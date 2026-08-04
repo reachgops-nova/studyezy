@@ -1,0 +1,195 @@
+{
+  "board": "Cambridge",
+  "curriculum": "Cambridge Primary / IGCSE pathway",
+  "grade_stage": 5,
+  "subject": "English",
+  "unit": 1,
+  "unit_title": "Fiction: Stories from different cultures",
+  "source_reference": {
+    "publisher": "Hodder Education",
+    "title": "Cambridge Primary English Learner's Book 5 (2nd edition)",
+    "authors": ["Marie Lallaway"],
+    "series_editors": ["Christine Chen", "Lindsay Pickton"],
+    "note": "Page numbers below are references into the family's own physical copy for alignment. No text from the book is reproduced here - all definitions, examples, and questions are original content written to teach the same skills the unit covers."
+  },
+  "unit_status": "in_progress",
+  "concepts": [
+    {
+      "concept_id": "1.1",
+      "concept_name": "Features of a fable",
+      "status": "drafted",
+      "difficulty": "beginner",
+      "book_pages": [5],
+      "story_reference": {
+        "title": "Why Cockerels Crow (a fable from Malawi)",
+        "synopsis": "A cockerel who lets a hyena do all his chores for him is eventually exposed as a fraud and has to earn his place in the village by crowing every morning."
+      },
+      "definition": "A fable is a short fictional story, usually with animal characters who act and speak like humans, written to teach the reader a lesson or a moral about right and wrong.",
+      "key_points": [
+        "Characters have clear strengths and weaknesses, and are often in some kind of conflict.",
+        "The setting can be anywhere in the world - fables exist in almost every culture.",
+        "The moral or lesson is usually made clear by the end of the story, even if it isn't stated outright."
+      ],
+      "examples": [
+        "Aesop's 'The Tortoise and the Hare' teaches that slow, steady effort beats overconfidence.",
+        "A fable about a crow and a fox might teach that flattery often has a hidden motive."
+      ],
+      "voice_qa_samples": [
+        {
+          "question": "What makes a story a fable?",
+          "answer": "A fable is a short story, usually with animal characters, written to teach a lesson. Look for three things: characters with real strengths and weaknesses, a setting that could be anywhere, and a moral or lesson by the end."
+        },
+        {
+          "question": "Why do fables use animals instead of people?",
+          "answer": "Animal characters let the writer show human behaviour - like greed, laziness, or kindness - without it feeling like it's pointing at any one real person. It also makes the lesson easier to remember."
+        }
+      ],
+      "tips_to_remember": [
+        "Ask yourself: what is this story trying to teach me, not just tell me?",
+        "Fables are old - many are thousands of years old and exist in almost every culture, often with similar lessons."
+      ],
+      "reasoning_interview_prompts": [
+        "You said this story is a fable. What convinced you - was it the characters, the ending, or something else?"
+      ]
+    },
+    {
+      "concept_id": "1.2",
+      "concept_name": "Implicit meaning",
+      "status": "drafted",
+      "difficulty": "intermediate",
+      "book_pages": [5, 6],
+      "story_reference": {
+        "title": "Why Cockerels Crow (a fable from Malawi)",
+        "synopsis": "Cockerel never directly says he is lazy or selfish - the reader works this out from watching him sit and watch while Hyena does all his chores."
+      },
+      "definition": "Implicit meaning is information the writer doesn't state directly - it's 'hidden' in what characters do, say, or how others react to them, and the reader has to work it out themselves.",
+      "key_points": [
+        "Writers 'show' rather than 'tell' to pull readers into the story and let them form their own opinions.",
+        "There can be more than one reasonable interpretation of implicit meaning - readers may disagree and both be right.",
+        "Look at actions, dialogue, and how other characters react as your evidence."
+      ],
+      "examples": [
+        "'Priya slammed the door and didn't answer when her brother called after her.' (Implies Priya is angry or upset, without the writer saying so.)",
+        "'Every time the ball came near Sam, he suddenly needed to tie his shoelace.' (Implies Sam is avoiding the game, perhaps because he's scared of it.)"
+      ],
+      "voice_qa_samples": [
+        {
+          "question": "What does implicit meaning mean?",
+          "answer": "It means meaning that isn't stated directly. The writer shows you through what a character does or says, and you work out the rest yourself, using clues from the text."
+        },
+        {
+          "question": "How is implicit meaning different from explicit meaning?",
+          "answer": "Explicit meaning is when the writer tells you directly - like 'Cockerel was lazy.' Implicit meaning is when the writer shows you through actions or dialogue instead, like showing Cockerel sitting and watching while someone else does his chores, and letting you conclude he's lazy."
+        }
+      ],
+      "tips_to_remember": [
+        "If the writer never uses the describing word itself (like 'lazy' or 'kind'), but you still know it about the character - that's implicit meaning at work.",
+        "Two readers can find different implicit meanings from the same clue - that's normal, as long as you can point to evidence in the text."
+      ],
+      "reasoning_interview_prompts": [
+        "You said Cockerel was selfish. What did he actually do or say that made you think that - not what you assume, what's actually in the text?",
+        "Could someone reasonably disagree with your reading of that character? What might they point to instead?"
+      ]
+    },
+    {
+      "concept_id": "1.3",
+      "concept_name": "Explicit meaning",
+      "status": "drafted",
+      "difficulty": "beginner",
+      "book_pages": [9],
+      "story_reference": {
+        "title": "Why Cockerels Crow (a fable from Malawi)",
+        "synopsis": "In places, the story tells the reader directly how a character or situation is - not just through actions."
+      },
+      "definition": "Explicit meaning is information the writer states directly and clearly - there's no guessing needed. It 'tells' the reader exactly what the mood, character, or situation is.",
+      "key_points": [
+        "Explicit information is stated in plain words - e.g. 'Cockerel was scared.'",
+        "It's often used for facts that move the plot along quickly, without needing the reader to infer anything.",
+        "Good writers usually mix explicit and implicit meaning - all-explicit writing can feel flat, all-implicit can feel confusing."
+      ],
+      "examples": [
+        "'It was the coldest night of the year.' (States the fact directly - explicit.)",
+        "compare with: 'She pulled her coat tighter and her breath turned to fog in front of her.' (Same idea, but shown - implicit.)"
+      ],
+      "voice_qa_samples": [
+        {
+          "question": "Give me an example of explicit meaning.",
+          "answer": "Any sentence that just tells you the fact directly, like 'The animals were angry.' You don't need to guess or read between the lines - the writer told you outright."
+        }
+      ],
+      "tips_to_remember": [
+        "If you can quote the exact word for the feeling or fact directly from the text, it's explicit.",
+        "If you had to work it out from clues, it's implicit."
+      ],
+      "reasoning_interview_prompts": [
+        "Find one sentence in the story that's explicit and one that's implicit. What's different about how they're written?"
+      ]
+    }
+  ],
+  "remaining_unit_outline": [
+    { "concept_id": "1.4", "concept_name": "Predicting as a reading strategy", "status": "outline", "story_reference": "Why Monkeys Live in Trees (South Africa)" },
+    { "concept_id": "1.5", "concept_name": "Perspective / point of view", "status": "outline", "story_reference": "Why Monkeys Live in Trees (South Africa)" },
+    { "concept_id": "1.6", "concept_name": "Proofreading checklist", "status": "outline", "story_reference": "Why Monkeys Live in Trees (South Africa)" },
+    { "concept_id": "1.7", "concept_name": "Fact vs. opinion", "status": "outline", "story_reference": "The Elephant Who Lost His Patience (India)" },
+    { "concept_id": "1.8", "concept_name": "Idiomatic phrases", "status": "outline", "story_reference": "The Elephant Who Lost His Patience (India)" },
+    { "concept_id": "1.9", "concept_name": "Sentence types: simple, compound, complex (multi-clause) + connectives", "status": "outline", "story_reference": "The Elephant Who Lost His Patience (India)" },
+    { "concept_id": "1.10", "concept_name": "Story structure (the narrative 'mountain': beginning, build up, challenge, problem, problem solved, ending)", "status": "outline", "story_reference": "The Elephant Who Lost His Patience (India)" },
+    { "concept_id": "1.11", "concept_name": "Mood created through setting and word choice", "status": "outline", "story_reference": "The Lion with the Red Eyes (Somalia)" },
+    { "concept_id": "1.12", "concept_name": "Comparative and superlative adverbs", "status": "outline", "story_reference": "The Lion with the Red Eyes (Somalia)" },
+    { "concept_id": "1.13", "concept_name": "Full writing checklist applied end-to-end (mood, punctuation, apostrophes, direct speech)", "status": "outline", "story_reference": "The Broath with the Rocks (Scotland)" }
+  ],
+  "unit_mastery_checklist": {
+    "source_note": "Mirrors the 'What can you do?' self-assessment on page 25 of the Learner's Book - the school's own checklist for this unit. Used directly as the Progression Test's mastery criteria instead of inventing new objectives.",
+    "items": [
+      "I can find explicit information in a text.",
+      "I can tell the difference between a fact and an opinion.",
+      "I can use implicit information to form opinions about characters.",
+      "I can identify the mood of a setting.",
+      "I can create a setting to convey a particular mood.",
+      "I can build complex (multi-clause) sentences to create pace and excitement.",
+      "I can use adverbs and adverbial phrases to add precision to my ideas.",
+      "I can recognise some idioms and explain their meanings.",
+      "I can proofread my writing for accuracy of punctuation and spelling."
+    ]
+  },
+  "progression_test_draft": {
+    "test_id": "PROG_TEST_1_ENGLISH_STAGE5",
+    "covers_concepts": ["1.1", "1.2", "1.3"],
+    "note": "Partial draft - only covers concepts drafted so far (1.1-1.3). Full test will map 1-2 questions per unit_mastery_checklist item once all concepts are built.",
+    "questions": [
+      {
+        "type": "multiple_choice",
+        "question": "Which of these is a key feature of a fable?",
+        "options": [
+          "It must be set in a school",
+          "It teaches a lesson or moral, often through animal characters",
+          "It must be written in the first person",
+          "It has no characters at all"
+        ],
+        "correct_answer": 1,
+        "concept_tested": "1.1"
+      },
+      {
+        "type": "short_answer",
+        "question": "A character in a story keeps interrupting others and never says sorry, but the writer never says 'he was rude.' Is this implicit or explicit meaning? Explain how you know.",
+        "concept_tested": "1.2",
+        "mark_scheme": {
+          "full_marks": 2,
+          "criteria": [
+            "Correctly identifies this as implicit meaning (1 mark)",
+            "Explains that the trait is shown through actions/behaviour, not stated directly (1 mark)"
+          ]
+        }
+      },
+      {
+        "type": "short_answer",
+        "question": "Rewrite this implicit sentence as an explicit one: 'Maya's hands were shaking as she opened the envelope.'",
+        "concept_tested": "1.3",
+        "mark_scheme": {
+          "full_marks": 1,
+          "criteria": ["Any answer that states the feeling directly, e.g. 'Maya was nervous as she opened the envelope.'"]
+        }
+      }
+    ]
+  }
+}
