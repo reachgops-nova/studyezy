@@ -6,19 +6,52 @@
 ## STATUS TRACKER
 *Updated every time a decision, feature, or milestone changes. This section is the source of truth for "where are we right now" — check here first.*
 
-**Last updated:** 2026-08-05
+**Last updated:** 2026-08-06
 
-**Where we are:** Opening a unit starts with a **Unit Overview** (objectives in kid-facing language, pulled from the book's own "What can you do?" checklist) and an optional **quick diagnostic check** ("how much do you already know?") before any teaching happens — the "brush up and skip" insight from the very first conversation, now implemented at concept granularity. Each concept gets a per-concept recommendation ("You've got this" vs. "Review this") routing into the avatar-led lesson only for what's weak. The lesson ("Ezy" the fox mascot) teaches via narrated chat bubbles at a slower, kid-friendly speech rate, with **word-by-word highlighting synced to the narration** (like a read-along highlighter) so kids can follow the text while listening — then asks a check-in question with quick-reply chips plus free voice/text input. **Parents can now upload textbook page photos directly through the app** (an "+ Add photos" button on the Unit Overview screen, backed by a real upload API that saves to the local filesystem and displays them immediately) - this replaced the earlier idea of manually copying files in via Finder, since real parents need a real upload flow. Uploaded scans are gitignored (personal copyrighted material, stays local, never pushed to GitHub). `ANTHROPIC_API_KEY` is configured (confirmed authenticating correctly) but the account has no credit yet, so live Q&A/grading answers aren't testable - fallback paths are confirmed working everywhere they're needed. Build/lint/tests pass. Dev server has been running locally at localhost:3000 for the user to test directly.
+**Where we are, in one line:** A working, interactive, voice-led pilot app for Unit 1 English (concepts 1.1–1.3) is built, tested, and pushed to GitHub — see the Feature Status list right below for the full breakdown of what's done vs. pending. Dev server runs locally at localhost:3000 for direct testing.
 
-**What we're trying to achieve right now:** Validate the full pilot loop (overview → upload real pages → diagnostic → per-concept recommendation → avatar-taught lesson with read-along highlighting → progression test → dashboard) with 1–3 real kids on Cambridge Stage 5 English, Unit 1 — currently only concepts 1.1–1.3 are fully built; 1.4–1.13 are stubbed as "coming soon."
+**Standing workflow (agreed 2026-08-06):** every code change gets committed and pushed to GitHub automatically as part of doing the work — no need to ask each time. Push credentials are cached in this Mac's Keychain (see changelog, 2026-08-05 night entry) so this happens without friction.
 
 **Currently blocked on / waiting for:**
 - Anthropic account credit top-up so voice Q&A and grading return real answers instead of the graceful fallback message
-- User to actually try the photo upload feature with real textbook page photos
-- Decision on when to deploy the current build to Vercel for real device testing vs. continuing to build out the rest of Unit 1 locally first — note the upload feature needs to move from local filesystem storage to real object storage (Vercel Blob/S3) before a Vercel deploy, since serverless filesystems are ephemeral (see README known gaps)
-- Reasoning Interview and Written Exam Capture & Coaching (plan §2.4, §2.5) are not built yet
+- User to actually try the photo upload feature with real textbook page photos (feature is built and tested, just not used with real content yet)
+- Priority call: build out concepts 1.4–1.13 to finish Unit 1, vs. deploying the current build to Vercel now for real device testing on just 1.1–1.3
 
-**Next milestone:** Once credits land, re-verify a live voice Q&A answer end-to-end, then either (a) deploy to Vercel for real device testing (requires swapping upload storage first), or (b) build out concepts 1.4–1.13 to finish Unit 1 first — whichever the user prioritizes next.
+---
+
+## FEATURE STATUS (full inventory)
+
+### ✅ Built and working
+- **Demo login** — 3 no-password profiles, no real accounts (by design for a 1-3 kid pilot)
+- **Curriculum → Stage → Subject → Unit selector** — cascading picker; only Cambridge Stage 5 English Unit 1 is live, everything else marked "coming soon"
+- **Unit Overview screen** — objectives in kid-facing language (pulled from the book's own "What can you do?" checklist) shown before any teaching starts
+- **Real photo upload** — parents upload textbook page photos via the native photo picker; saved server-side and displayed immediately; gitignored (personal copyrighted scans never reach GitHub)
+- **Diagnostic quick-check** — optional 3-question "how much do you already know?" quiz before teaching; scores per concept and recommends "You've got this" (skip) vs. "Review this" (teach) per concept — the original "brush up and skip mastered content" insight, now working at concept granularity
+- **Avatar-led interactive lesson** ("Ezy" the fox mascot) — content is taught in checkpoints (intro+definition / key points / example+tip), **pausing after each one** and waiting for the kid to react before continuing, instead of reading straight through
+- **Natural-language pause handling** — typing/saying "yes", "okay", "got it", "again?", "I don't understand" etc. during a pause is recognized locally (no AI call) and acts like tapping the pause buttons, with a short varied acknowledgment
+- **Voice Q&A** — free-form questions answered by Claude, grounded in the specific concept's content (not generic answers)
+- **UK English narration** — en-GB accent with explicit voice selection, slowed reading rate (0.7x) for clarity
+- **Read-along highlighting** — the word currently being spoken is highlighted, synced via speech boundary events
+- **Original sample illustrations** — simple SVG art per concept (not scanned from the book) plus a labeled "video coming soon" placeholder
+- **Progression test** — MCQ + AI-graded short answer, adaptive mastery banding (mastered / needs brush-up / needs reteach), adaptive retest-date suggestion
+- **Dashboard** — per-concept mastery breakdown, stored in browser localStorage per profile
+- **Content** — Unit 1 English concepts 1.1–1.3 fully written (Features of a fable, Implicit meaning, Explicit meaning), sourced from the family's own scanned textbook as original writing, not copied text
+- **Security/quality baseline** — server-side-only API key handling, in-memory rate limiting, input validation on all API routes, `npm audit` clean, secrets and uploads gitignored, Vitest unit tests passing, clean build/lint
+
+### ⏳ Pending / not built yet
+- **Unit 1 concepts 1.4–1.13** — currently stubbed "coming soon" in the sidebar
+- **Units 2–9** for English Stage 5, and **any Math/other-subject content** — not started (Math was the original plan but paused since that textbook isn't in hand yet)
+- **Reasoning Interview** (plan §2.4) — voice follow-up after a test to classify *why* an answer was wrong (conceptual gap vs. careless slip vs. misread question), not just score it
+- **Written Exam Capture & Coaching** (plan §2.5) — photograph a real handwritten paper, get exam-technique feedback (structure, working shown, time use) with marks shown last
+- **In-Unit Micro-Checks** (plan §2.2) — short ungraded questions while a unit is currently being taught in class
+- **Prep Planner** (plan §2.6) — weekly "what to revisit" view generated from mastery + Reasoning Interview data
+- **Live-verified voice Q&A and AI grading** — code path confirmed correct, but blocked on Anthropic account credit top-up to see a real answer end-to-end
+- **Vercel deployment** — not deployed yet; the photo upload feature needs to move from local filesystem storage to real object storage (Vercel Blob/S3) first, since serverless filesystems don't persist uploads
+- **Real database** — progress/results still live in browser localStorage, not Postgres; fine for one device per kid, loses history if browser data is cleared or a second device is used
+- **Real authentication** — still a no-password demo-profile cookie; anyone with the URL can pick any profile
+- **CI pipeline** — build/test/lint all pass locally but nothing runs them automatically on push
+- **Automated end-to-end tests** — only the scoring/mastery logic has unit tests; UI flows are verified manually each time
+- **Multi-language voice support** (Hindi/Tamil/Telugu/Kannada) — part of the original v1 vision, not built; current app is English-only
 
 ---
 
@@ -176,6 +209,8 @@ After that: extend the same loop to Unit 2, then decide whether to add a second 
 
 ## CHANGELOG
 *Newest first. One entry per meaningful change — new feature, scope decision, milestone hit, or pivot.*
+
+**2026-08-06 (later)** — Added a consolidated FEATURE STATUS section (built vs. pending, full inventory) per request to see everything done so far and what's left, in one place instead of scattered across changelog entries. Also formalized push-every-change as the standing workflow going forward - no longer something to ask about each time.
 
 **2026-08-06** — Checkpoint pauses now understand natural replies, not just button taps - per feedback that clicking exact buttons "looks more artificial, not natural." Typing or saying something like "yes", "okay got it", or "sorry I didn't understand" during a pause is now recognized locally (regex-based, no AI call needed) as the same intent as tapping "Got it, keep going" / "Can you say that again?", with a short varied acknowledgment ("Great, let's keep going!" / "Sure, here it is again.") before continuing - makes the flow feel like a real conversation rather than forced button-clicking, and works even without Anthropic credits since it's local pattern matching, not an API call. Verified both the continue and repeat natural-language paths end-to-end in-browser. Build/lint/tests pass.
 
