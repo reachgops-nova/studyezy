@@ -50,7 +50,12 @@
       ],
       "reasoning_interview_prompts": [
         "You said this story is a fable. What convinced you - was it the characters, the ending, or something else?"
-      ]
+      ],
+      "media": {
+        "illustration_key": "cockerel_hyena_fable",
+        "illustration_caption": "Cockerel and Hyena, from Why Cockerels Crow",
+        "video_status": "coming_soon"
+      }
     },
     {
       "concept_id": "1.2",
@@ -89,7 +94,12 @@
       "reasoning_interview_prompts": [
         "You said Cockerel was selfish. What did he actually do or say that made you think that - not what you assume, what's actually in the text?",
         "Could someone reasonably disagree with your reading of that character? What might they point to instead?"
-      ]
+      ],
+      "media": {
+        "illustration_key": "implicit_meaning_clue",
+        "illustration_caption": "Reading the clues a writer leaves behind",
+        "video_status": "coming_soon"
+      }
     },
     {
       "concept_id": "1.3",
@@ -123,7 +133,12 @@
       ],
       "reasoning_interview_prompts": [
         "Find one sentence in the story that's explicit and one that's implicit. What's different about how they're written?"
-      ]
+      ],
+      "media": {
+        "illustration_key": "explicit_meaning_direct",
+        "illustration_caption": "Saying it straight out, no guessing needed",
+        "video_status": "coming_soon"
+      }
     }
   ],
   "remaining_unit_outline": [

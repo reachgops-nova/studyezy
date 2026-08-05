@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import type { CurriculumUnit } from "@/lib/types";
-import VoiceQA from "./VoiceQA";
+import AvatarChat from "./AvatarChat";
 
 export default function UnitView({ unit, unitKey }: { unit: CurriculumUnit; unitKey: string }) {
   const [selectedId, setSelectedId] = useState(unit.concepts[0]?.concept_id);
@@ -34,62 +34,14 @@ export default function UnitView({ unit, unitKey }: { unit: CurriculumUnit; unit
       </nav>
 
       {selected && (
-        <article className="grid gap-4">
+        <div className="grid gap-2">
           {selected.story_reference && (
             <p className="text-xs uppercase tracking-wide text-slate-400">
               From: {selected.story_reference.title}
             </p>
           )}
-
-          <h2 className="text-xl font-semibold">{selected.concept_name}</h2>
-
-          {selected.definition && <p className="text-slate-700">{selected.definition}</p>}
-
-          {selected.key_points && selected.key_points.length > 0 && (
-            <div>
-              <h3 className="text-sm font-semibold text-slate-500">Key points</h3>
-              <ul className="mt-1 list-disc pl-5 text-sm text-slate-700">
-                {selected.key_points.map((p, i) => (
-                  <li key={i}>{p}</li>
-                ))}
-              </ul>
-            </div>
-          )}
-
-          {selected.examples && selected.examples.length > 0 && (
-            <div>
-              <h3 className="text-sm font-semibold text-slate-500">Examples</h3>
-              <ul className="mt-1 list-disc pl-5 text-sm text-slate-700">
-                {selected.examples.map((e, i) => (
-                  <li key={i}>{e}</li>
-                ))}
-              </ul>
-            </div>
-          )}
-
-          {selected.tips_to_remember && selected.tips_to_remember.length > 0 && (
-            <div className="rounded-lg bg-amber-50 p-3 text-sm text-amber-900">
-              {selected.tips_to_remember.map((t, i) => (
-                <p key={i}>💡 {t}</p>
-              ))}
-            </div>
-          )}
-
-          <VoiceQA unitKey={unitKey} conceptId={selected.concept_id} conceptName={selected.concept_name} />
-
-          {selected.reasoning_interview_prompts && selected.reasoning_interview_prompts.length > 0 && (
-            <details className="rounded-lg border border-slate-200 p-3 text-sm">
-              <summary className="cursor-pointer font-medium text-slate-600">
-                Talk it through (optional)
-              </summary>
-              <ul className="mt-2 list-disc pl-5 text-slate-600">
-                {selected.reasoning_interview_prompts.map((p, i) => (
-                  <li key={i}>{p}</li>
-                ))}
-              </ul>
-            </details>
-          )}
-        </article>
+          <AvatarChat key={selected.concept_id} unitKey={unitKey} concept={selected} />
+        </div>
       )}
     </div>
   );

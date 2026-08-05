@@ -6,18 +6,18 @@
 ## STATUS TRACKER
 *Updated every time a decision, feature, or milestone changes. This section is the source of truth for "where are we right now" — check here first.*
 
-**Last updated:** 2026-08-04
+**Last updated:** 2026-08-05
 
-**Where we are:** First working build is live in this repo (https://github.com/reachgops-nova/studyezy). Next.js app with demo login (3 profiles, no passwords), curriculum → stage → subject → unit selector, a fully-built Unit 1 English (Cambridge Stage 5) concept viewer with voice Q&A, a progression test with adaptive scoring, and a basic dashboard. Build, lint, and tests all pass; `npm audit` is clean. Manually smoke-tested end-to-end in browser. Not deployed yet.
+**Where we are:** Learning page is now an avatar-led conversation instead of a static content page: "Ezy" the fox mascot greets the kid, teaches the concept as a sequence of narrated chat bubbles (definition → key points → example → tip), then asks a check-in question and surfaces quick-reply chips (drawn from the concept's own sample questions) alongside free voice/text input. Each drafted concept (1.1–1.3) now has an original sample illustration (simple SVG art, not scanned from the book) plus a clearly-labeled "video coming soon" slot — real video needs a licensed/production pipeline we don't have yet. `ANTHROPIC_API_KEY` is configured in `.env.local` (gitignored, confirmed working — request auth succeeds) but the account is currently out of credit, so live answers aren't testable yet; the "couldn't get an answer" fallback path is confirmed working. Build/lint/tests still pass.
 
-**What we're trying to achieve right now:** Validate the pilot loop (content → voice Q&A → progression test → dashboard) with 1–3 real kids on Cambridge Stage 5 English, Unit 1 — currently only concepts 1.1–1.3 ("Why Cockerels Crow": features of a fable, implicit meaning, explicit meaning) are fully built; 1.4–1.13 are stubbed as "coming soon."
+**What we're trying to achieve right now:** Validate the pilot loop (avatar teaches → check-in question → quick replies/free Q&A → progression test → dashboard) with 1–3 real kids on Cambridge Stage 5 English, Unit 1 — currently only concepts 1.1–1.3 are fully built; 1.4–1.13 are stubbed as "coming soon."
 
 **Currently blocked on / waiting for:**
-- An `ANTHROPIC_API_KEY` to actually exercise voice Q&A and short-answer grading (currently shows a graceful "not configured" message instead of an answer)
+- Anthropic account credit top-up so voice Q&A and grading return real answers instead of the graceful fallback message
 - Decision on when to deploy the current build to Vercel for real device testing vs. continuing to build out the rest of Unit 1 locally first
-- Reasoning Interview and Written Exam Capture & Coaching (plan §2.4, §2.5) are not built yet — only the progression test loop exists so far
+- Reasoning Interview and Written Exam Capture & Coaching (plan §2.4, §2.5) are not built yet — only the progression test loop and the avatar chat's quick-reply prompts exist so far
 
-**Next milestone:** Either (a) get an API key wired in and deploy to Vercel for the pilot kids to try on a real device, or (b) build out concepts 1.4–1.13 to finish Unit 1 first — whichever the user prioritizes next.
+**Next milestone:** Once credits land, re-verify a live voice Q&A answer end-to-end, then either (a) deploy to Vercel for real device testing, or (b) build out concepts 1.4–1.13 to finish Unit 1 first — whichever the user prioritizes next.
 
 ---
 
@@ -167,15 +167,16 @@ After that: extend the same loop to Unit 2, then decide whether to add a second 
 
 ## OPEN ITEMS FOR YOU
 
-1. An `ANTHROPIC_API_KEY` so voice Q&A and short-answer grading actually work (app runs fine without one, just shows a "not configured" message for those two features).
+1. ~~An `ANTHROPIC_API_KEY`~~ — done, key is in `.env.local`, confirmed working; just needs Anthropic account credit top-up to return live answers.
 2. Names/ages of the 1–3 pilot kids (just for tailoring tone/difficulty, nothing else) — or keep it anonymous and just share their rough comfort level with English.
 3. Priority call: finish building out Unit 1 concepts 1.4–1.13 next, or deploy the current build to Vercel now and start real pilot testing on just concepts 1.1–1.3.
-4. Push access / confirmation to push these commits to https://github.com/reachgops-nova/studyezy.git.
 
 ---
 
 ## CHANGELOG
 *Newest first. One entry per meaningful change — new feature, scope decision, milestone hit, or pivot.*
+
+**2026-08-05** — Learning page redesigned as an avatar-led chat (components/AvatarChat.tsx, Avatar.tsx, illustrations.tsx), replacing the static content-block + separate Q&A box layout, per feedback that the old layout "asked questions directly without showing the textbook first." New flow: avatar greets → narrates the concept (definition, key points, example, tip) as sequential chat bubbles with TTS → asks a check-in question → shows quick-reply chips (from the concept's own sample questions) plus free voice/text input. Added original sample illustrations (simple SVG, not scanned from the book) per drafted concept and a labeled "video coming soon" media slot, since real video needs a licensing/production pipeline not built yet. Retired the old VoiceQA component (superseded by AvatarChat). `ANTHROPIC_API_KEY` added to `.env.local`; confirmed the key authenticates correctly but the Anthropic account currently has no credit balance, so live Q&A answers aren't testable until top-up — the graceful fallback error path is confirmed working. Build/lint/tests still pass.
 
 **2026-08-04** — First working build committed. Next.js 16 app (TypeScript, Tailwind, deployable to Vercel) with: demo login (3 no-password profiles), curriculum → stage → subject → unit selector, Unit 1 English (Cambridge Stage 5) concept viewer with voice Q&A, adaptive-scoring progression test, and a basic dashboard. Pilot subject switched from the originally-planned Grade 4 Math to Cambridge Stage 5 English since the family had the English book in hand (Hodder Education, Cambridge Primary English Learner's Book 5, 2nd ed.) but not the Math one yet. Content for concepts 1.1-1.3 ("Why Cockerels Crow": features of a fable, implicit meaning, explicit meaning) is original writing aligned to the book's own page structure, not reproduced text. `npm run build`, `npm test`, and `npm run lint` pass; `npm audit` clean (upgraded off Next.js 14 after it surfaced several known CVEs). Manually smoke-tested end-to-end in-browser: login → selector → concept view → voice Q&A error path → progression test → scoring → dashboard, all working.
 

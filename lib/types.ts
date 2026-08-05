@@ -15,6 +15,14 @@ export interface MarkScheme {
   criteria: string[];
 }
 
+export interface ConceptMedia {
+  /** Key into the built-in illustration set in components/illustrations.tsx - original artwork, not scanned from the book. */
+  illustration_key?: string;
+  illustration_caption?: string;
+  /** Real video needs a licensed/production content pipeline - not built yet, so the UI shows a clearly-labeled placeholder instead. */
+  video_status: "not_planned" | "coming_soon";
+}
+
 export interface Concept {
   concept_id: string;
   concept_name: string;
@@ -28,6 +36,7 @@ export interface Concept {
   voice_qa_samples?: VoiceQASample[];
   tips_to_remember?: string[];
   reasoning_interview_prompts?: string[];
+  media?: ConceptMedia;
 }
 
 export interface OutlineConcept {
