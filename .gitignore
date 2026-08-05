@@ -9,6 +9,8 @@ coverage/
 # next.js
 .next/
 out/
+AGENTS.md
+CLAUDE.md
 
 # production
 build/

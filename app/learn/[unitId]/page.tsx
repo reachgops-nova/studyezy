@@ -37,7 +37,7 @@ export default async function LearnPage({ params }: { params: Promise<{ unitId: 
         </Link>
       </header>
 
-      <UnitView unit={unit} unitKey={unitId} />
+      <UnitView unit={unit} unitKey={unitId} profileId={profile.id} />
     </main>
   );
 }

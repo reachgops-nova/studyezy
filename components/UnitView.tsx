@@ -3,14 +3,58 @@
 import { useState } from "react";
 import type { CurriculumUnit } from "@/lib/types";
 import AvatarChat from "./AvatarChat";
+import UnitOverview from "./UnitOverview";
+import UnitDiagnostic from "./UnitDiagnostic";
 
-export default function UnitView({ unit, unitKey }: { unit: CurriculumUnit; unitKey: string }) {
+type Stage = "overview" | "diagnostic" | "lesson";
+
+export default function UnitView({
+  unit,
+  unitKey,
+  profileId,
+}: {
+  unit: CurriculumUnit;
+  unitKey: string;
+  profileId: string;
+}) {
+  const [stage, setStage] = useState<Stage>("overview");
   const [selectedId, setSelectedId] = useState(unit.concepts[0]?.concept_id);
   const selected = unit.concepts.find((c) => c.concept_id === selectedId);
+
+  if (stage === "overview") {
+    return (
+      <UnitOverview
+        unit={unit}
+        onStartDiagnostic={() => setStage("diagnostic")}
+        onSkipToTeaching={() => setStage("lesson")}
+      />
+    );
+  }
+
+  if (stage === "diagnostic") {
+    return (
+      <UnitDiagnostic
+        unit={unit}
+        unitKey={unitKey}
+        profileId={profileId}
+        onReviewConcept={(conceptId) => {
+          setSelectedId(conceptId);
+          setStage("lesson");
+        }}
+        onAllMastered={() => setStage("lesson")}
+      />
+    );
+  }
 
   return (
     <div className="grid gap-6 md:grid-cols-[220px_1fr]">
       <nav className="grid gap-1">
+        <button
+          onClick={() => setStage("overview")}
+          className="mb-2 rounded-lg px-3 py-2 text-left text-xs font-medium uppercase tracking-wide text-slate-400 hover:text-slate-600"
+        >
+          &larr; Unit overview
+        </button>
         {unit.concepts.map((c) => (
           <button
             key={c.concept_id}
