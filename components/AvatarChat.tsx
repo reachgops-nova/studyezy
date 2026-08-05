@@ -31,19 +31,33 @@ function nextId() {
   return `m${messageCounter}`;
 }
 
-function buildTeachingScript(concept: Concept): string[] {
-  const script: string[] = [];
-  script.push(`Hi! Let's learn about ${concept.concept_name}.`);
-  if (concept.definition) script.push(concept.definition);
-  for (const point of concept.key_points ?? []) script.push(point);
-  if (concept.examples?.length) {
-    script.push(`Here's an example: ${concept.examples[0]}`);
+// Teaching content is grouped into small checkpoints - the avatar pauses
+// and waits for the kid to react after each one, rather than reading the
+// whole concept straight through and only checking in once at the very end.
+function buildCheckpoints(concept: Concept): string[][] {
+  const checkpoints: string[][] = [];
+
+  const intro: string[] = [`Hi! Let's learn about ${concept.concept_name}.`];
+  if (concept.definition) intro.push(concept.definition);
+  checkpoints.push(intro);
+
+  if (concept.key_points?.length) {
+    checkpoints.push(concept.key_points);
   }
-  if (concept.tips_to_remember?.[0]) {
-    script.push(`Quick tip: ${concept.tips_to_remember[0]}`);
-  }
-  return script;
+
+  const closing: string[] = [];
+  if (concept.examples?.length) closing.push(`Here's an example: ${concept.examples[0]}`);
+  if (concept.tips_to_remember?.[0]) closing.push(`Quick tip: ${concept.tips_to_remember[0]}`);
+  if (closing.length) checkpoints.push(closing);
+
+  return checkpoints;
 }
+
+const PAUSE_PROMPTS = [
+  "Does that make sense so far?",
+  "Following okay? Tell me when you're ready to keep going.",
+  "All good? Say the word and we'll keep going.",
+];
 
 // A slower-than-default pace reads clearly for a 9-10 year old without
 // dragging - 1.0 (browser default) reads too fast to follow along with.
@@ -97,6 +111,8 @@ export default function AvatarChat({
 }) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [readyForInput, setReadyForInput] = useState(false);
+  const [awaitingContinue, setAwaitingContinue] = useState(false);
+  const [checkpointIndex, setCheckpointIndex] = useState(0);
   const [speaking, setSpeaking] = useState(false);
   const [speakingMessageId, setSpeakingMessageId] = useState<string | null>(null);
   const [highlightRange, setHighlightRange] = useState<[number, number] | null>(null);
@@ -108,6 +124,7 @@ export default function AvatarChat({
   const [readAloud, setReadAloud] = useState(true);
 
   const playTokenRef = useRef(0);
+  const checkpointsRef = useRef<string[][]>([]);
   const recognitionRef = useRef<SpeechRecognitionLike | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -161,6 +178,58 @@ export default function AvatarChat({
     window.speechSynthesis.speak(utterance);
   }
 
+  function playCheckpoint(index: number, token: number) {
+    if (playTokenRef.current !== token) return;
+    const checkpoints = checkpointsRef.current;
+
+    if (checkpoints.length === 0 || index > checkpoints.length - 1) {
+      const checkIn =
+        concept.voice_qa_samples?.[0]?.question ??
+        "Want to try answering a quick question, or ask me anything about this?";
+      const id = nextId();
+      setMessages((prev) => [...prev, { id, sender: "avatar", text: checkIn }]);
+      speakText(checkIn, id, () => {});
+      setReadyForInput(true);
+      setAwaitingContinue(false);
+      return;
+    }
+
+    const isLast = index === checkpoints.length - 1;
+    const msgs = checkpoints[index];
+
+    function speakStep(i: number) {
+      if (playTokenRef.current !== token) return;
+      if (i >= msgs.length) {
+        if (isLast) {
+          const checkIn =
+            concept.voice_qa_samples?.[0]?.question ??
+            "Want to try answering a quick question, or ask me anything about this?";
+          const id = nextId();
+          setMessages((prev) => [...prev, { id, sender: "avatar", text: checkIn }]);
+          speakText(checkIn, id, () => {});
+          setReadyForInput(true);
+          setAwaitingContinue(false);
+        } else {
+          const prompt = PAUSE_PROMPTS[index % PAUSE_PROMPTS.length];
+          const id = nextId();
+          setMessages((prev) => [...prev, { id, sender: "avatar", text: prompt }]);
+          speakText(prompt, id, () => {});
+          setReadyForInput(true);
+          setAwaitingContinue(true);
+        }
+        return;
+      }
+      const id = nextId();
+      setMessages((prev) => [...prev, { id, sender: "avatar", text: msgs[i] }]);
+      speakText(msgs[i], id, () => {
+        if (playTokenRef.current !== token) return;
+        speakStep(i + 1);
+      });
+    }
+
+    speakStep(0);
+  }
+
   useEffect(() => {
     const myToken = playTokenRef.current + 1;
     playTokenRef.current = myToken;
@@ -172,41 +241,36 @@ export default function AvatarChat({
     /* eslint-disable react-hooks/set-state-in-effect */
     setMessages([]);
     setReadyForInput(false);
+    setAwaitingContinue(false);
+    setCheckpointIndex(0);
     setSpeaking(false);
     setSpeakingMessageId(null);
     setHighlightRange(null);
     /* eslint-enable react-hooks/set-state-in-effect */
     window.speechSynthesis?.cancel();
 
-    const script = buildTeachingScript(concept);
-    let cancelled = false;
-
-    function playStep(index: number) {
-      if (cancelled || playTokenRef.current !== myToken) return;
-      if (index >= script.length) {
-        const checkIn =
-          concept.voice_qa_samples?.[0]?.question ??
-          "Want to try answering a quick question, or ask me anything about this?";
-        setMessages((prev) => [...prev, { id: nextId(), sender: "avatar", text: checkIn }]);
-        setReadyForInput(true);
-        return;
-      }
-      const id = nextId();
-      setMessages((prev) => [...prev, { id, sender: "avatar", text: script[index] }]);
-      speakText(script[index], id, () => {
-        if (cancelled || playTokenRef.current !== myToken) return;
-        playStep(index + 1);
-      });
-    }
-
-    playStep(0);
+    checkpointsRef.current = buildCheckpoints(concept);
+    playCheckpoint(0, myToken);
 
     return () => {
-      cancelled = true;
       window.speechSynthesis?.cancel();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [concept.concept_id, readAloud]);
+
+  function handleContinueCheckpoint() {
+    window.speechSynthesis?.cancel();
+    const nextIndex = checkpointIndex + 1;
+    setCheckpointIndex(nextIndex);
+    setAwaitingContinue(false);
+    playCheckpoint(nextIndex, playTokenRef.current);
+  }
+
+  function handleRepeatCheckpoint() {
+    window.speechSynthesis?.cancel();
+    setAwaitingContinue(false);
+    playCheckpoint(checkpointIndex, playTokenRef.current);
+  }
 
   async function sendMessage(text: string) {
     const trimmed = text.trim();
@@ -314,20 +378,42 @@ export default function AvatarChat({
         </div>
 
         <div className="border-t border-practice-border p-4">
-          {readyForInput && quickReplies.length > 0 && (
+          {awaitingContinue ? (
             <div className="mb-3 flex flex-wrap gap-2">
-              {quickReplies.map((q, i) => (
-                <button
-                  key={i}
-                  type="button"
-                  onClick={() => sendMessage(q)}
-                  disabled={loading}
-                  className="rounded-full border border-blue-300 bg-white px-3 py-1.5 text-xs text-blue-700 hover:bg-blue-50 disabled:opacity-50"
-                >
-                  {q}
-                </button>
-              ))}
+              <button
+                type="button"
+                onClick={handleContinueCheckpoint}
+                disabled={loading}
+                className="rounded-full bg-green-600 px-4 py-1.5 text-xs font-medium text-white hover:bg-green-700 disabled:opacity-50"
+              >
+                👍 Got it, keep going
+              </button>
+              <button
+                type="button"
+                onClick={handleRepeatCheckpoint}
+                disabled={loading}
+                className="rounded-full border border-slate-300 bg-white px-4 py-1.5 text-xs text-slate-700 hover:bg-slate-50 disabled:opacity-50"
+              >
+                🔁 Can you say that again?
+              </button>
             </div>
+          ) : (
+            readyForInput &&
+            quickReplies.length > 0 && (
+              <div className="mb-3 flex flex-wrap gap-2">
+                {quickReplies.map((q, i) => (
+                  <button
+                    key={i}
+                    type="button"
+                    onClick={() => sendMessage(q)}
+                    disabled={loading}
+                    className="rounded-full border border-blue-300 bg-white px-3 py-1.5 text-xs text-blue-700 hover:bg-blue-50 disabled:opacity-50"
+                  >
+                    {q}
+                  </button>
+                ))}
+              </div>
+            )
           )}
 
           <div className="flex gap-2">
