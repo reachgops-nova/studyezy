@@ -47,7 +47,23 @@ function buildTeachingScript(concept: Concept): string[] {
 
 // A slower-than-default pace reads clearly for a 9-10 year old without
 // dragging - 1.0 (browser default) reads too fast to follow along with.
-const SPEECH_RATE = 0.82;
+const SPEECH_RATE = 0.7;
+const SPEECH_LANG = "en-GB";
+
+let cachedVoices: SpeechSynthesisVoice[] = [];
+
+function pickVoice(): SpeechSynthesisVoice | null {
+  if (!("speechSynthesis" in window)) return null;
+  const voices = window.speechSynthesis.getVoices();
+  if (voices.length) cachedVoices = voices;
+  const pool = cachedVoices.length ? cachedVoices : voices;
+
+  // Prefer an explicit British English voice; most platforms ship at least
+  // one (e.g. "Google UK English Female", "Daniel", "Kate", "Serena").
+  const gb = pool.filter((v) => v.lang?.toLowerCase() === "en-gb");
+  if (gb.length === 0) return null;
+  return gb.find((v) => /female|kate|serena/i.test(v.name)) ?? gb[0];
+}
 
 function getWordRange(text: string, charIndex: number, charLength?: number): [number, number] {
   const start = Math.max(0, Math.min(charIndex, text.length));
@@ -99,6 +115,14 @@ export default function AvatarChat({
     const SpeechRecognitionCtor = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setSpeechInputSupported(Boolean(SpeechRecognitionCtor));
+
+    // Voice lists load asynchronously in most browsers - warm the cache now
+    // so the first line spoken already has a chance to use a UK voice
+    // instead of falling back to the system default.
+    if ("speechSynthesis" in window) {
+      pickVoice();
+      window.speechSynthesis.onvoiceschanged = () => pickVoice();
+    }
   }, []);
 
   useEffect(() => {
@@ -111,8 +135,10 @@ export default function AvatarChat({
       return;
     }
     const utterance = new SpeechSynthesisUtterance(text);
-    utterance.lang = "en-IN";
+    utterance.lang = SPEECH_LANG;
     utterance.rate = SPEECH_RATE;
+    const voice = pickVoice();
+    if (voice) utterance.voice = voice;
     utterance.onboundary = (event) => {
       if (event.name === "sentence") return;
       const charLength = (event as unknown as { charLength?: number }).charLength;
