@@ -88,8 +88,6 @@ export interface CurriculumUnit {
     note: string;
   };
   unit_status: "in_progress" | "complete";
-  /** Paths under /public to the family's own scanned textbook pages for this unit, if provided. */
-  page_images?: string[];
   concepts: Concept[];
   remaining_unit_outline: OutlineConcept[];
   unit_mastery_checklist: UnitMasteryChecklist;

@@ -95,6 +95,12 @@ front of real kids quickly - not a hardened multi-tenant product yet. Specifical
   flow stabilizes.
 - **No CI pipeline yet.** `npm run build`, `npm test`, and `npm run lint` all pass
   locally as of this commit, but nothing runs them automatically on push.
+- **Uploaded textbook page photos are written to the local filesystem** (`public/uploads/`,
+  gitignored - personal copyrighted scans never get pushed to GitHub). This works
+  fine for local/dev use, but Vercel's serverless filesystem is ephemeral - uploads
+  would NOT persist there. Before deploying to Vercel, swap the upload route
+  (`app/api/pages/upload/route.ts`) to write to real object storage (e.g. Vercel
+  Blob or S3) instead of `fs.writeFile`.
 
 ## Deployment
 

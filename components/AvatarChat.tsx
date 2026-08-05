@@ -45,6 +45,33 @@ function buildTeachingScript(concept: Concept): string[] {
   return script;
 }
 
+// A slower-than-default pace reads clearly for a 9-10 year old without
+// dragging - 1.0 (browser default) reads too fast to follow along with.
+const SPEECH_RATE = 0.82;
+
+function getWordRange(text: string, charIndex: number, charLength?: number): [number, number] {
+  const start = Math.max(0, Math.min(charIndex, text.length));
+  if (charLength && charLength > 0) {
+    return [start, Math.min(start + charLength, text.length)];
+  }
+  let end = start;
+  while (end < text.length && !/\s/.test(text[end])) end++;
+  if (end === start) end = Math.min(start + 1, text.length);
+  return [start, end];
+}
+
+function HighlightedText({ text, range }: { text: string; range: [number, number] | null }) {
+  if (!range || range[0] >= text.length) return <>{text}</>;
+  const [start, end] = range;
+  return (
+    <>
+      {text.slice(0, start)}
+      <mark className="rounded bg-yellow-300 px-0.5 text-slate-900">{text.slice(start, end)}</mark>
+      {text.slice(end)}
+    </>
+  );
+}
+
 export default function AvatarChat({
   unitKey,
   concept,
@@ -55,6 +82,8 @@ export default function AvatarChat({
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [readyForInput, setReadyForInput] = useState(false);
   const [speaking, setSpeaking] = useState(false);
+  const [speakingMessageId, setSpeakingMessageId] = useState<string | null>(null);
+  const [highlightRange, setHighlightRange] = useState<[number, number] | null>(null);
   const [inputText, setInputText] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -76,6 +105,36 @@ export default function AvatarChat({
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
   }, [messages]);
 
+  function speakText(text: string, messageId: string, onDone: () => void) {
+    if (!(readAloud && "speechSynthesis" in window)) {
+      setTimeout(onDone, 1400);
+      return;
+    }
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = "en-IN";
+    utterance.rate = SPEECH_RATE;
+    utterance.onboundary = (event) => {
+      if (event.name === "sentence") return;
+      const charLength = (event as unknown as { charLength?: number }).charLength;
+      setHighlightRange(getWordRange(text, event.charIndex, charLength));
+    };
+    utterance.onend = () => {
+      setSpeaking(false);
+      setSpeakingMessageId(null);
+      setHighlightRange(null);
+      onDone();
+    };
+    utterance.onerror = () => {
+      setSpeaking(false);
+      setSpeakingMessageId(null);
+      setHighlightRange(null);
+      onDone();
+    };
+    setSpeaking(true);
+    setSpeakingMessageId(messageId);
+    window.speechSynthesis.speak(utterance);
+  }
+
   useEffect(() => {
     const myToken = playTokenRef.current + 1;
     playTokenRef.current = myToken;
@@ -88,29 +147,17 @@ export default function AvatarChat({
     setMessages([]);
     setReadyForInput(false);
     setSpeaking(false);
+    setSpeakingMessageId(null);
+    setHighlightRange(null);
     /* eslint-enable react-hooks/set-state-in-effect */
     window.speechSynthesis?.cancel();
 
     const script = buildTeachingScript(concept);
     let cancelled = false;
 
-    function speak(text: string, onDone: () => void) {
-      if (readAloud && "speechSynthesis" in window) {
-        const utterance = new SpeechSynthesisUtterance(text);
-        utterance.lang = "en-IN";
-        utterance.onend = onDone;
-        utterance.onerror = onDone;
-        setSpeaking(true);
-        window.speechSynthesis.speak(utterance);
-      } else {
-        setTimeout(onDone, 1100);
-      }
-    }
-
     function playStep(index: number) {
       if (cancelled || playTokenRef.current !== myToken) return;
       if (index >= script.length) {
-        setSpeaking(false);
         const checkIn =
           concept.voice_qa_samples?.[0]?.question ??
           "Want to try answering a quick question, or ask me anything about this?";
@@ -118,10 +165,10 @@ export default function AvatarChat({
         setReadyForInput(true);
         return;
       }
-      setMessages((prev) => [...prev, { id: nextId(), sender: "avatar", text: script[index] }]);
-      speak(script[index], () => {
+      const id = nextId();
+      setMessages((prev) => [...prev, { id, sender: "avatar", text: script[index] }]);
+      speakText(script[index], id, () => {
         if (cancelled || playTokenRef.current !== myToken) return;
-        setSpeaking(false);
         playStep(index + 1);
       });
     }
@@ -157,15 +204,9 @@ export default function AvatarChat({
       }
 
       const data = (await res.json()) as { answer: string };
-      setMessages((prev) => [...prev, { id: nextId(), sender: "avatar", text: data.answer }]);
-
-      if (readAloud && "speechSynthesis" in window) {
-        const utterance = new SpeechSynthesisUtterance(data.answer);
-        utterance.lang = "en-IN";
-        utterance.onstart = () => setSpeaking(true);
-        utterance.onend = () => setSpeaking(false);
-        window.speechSynthesis.speak(utterance);
-      }
+      const answerId = nextId();
+      setMessages((prev) => [...prev, { id: answerId, sender: "avatar", text: data.answer }]);
+      speakText(data.answer, answerId, () => {});
     } catch (e) {
       setError(e instanceof Error ? e.message : "Something went wrong.");
     } finally {
@@ -222,25 +263,25 @@ export default function AvatarChat({
         <div ref={scrollRef} className="flex max-h-[420px] flex-col gap-3 overflow-y-auto p-4">
           {messages.map((m) =>
             m.sender === "avatar" ? (
-              <div key={m.id} className="flex items-start gap-2">
-                <Avatar speaking={false} />
+              <div key={m.id} className="message-enter flex items-start gap-2">
+                <Avatar speaking={m.id === speakingMessageId} />
                 <div className="rounded-2xl rounded-tl-sm bg-white px-4 py-2 text-sm leading-relaxed text-slate-800 shadow-sm">
-                  {m.text}
+                  <HighlightedText text={m.text} range={m.id === speakingMessageId ? highlightRange : null} />
                 </div>
               </div>
             ) : (
-              <div key={m.id} className="flex justify-end">
+              <div key={m.id} className="message-enter flex justify-end">
                 <div className="rounded-2xl rounded-tr-sm bg-blue-600 px-4 py-2 text-sm leading-relaxed text-white shadow-sm">
                   {m.text}
                 </div>
               </div>
             )
           )}
-          {(loading || speaking) && (
+          {loading && (
             <div className="flex items-center gap-2">
               <Avatar speaking />
               <div className="rounded-2xl rounded-tl-sm bg-white px-4 py-2 text-sm text-slate-400 shadow-sm">
-                {loading ? "Thinking..." : "..."}
+                Thinking...
               </div>
             </div>
           )}
@@ -297,10 +338,17 @@ export default function AvatarChat({
             </button>
           </div>
 
-          <label className="mt-2 flex items-center gap-2 text-xs text-slate-500">
-            <input type="checkbox" checked={readAloud} onChange={(e) => setReadAloud(e.target.checked)} />
-            Read aloud
-          </label>
+          <div className="mt-2 flex items-center justify-between">
+            <label className="flex items-center gap-2 text-xs text-slate-500">
+              <input type="checkbox" checked={readAloud} onChange={(e) => setReadAloud(e.target.checked)} />
+              Read aloud
+            </label>
+            {speaking && (
+              <span className="flex items-center gap-1 text-xs text-blue-600">
+                <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-blue-600" /> reading...
+              </span>
+            )}
+          </div>
 
           {error && <p className="mt-2 text-sm text-red-600">{error}</p>}
         </div>

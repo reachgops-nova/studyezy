@@ -24,6 +24,11 @@ dist/
 # vercel
 .vercel
 
+# uploaded textbook page scans - personal copyrighted material, stays local
+# only, never pushed to GitHub even though this repo is currently private
+public/uploads/*
+!public/uploads/.gitkeep
+
 # misc
 .DS_Store
 *.pem

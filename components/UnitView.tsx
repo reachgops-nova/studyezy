@@ -12,19 +12,25 @@ export default function UnitView({
   unit,
   unitKey,
   profileId,
+  initialPageImages,
 }: {
   unit: CurriculumUnit;
   unitKey: string;
   profileId: string;
+  initialPageImages: string[];
 }) {
   const [stage, setStage] = useState<Stage>("overview");
   const [selectedId, setSelectedId] = useState(unit.concepts[0]?.concept_id);
+  const [pageImages, setPageImages] = useState(initialPageImages);
   const selected = unit.concepts.find((c) => c.concept_id === selectedId);
 
   if (stage === "overview") {
     return (
       <UnitOverview
         unit={unit}
+        unitKey={unitKey}
+        pageImages={pageImages}
+        onPageImagesUploaded={(newPaths) => setPageImages((prev) => [...prev, ...newPaths])}
         onStartDiagnostic={() => setStage("diagnostic")}
         onSkipToTeaching={() => setStage("lesson")}
       />

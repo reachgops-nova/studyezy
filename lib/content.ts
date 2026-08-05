@@ -1,4 +1,6 @@
 import "server-only";
+import { readdir } from "node:fs/promises";
+import path from "node:path";
 import type { CurriculumUnit } from "./types";
 import unit1English from "@/content/curricula/igcse/stage5/english/unit-1.json";
 
@@ -20,4 +22,22 @@ export function getUnit(
 
 export function unitKey(curriculumId: string, stageId: number, subjectId: string, unitId: number) {
   return `${curriculumId}-${stageId}-${subjectId}-${unitId}`;
+}
+
+/**
+ * Textbook page photos a parent uploaded via the Unit Overview screen.
+ * Stored under public/uploads/{unitKey}/ - see app/api/pages/upload.
+ * Returns [] if nothing has been uploaded for this unit yet.
+ */
+export async function getUploadedPageImages(key: string): Promise<string[]> {
+  const dir = path.join(process.cwd(), "public", "uploads", key);
+  try {
+    const files = await readdir(dir);
+    return files
+      .filter((f) => !f.startsWith("."))
+      .sort()
+      .map((f) => `/uploads/${key}/${f}`);
+  } catch {
+    return [];
+  }
 }

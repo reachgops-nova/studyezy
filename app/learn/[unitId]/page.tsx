@@ -1,7 +1,7 @@
 import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
 import { getActiveProfile } from "@/lib/auth";
-import { getUnit } from "@/lib/content";
+import { getUnit, getUploadedPageImages } from "@/lib/content";
 import UnitView from "@/components/UnitView";
 
 export default async function LearnPage({ params }: { params: Promise<{ unitId: string }> }) {
@@ -14,6 +14,8 @@ export default async function LearnPage({ params }: { params: Promise<{ unitId: 
   const [curriculumId, stageIdStr, subjectId, unitIdStr] = parts;
   const unit = getUnit(curriculumId, Number(stageIdStr), subjectId, Number(unitIdStr));
   if (!unit) notFound();
+
+  const pageImages = await getUploadedPageImages(unitId);
 
   return (
     <main className="grid gap-6">
@@ -37,7 +39,7 @@ export default async function LearnPage({ params }: { params: Promise<{ unitId: 
         </Link>
       </header>
 
-      <UnitView unit={unit} unitKey={unitId} profileId={profile.id} />
+      <UnitView unit={unit} unitKey={unitId} profileId={profile.id} initialPageImages={pageImages} />
     </main>
   );
 }
