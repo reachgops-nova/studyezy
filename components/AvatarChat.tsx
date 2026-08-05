@@ -59,6 +59,23 @@ const PAUSE_PROMPTS = [
   "All good? Say the word and we'll keep going.",
 ];
 
+const CONTINUE_ACKS = ["Great, let's keep going!", "Awesome, moving on!", "Nice, here we go!"];
+const REPEAT_ACKS = ["No problem, let me explain that again.", "Sure, here it is again."];
+
+// Recognizes natural replies to a checkpoint pause ("okay", "got it", "again?")
+// without needing an AI call - this is what lets typing/saying a normal
+// response act like tapping the pause buttons, instead of always being sent
+// off as a real question.
+const REPEAT_INTENT = /\b(again|repeat|didn'?t (get|catch|understand)|not clear|confused|explain again|don'?t (get|understand)|what does that mean|come again|one more time|slower)\b/i;
+const CONTINUE_INTENT = /\b(ok(ay)?|yes|yeah|yep|yup|got it|good|fine|sure|continue|next|go on|keep going|ready|understood|makes sense|i (understand|get it)|alright)\b/i;
+
+function matchCheckpointIntent(text: string): "continue" | "repeat" | null {
+  const t = text.trim().toLowerCase();
+  if (REPEAT_INTENT.test(t)) return "repeat";
+  if (CONTINUE_INTENT.test(t)) return "continue";
+  return null;
+}
+
 // A slower-than-default pace reads clearly for a 9-10 year old without
 // dragging - 1.0 (browser default) reads too fast to follow along with.
 const SPEECH_RATE = 0.7;
@@ -260,16 +277,24 @@ export default function AvatarChat({
 
   function handleContinueCheckpoint() {
     window.speechSynthesis?.cancel();
+    setAwaitingContinue(false);
+    const ack = CONTINUE_ACKS[checkpointIndex % CONTINUE_ACKS.length];
+    const ackId = nextId();
+    setMessages((prev) => [...prev, { id: ackId, sender: "avatar", text: ack }]);
     const nextIndex = checkpointIndex + 1;
     setCheckpointIndex(nextIndex);
-    setAwaitingContinue(false);
-    playCheckpoint(nextIndex, playTokenRef.current);
+    const token = playTokenRef.current;
+    speakText(ack, ackId, () => playCheckpoint(nextIndex, token));
   }
 
   function handleRepeatCheckpoint() {
     window.speechSynthesis?.cancel();
     setAwaitingContinue(false);
-    playCheckpoint(checkpointIndex, playTokenRef.current);
+    const ack = REPEAT_ACKS[checkpointIndex % REPEAT_ACKS.length];
+    const ackId = nextId();
+    setMessages((prev) => [...prev, { id: ackId, sender: "avatar", text: ack }]);
+    const token = playTokenRef.current;
+    speakText(ack, ackId, () => playCheckpoint(checkpointIndex, token));
   }
 
   async function sendMessage(text: string) {
@@ -278,6 +303,22 @@ export default function AvatarChat({
 
     setMessages((prev) => [...prev, { id: nextId(), sender: "kid", text: trimmed }]);
     setInputText("");
+
+    // A natural "okay" / "again?" style reply during a checkpoint pause acts
+    // like tapping the pause buttons - no need to send it off as a real
+    // question (and no AI call needed, so this works even without credits).
+    if (awaitingContinue) {
+      const intent = matchCheckpointIntent(trimmed);
+      if (intent === "continue") {
+        handleContinueCheckpoint();
+        return;
+      }
+      if (intent === "repeat") {
+        handleRepeatCheckpoint();
+        return;
+      }
+    }
+
     setLoading(true);
     setError(null);
 
