@@ -21,12 +21,14 @@ export default function UnitOverview({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
+  const [uploadSuccess, setUploadSuccess] = useState<string | null>(null);
 
   async function handleFilesSelected(files: FileList | null) {
     if (!files || files.length === 0) return;
 
     setUploading(true);
     setUploadError(null);
+    setUploadSuccess(null);
 
     const formData = new FormData();
     formData.append("unitKey", unitKey);
@@ -40,6 +42,10 @@ export default function UnitOverview({
       }
       const data = (await res.json()) as { saved: string[] };
       onPageImagesUploaded(data.saved);
+      setUploadSuccess(
+        data.saved.length === 1 ? "Added 1 photo below." : `Added ${data.saved.length} photos below.`
+      );
+      setTimeout(() => setUploadSuccess(null), 4000);
     } catch (e) {
       setUploadError(e instanceof Error ? e.message : "Upload failed - please try again.");
     } finally {
@@ -78,13 +84,17 @@ export default function UnitOverview({
             type="file"
             accept="image/*"
             multiple
-            capture="environment"
             className="hidden"
             onChange={(e) => handleFilesSelected(e.target.files)}
           />
         </div>
+        <p className="mt-1 text-xs text-slate-400">
+          Tap &ldquo;+ Add photos&rdquo; to open your photo picker - choose one or more pages and they&apos;ll
+          upload automatically, no extra confirm step needed.
+        </p>
 
         {uploadError && <p className="mt-2 text-sm text-red-600">{uploadError}</p>}
+        {uploadSuccess && <p className="mt-2 text-sm text-green-600">✓ {uploadSuccess}</p>}
 
         {pageImages.length > 0 ? (
           <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3">
