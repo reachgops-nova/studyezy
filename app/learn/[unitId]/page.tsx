@@ -1,7 +1,7 @@
 import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
 import { getActiveProfile } from "@/lib/auth";
-import { getUnit, getUploadedPageImages } from "@/lib/content";
+import { getUnit, getUnitWithGeneratedContent, getUploadedPageImages } from "@/lib/content";
 import UnitView from "@/components/UnitView";
 
 export default async function LearnPage({ params }: { params: Promise<{ unitId: string }> }) {
@@ -12,8 +12,9 @@ export default async function LearnPage({ params }: { params: Promise<{ unitId: 
   const parts = unitId.split("-");
   if (parts.length !== 4) notFound();
   const [curriculumId, stageIdStr, subjectId, unitIdStr] = parts;
-  const unit = getUnit(curriculumId, Number(stageIdStr), subjectId, Number(unitIdStr));
-  if (!unit) notFound();
+  const baseUnit = getUnit(curriculumId, Number(stageIdStr), subjectId, Number(unitIdStr));
+  if (!baseUnit) notFound();
+  const unit = await getUnitWithGeneratedContent(baseUnit, unitId);
 
   const pageImages = await getUploadedPageImages(unitId);
 

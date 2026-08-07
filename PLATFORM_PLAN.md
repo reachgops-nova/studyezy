@@ -6,16 +6,16 @@
 ## STATUS TRACKER
 *Updated every time a decision, feature, or milestone changes. This section is the source of truth for "where are we right now" — check here first.*
 
-**Last updated:** 2026-08-06
+**Last updated:** 2026-08-07
 
-**Where we are, in one line:** A working, interactive, voice-led pilot app for Unit 1 English (concepts 1.1–1.3) is built, tested, and pushed to GitHub — see the Feature Status list right below for the full breakdown of what's done vs. pending. Dev server runs locally at localhost:3000 for direct testing.
+**Where we are, in one line:** A working, interactive, voice-led pilot app for Unit 1 English is built, tested, and pushed to GitHub — concepts 1.1–1.3 are hand-authored, and a page-extraction pipeline now exists to fill in 1.4–1.13 automatically from uploaded photos. See the Feature Status list right below for the full breakdown of what's done vs. pending. Dev server runs locally at localhost:3000 for direct testing.
 
 **Standing workflow (agreed 2026-08-06):** every code change gets committed and pushed to GitHub automatically as part of doing the work — no need to ask each time. Push credentials are cached in this Mac's Keychain (see changelog, 2026-08-05 night entry) so this happens without friction.
 
 **Currently blocked on / waiting for:**
-- Anthropic account credit top-up so voice Q&A and grading return real answers instead of the graceful fallback message
-- User to actually try the photo upload feature with real textbook page photos (feature is built and tested, just not used with real content yet)
-- Priority call: build out concepts 1.4–1.13 to finish Unit 1, vs. deploying the current build to Vercel now for real device testing on just 1.1–1.3
+- Anthropic account credit top-up so voice Q&A, grading, and the new extraction pipeline all return real results instead of the graceful fallback message (request shapes for all three are confirmed correct — same credit-balance error, not a code bug)
+- User to actually try the photo upload + extraction feature with real textbook page photos for concepts 1.4 onward
+- Priority call: use extraction to finish out Unit 1, vs. deploying the current build to Vercel now for real device testing on what's already built
 
 ---
 
@@ -36,10 +36,11 @@
 - **Progression test** — MCQ + AI-graded short answer, adaptive mastery banding (mastered / needs brush-up / needs reteach), adaptive retest-date suggestion
 - **Dashboard** — per-concept mastery breakdown, stored in browser localStorage per profile
 - **Content** — Unit 1 English concepts 1.1–1.3 fully written (Features of a fable, Implicit meaning, Explicit meaning), sourced from the family's own scanned textbook as original writing, not copied text
+- **Page-extraction pipeline** — a parent uploads textbook pages, taps "Extract lesson content from these pages" (Unit Overview screen), and Claude reads the photos to write original definitions/key points/examples/tips/sample Q&A for whichever "coming soon" concepts there's enough material for. Uses `claude-sonnet-5` specifically (better than the interactive-call model, since this becomes real curriculum content and runs rarely, not per-interaction), with prompt caching on the static instructions and an explicit no-copying instruction in the prompt. Extracted concepts get the real uploaded page as their illustration instead of a placeholder SVG, and merge automatically into the unit alongside the hand-authored ones.
 - **Security/quality baseline** — server-side-only API key handling, in-memory rate limiting, input validation on all API routes, `npm audit` clean, secrets and uploads gitignored, Vitest unit tests passing, clean build/lint
 
 ### ⏳ Pending / not built yet
-- **Unit 1 concepts 1.4–1.13** — currently stubbed "coming soon" in the sidebar
+- **Unit 1 concepts 1.4–1.13** — extraction pipeline exists to fill these in, but nothing has actually been extracted yet (no real pages uploaded for them, and Anthropic credit is needed to run it live)
 - **Units 2–9** for English Stage 5, and **any Math/other-subject content** — not started (Math was the original plan but paused since that textbook isn't in hand yet)
 - **Reasoning Interview** (plan §2.4) — voice follow-up after a test to classify *why* an answer was wrong (conceptual gap vs. careless slip vs. misread question), not just score it
 - **Written Exam Capture & Coaching** (plan §2.5) — photograph a real handwritten paper, get exam-technique feedback (structure, working shown, time use) with marks shown last
@@ -209,6 +210,8 @@ After that: extend the same loop to Unit 2, then decide whether to add a second 
 
 ## CHANGELOG
 *Newest first. One entry per meaningful change — new feature, scope decision, milestone hit, or pivot.*
+
+**2026-08-07** — Built the page-extraction pipeline: `app/api/pages/extract/route.ts` sends a unit's uploaded photos + its list of "coming soon" concepts to Claude, which returns original (not copied) definitions/key points/examples/tips/sample Q&A for whichever concepts the photos support, tagged with which photo best illustrates each one. New `lib/generatedContent.ts` persists this per unit; `getUnitWithGeneratedContent()` in `lib/content.ts` merges it into the unit at read time, moving matched concepts out of "coming soon". Added an "Extract lesson content from these pages" button to the Unit Overview screen. Deliberately used `claude-sonnet-5` for this call specifically (vs. the cheaper `claude-haiku-4-5` used for interactive Q&A/grading) since extraction output becomes real curriculum content and runs rarely, not per-interaction — plus prompt caching on the static instruction portion of the system prompt, since it's identical across calls. This required upgrading `@anthropic-ai/sdk` from a stale `0.32.1` pin to `0.115.0` - the old version's TypeScript types didn't support `cache_control` or `output_config.effort`. Verified the request plumbing end-to-end via curl (auth → unit lookup → image read → API call) - reaches the Anthropic API correctly and fails with the same "credit balance too low" error as the other endpoints, confirming no code-level bug, just the same pending credit top-up. `npm audit` still clean after the SDK bump. Build/lint/tests pass.
 
 **2026-08-06 (later)** — Added a consolidated FEATURE STATUS section (built vs. pending, full inventory) per request to see everything done so far and what's left, in one place instead of scattered across changelog entries. Also formalized push-every-change as the standing workflow going forward - no longer something to ask about each time.
 

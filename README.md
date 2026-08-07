@@ -48,24 +48,37 @@ real login system, see "Security notes" below for why that's intentional right n
 app/                    Next.js App Router pages + API routes
   login/                Demo profile picker (server action sets a cookie)
   select/                Curriculum -> stage -> subject -> unit picker
-  learn/[unitId]/        Concept viewer + voice Q&A
+  learn/[unitId]/        Unit overview, diagnostic, avatar-led lesson
   test/[unitId]/         Progression test
   dashboard/              Per-concept mastery view
   api/ask/                Curriculum-aware Q&A (calls Claude, server-side only)
   api/grade/              Short-answer grading against the mark scheme
+  api/pages/upload/       Parent-uploaded textbook page photos -> public/uploads/
+  api/pages/extract/      Turns uploaded photos into structured lesson concepts
 lib/                     Types, content loading, mastery/scoring logic, auth, Claude client
-content/curricula/       Curriculum content as JSON (source-referenced, not copied text)
-components/              Client components (selector, voice Q&A, test runner, dashboard)
+content/curricula/       Hand-authored curriculum content as JSON (source-referenced, not copied text)
+content/generated/       AI-extracted concepts from uploaded photos (gitignored images, tracked text)
+components/              Client components (selector, avatar chat, test runner, dashboard)
 tests/                   Vitest unit tests
 ```
 
 ## Content sourcing
 
-Content in `content/curricula/` is original writing aligned to the family's own
-physical textbook's topics and page structure (Hodder Education, Cambridge Primary
-English Learner's Book 5) - no text is reproduced from the book itself. See the
-`source_reference.note` field in each unit JSON file and PLATFORM_PLAN.md section 3
-for the reasoning.
+Content comes from two paths, both original writing aligned to the family's own
+physical textbook (Hodder Education, Cambridge Primary English Learner's Book 5) -
+no text is reproduced from the book itself either way:
+
+- **Hand-authored** (`content/curricula/`) - concepts 1.1-1.3, written directly from
+  photos shared in chat during initial development.
+- **AI-extracted** (`content/generated/`, created at runtime) - a parent uploads
+  textbook page photos via the Unit Overview screen, then "Extract lesson content"
+  sends them to Claude (`claude-sonnet-5` - a better model than the interactive Q&A
+  calls, since this becomes the actual curriculum content and runs rarely) with an
+  explicit instruction to write original explanations, not copy the page text. See
+  `lib/claude.ts` → `extractConceptsFromPages` for the prompt.
+
+See the `source_reference.note` field in each unit JSON file and PLATFORM_PLAN.md
+section 3 for the copyright reasoning.
 
 ## Known gaps (read before treating this as production-ready)
 
@@ -82,10 +95,10 @@ front of real kids quickly - not a hardened multi-tenant product yet. Specifical
 - **Rate limiting is in-memory**, per server process. It resets on every deploy and
   doesn't coordinate across serverless instances. Adequate for a single Vercel preview
   during the pilot; replace with a durable store (e.g. Upstash Redis) before scaling.
-- **Only Unit 1 concepts 1.1-1.3 are fully built.** The rest of Unit 1 (1.4-1.13) and
-  every other unit/subject/stage are stubbed as "coming soon" in the catalog - this is
-  intentional per the plan's "start with what's needed for the pilot" approach, not an
-  oversight.
+- **Only Unit 1 concepts 1.1-1.3 are hand-authored.** The rest of Unit 1 (1.4-1.13) and
+  every other unit/subject/stage are stubbed as "coming soon" - a parent can now fill
+  these in via the page-extraction pipeline (upload photos -> "Extract lesson content"
+  on the Unit Overview screen), but nothing has been extracted yet at time of writing.
 - **Short-answer grading is single-pass AI grading with no human review loop yet.**
   Per PLATFORM_PLAN.md's "understand thought process" goal, the Reasoning Interview
   and Written Exam Capture & Coaching features described in the plan are not yet
@@ -95,6 +108,12 @@ front of real kids quickly - not a hardened multi-tenant product yet. Specifical
   flow stabilizes.
 - **No CI pipeline yet.** `npm run build`, `npm test`, and `npm run lint` all pass
   locally as of this commit, but nothing runs them automatically on push.
+- **Extracted content has no human review step.** `/api/pages/extract` writes straight
+  to `content/generated/{unitKey}.json` and it's immediately live in the lesson - worth
+  spot-checking extracted concepts against the real textbook before a kid sees them,
+  same as the hand-authored content already was. Not yet verified against a real API
+  response either (no Anthropic credit at time of writing - request shape confirmed
+  correct via the same credit-balance error path as `/api/ask`).
 - **Uploaded textbook page photos are written to the local filesystem** (`public/uploads/`,
   gitignored - personal copyrighted scans never get pushed to GitHub). This works
   fine for local/dev use, but Vercel's serverless filesystem is ephemeral - uploads

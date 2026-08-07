@@ -18,6 +18,8 @@ export interface MarkScheme {
 export interface ConceptMedia {
   /** Key into the built-in illustration set in components/illustrations.tsx - original artwork, not scanned from the book. */
   illustration_key?: string;
+  /** A real uploaded textbook page photo (/uploads/{unitKey}/...) - takes priority over illustration_key when set, since it's the actual source page. */
+  source_image_path?: string;
   illustration_caption?: string;
   /** Real video needs a licensed/production content pipeline - not built yet, so the UI shows a clearly-labeled placeholder instead. */
   video_status: "not_planned" | "coming_soon";
@@ -37,6 +39,8 @@ export interface Concept {
   tips_to_remember?: string[];
   reasoning_interview_prompts?: string[];
   media?: ConceptMedia;
+  /** True for concepts filled in by the page-extraction pipeline rather than hand-authored. */
+  source?: "hand_authored" | "extracted";
 }
 
 export interface OutlineConcept {

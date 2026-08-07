@@ -1,8 +1,9 @@
 import "server-only";
 import { readdir } from "node:fs/promises";
 import path from "node:path";
-import type { CurriculumUnit } from "./types";
+import type { Concept, CurriculumUnit } from "./types";
 import unit1English from "@/content/curricula/igcse/stage5/english/unit-1.json";
+import { getGeneratedConcepts } from "./generatedContent";
 
 // Only real, populated units are registered here. Anything not listed is "coming soon"
 // per the catalog and should never be requested directly.
@@ -40,4 +41,27 @@ export async function getUploadedPageImages(key: string): Promise<string[]> {
   } catch {
     return [];
   }
+}
+
+/**
+ * Merges any concepts produced by the page-extraction pipeline (see
+ * app/api/pages/extract) into the base unit: matched outline stubs move
+ * from "coming soon" to real, drafted concepts. Returns a fresh object -
+ * never mutates the shared UNIT_REGISTRY entry.
+ */
+export async function getUnitWithGeneratedContent(unit: CurriculumUnit, key: string): Promise<CurriculumUnit> {
+  const generated = await getGeneratedConcepts(key);
+  if (generated.length === 0) return unit;
+
+  const generatedById = new Map(generated.map((c) => [c.concept_id, c]));
+  const stillOutline = unit.remaining_unit_outline.filter((o) => !generatedById.has(o.concept_id));
+  const newConcepts: Concept[] = unit.remaining_unit_outline
+    .filter((o) => generatedById.has(o.concept_id))
+    .map((o) => generatedById.get(o.concept_id) as Concept);
+
+  return {
+    ...unit,
+    concepts: [...unit.concepts, ...newConcepts],
+    remaining_unit_outline: stillOutline,
+  };
 }

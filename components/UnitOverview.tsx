@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import type { CurriculumUnit } from "@/lib/types";
 
 export default function UnitOverview({
@@ -18,10 +19,43 @@ export default function UnitOverview({
   onStartDiagnostic: () => void;
   onSkipToTeaching: () => void;
 }) {
+  const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [uploadSuccess, setUploadSuccess] = useState<string | null>(null);
+  const [extracting, setExtracting] = useState(false);
+  const [extractError, setExtractError] = useState<string | null>(null);
+  const [extractSuccess, setExtractSuccess] = useState<string | null>(null);
+
+  async function handleExtract() {
+    setExtracting(true);
+    setExtractError(null);
+    setExtractSuccess(null);
+
+    try {
+      const res = await fetch("/api/pages/extract", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ unitKey }),
+      });
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        throw new Error(body.error || "Couldn't extract content - please try again.");
+      }
+      const data = (await res.json()) as { extracted: { concept_id: string; concept_name: string }[] };
+      setExtractSuccess(
+        data.extracted.length === 1
+          ? `Added "${data.extracted[0].concept_name}".`
+          : `Added ${data.extracted.length} new concepts.`
+      );
+      router.refresh();
+    } catch (e) {
+      setExtractError(e instanceof Error ? e.message : "Couldn't extract content - please try again.");
+    } finally {
+      setExtracting(false);
+    }
+  }
 
   async function handleFilesSelected(files: FileList | null) {
     if (!files || files.length === 0) return;
@@ -115,6 +149,29 @@ export default function UnitOverview({
           </div>
         )}
       </div>
+
+      {unit.remaining_unit_outline.length > 0 && (
+        <div className="rounded-xl border border-slate-200 bg-white p-5">
+          <h2 className="text-lg font-semibold">Fill in the rest of the unit</h2>
+          <p className="mt-1 text-sm text-slate-600">
+            {pageImages.length > 0
+              ? `${unit.remaining_unit_outline.length} concept${
+                  unit.remaining_unit_outline.length === 1 ? "" : "s"
+                } still marked "coming soon" - Ezy can read the uploaded pages and write the lesson content for whichever ones there's enough material for.`
+              : "Add photos of this unit's remaining pages above, then come back here to fill in the rest of the unit automatically."}
+          </p>
+          <button
+            type="button"
+            onClick={handleExtract}
+            disabled={extracting || pageImages.length === 0}
+            className="mt-3 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
+          >
+            {extracting ? "Reading the pages..." : "Extract lesson content from these pages"}
+          </button>
+          {extractError && <p className="mt-2 text-sm text-red-600">{extractError}</p>}
+          {extractSuccess && <p className="mt-2 text-sm text-green-600">✓ {extractSuccess}</p>}
+        </div>
+      )}
 
       <div className="rounded-xl border border-test-border bg-test-bg p-5">
         <h2 className="text-lg font-semibold">Before we start...</h2>

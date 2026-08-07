@@ -1,6 +1,6 @@
 import "server-only";
 import Anthropic from "@anthropic-ai/sdk";
-import type { Concept, MarkScheme } from "./types";
+import type { Concept, ConceptMedia, MarkScheme, VoiceQASample } from "./types";
 
 let client: Anthropic | null = null;
 
@@ -17,7 +17,17 @@ function getClient(): Anthropic {
   return client;
 }
 
+// Cheap, fast model for the high-frequency, low-stakes interactive calls
+// (every voice question, every test answer) - cost matters more than extra
+// polish here, and Haiku is plenty for a 100-word grounded answer.
 const MODEL = process.env.ANTHROPIC_MODEL || "claude-haiku-4-5-20251001";
+
+// Better model for content extraction specifically: this runs rarely (once
+// per batch of uploaded pages, triggered by a parent, not per interaction)
+// but its output becomes the actual curriculum content taught to a real kid -
+// quality matters more than the marginal cost here, so it's worth the
+// upgrade from the interactive-call model.
+const EXTRACTION_MODEL = "claude-sonnet-5";
 
 const MAX_QUESTION_LENGTH = 500;
 
@@ -125,4 +135,121 @@ export async function gradeShortAnswer(
       feedback: "Couldn't grade this automatically - please review with a parent.",
     };
   }
+}
+
+export interface ExpectedConcept {
+  concept_id: string;
+  concept_name: string;
+  story_reference?: string;
+}
+
+export interface UploadedPageImage {
+  path: string; // public URL, e.g. /uploads/{unitKey}/xyz.jpg
+  mediaType: "image/jpeg" | "image/png" | "image/webp";
+  base64: string;
+}
+
+// Static instructional half of the extraction prompt - identical on every
+// call for a given unit, so it's worth a cache_control breakpoint: the
+// per-call variable part (which concepts are still missing) is appended
+// separately in the user turn, after the cached prefix.
+const EXTRACTION_SYSTEM_PROMPT = `You are structuring curriculum content for a voice-led English tutoring app for a Grade 5 (Cambridge Stage 5) student, from photos of their own textbook pages.
+
+CRITICAL - originality: Write your OWN explanations of what's shown in the photos, in your own words, the way a tutor would explain it out loud. Do NOT copy or closely paraphrase sentences directly from the page images - this becomes original teaching content, not a reproduction of the book.
+
+You will be given: (1) photos of textbook pages, and (2) a list of "expected concepts" the family's unit is known to cover (id, name, and optionally which story/section it comes from). For each expected concept that the photos actually contain enough material for, produce:
+- concept_id: copy exactly from the expected concept
+- concept_name: copy exactly from the expected concept
+- definition: 1-2 original sentences, grade-appropriate
+- key_points: 2-4 original bullet points
+- examples: 1-2 original examples (can reference the story context if relevant, but don't quote it verbatim)
+- tips_to_remember: 1 short original memory tip
+- voice_qa_samples: 2 short original question+answer pairs a curious kid might ask, with simple grade-appropriate answers
+- source_image_index: the 0-based index of the single uploaded photo that best represents this concept
+
+Skip any expected concept the photos don't contain enough material for - do not invent content for it.
+
+Respond with ONLY a JSON array matching this shape, no other text, no markdown fences:
+[{"concept_id": string, "concept_name": string, "definition": string, "key_points": string[], "examples": string[], "tips_to_remember": string[], "voice_qa_samples": [{"question": string, "answer": string}], "source_image_index": number}]`;
+
+interface RawExtractedConcept {
+  concept_id: string;
+  concept_name: string;
+  definition: string;
+  key_points: string[];
+  examples: string[];
+  tips_to_remember: string[];
+  voice_qa_samples: VoiceQASample[];
+  source_image_index: number;
+}
+
+/**
+ * Turns a parent's uploaded textbook page photos into structured lesson
+ * concepts, targeting whichever concepts a unit still has stubbed as
+ * "coming soon". This is what fills in the rest of a unit without needing
+ * every concept hand-authored - see app/api/pages/extract/route.ts.
+ */
+export async function extractConceptsFromPages(
+  images: UploadedPageImage[],
+  expected: ExpectedConcept[]
+): Promise<Concept[]> {
+  const response = await getClient().messages.create({
+    model: EXTRACTION_MODEL,
+    max_tokens: 8000,
+    output_config: { effort: "medium" },
+    system: [
+      {
+        type: "text",
+        text: EXTRACTION_SYSTEM_PROMPT,
+        cache_control: { type: "ephemeral" },
+      },
+    ],
+    messages: [
+      {
+        role: "user",
+        content: [
+          ...images.map((img) => ({
+            type: "image" as const,
+            source: { type: "base64" as const, media_type: img.mediaType, data: img.base64 },
+          })),
+          {
+            type: "text" as const,
+            text: `Expected concepts for this unit:\n${JSON.stringify(expected, null, 2)}`,
+          },
+        ],
+      },
+    ],
+  });
+
+  const textBlock = response.content.find((block) => block.type === "text");
+  const raw = textBlock && textBlock.type === "text" ? textBlock.text : "[]";
+
+  let parsed: RawExtractedConcept[];
+  try {
+    parsed = JSON.parse(raw) as RawExtractedConcept[];
+  } catch {
+    throw new Error("Couldn't understand the extracted content - please try again.");
+  }
+
+  return parsed
+    .filter((c) => images[c.source_image_index])
+    .map((c): Concept => {
+      const media: ConceptMedia = {
+        source_image_path: images[c.source_image_index].path,
+        illustration_caption: c.concept_name,
+        video_status: "coming_soon",
+      };
+      return {
+        concept_id: c.concept_id,
+        concept_name: c.concept_name,
+        status: "drafted",
+        source: "extracted",
+        definition: c.definition,
+        key_points: c.key_points,
+        examples: c.examples,
+        tips_to_remember: c.tips_to_remember,
+        voice_qa_samples: c.voice_qa_samples,
+        media,
+      };
+    });
 }

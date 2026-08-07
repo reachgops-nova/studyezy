@@ -374,14 +374,23 @@ export default function AvatarChat({
 
   return (
     <div className="grid gap-4">
-      {concept.media?.illustration_key && (
+      {(concept.media?.source_image_path || concept.media?.illustration_key) && (
         <div className="flex gap-3 rounded-xl border border-slate-200 bg-white p-3">
           <div className="h-24 w-40 shrink-0 overflow-hidden rounded-lg">
-            <Illustration illustrationKey={concept.media.illustration_key} />
+            {concept.media?.source_image_path ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={concept.media.source_image_path}
+                alt={concept.media.illustration_caption ?? concept.concept_name}
+                className="h-full w-full object-cover"
+              />
+            ) : (
+              <Illustration illustrationKey={concept.media!.illustration_key!} />
+            )}
           </div>
           <div className="flex flex-col justify-between">
-            <p className="text-sm text-slate-600">{concept.media.illustration_caption}</p>
-            {concept.media.video_status === "coming_soon" && (
+            <p className="text-sm text-slate-600">{concept.media?.illustration_caption}</p>
+            {concept.media?.video_status === "coming_soon" && (
               <span className="w-fit rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-slate-500">
                 🎬 Video coming soon
               </span>
