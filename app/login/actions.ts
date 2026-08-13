@@ -1,29 +1,28 @@
 "use server";
 
-import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
-import { DEMO_PROFILES, DEMO_PROFILE_COOKIE } from "@/lib/auth";
+import { db } from "@/lib/db";
+import { verifyPassword } from "@/lib/password";
+import { createSession, destroySession } from "@/lib/session";
+import { clearActiveProfile } from "@/lib/auth";
 
-export async function selectProfile(formData: FormData) {
-  const profileId = formData.get("profileId");
-  if (typeof profileId !== "string" || !DEMO_PROFILES.some((p) => p.id === profileId)) {
-    throw new Error("Unknown profile.");
+export async function authenticate(formData: FormData) {
+  const email = String(formData.get("email") ?? "").trim().toLowerCase();
+  const password = String(formData.get("password") ?? "");
+
+  const user = email ? await db.user.findUnique({ where: { email } }) : null;
+  const valid = user ? await verifyPassword(password, user.passwordHash) : false;
+
+  if (!user || !valid) {
+    redirect("/login?error=invalid_credentials");
   }
 
-  const store = await cookies();
-  store.set(DEMO_PROFILE_COOKIE, profileId, {
-    httpOnly: true,
-    sameSite: "lax",
-    secure: process.env.NODE_ENV === "production",
-    path: "/",
-    maxAge: 60 * 60 * 24 * 30,
-  });
-
-  redirect("/select");
+  await createSession(user.id);
+  redirect("/profiles");
 }
 
 export async function signOut() {
-  const store = await cookies();
-  store.delete(DEMO_PROFILE_COOKIE);
+  await destroySession();
+  await clearActiveProfile();
   redirect("/login");
 }

@@ -44,7 +44,7 @@ export async function POST(req: NextRequest) {
   }
 
   const [curriculumId, stageIdStr, subjectId, unitIdStr] = unitKey.split("-");
-  const unit = getUnit(curriculumId, Number(stageIdStr), subjectId, Number(unitIdStr));
+  const unit = await getUnit(curriculumId, Number(stageIdStr), subjectId, Number(unitIdStr));
   if (!unit) {
     return NextResponse.json({ error: "Unit not found." }, { status: 404 });
   }

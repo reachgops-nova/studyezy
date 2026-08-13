@@ -1,0 +1,205 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// --- accounts / auth ---
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  createdAt    DateTime @default(now())
+
+  sessions        Session[]
+  studentProfiles StudentProfile[]
+  uploadedPages   UploadedPage[]
+  createdSubjects Subject[] @relation("SubjectCreatedBy")
+  createdUnits    Unit[]    @relation("UnitCreatedBy")
+}
+
+model Session {
+  id        String   @id @default(cuid())
+  tokenHash String   @unique
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+}
+
+model StudentProfile {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  displayName String
+  avatarEmoji String   @default("🦊")
+  createdAt   DateTime @default(now())
+
+  testAttempts      TestAttempt[]
+  conceptMasteries  ConceptMastery[]
+  interactionEvents InteractionEvent[]
+}
+
+// --- curriculum hierarchy ---
+
+model Curriculum {
+  id     String  @id @default(cuid())
+  slug   String  @unique
+  name   String
+  stages Stage[]
+}
+
+model Stage {
+  id           String     @id @default(cuid())
+  curriculumId String
+  curriculum   Curriculum @relation(fields: [curriculumId], references: [id], onDelete: Cascade)
+  number       Int
+  label        String
+  available    Boolean    @default(false)
+  subjects     Subject[]
+
+  @@unique([curriculumId, number])
+}
+
+model Subject {
+  id              String   @id @default(cuid())
+  stageId         String
+  stage           Stage    @relation(fields: [stageId], references: [id], onDelete: Cascade)
+  slug            String
+  name            String
+  available       Boolean  @default(false)
+  createdByUserId String?
+  createdBy       User?    @relation("SubjectCreatedBy", fields: [createdByUserId], references: [id])
+  createdAt       DateTime @default(now())
+  units           Unit[]
+
+  @@unique([stageId, slug])
+}
+
+model Unit {
+  id                   String   @id @default(cuid())
+  subjectId            String
+  subject              Subject  @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  unitKey              String   @unique // e.g. "cambridge-5-english-1" - preserves current URL scheme
+  number               Int
+  title                String
+  board                String   @default("Cambridge") // exam board label, e.g. "Cambridge" - independent of the curriculum pathway name
+  available            Boolean  @default(false)
+  unitStatus           String   @default("in_progress") // "in_progress" | "complete"
+  sourcePublisher      String?
+  sourceTitle          String?
+  sourceAuthors        String[]
+  sourceSeriesEditors  String[]
+  sourceNote           String?
+  masteryChecklist     Json? // UnitMasteryChecklist passthrough
+  progressionTestDraft Json? // ProgressionTestDraft passthrough (MCQ/mark schemes as-is)
+  createdByUserId      String?
+  createdBy            User?    @relation("UnitCreatedBy", fields: [createdByUserId], references: [id])
+  createdAt            DateTime @default(now())
+
+  concepts      Concept[]
+  uploadedPages UploadedPage[]
+  testAttempts  TestAttempt[]
+
+  @@unique([subjectId, number])
+}
+
+model Concept {
+  id                        String   @id @default(cuid())
+  unitId                    String
+  unit                      Unit     @relation(fields: [unitId], references: [id], onDelete: Cascade)
+  conceptKey                String // matches concept_id, e.g. "1.1"
+  name                      String
+  status                    String   @default("outline") // "outline" | "drafted"
+  difficulty                String?
+  bookPages                 Int[]
+  storyReferenceTitle       String?
+  storyReferenceSynopsis    String?  @db.Text
+  definition                String?  @db.Text
+  keyPoints                 String[]
+  examples                  String[]
+  tipsToRemember            String[]
+  reasoningInterviewPrompts String[]
+  voiceQaSamples            Json?
+  illustrationKey           String?
+  sourceImagePath           String?
+  illustrationCaption       String?
+  videoStatus               String   @default("not_planned")
+  source                    String   @default("hand_authored") // "hand_authored" | "extracted"
+  orderIndex                Int      @default(0)
+  createdAt                 DateTime @default(now())
+  updatedAt                 DateTime @updatedAt
+
+  conceptMasteries  ConceptMastery[]
+  interactionEvents InteractionEvent[]
+
+  @@unique([unitId, conceptKey])
+}
+
+// --- uploads ---
+
+model UploadedPage {
+  id               String   @id @default(cuid())
+  unitId           String
+  unit             Unit     @relation(fields: [unitId], references: [id], onDelete: Cascade)
+  uploadedByUserId String
+  uploadedBy       User     @relation(fields: [uploadedByUserId], references: [id])
+  storageKey       String // relative path under UPLOADS_DIR, e.g. "cambridge-5-english-1/171...-ab12.jpg"
+  originalFilename String
+  mimeType         String
+  byteSize         Int
+  createdAt        DateTime @default(now())
+}
+
+// --- progress / mastery ---
+
+model TestAttempt {
+  id               String         @id @default(cuid())
+  studentProfileId String
+  studentProfile   StudentProfile @relation(fields: [studentProfileId], references: [id], onDelete: Cascade)
+  unitId           String
+  unit             Unit           @relation(fields: [unitId], references: [id], onDelete: Cascade)
+  attemptType      String         @default("progression_test") // "progression_test" | "diagnostic"
+  scorePct         Int
+  band             String // MasteryBand
+  perConcept       Json // Record<conceptId, {correct, total}>
+  nextReviewDate   DateTime
+  takenAt          DateTime       @default(now())
+
+  @@index([studentProfileId, unitId, takenAt])
+}
+
+model ConceptMastery {
+  id               String         @id @default(cuid())
+  studentProfileId String
+  studentProfile   StudentProfile @relation(fields: [studentProfileId], references: [id], onDelete: Cascade)
+  conceptId        String
+  concept          Concept        @relation(fields: [conceptId], references: [id], onDelete: Cascade)
+  lastScorePct     Int
+  band             String
+  attempts         Int            @default(0)
+  lastAttemptAt    DateTime
+  nextReviewDue    DateTime
+
+  @@unique([studentProfileId, conceptId])
+}
+
+// Foundation for future adaptive personalization - logging only, no adaptive
+// behavior-change logic built on top of this yet (deliberately deferred).
+model InteractionEvent {
+  id               String         @id @default(cuid())
+  studentProfileId String
+  studentProfile   StudentProfile @relation(fields: [studentProfileId], references: [id], onDelete: Cascade)
+  unitId           String?
+  conceptId        String?
+  concept          Concept?       @relation(fields: [conceptId], references: [id], onDelete: SetNull)
+  eventType        String // "voice_question" | "checkpoint_response" | "test_answer" | "diagnostic_answer"
+  payload          Json
+  createdAt        DateTime       @default(now())
+
+  @@index([studentProfileId, createdAt])
+}

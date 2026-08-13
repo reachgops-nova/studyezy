@@ -1,8 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import type { CurriculumUnit, TestQuestion } from "@/lib/types";
-import { recordTestResult, type StoredUnitResult } from "@/lib/progressStorage";
+import type { CurriculumUnit, StoredUnitResult, TestQuestion } from "@/lib/types";
+import { recordAttempt } from "@/lib/attempts";
 
 type Answer =
   | { type: "multiple_choice"; selected: number | null }
@@ -11,11 +11,9 @@ type Answer =
 export default function TestRunner({
   unit,
   unitKey,
-  profileId,
 }: {
   unit: CurriculumUnit;
   unitKey: string;
-  profileId: string;
 }) {
   const questions = unit.progression_test_draft.questions;
   const [answers, setAnswers] = useState<Answer[]>(
@@ -85,9 +83,18 @@ export default function TestRunner({
       }
     }
 
-    const stored = recordTestResult(profileId, unitKey, correctSum, questions.length, perConcept);
-    setResult(stored);
-    setSubmitting(false);
+    try {
+      const stored = await recordAttempt({
+        unitKey,
+        attemptType: "progression_test",
+        correct: correctSum,
+        total: questions.length,
+        perConcept,
+      });
+      setResult(stored);
+    } finally {
+      setSubmitting(false);
+    }
   }
 
   if (result) {

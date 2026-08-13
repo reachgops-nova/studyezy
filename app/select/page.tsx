@@ -1,13 +1,18 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { getActiveProfile } from "@/lib/auth";
-import { CATALOG } from "@/lib/catalog";
+import { getCurrentUser } from "@/lib/session";
+import { getCatalog } from "@/lib/catalog";
 import CurriculumSelector from "@/components/CurriculumSelector";
-import { signOut } from "@/app/login/actions";
 
 export default async function SelectPage() {
+  const user = await getCurrentUser();
+  if (!user) redirect("/login");
+
   const profile = await getActiveProfile();
-  if (!profile) redirect("/login");
+  if (!profile) redirect("/profiles");
+
+  const catalog = await getCatalog();
 
   return (
     <main className="grid gap-8">
@@ -15,18 +20,19 @@ export default async function SelectPage() {
         <div>
           <p className="text-sm text-slate-500">Signed in as</p>
           <p className="text-lg font-semibold">
-            {profile.avatar_emoji} {profile.display_name}
+            {profile.avatarEmoji} {profile.displayName}
           </p>
         </div>
         <div className="flex gap-3">
           <Link href="/dashboard" className="text-sm font-medium text-blue-600 hover:underline">
             Dashboard
           </Link>
-          <form action={signOut}>
-            <button type="submit" className="text-sm text-slate-500 hover:underline">
-              Switch profile
-            </button>
-          </form>
+          <Link href="/manage" className="text-sm font-medium text-blue-600 hover:underline">
+            + Add subject or unit
+          </Link>
+          <Link href="/profiles" className="text-sm text-slate-500 hover:underline">
+            Switch profile
+          </Link>
         </div>
       </header>
 
@@ -37,7 +43,7 @@ export default async function SelectPage() {
         </p>
       </div>
 
-      <CurriculumSelector catalog={CATALOG} />
+      <CurriculumSelector catalog={catalog} />
     </main>
   );
 }

@@ -6,24 +6,26 @@
 ## STATUS TRACKER
 *Updated every time a decision, feature, or milestone changes. This section is the source of truth for "where are we right now" — check here first.*
 
-**Last updated:** 2026-08-07
+**Last updated:** 2026-08-13
 
-**Where we are, in one line:** A working, interactive, voice-led pilot app for Unit 1 English is built, tested, and pushed to GitHub — concepts 1.1–1.3 are hand-authored, and a page-extraction pipeline now exists to fill in 1.4–1.13 automatically from uploaded photos. See the Feature Status list right below for the full breakdown of what's done vs. pending. Dev server runs locally at localhost:3000 for direct testing.
+**Where we are, in one line:** Moved from a zero-infra demo (hardcoded profiles, localStorage, static JSON content) to a real Postgres-backed app: real account registration, a DB-backed curriculum hierarchy that any signed-in user can extend with new subjects/units, server-side progress tracking, and Railway as the deploy target (switched from the originally-planned Vercel, since Railway's persistent Volumes solve the uploaded-photo storage problem directly). See FEATURE STATUS below for the full breakdown.
 
 **Standing workflow (agreed 2026-08-06):** every code change gets committed and pushed to GitHub automatically as part of doing the work — no need to ask each time. Push credentials are cached in this Mac's Keychain (see changelog, 2026-08-05 night entry) so this happens without friction.
 
 **Currently blocked on / waiting for:**
-- Anthropic account credit top-up so voice Q&A, grading, and the new extraction pipeline all return real results instead of the graceful fallback message (request shapes for all three are confirmed correct — same credit-balance error, not a code bug)
-- User to actually try the photo upload + extraction feature with real textbook page photos for concepts 1.4 onward
-- Priority call: use extraction to finish out Unit 1, vs. deploying the current build to Vercel now for real device testing on what's already built
+- Anthropic account credit top-up so voice Q&A, grading, and extraction all return real results instead of the graceful fallback message (request shapes confirmed correct — same credit-balance error, not a code bug)
+- Local Postgres for full migrate+seed+click-through verification — `brew install postgresql@16` is compiling several dependencies from source in this sandbox (no prebuilt bottle for this macOS/arch combo), so it's slow; code is verified via `tsc`, `next build`, `eslint`, and `vitest` in the meantime, all passing
+- User to run the Railway-side setup (login, Postgres plugin, Volume, GitHub App authorization — see README.md "Deployment") so the actual deploy + live click-through can happen
 
 ---
 
 ## FEATURE STATUS (full inventory)
 
 ### ✅ Built and working
-- **Demo login** — 3 no-password profiles, no real accounts (by design for a 1-3 kid pilot)
-- **Curriculum → Stage → Subject → Unit selector** — cascading picker; only Cambridge Stage 5 English Unit 1 is live, everything else marked "coming soon"
+- **Real accounts** — email/password registration and sign-in (`bcryptjs` hashing, DB-backed opaque session tokens in an httpOnly cookie), replacing the old 3-hardcoded-profile demo login. A registered account owns one or more kid **StudentProfiles**, switchable via `/profiles` without signing out.
+- **Postgres via Prisma** — the full curriculum hierarchy (Curriculum → Stage → Subject → Unit → Concept), accounts/sessions/profiles, progress/mastery history, and uploaded-page metadata all live in Postgres now (`prisma/schema.prisma`). `prisma/seed.ts` migrates the existing catalog + Unit 1 content losslessly.
+- **Add subjects/units through the app** — `/manage` lets any signed-in user add a new subject or unit (with an optional list of outline concepts), immediately available to practice — no separate admin role or review gate at this pilot scale.
+- **Curriculum → Stage → Subject → Unit selector** — cascading picker, now reading the live DB catalog instead of a hardcoded list; only Cambridge Stage 5 English Unit 1 has real content so far, everything else marked "coming soon" until filled in via extraction or hand-authoring.
 - **Unit Overview screen** — objectives in kid-facing language (pulled from the book's own "What can you do?" checklist) shown before any teaching starts
 - **Real photo upload** — parents upload textbook page photos via the native photo picker; saved server-side and displayed immediately; gitignored (personal copyrighted scans never reach GitHub)
 - **Diagnostic quick-check** — optional 3-question "how much do you already know?" quiz before teaching; scores per concept and recommends "You've got this" (skip) vs. "Review this" (teach) per concept — the original "brush up and skip mastered content" insight, now working at concept granularity
@@ -34,25 +36,28 @@
 - **Read-along highlighting** — the word currently being spoken is highlighted, synced via speech boundary events
 - **Original sample illustrations** — simple SVG art per concept (not scanned from the book) plus a labeled "video coming soon" placeholder
 - **Progression test** — MCQ + AI-graded short answer, adaptive mastery banding (mastered / needs brush-up / needs reteach), adaptive retest-date suggestion
-- **Dashboard** — per-concept mastery breakdown, stored in browser localStorage per profile
+- **Server-side progress tracking** — `POST /api/attempts` writes every test/diagnostic attempt to Postgres (`TestAttempt`), plus a per-concept `ConceptMastery` upsert (concept-granularity retest cadence, not just unit-level) — replaces browser localStorage, so progress now survives a cleared browser or a second device.
+- **Dashboard** — per-concept mastery breakdown, now a server component reading straight from Postgres
 - **Content** — Unit 1 English concepts 1.1–1.3 fully written (Features of a fable, Implicit meaning, Explicit meaning), sourced from the family's own scanned textbook as original writing, not copied text
-- **Page-extraction pipeline** — a parent uploads textbook pages, taps "Extract lesson content from these pages" (Unit Overview screen), and Claude reads the photos to write original definitions/key points/examples/tips/sample Q&A for whichever "coming soon" concepts there's enough material for. Uses `claude-sonnet-5` specifically (better than the interactive-call model, since this becomes real curriculum content and runs rarely, not per-interaction), with prompt caching on the static instructions and an explicit no-copying instruction in the prompt. Extracted concepts get the real uploaded page as their illustration instead of a placeholder SVG, and merge automatically into the unit alongside the hand-authored ones.
-- **Security/quality baseline** — server-side-only API key handling, in-memory rate limiting, input validation on all API routes, `npm audit` clean, secrets and uploads gitignored, Vitest unit tests passing, clean build/lint
+- **Page-extraction pipeline** — a parent uploads textbook pages, taps "Extract lesson content from these pages" (Unit Overview screen), and Claude reads the photos to write original definitions/key points/examples/tips/sample Q&A for whichever "coming soon" concepts there's enough material for, writing straight into the `Concept` table now (`status: outline → drafted`) instead of a separate JSON file. Uses `claude-sonnet-5` specifically (better than the interactive-call model, since this becomes real curriculum content and runs rarely, not per-interaction), with prompt caching on the static instructions and an explicit no-copying instruction in the prompt.
+- **Uploaded photos on volume-ready storage** — moved off Next's `public/` (baked in at build time, doesn't survive redeploys) to a configurable `UPLOADS_DIR`, served through an authenticated `/api/uploads/[...path]` route instead of a static URL — ready for a Railway Volume mount.
+- **Railway deploy-prep** — `railway.json` (runs `prisma migrate deploy` before `next start` on every deploy), `package.json` start script respects Railway's injected `$PORT`, `.env.example` documents every required var.
+- **Security/quality baseline** — server-side-only API key handling, in-memory rate limiting, input validation on all API routes, `npm audit` clean, secrets/uploads gitignored, Vitest unit tests passing, clean build/lint/typecheck
 
 ### ⏳ Pending / not built yet
 - **Unit 1 concepts 1.4–1.13** — extraction pipeline exists to fill these in, but nothing has actually been extracted yet (no real pages uploaded for them, and Anthropic credit is needed to run it live)
-- **Units 2–9** for English Stage 5, and **any Math/other-subject content** — not started (Math was the original plan but paused since that textbook isn't in hand yet)
+- **Units 2–9** for English Stage 5, and **any Math/other-subject content** — not started, though `/manage` now makes adding them a UI action rather than a code change
 - **Reasoning Interview** (plan §2.4) — voice follow-up after a test to classify *why* an answer was wrong (conceptual gap vs. careless slip vs. misread question), not just score it
 - **Written Exam Capture & Coaching** (plan §2.5) — photograph a real handwritten paper, get exam-technique feedback (structure, working shown, time use) with marks shown last
 - **In-Unit Micro-Checks** (plan §2.2) — short ungraded questions while a unit is currently being taught in class
 - **Prep Planner** (plan §2.6) — weekly "what to revisit" view generated from mastery + Reasoning Interview data
-- **Live-verified voice Q&A and AI grading** — code path confirmed correct, but blocked on Anthropic account credit top-up to see a real answer end-to-end
-- **Vercel deployment** — not deployed yet; the photo upload feature needs to move from local filesystem storage to real object storage (Vercel Blob/S3) first, since serverless filesystems don't persist uploads
-- **Real database** — progress/results still live in browser localStorage, not Postgres; fine for one device per kid, loses history if browser data is cleared or a second device is used
-- **Real authentication** — still a no-password demo-profile cookie; anyone with the URL can pick any profile
+- **Live-verified voice Q&A, AI grading, and extraction** — code paths confirmed correct, but blocked on Anthropic account credit top-up to see a real answer end-to-end
+- **Adaptive teaching from interaction patterns** — the `InteractionEvent` table exists in the schema (foundation for logging question patterns, retry behavior, etc. per kid) but nothing writes to it yet and no behavior-changing logic sits on top of it - deliberately deferred to a later pass once there's real usage data to design against
+- **Actual Railway deploy** — deploy-prep files are in place, but the live deploy itself needs the user's one-time Railway account setup (login, Postgres plugin, Volume, GitHub App) — see README.md "Deployment"
 - **CI pipeline** — build/test/lint all pass locally but nothing runs them automatically on push
 - **Automated end-to-end tests** — only the scoring/mastery logic has unit tests; UI flows are verified manually each time
 - **Multi-language voice support** (Hindi/Tamil/Telugu/Kannada) — part of the original v1 vision, not built; current app is English-only
+- **Content moderation / admin role** — any signed-in user can add subjects/units via `/manage`; fine for a handful of trusted family accounts, not fine at open-registration scale
 
 ---
 
@@ -204,12 +209,15 @@ After that: extend the same loop to Unit 2, then decide whether to add a second 
 
 1. ~~An `ANTHROPIC_API_KEY`~~ — done, key is in `.env.local`, confirmed working; just needs Anthropic account credit top-up to return live answers.
 2. Names/ages of the 1–3 pilot kids (just for tailoring tone/difficulty, nothing else) — or keep it anonymous and just share their rough comfort level with English.
-3. Priority call: finish building out Unit 1 concepts 1.4–1.13 next, or deploy the current build to Vercel now and start real pilot testing on just concepts 1.1–1.3.
+3. Railway account setup so the actual deploy can happen: `railway login` (or connect the GitHub repo via Railway's dashboard), add a Postgres plugin, add a Volume mounted at `/data`, set `ANTHROPIC_API_KEY` — see README.md "Deployment" for the full list.
+4. Priority call: finish building out Unit 1 concepts 1.4–1.13 next, or get the Railway deploy live now and start real pilot testing on just concepts 1.1–1.3.
 
 ---
 
 ## CHANGELOG
 *Newest first. One entry per meaningful change — new feature, scope decision, milestone hit, or pivot.*
+
+**2026-08-13** — Moved off the zero-infra pilot setup to a real, deployable app on Postgres + Railway, per explicit request to add real user registration, let more subjects/units be added through the app, and deploy for real (switching the deploy target from the originally-planned Vercel to Railway). Added Prisma (`prisma/schema.prisma`): `User`/`Session`/`StudentProfile` for real accounts, `Curriculum`/`Stage`/`Subject`/`Unit`/`Concept` replacing the hardcoded catalog + static JSON, `UploadedPage`/`TestAttempt`/`ConceptMastery` replacing the filesystem directory listing and localStorage progress store, and an `InteractionEvent` table as a deliberately-unused-for-now foundation for later adaptive-teaching work. Real auth: `bcryptjs` password hashing, DB-backed opaque session tokens (SHA-256 hash stored, raw token in an httpOnly cookie) — chosen over JWT for instant revocation and no secret-rotation story, and over a library like NextAuth since the existing app already had a simple cookie pattern to extend. `/register` creates an account + first kid profile in one step; `/profiles` handles switching or adding more kids under the same account (up from the old 3-hardcoded-demo-profile design). `/manage` lets any signed-in user add a new subject or unit (with optional outline concepts), live immediately — no admin role or review gate yet, deliberately, to match pilot scale. Rewrote `lib/catalog.ts` and `lib/content.ts` to query Postgres instead of static data, keeping their exported shapes close to identical so `components/CurriculumSelector.tsx` needed zero changes. Moved uploaded textbook photos off Next's `public/` folder (baked in at build time, doesn't survive redeploys) to a configurable `UPLOADS_DIR`, served through a new authenticated `/api/uploads/[...path]` route — sets up cleanly for a Railway persistent Volume mount, which was the deciding factor for Railway over Vercel (Vercel's serverless filesystem has the same ephemeral-uploads problem with no equivalent fix). Deleted `lib/generatedContent.ts` and `lib/progressStorage.ts` (superseded, not ported). Wrote `prisma/seed.ts` to migrate the existing catalog + Unit 1 hand-authored content losslessly. Local Postgres verification is still pending in this sandbox — `brew install postgresql@16` had no prebuilt bottle available for this macOS/arch combo and is compiling several dependencies (icu4c, krb5, gettext, etc.) from source, which is slow — so this pass was verified via `npx prisma generate`/`validate` (schema correctness), `npx tsc --noEmit`, `npm run build`, `npm run lint`, and `npm test`, all passing; live migrate+seed+click-through verification is still owed once either the local Postgres build finishes or the user's Railway Postgres is available. Railway deploy-prep: `railway.json` (runs `prisma migrate deploy` before `next start` on every deploy), `package.json` start script respects Railway's `$PORT`, `.env.example` documents `DATABASE_URL`/`UPLOADS_DIR`. Actual Railway deploy needs the user's one-time account setup (login/GitHub App/Postgres plugin/Volume) before it can go live.
 
 **2026-08-07** — Built the page-extraction pipeline: `app/api/pages/extract/route.ts` sends a unit's uploaded photos + its list of "coming soon" concepts to Claude, which returns original (not copied) definitions/key points/examples/tips/sample Q&A for whichever concepts the photos support, tagged with which photo best illustrates each one. New `lib/generatedContent.ts` persists this per unit; `getUnitWithGeneratedContent()` in `lib/content.ts` merges it into the unit at read time, moving matched concepts out of "coming soon". Added an "Extract lesson content from these pages" button to the Unit Overview screen. Deliberately used `claude-sonnet-5` for this call specifically (vs. the cheaper `claude-haiku-4-5` used for interactive Q&A/grading) since extraction output becomes real curriculum content and runs rarely, not per-interaction — plus prompt caching on the static instruction portion of the system prompt, since it's identical across calls. This required upgrading `@anthropic-ai/sdk` from a stale `0.32.1` pin to `0.115.0` - the old version's TypeScript types didn't support `cache_control` or `output_config.effort`. Verified the request plumbing end-to-end via curl (auth → unit lookup → image read → API call) - reaches the Anthropic API correctly and fails with the same "credit balance too low" error as the other endpoints, confirming no code-level bug, just the same pending credit top-up. `npm audit` still clean after the SDK bump. Build/lint/tests pass.
 

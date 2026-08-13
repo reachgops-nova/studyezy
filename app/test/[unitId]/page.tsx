@@ -1,18 +1,21 @@
 import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
 import { getActiveProfile } from "@/lib/auth";
+import { getCurrentUser } from "@/lib/session";
 import { getUnit } from "@/lib/content";
 import TestRunner from "@/components/TestRunner";
 
 export default async function TestPage({ params }: { params: Promise<{ unitId: string }> }) {
+  const user = await getCurrentUser();
+  if (!user) redirect("/login");
   const profile = await getActiveProfile();
-  if (!profile) redirect("/login");
+  if (!profile) redirect("/profiles");
 
   const { unitId } = await params;
   const parts = unitId.split("-");
   if (parts.length !== 4) notFound();
   const [curriculumId, stageIdStr, subjectId, unitIdStr] = parts;
-  const unit = getUnit(curriculumId, Number(stageIdStr), subjectId, Number(unitIdStr));
+  const unit = await getUnit(curriculumId, Number(stageIdStr), subjectId, Number(unitIdStr));
   if (!unit) notFound();
 
   return (
@@ -29,7 +32,7 @@ export default async function TestPage({ params }: { params: Promise<{ unitId: s
         )}
       </header>
 
-      <TestRunner unit={unit} unitKey={unitId} profileId={profile.id} />
+      <TestRunner unit={unit} unitKey={unitId} />
     </main>
   );
 }

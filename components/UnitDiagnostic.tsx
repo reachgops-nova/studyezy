@@ -3,7 +3,7 @@
 import { useState } from "react";
 import type { CurriculumUnit, MasteryBand } from "@/lib/types";
 import { masteryBand } from "@/lib/mastery";
-import { recordTestResult } from "@/lib/progressStorage";
+import { recordAttempt } from "@/lib/attempts";
 
 type Answer =
   | { type: "multiple_choice"; selected: number | null }
@@ -12,13 +12,11 @@ type Answer =
 export default function UnitDiagnostic({
   unit,
   unitKey,
-  profileId,
   onReviewConcept,
   onAllMastered,
 }: {
   unit: CurriculumUnit;
   unitKey: string;
-  profileId: string;
   onReviewConcept: (conceptId: string) => void;
   onAllMastered: () => void;
 }) {
@@ -83,9 +81,18 @@ export default function UnitDiagnostic({
       computedBands[conceptId] = masteryBand(pct);
     }
 
-    recordTestResult(profileId, `${unitKey}-diagnostic`, correctSum, questions.length, perConcept);
-    setBands(computedBands);
-    setSubmitting(false);
+    try {
+      await recordAttempt({
+        unitKey,
+        attemptType: "diagnostic",
+        correct: correctSum,
+        total: questions.length,
+        perConcept,
+      });
+    } finally {
+      setBands(computedBands);
+      setSubmitting(false);
+    }
   }
 
   if (bands) {

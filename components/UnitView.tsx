@@ -11,12 +11,10 @@ type Stage = "overview" | "diagnostic" | "lesson";
 export default function UnitView({
   unit,
   unitKey,
-  profileId,
   initialPageImages,
 }: {
   unit: CurriculumUnit;
   unitKey: string;
-  profileId: string;
   initialPageImages: string[];
 }) {
   const [stage, setStage] = useState<Stage>("overview");
@@ -42,7 +40,6 @@ export default function UnitView({
       <UnitDiagnostic
         unit={unit}
         unitKey={unitKey}
-        profileId={profileId}
         onReviewConcept={(conceptId) => {
           setSelectedId(conceptId);
           setStage("lesson");

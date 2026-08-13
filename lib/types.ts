@@ -133,8 +133,12 @@ export interface TestAttemptResult {
   per_concept: Record<string, { correct: number; total: number }>;
 }
 
-export interface DemoProfile {
-  id: string;
-  display_name: string;
-  avatar_emoji: string;
+/** Shape returned by POST /api/attempts - see app/api/attempts/route.ts. */
+export interface StoredUnitResult {
+  unitKey: string;
+  scorePct: number;
+  band: MasteryBand;
+  nextReviewDate: string; // ISO date
+  perConcept: Record<string, { correct: number; total: number }>;
+  takenAt: string; // ISO date
 }

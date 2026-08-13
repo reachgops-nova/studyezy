@@ -1,33 +1,59 @@
-import { DEMO_PROFILES } from "@/lib/auth";
-import { selectProfile } from "./actions";
+import Link from "next/link";
+import { authenticate } from "./actions";
 
-export default function LoginPage() {
+export default async function LoginPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ error?: string }>;
+}) {
+  const { error } = await searchParams;
+
   return (
     <main className="flex min-h-[80vh] flex-col items-center justify-center gap-8">
       <div className="text-center">
         <h1 className="text-3xl font-bold">StudyEzy</h1>
-        <p className="mt-2 text-slate-600">Pilot demo - choose who&apos;s learning today.</p>
+        <p className="mt-2 text-slate-600">Sign in to continue.</p>
       </div>
 
-      <div className="grid w-full max-w-sm gap-3">
-        {DEMO_PROFILES.map((profile) => (
-          <form key={profile.id} action={selectProfile}>
-            <input type="hidden" name="profileId" value={profile.id} />
-            <button
-              type="submit"
-              className="flex w-full items-center gap-3 rounded-xl border border-slate-200 bg-white px-5 py-4 text-left text-lg shadow-sm transition hover:border-blue-400 hover:shadow-md"
-            >
-              <span className="text-2xl" aria-hidden>
-                {profile.avatar_emoji}
-              </span>
-              <span>{profile.display_name}</span>
-            </button>
-          </form>
-        ))}
-      </div>
+      <form action={authenticate} className="grid w-full max-w-sm gap-4">
+        {error === "invalid_credentials" && (
+          <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600">
+            That email and password combination doesn&apos;t match an account.
+          </p>
+        )}
 
-      <p className="max-w-sm text-center text-xs text-slate-400">
-        Demo mode: no passwords, no personal data collected. Pick a profile to try the app end to end.
+        <label className="grid gap-1 text-sm font-medium text-slate-700">
+          Email
+          <input
+            type="email"
+            name="email"
+            required
+            className="rounded-lg border border-slate-300 px-3 py-2 text-base"
+            autoComplete="email"
+          />
+        </label>
+
+        <label className="grid gap-1 text-sm font-medium text-slate-700">
+          Password
+          <input
+            type="password"
+            name="password"
+            required
+            className="rounded-lg border border-slate-300 px-3 py-2 text-base"
+            autoComplete="current-password"
+          />
+        </label>
+
+        <button type="submit" className="rounded-lg bg-blue-600 px-4 py-2.5 text-base font-medium text-white">
+          Sign in
+        </button>
+      </form>
+
+      <p className="text-sm text-slate-500">
+        New here?{" "}
+        <Link href="/register" className="font-medium text-blue-600 hover:underline">
+          Create an account
+        </Link>
       </p>
     </main>
   );

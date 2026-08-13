@@ -1,20 +1,6 @@
-"use client";
+import type { StoredUnitResult } from "@/lib/types";
 
-import { useEffect, useState } from "react";
-import { getAllResults, type StoredUnitResult } from "@/lib/progressStorage";
-
-export default function Dashboard({ profileId }: { profileId: string }) {
-  const [results, setResults] = useState<StoredUnitResult[] | null>(null);
-
-  useEffect(() => {
-    // localStorage only exists client-side; reading it during render would
-    // mismatch the server-rendered HTML, so this has to happen post-mount.
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setResults(getAllResults(profileId));
-  }, [profileId]);
-
-  if (results === null) return <p className="text-sm text-slate-400">Loading...</p>;
-
+export default function Dashboard({ results }: { results: StoredUnitResult[] }) {
   if (results.length === 0) {
     return (
       <p className="rounded-lg border border-slate-200 bg-white p-4 text-sm text-slate-500">
@@ -29,9 +15,7 @@ export default function Dashboard({ profileId }: { profileId: string }) {
         <div key={r.unitKey} className="rounded-xl border border-slate-200 bg-white p-4">
           <div className="flex items-center justify-between">
             <p className="font-medium">{r.unitKey}</p>
-            <span
-              className={`rounded-full px-2 py-0.5 text-xs font-medium ${bandColor(r.band)}`}
-            >
+            <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${bandColor(r.band)}`}>
               {r.scorePct}%
             </span>
           </div>

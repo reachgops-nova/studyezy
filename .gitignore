@@ -25,7 +25,11 @@ dist/
 .vercel
 
 # uploaded textbook page scans - personal copyrighted material, stays local
-# only, never pushed to GitHub even though this repo is currently private
+# only, never pushed to GitHub even though this repo is currently private.
+# Lives outside public/ now (see UPLOADS_DIR) since public/ is baked in at
+# build time and doesn't survive redeploys on Railway/Vercel.
+/uploads/*
+!/uploads/.gitkeep
 public/uploads/*
 !public/uploads/.gitkeep
 

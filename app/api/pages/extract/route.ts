@@ -4,9 +4,10 @@ import path from "node:path";
 import { getActiveProfileId } from "@/lib/auth";
 import { getUnit, getUploadedPageImages } from "@/lib/content";
 import { extractConceptsFromPages, isConfigured, type UploadedPageImage } from "@/lib/claude";
-import { getGeneratedConcepts, saveGeneratedConcepts } from "@/lib/generatedContent";
+import { db } from "@/lib/db";
 import { checkRateLimit } from "@/lib/rateLimit";
-import type { Concept } from "@/lib/types";
+import { UPLOADS_DIR } from "@/lib/uploads";
+import type { Prisma } from "@prisma/client";
 
 export const runtime = "nodejs";
 
@@ -52,7 +53,7 @@ export async function POST(req: NextRequest) {
   }
 
   const [curriculumId, stageIdStr, subjectId, unitIdStr] = unitKey.split("-");
-  const unit = getUnit(curriculumId, Number(stageIdStr), subjectId, Number(unitIdStr));
+  const unit = await getUnit(curriculumId, Number(stageIdStr), subjectId, Number(unitIdStr));
   if (!unit) {
     return NextResponse.json({ error: "Unit not found." }, { status: 404 });
   }
@@ -61,20 +62,20 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "This unit already has every concept built." }, { status: 400 });
   }
 
-  const pagePaths = await getUploadedPageImages(unitKey);
+  const pagePaths = await getUploadedPageImages(unitKey); // "/api/uploads/{storageKey}"
   if (pagePaths.length === 0) {
     return NextResponse.json({ error: "Upload some pages first." }, { status: 400 });
   }
 
   const selectedPaths = pagePaths.slice(0, MAX_IMAGES_PER_EXTRACTION);
   const images: UploadedPageImage[] = [];
-  for (const publicPath of selectedPaths) {
-    const ext = path.extname(publicPath).toLowerCase();
+  for (const servedPath of selectedPaths) {
+    const storageKey = servedPath.replace(/^\/api\/uploads\//, "");
+    const ext = path.extname(storageKey).toLowerCase();
     const mediaType = MEDIA_TYPE_BY_EXT[ext];
     if (!mediaType) continue;
-    const diskPath = path.join(process.cwd(), "public", publicPath);
-    const bytes = await readFile(diskPath);
-    images.push({ path: publicPath, mediaType, base64: bytes.toString("base64") });
+    const bytes = await readFile(path.join(UPLOADS_DIR, storageKey));
+    images.push({ path: servedPath, mediaType, base64: bytes.toString("base64") });
   }
 
   if (images.length === 0) {
@@ -97,10 +98,28 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const existing = await getGeneratedConcepts(unitKey);
-    const merged = new Map<string, Concept>(existing.map((c) => [c.concept_id, c]));
-    for (const c of extracted) merged.set(c.concept_id, c);
-    await saveGeneratedConcepts(unitKey, Array.from(merged.values()));
+    const unitRow = await db.unit.findUnique({ where: { unitKey } });
+    if (!unitRow) {
+      return NextResponse.json({ error: "Unit not found." }, { status: 404 });
+    }
+
+    for (const c of extracted) {
+      await db.concept.updateMany({
+        where: { unitId: unitRow.id, conceptKey: c.concept_id },
+        data: {
+          status: "drafted",
+          source: "extracted",
+          definition: c.definition,
+          keyPoints: c.key_points ?? [],
+          examples: c.examples ?? [],
+          tipsToRemember: c.tips_to_remember ?? [],
+          voiceQaSamples: (c.voice_qa_samples ?? []) as unknown as Prisma.InputJsonValue,
+          sourceImagePath: c.media?.source_image_path,
+          illustrationCaption: c.media?.illustration_caption,
+          videoStatus: c.media?.video_status ?? "coming_soon",
+        },
+      });
+    }
 
     return NextResponse.json({
       extracted: extracted.map((c) => ({ concept_id: c.concept_id, concept_name: c.concept_name })),
