@@ -1,8 +1,8 @@
 import { redirect } from "next/navigation";
-import Link from "next/link";
 import { getActiveProfile } from "@/lib/auth";
 import { getCurrentUser } from "@/lib/session";
 import { getCatalog } from "@/lib/catalog";
+import AppHeader from "@/components/AppHeader";
 import CurriculumSelector from "@/components/CurriculumSelector";
 
 export default async function SelectPage() {
@@ -16,25 +16,7 @@ export default async function SelectPage() {
 
   return (
     <main className="grid gap-8">
-      <header className="flex items-center justify-between">
-        <div>
-          <p className="text-sm text-slate-500">Signed in as</p>
-          <p className="text-lg font-semibold">
-            {profile.avatarEmoji} {profile.displayName}
-          </p>
-        </div>
-        <div className="flex gap-3">
-          <Link href="/dashboard" className="text-sm font-medium text-blue-600 hover:underline">
-            Dashboard
-          </Link>
-          <Link href="/manage" className="text-sm font-medium text-blue-600 hover:underline">
-            + Add subject or unit
-          </Link>
-          <Link href="/profiles" className="text-sm text-slate-500 hover:underline">
-            Switch profile
-          </Link>
-        </div>
-      </header>
+      <AppHeader profile={profile} active="select" />
 
       <div>
         <h1 className="text-2xl font-bold">What are we learning today?</h1>

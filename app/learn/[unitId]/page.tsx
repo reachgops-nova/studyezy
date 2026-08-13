@@ -3,6 +3,7 @@ import Link from "next/link";
 import { getActiveProfile } from "@/lib/auth";
 import { getCurrentUser } from "@/lib/session";
 import { getUnit, getUploadedPageImages } from "@/lib/content";
+import { LogoMark } from "@/components/Logo";
 import UnitView from "@/components/UnitView";
 
 export default async function LearnPage({ params }: { params: Promise<{ unitId: string }> }) {
@@ -24,10 +25,11 @@ export default async function LearnPage({ params }: { params: Promise<{ unitId: 
     <main className="grid gap-6">
       <header className="flex items-center justify-between">
         <div>
-          <Link href="/select" className="text-sm text-slate-500 hover:underline">
+          <Link href="/select" className="inline-flex items-center gap-2 text-sm text-slate-500 hover:text-slate-700">
+            <LogoMark className="h-6 w-6" />
             &larr; Change unit
           </Link>
-          <h1 className="mt-1 text-2xl font-bold">
+          <h1 className="mt-2 text-2xl font-bold">
             Unit {unit.unit}: {unit.unit_title}
           </h1>
           <p className="text-sm text-slate-500">

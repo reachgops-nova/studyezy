@@ -1,0 +1,62 @@
+import Link from "next/link";
+import Logo from "./Logo";
+
+type NavKey = "select" | "dashboard" | "manage";
+
+export default function AppHeader({
+  profile,
+  active,
+}: {
+  profile: { avatarEmoji: string; displayName: string };
+  active?: NavKey;
+}) {
+  return (
+    <header className="mb-6 flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 pb-4">
+      <Link href="/select" className="shrink-0">
+        <Logo />
+      </Link>
+
+      <nav className="flex flex-wrap items-center gap-1 text-sm">
+        <span className="mr-2 hidden items-center gap-1.5 rounded-full bg-slate-100 px-3 py-1.5 text-slate-600 sm:inline-flex">
+          <span aria-hidden>{profile.avatarEmoji}</span> {profile.displayName}
+        </span>
+        <NavLink href="/select" isActive={active === "select"}>
+          Learn
+        </NavLink>
+        <NavLink href="/dashboard" isActive={active === "dashboard"}>
+          Dashboard
+        </NavLink>
+        <NavLink href="/manage" isActive={active === "manage"}>
+          + Add subject or unit
+        </NavLink>
+        <Link
+          href="/profiles"
+          className="rounded-full px-3 py-1.5 text-slate-400 transition hover:bg-slate-100 hover:text-slate-600"
+        >
+          Switch profile
+        </Link>
+      </nav>
+    </header>
+  );
+}
+
+function NavLink({
+  href,
+  isActive,
+  children,
+}: {
+  href: string;
+  isActive: boolean;
+  children: React.ReactNode;
+}) {
+  return (
+    <Link
+      href={href}
+      className={`rounded-full px-3 py-1.5 font-medium transition ${
+        isActive ? "bg-blue-600 text-white" : "text-slate-600 hover:bg-slate-100"
+      }`}
+    >
+      {children}
+    </Link>
+  );
+}

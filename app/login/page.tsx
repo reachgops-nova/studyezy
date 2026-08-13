@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Logo from "@/components/Logo";
 import { authenticate } from "./actions";
 
 export default async function LoginPage({
@@ -10,9 +11,9 @@ export default async function LoginPage({
 
   return (
     <main className="flex min-h-[80vh] flex-col items-center justify-center gap-8">
-      <div className="text-center">
-        <h1 className="text-3xl font-bold">StudyEzy</h1>
-        <p className="mt-2 text-slate-600">Sign in to continue.</p>
+      <div className="flex flex-col items-center gap-3 text-center">
+        <Logo className="h-14 w-14" textClassName="text-3xl" />
+        <p className="text-slate-600">Sign in to continue.</p>
       </div>
 
       <form action={authenticate} className="grid w-full max-w-sm gap-4">

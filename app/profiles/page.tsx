@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
 import { getCurrentUser } from "@/lib/session";
 import { signOut } from "@/app/login/actions";
+import Logo from "@/components/Logo";
 import { selectProfile, addProfile } from "./actions";
 
 export default async function ProfilesPage({
@@ -20,9 +21,9 @@ export default async function ProfilesPage({
 
   return (
     <main className="flex min-h-[80vh] flex-col items-center justify-center gap-8">
-      <div className="text-center">
-        <h1 className="text-3xl font-bold">StudyEzy</h1>
-        <p className="mt-2 text-slate-600">Who&apos;s learning today?</p>
+      <div className="flex flex-col items-center gap-3 text-center">
+        <Logo className="h-14 w-14" textClassName="text-3xl" />
+        <p className="text-slate-600">Who&apos;s learning today?</p>
       </div>
 
       {error && (

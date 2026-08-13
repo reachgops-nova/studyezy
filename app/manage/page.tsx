@@ -1,7 +1,8 @@
 import { redirect } from "next/navigation";
-import Link from "next/link";
+import { getActiveProfile } from "@/lib/auth";
 import { getCurrentUser } from "@/lib/session";
 import { db } from "@/lib/db";
+import AppHeader from "@/components/AppHeader";
 import { createSubject, createUnit } from "./actions";
 
 const ERROR_MESSAGES: Record<string, string> = {
@@ -19,6 +20,8 @@ export default async function ManagePage({
 }) {
   const user = await getCurrentUser();
   if (!user) redirect("/login");
+  const profile = await getActiveProfile();
+  if (!profile) redirect("/profiles");
 
   const { error, success } = await searchParams;
 
@@ -32,16 +35,15 @@ export default async function ManagePage({
 
   return (
     <main className="grid gap-8">
-      <header>
-        <Link href="/select" className="text-sm text-slate-500 hover:underline">
-          &larr; Back
-        </Link>
-        <h1 className="mt-1 text-2xl font-bold">Add subjects and units</h1>
+      <AppHeader profile={profile} active="manage" />
+
+      <div>
+        <h1 className="text-2xl font-bold">Add subjects and units</h1>
         <p className="mt-1 text-slate-600">
           New subjects and units are available to practice right away - fill in the actual lesson
           content afterwards from the unit page (upload textbook pages, then extract).
         </p>
-      </header>
+      </div>
 
       {error && ERROR_MESSAGES[error] && (
         <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600">{ERROR_MESSAGES[error]}</p>
