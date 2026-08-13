@@ -15,7 +15,7 @@ export default async function DashboardPage() {
 
   return (
     <main className="grid gap-6">
-      <AppHeader profile={profile} active="dashboard" />
+      <AppHeader profile={profile} active="dashboard" isAdmin={user.role === "admin"} />
 
       <h1 className="text-2xl font-bold">{profile.displayName}&apos;s progress</h1>
 

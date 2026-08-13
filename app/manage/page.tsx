@@ -35,7 +35,7 @@ export default async function ManagePage({
 
   return (
     <main className="grid gap-8">
-      <AppHeader profile={profile} active="manage" />
+      <AppHeader profile={profile} active="manage" isAdmin={user.role === "admin"} />
 
       <div>
         <h1 className="text-2xl font-bold">Add subjects and units</h1>

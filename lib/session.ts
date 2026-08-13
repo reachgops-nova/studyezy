@@ -57,4 +57,9 @@ export async function destroySession(): Promise<void> {
   store.delete(SESSION_COOKIE);
 }
 
+export async function getCurrentAdmin(): Promise<User | null> {
+  const user = await getCurrentUser();
+  return user?.role === "admin" ? user : null;
+}
+
 export const SESSION_COOKIE_NAME = SESSION_COOKIE;

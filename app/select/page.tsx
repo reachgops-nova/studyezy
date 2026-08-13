@@ -16,7 +16,7 @@ export default async function SelectPage() {
 
   return (
     <main className="grid gap-8">
-      <AppHeader profile={profile} active="select" />
+      <AppHeader profile={profile} active="select" isAdmin={user.role === "admin"} />
 
       <div>
         <h1 className="text-2xl font-bold">What are we learning today?</h1>

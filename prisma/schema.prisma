@@ -13,6 +13,7 @@ model User {
   id           String   @id @default(cuid())
   email        String   @unique
   passwordHash String
+  role         String   @default("parent") // "parent" | "admin" - the very first account ever registered becomes admin automatically
   createdAt    DateTime @default(now())
 
   sessions        Session[]

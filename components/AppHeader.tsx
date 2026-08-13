@@ -1,14 +1,16 @@
 import Link from "next/link";
 import Logo from "./Logo";
 
-type NavKey = "select" | "dashboard" | "manage";
+type NavKey = "select" | "dashboard" | "manage" | "admin";
 
 export default function AppHeader({
   profile,
   active,
+  isAdmin,
 }: {
   profile: { avatarEmoji: string; displayName: string };
   active?: NavKey;
+  isAdmin?: boolean;
 }) {
   return (
     <header className="mb-6 flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 pb-4">
@@ -29,6 +31,11 @@ export default function AppHeader({
         <NavLink href="/manage" isActive={active === "manage"}>
           + Add subject or unit
         </NavLink>
+        {isAdmin && (
+          <NavLink href="/admin" isActive={active === "admin"}>
+            Admin
+          </NavLink>
+        )}
         <Link
           href="/profiles"
           className="rounded-full px-3 py-1.5 text-slate-400 transition hover:bg-slate-100 hover:text-slate-600"
