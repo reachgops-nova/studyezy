@@ -72,6 +72,20 @@ const REPEAT_ACKS = ["No problem, let me explain that again.", "Sure, here it is
 const MICRO_CHECK_COUNT = 2;
 const MICRO_CHECK_ACKS = ["Nice thinking!", "Good effort - thanks for trying that one!", "Noted, thank you!"];
 
+// A real explanation gets real praise; a low-effort reply ("ok", "yes", "idk")
+// gets an honest, still-warm response instead of pretending it was an answer
+// - no AI call needed, just a length/pattern check.
+const LOW_EFFORT_PATTERN =
+  /^(ok(ay)?|k|yes|yeah|yep|no|nope|sure|fine|good|nice|idk|i ?don'?t ?know|dunno|hmm+|maybe|not sure)[.!?]*$/i;
+const LOW_EFFORT_ACKS = [
+  "That's okay if you're not sure yet - we'll come back to this kind of question.",
+  "No worries - it'll come with more practice. Let's keep going.",
+];
+
+function isLowEffortAnswer(text: string): boolean {
+  return text.trim().length < 4 || LOW_EFFORT_PATTERN.test(text.trim());
+}
+
 // Recognizes natural replies to a checkpoint pause ("okay", "got it", "again?")
 // without needing an AI call - this is what lets typing/saying a normal
 // response act like tapping the pause buttons, instead of always being sent
@@ -375,7 +389,9 @@ export default function AvatarChat({
     // Anthropic credit.
     if (inMicroCheck) {
       const questionAsked = concept.voice_qa_samples?.[microCheckIndex]?.question ?? "";
-      const ack = MICRO_CHECK_ACKS[microCheckIndex % MICRO_CHECK_ACKS.length];
+      const ack = isLowEffortAnswer(trimmed)
+        ? LOW_EFFORT_ACKS[microCheckIndex % LOW_EFFORT_ACKS.length]
+        : MICRO_CHECK_ACKS[microCheckIndex % MICRO_CHECK_ACKS.length];
       const ackId = nextId();
       setMessages((prev) => [...prev, { id: ackId, sender: "avatar", text: ack }]);
       fetch("/api/micro-check", {
