@@ -3,6 +3,7 @@ import Link from "next/link";
 import { getActiveProfileId } from "@/lib/auth";
 import { getCurrentUser } from "@/lib/session";
 import Logo, { LogoMark } from "@/components/Logo";
+import HeroIllustration from "@/components/HeroIllustration";
 
 export default async function Home() {
   const user = await getCurrentUser();
@@ -33,6 +34,7 @@ function LandingPage() {
       </nav>
 
       <header className="grid gap-6 pt-4 text-center">
+        <HeroIllustration className="mx-auto w-56 sm:w-72" />
         <h1 className="mx-auto max-w-2xl text-4xl font-bold tracking-tight text-slate-900 sm:text-5xl">
           Homework help that actually checks if it clicked.
         </h1>
