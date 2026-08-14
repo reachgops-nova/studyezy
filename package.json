@@ -7,7 +7,7 @@
   },
   "scripts": {
     "dev": "next dev",
-    "build": "rm -rf .next/cache && next build",
+    "build": "find .next/cache -mindepth 1 -delete 2>/dev/null; next build",
     "start": "next start -p ${PORT:-3000}",
     "lint": "eslint .",
     "test": "vitest run",
