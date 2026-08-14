@@ -38,7 +38,7 @@ export default async function ProfilesPage({
             <input type="hidden" name="profileId" value={profile.id} />
             <button
               type="submit"
-              className="flex w-full items-center gap-3 rounded-xl border border-slate-200 bg-white px-5 py-4 text-left text-lg shadow-sm transition hover:border-blue-400 hover:shadow-md"
+              className="flex w-full items-center gap-3 rounded-xl border border-slate-200 bg-white px-5 py-4 text-left text-lg shadow-sm transition hover:border-brand-navy-light hover:shadow-md"
             >
               <span className="text-2xl" aria-hidden>
                 {profile.avatarEmoji}

@@ -60,7 +60,7 @@ function NavLink({
     <Link
       href={href}
       className={`rounded-full px-3 py-1.5 font-medium transition ${
-        isActive ? "bg-blue-600 text-white" : "text-slate-600 hover:bg-slate-100"
+        isActive ? "bg-brand-navy text-white" : "text-slate-600 hover:bg-slate-100"
       }`}
     >
       {children}

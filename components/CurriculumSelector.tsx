@@ -76,7 +76,7 @@ export default function CurriculumSelector({ catalog }: { catalog: CatalogCurric
               <div
                 key={u.id}
                 className={`flex items-center justify-between rounded-lg border px-4 py-3 ${
-                  u.available ? "border-blue-200 bg-blue-50" : "border-slate-200 bg-slate-50 text-slate-400"
+                  u.available ? "border-orange-200 bg-orange-50" : "border-slate-200 bg-slate-50 text-slate-400"
                 }`}
               >
                 <span>
@@ -85,7 +85,7 @@ export default function CurriculumSelector({ catalog }: { catalog: CatalogCurric
                 {u.available ? (
                   <Link
                     href={`/learn/${curriculumId}-${stageId}-${subjectId}-${u.id}`}
-                    className="rounded-md bg-blue-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-blue-700"
+                    className="rounded-md bg-brand-navy px-3 py-1.5 text-sm font-medium text-white hover:bg-brand-navy-dark"
                   >
                     Start
                   </Link>
@@ -130,8 +130,8 @@ function PillButton({
         disabled
           ? "cursor-not-allowed border-slate-200 text-slate-400"
           : active
-          ? "border-blue-600 bg-blue-600 text-white"
-          : "border-slate-300 bg-white hover:border-blue-400"
+          ? "border-brand-navy bg-brand-navy text-white"
+          : "border-slate-300 bg-white hover:border-brand-navy-light"
       }`}
     >
       {children}

@@ -411,7 +411,7 @@ export default function AvatarChat({
               </div>
             ) : (
               <div key={m.id} className="message-enter flex justify-end">
-                <div className="rounded-2xl rounded-tr-sm bg-blue-600 px-4 py-2 text-sm leading-relaxed text-white shadow-sm">
+                <div className="rounded-2xl rounded-tr-sm bg-brand-navy px-4 py-2 text-sm leading-relaxed text-white shadow-sm">
                   {m.text}
                 </div>
               </div>
@@ -457,7 +457,7 @@ export default function AvatarChat({
                     type="button"
                     onClick={() => sendMessage(q)}
                     disabled={loading}
-                    className="rounded-full border border-blue-300 bg-white px-3 py-1.5 text-xs text-blue-700 hover:bg-blue-50 disabled:opacity-50"
+                    className="rounded-full border border-brand-navy-light bg-white px-3 py-1.5 text-xs text-brand-navy hover:bg-brand-cream disabled:opacity-50"
                   >
                     {q}
                   </button>
@@ -506,8 +506,8 @@ export default function AvatarChat({
               Read aloud
             </label>
             {speaking && (
-              <span className="flex items-center gap-1 text-xs text-blue-600">
-                <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-blue-600" /> reading...
+              <span className="flex items-center gap-1 text-xs text-orange-600">
+                <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-orange-500" /> reading...
               </span>
             )}
           </div>

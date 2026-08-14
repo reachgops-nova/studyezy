@@ -63,7 +63,7 @@ export default function UnitView({
             key={c.concept_id}
             onClick={() => setSelectedId(c.concept_id)}
             className={`rounded-lg px-3 py-2 text-left text-sm ${
-              c.concept_id === selectedId ? "bg-blue-600 text-white" : "hover:bg-slate-100"
+              c.concept_id === selectedId ? "bg-brand-navy text-white" : "hover:bg-slate-100"
             }`}
           >
             {c.concept_id} {c.concept_name}

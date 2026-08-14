@@ -164,7 +164,7 @@ export default function UnitOverview({
             type="button"
             onClick={handleExtract}
             disabled={extracting || pageImages.length === 0}
-            className="mt-3 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
+            className="mt-3 rounded-lg bg-brand-navy px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
           >
             {extracting ? "Reading the pages..." : "Extract lesson content from these pages"}
           </button>

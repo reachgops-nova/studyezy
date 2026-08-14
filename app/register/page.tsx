@@ -62,14 +62,14 @@ export default async function RegisterPage({
           />
         </label>
 
-        <button type="submit" className="rounded-lg bg-blue-600 px-4 py-2.5 text-base font-medium text-white">
+        <button type="submit" className="rounded-lg bg-brand-navy px-4 py-2.5 text-base font-medium text-white">
           Create account
         </button>
       </form>
 
       <p className="text-sm text-slate-500">
         Already have an account?{" "}
-        <Link href="/login" className="font-medium text-blue-600 hover:underline">
+        <Link href="/login" className="font-medium text-brand-navy hover:underline">
           Sign in
         </Link>
       </p>

@@ -25,7 +25,7 @@ function LandingPage() {
           </Link>
           <Link
             href="/register"
-            className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
+            className="rounded-lg bg-brand-navy px-4 py-2 text-sm font-medium text-white hover:bg-brand-navy-dark"
           >
             Get started free
           </Link>
@@ -43,7 +43,7 @@ function LandingPage() {
         <div className="flex flex-wrap items-center justify-center gap-3">
           <Link
             href="/register"
-            className="rounded-lg bg-blue-600 px-6 py-3 text-base font-medium text-white hover:bg-blue-700"
+            className="rounded-lg bg-brand-navy px-6 py-3 text-base font-medium text-white hover:bg-brand-navy-dark"
           >
             Get started free
           </Link>
@@ -115,7 +115,7 @@ function LandingPage() {
         </p>
         <Link
           href="/register"
-          className="mt-6 inline-block rounded-lg bg-blue-600 px-6 py-3 text-base font-medium text-white hover:bg-blue-700"
+          className="mt-6 inline-block rounded-lg bg-brand-navy px-6 py-3 text-base font-medium text-white hover:bg-brand-navy-dark"
         >
           Get started free
         </Link>
@@ -143,7 +143,7 @@ function DifferentiatorCard({ title, body }: { title: string; body: string }) {
 function StepCard({ number, body }: { number: number; body: string }) {
   return (
     <div className="grid gap-2">
-      <span className="flex h-8 w-8 items-center justify-center rounded-full bg-blue-600 text-sm font-bold text-white">
+      <span className="flex h-8 w-8 items-center justify-center rounded-full bg-brand-navy text-sm font-bold text-white">
         {number}
       </span>
       <p className="text-sm text-slate-600">{body}</p>

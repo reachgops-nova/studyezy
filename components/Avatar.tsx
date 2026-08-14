@@ -1,24 +1,41 @@
 "use client";
 
-// Original simple mascot - "Ezy" the fox, matching the fox/panda/lion demo
-// profile emoji theme from the login screen. No third-party or licensed
-// character art involved.
+// "Ezy" the kangaroo mascot - matches the brand mark in components/Logo.tsx.
+// Small, set-back ears and an elongated snout are what read as "kangaroo"
+// rather than fox/rabbit, especially at small sizes.
 export default function Avatar({ speaking }: { speaking: boolean }) {
   return (
     <div className="relative h-16 w-16 shrink-0">
-      <svg viewBox="0 0 100 100" className="h-full w-full drop-shadow-sm">
-        <ellipse cx="50" cy="55" rx="38" ry="34" fill="#f97316" />
-        <path d="M15 35 L30 15 L38 40 Z" fill="#f97316" />
-        <path d="M85 35 L70 15 L62 40 Z" fill="#f97316" />
-        <path d="M20 32 L29 20 L34 38 Z" fill="#fff7ed" />
-        <path d="M80 32 L71 20 L66 38 Z" fill="#fff7ed" />
-        <path d="M50 48 L38 68 Q50 78 62 68 Z" fill="#fff7ed" />
-        <circle cx="36" cy="52" r="5" fill="#1f2937" />
-        <circle cx="64" cy="52" r="5" fill="#1f2937" />
-        <circle cx="50" cy="60" r="3" fill="#1f2937" />
+      <svg viewBox="0 0 200 175" className="h-full w-full drop-shadow-sm">
+        <defs>
+          <linearGradient id="avatarRooGrad" x1="30" y1="10" x2="170" y2="175" gradientUnits="userSpaceOnUse">
+            <stop offset="0" stopColor="#fdba74" />
+            <stop offset="1" stopColor="#ea580c" />
+          </linearGradient>
+        </defs>
+        <ellipse cx="128" cy="42" rx="13" ry="19" fill="url(#avatarRooGrad)" transform="rotate(-8 128 42)" />
+        <ellipse cx="72" cy="42" rx="13" ry="19" fill="url(#avatarRooGrad)" transform="rotate(8 72 42)" />
+        <ellipse cx="127" cy="45" rx="7" ry="12" fill="#fff7ed" transform="rotate(-8 127 45)" />
+        <ellipse cx="73" cy="45" rx="7" ry="12" fill="#fff7ed" transform="rotate(8 73 45)" />
+        <ellipse cx="100" cy="88" rx="42" ry="38" fill="url(#avatarRooGrad)" />
         <path
-          d={speaking ? "M42 70 Q50 80 58 70" : "M43 71 Q50 75 57 71"}
-          stroke="#1f2937"
+          d="M64,96 C64,130 78,160 100,168 C122,160 136,130 136,96 C136,120 120,132 100,132 C80,132 64,120 64,96 Z"
+          fill="url(#avatarRooGrad)"
+        />
+        <ellipse cx="100" cy="140" rx="24" ry="34" fill="#fff7ed" />
+        <ellipse cx="82" cy="82" rx="7" ry="9" fill="#1e2a4a" />
+        <ellipse cx="118" cy="82" rx="7" ry="9" fill="#1e2a4a" />
+        <circle cx="79.7" cy="78.5" r="1.9" fill="#fff" />
+        <circle cx="115.7" cy="78.5" r="1.9" fill="#fff" />
+        <ellipse cx="88" cy="70" rx="6" ry="4" fill="#fdba74" opacity="0.55" />
+        <ellipse cx="112" cy="70" rx="6" ry="4" fill="#fdba74" opacity="0.55" />
+        <path
+          d="M95,128 C95,124.5 105,124.5 105,128 C105,132 100,136 100,136 C100,136 95,132 95,128 Z"
+          fill="#1e2a4a"
+        />
+        <path
+          d={speaking ? "M86,143 Q100,157 114,143" : "M88,144 Q100,151 112,144"}
+          stroke="#1e2a4a"
           strokeWidth="2.5"
           fill="none"
           strokeLinecap="round"
@@ -27,8 +44,8 @@ export default function Avatar({ speaking }: { speaking: boolean }) {
       </svg>
       {speaking && (
         <span className="absolute -right-1 -top-1 flex h-4 w-4">
-          <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-blue-400 opacity-75" />
-          <span className="relative inline-flex h-4 w-4 rounded-full bg-blue-500" />
+          <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-orange-400 opacity-75" />
+          <span className="relative inline-flex h-4 w-4 rounded-full bg-orange-500" />
         </span>
       )}
     </div>

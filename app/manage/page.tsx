@@ -75,7 +75,7 @@ export default async function ManagePage({
               className="rounded-lg border border-slate-300 px-3 py-2 text-base"
             />
           </label>
-          <button type="submit" className="justify-self-start rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white">
+          <button type="submit" className="justify-self-start rounded-lg bg-brand-navy px-4 py-2 text-sm font-medium text-white">
             Add subject
           </button>
         </form>
@@ -131,7 +131,7 @@ export default async function ManagePage({
               className="rounded-lg border border-slate-300 px-3 py-2 text-sm font-mono"
             />
           </label>
-          <button type="submit" className="justify-self-start rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white">
+          <button type="submit" className="justify-self-start rounded-lg bg-brand-navy px-4 py-2 text-sm font-medium text-white">
             Add unit
           </button>
         </form>
