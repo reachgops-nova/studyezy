@@ -9,10 +9,14 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
+        // Practice (calm, navy) vs test (warm, orange) stay visually
+        // distinct on purpose - a kid should always know which mode they're
+        // in - but both now read as part of the same navy/orange/cream
+        // brand instead of practice defaulting to generic blue.
         practice: {
-          bg: "#eef6ff",
-          border: "#bfdbfe",
-          accent: "#2563eb",
+          bg: "#f3f5fa",
+          border: "#dbe1ee",
+          accent: "#1e2a4a",
         },
         test: {
           bg: "#fff7ed",

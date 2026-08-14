@@ -62,6 +62,15 @@ const PAUSE_PROMPTS = [
 const CONTINUE_ACKS = ["Great, let's keep going!", "Awesome, moving on!", "Nice, here we go!"];
 const REPEAT_ACKS = ["No problem, let me explain that again.", "Sure, here it is again."];
 
+// In-Unit Micro-Checks (PLATFORM_PLAN.md §2.2): a couple of short, ungraded
+// questions once teaching finishes, to catch confusion while it's still
+// cheap to fix - before the formal progression test. Reuses the concept's
+// own voice_qa_samples rather than generating new questions, so this works
+// even without Anthropic credit. Answers aren't graded - just logged as an
+// InteractionEvent for future adaptive-teaching work.
+const MICRO_CHECK_COUNT = 2;
+const MICRO_CHECK_ACKS = ["Nice thinking!", "Good effort - thanks for trying that one!", "Noted, thank you!"];
+
 // Recognizes natural replies to a checkpoint pause ("okay", "got it", "again?")
 // without needing an AI call - this is what lets typing/saying a normal
 // response act like tapping the pause buttons, instead of always being sent
@@ -130,6 +139,8 @@ export default function AvatarChat({
   const [readyForInput, setReadyForInput] = useState(false);
   const [awaitingContinue, setAwaitingContinue] = useState(false);
   const [checkpointIndex, setCheckpointIndex] = useState(0);
+  const [inMicroCheck, setInMicroCheck] = useState(false);
+  const [microCheckIndex, setMicroCheckIndex] = useState(0);
   const [speaking, setSpeaking] = useState(false);
   const [speakingMessageId, setSpeakingMessageId] = useState<string | null>(null);
   const [highlightRange, setHighlightRange] = useState<[number, number] | null>(null);
@@ -195,19 +206,53 @@ export default function AvatarChat({
     window.speechSynthesis.speak(utterance);
   }
 
-  function playCheckpoint(index: number, token: number) {
+  function startFinalCheckIn(token: number) {
     if (playTokenRef.current !== token) return;
-    const checkpoints = checkpointsRef.current;
+    const samples = concept.voice_qa_samples ?? [];
+    if (samples.length > 0) {
+      askMicroCheck(0, token);
+      return;
+    }
+    const checkIn = "Want to try answering a quick question, or ask me anything about this?";
+    const id = nextId();
+    setMessages((prev) => [...prev, { id, sender: "avatar", text: checkIn }]);
+    speakText(checkIn, id, () => {});
+    setReadyForInput(true);
+    setAwaitingContinue(false);
+  }
 
-    if (checkpoints.length === 0 || index > checkpoints.length - 1) {
-      const checkIn =
-        concept.voice_qa_samples?.[0]?.question ??
-        "Want to try answering a quick question, or ask me anything about this?";
+  function askMicroCheck(index: number, token: number) {
+    if (playTokenRef.current !== token) return;
+    const samples = concept.voice_qa_samples ?? [];
+    const count = Math.min(MICRO_CHECK_COUNT, samples.length);
+
+    if (index >= count) {
+      setInMicroCheck(false);
+      const checkIn = "Ready to move on, or want to ask me anything else about this first?";
       const id = nextId();
       setMessages((prev) => [...prev, { id, sender: "avatar", text: checkIn }]);
       speakText(checkIn, id, () => {});
       setReadyForInput(true);
       setAwaitingContinue(false);
+      return;
+    }
+
+    const question = samples[index].question;
+    const id = nextId();
+    setMessages((prev) => [...prev, { id, sender: "avatar", text: question }]);
+    speakText(question, id, () => {});
+    setReadyForInput(true);
+    setAwaitingContinue(false);
+    setInMicroCheck(true);
+    setMicroCheckIndex(index);
+  }
+
+  function playCheckpoint(index: number, token: number) {
+    if (playTokenRef.current !== token) return;
+    const checkpoints = checkpointsRef.current;
+
+    if (checkpoints.length === 0 || index > checkpoints.length - 1) {
+      startFinalCheckIn(token);
       return;
     }
 
@@ -218,14 +263,7 @@ export default function AvatarChat({
       if (playTokenRef.current !== token) return;
       if (i >= msgs.length) {
         if (isLast) {
-          const checkIn =
-            concept.voice_qa_samples?.[0]?.question ??
-            "Want to try answering a quick question, or ask me anything about this?";
-          const id = nextId();
-          setMessages((prev) => [...prev, { id, sender: "avatar", text: checkIn }]);
-          speakText(checkIn, id, () => {});
-          setReadyForInput(true);
-          setAwaitingContinue(false);
+          startFinalCheckIn(token);
         } else {
           const prompt = PAUSE_PROMPTS[index % PAUSE_PROMPTS.length];
           const id = nextId();
@@ -260,6 +298,8 @@ export default function AvatarChat({
     setReadyForInput(false);
     setAwaitingContinue(false);
     setCheckpointIndex(0);
+    setInMicroCheck(false);
+    setMicroCheckIndex(0);
     setSpeaking(false);
     setSpeakingMessageId(null);
     setHighlightRange(null);
@@ -317,6 +357,24 @@ export default function AvatarChat({
         handleRepeatCheckpoint();
         return;
       }
+    }
+
+    // Micro-check answers aren't graded or routed to Claude - just
+    // acknowledged warmly and logged for later, so this works even without
+    // Anthropic credit.
+    if (inMicroCheck) {
+      const questionAsked = concept.voice_qa_samples?.[microCheckIndex]?.question ?? "";
+      const ack = MICRO_CHECK_ACKS[microCheckIndex % MICRO_CHECK_ACKS.length];
+      const ackId = nextId();
+      setMessages((prev) => [...prev, { id: ackId, sender: "avatar", text: ack }]);
+      fetch("/api/micro-check", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ unitKey, conceptId: concept.concept_id, question: questionAsked, answer: trimmed }),
+      }).catch(() => {});
+      const token = playTokenRef.current;
+      speakText(ack, ackId, () => askMicroCheck(microCheckIndex + 1, token));
+      return;
     }
 
     setLoading(true);
@@ -447,6 +505,10 @@ export default function AvatarChat({
                 🔁 Can you say that again?
               </button>
             </div>
+          ) : inMicroCheck ? (
+            <p className="mb-3 text-xs text-slate-400">
+              Quick check - just for you, no pressure. Type whatever comes to mind.
+            </p>
           ) : (
             readyForInput &&
             quickReplies.length > 0 && (
@@ -473,7 +535,9 @@ export default function AvatarChat({
               onChange={(e) => setInputText(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && sendMessage(inputText)}
               disabled={!readyForInput}
-              placeholder={readyForInput ? "Type or use the mic..." : "Ezy is teaching..."}
+              placeholder={
+                !readyForInput ? "Ezy is teaching..." : inMicroCheck ? "Type your answer..." : "Type or use the mic..."
+              }
               className="flex-1 rounded-lg border border-slate-300 px-3 py-2 text-sm disabled:bg-slate-50"
             />
             {speechInputSupported && (
