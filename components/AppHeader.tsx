@@ -1,7 +1,7 @@
 import Link from "next/link";
 import Logo from "./Logo";
 
-type NavKey = "select" | "dashboard" | "manage" | "admin";
+type NavKey = "select" | "dashboard" | "plan" | "manage" | "admin";
 
 export default function AppHeader({
   profile,
@@ -27,6 +27,9 @@ export default function AppHeader({
         </NavLink>
         <NavLink href="/dashboard" isActive={active === "dashboard"}>
           Dashboard
+        </NavLink>
+        <NavLink href="/plan" isActive={active === "plan"}>
+          Prep Plan
         </NavLink>
         <NavLink href="/manage" isActive={active === "manage"}>
           + Add subject or unit
