@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import type { Concept } from "@/lib/types";
 import Avatar from "./Avatar";
 import { Illustration } from "./illustrations";
+import VoicePicker, { getSavedRate, getSavedVoiceName } from "./VoicePicker";
 
 interface SpeechRecognitionResultLike {
   results: { [index: number]: { [index: number]: { transcript: string } } };
@@ -85,9 +86,8 @@ function matchCheckpointIntent(text: string): "continue" | "repeat" | null {
   return null;
 }
 
-// A slower-than-default pace reads clearly for a 9-10 year old without
-// dragging - 1.0 (browser default) reads too fast to follow along with.
-const SPEECH_RATE = 0.7;
+// Default speech rate lives in VoicePicker.tsx (getSavedRate) - a kid or
+// parent can tune it per-device now instead of a single fixed value.
 const SPEECH_LANG = "en-GB";
 
 let cachedVoices: SpeechSynthesisVoice[] = [];
@@ -98,8 +98,18 @@ function pickVoice(): SpeechSynthesisVoice | null {
   if (voices.length) cachedVoices = voices;
   const pool = cachedVoices.length ? cachedVoices : voices;
 
-  // Prefer an explicit British English voice; most platforms ship at least
-  // one (e.g. "Google UK English Female", "Daniel", "Kate", "Serena").
+  // A voice picked and previewed in VoicePicker always wins - it's a real
+  // choice made against what's actually installed on this device, better
+  // than any heuristic guess.
+  const savedName = getSavedVoiceName();
+  if (savedName) {
+    const saved = pool.find((v) => v.name === savedName);
+    if (saved) return saved;
+  }
+
+  // Otherwise fall back to a British English voice as the default; most
+  // platforms ship at least one (e.g. "Google UK English Female", "Daniel",
+  // "Kate", "Serena").
   const gb = pool.filter((v) => v.lang?.toLowerCase() === "en-gb");
   if (gb.length === 0) return null;
   return gb.find((v) => /female|kate|serena/i.test(v.name)) ?? gb[0];
@@ -150,6 +160,7 @@ export default function AvatarChat({
   const [listening, setListening] = useState(false);
   const [speechInputSupported, setSpeechInputSupported] = useState(false);
   const [readAloud, setReadAloud] = useState(true);
+  const [showVoicePicker, setShowVoicePicker] = useState(false);
 
   const playTokenRef = useRef(0);
   const checkpointsRef = useRef<string[][]>([]);
@@ -181,7 +192,7 @@ export default function AvatarChat({
     }
     const utterance = new SpeechSynthesisUtterance(text);
     utterance.lang = SPEECH_LANG;
-    utterance.rate = SPEECH_RATE;
+    utterance.rate = getSavedRate();
     const voice = pickVoice();
     if (voice) utterance.voice = voice;
     utterance.onboundary = (event) => {
@@ -565,16 +576,31 @@ export default function AvatarChat({
           </div>
 
           <div className="mt-2 flex items-center justify-between">
-            <label className="flex items-center gap-2 text-xs text-slate-500">
-              <input type="checkbox" checked={readAloud} onChange={(e) => setReadAloud(e.target.checked)} />
-              Read aloud
-            </label>
+            <div className="flex items-center gap-3">
+              <label className="flex items-center gap-2 text-xs text-slate-500">
+                <input type="checkbox" checked={readAloud} onChange={(e) => setReadAloud(e.target.checked)} />
+                Read aloud
+              </label>
+              <button
+                type="button"
+                onClick={() => setShowVoicePicker((prev) => !prev)}
+                className="text-xs font-medium text-brand-navy hover:underline"
+              >
+                🔊 Choose voice
+              </button>
+            </div>
             {speaking && (
               <span className="flex items-center gap-1 text-xs text-orange-600">
                 <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-orange-500" /> reading...
               </span>
             )}
           </div>
+
+          {showVoicePicker && (
+            <div className="mt-2">
+              <VoicePicker onClose={() => setShowVoicePicker(false)} />
+            </div>
+          )}
 
           {error && <p className="mt-2 text-sm text-red-600">{error}</p>}
         </div>
