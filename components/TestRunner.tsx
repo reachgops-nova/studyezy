@@ -3,6 +3,9 @@
 import { useState } from "react";
 import type { CurriculumUnit, StoredUnitResult, TestQuestion } from "@/lib/types";
 import { recordAttempt } from "@/lib/attempts";
+import ReasoningInterview, { type ReasoningItem } from "./ReasoningInterview";
+
+const MAX_REASONING_ITEMS = 2;
 
 type Answer =
   | { type: "multiple_choice"; selected: number | null }
@@ -21,6 +24,8 @@ export default function TestRunner({
   );
   const [submitting, setSubmitting] = useState(false);
   const [result, setResult] = useState<StoredUnitResult | null>(null);
+  const [reasoningItems, setReasoningItems] = useState<ReasoningItem[]>([]);
+  const [reasoningDone, setReasoningDone] = useState(false);
 
   function setMcq(index: number, selected: number) {
     setAnswers((prev) => prev.map((a, i) => (i === index ? { type: "multiple_choice", selected } : a)));
@@ -83,6 +88,32 @@ export default function TestRunner({
       }
     }
 
+    // Pick up to a couple of tested concepts that have a reasoning-interview
+    // prompt authored for them, and carry the kid's own answer text along so
+    // the Reasoning Interview step (after the score) has something concrete
+    // to ask about.
+    const candidates: ReasoningItem[] = [];
+    for (const g of graded) {
+      const q = questions[g.index];
+      const concept = unit.concepts.find((c) => c.concept_id === q.concept_tested);
+      const prompt = concept?.reasoning_interview_prompts?.[0];
+      if (!prompt) continue;
+
+      const a = answers[g.index];
+      const studentAnswerText =
+        a.type === "multiple_choice"
+          ? q.type === "multiple_choice" && a.selected !== null
+            ? q.options[a.selected]
+            : ""
+          : a.type === "short_answer"
+          ? a.text
+          : "";
+
+      candidates.push({ conceptId: q.concept_tested, prompt, question: q.question, studentAnswer: studentAnswerText });
+      if (candidates.length >= MAX_REASONING_ITEMS) break;
+    }
+    setReasoningItems(candidates);
+
     try {
       const stored = await recordAttempt({
         unitKey,
@@ -99,23 +130,33 @@ export default function TestRunner({
 
   if (result) {
     return (
-      <div className="rounded-xl border border-test-border bg-test-bg p-6">
-        <h2 className="text-xl font-bold">Nice work!</h2>
-        <p className="mt-2 text-slate-700">
-          Score: {result.scorePct}% - {bandLabel(result.band)}
-        </p>
-        <p className="mt-1 text-sm text-slate-600">
-          Next check-in suggested: {new Date(result.nextReviewDate).toLocaleDateString()}
-        </p>
-        <div className="mt-4 grid gap-2">
-          {answers.map((a, i) =>
-            a.type === "short_answer" && a.feedback ? (
-              <p key={i} className="rounded-lg bg-white p-3 text-sm text-slate-700">
-                <strong>Q{i + 1} feedback:</strong> {a.feedback}
-              </p>
-            ) : null
-          )}
+      <div>
+        <div className="rounded-xl border border-test-border bg-test-bg p-6">
+          <h2 className="text-xl font-bold">Nice work!</h2>
+          <p className="mt-2 text-slate-700">
+            Score: {result.scorePct}% - {bandLabel(result.band)}
+          </p>
+          <p className="mt-1 text-sm text-slate-600">
+            Next check-in suggested: {new Date(result.nextReviewDate).toLocaleDateString()}
+          </p>
+          <div className="mt-4 grid gap-2">
+            {answers.map((a, i) =>
+              a.type === "short_answer" && a.feedback ? (
+                <p key={i} className="rounded-lg bg-white p-3 text-sm text-slate-700">
+                  <strong>Q{i + 1} feedback:</strong> {a.feedback}
+                </p>
+              ) : null
+            )}
+          </div>
         </div>
+
+        {reasoningItems.length > 0 && !reasoningDone && (
+          <ReasoningInterview
+            unitKey={unitKey}
+            items={reasoningItems}
+            onDone={() => setReasoningDone(true)}
+          />
+        )}
       </div>
     );
   }

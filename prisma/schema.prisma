@@ -43,6 +43,7 @@ model StudentProfile {
   testAttempts      TestAttempt[]
   conceptMasteries  ConceptMastery[]
   interactionEvents InteractionEvent[]
+  reasoningLogs     ReasoningLog[]
 }
 
 // --- curriculum hierarchy ---
@@ -137,6 +138,7 @@ model Concept {
 
   conceptMasteries  ConceptMastery[]
   interactionEvents InteractionEvent[]
+  reasoningLogs     ReasoningLog[]
 
   @@unique([unitId, conceptKey])
 }
@@ -172,6 +174,25 @@ model TestAttempt {
   takenAt          DateTime       @default(now())
 
   @@index([studentProfileId, unitId, takenAt])
+}
+
+// Reasoning Interview (PLATFORM_PLAN.md §2.4): a short voice/text follow-up
+// after a test asking the kid to explain their thinking, classified into why
+// an answer was right/wrong - not just whether it was.
+model ReasoningLog {
+  id               String         @id @default(cuid())
+  studentProfileId String
+  studentProfile   StudentProfile @relation(fields: [studentProfileId], references: [id], onDelete: Cascade)
+  conceptId        String
+  concept          Concept        @relation(fields: [conceptId], references: [id], onDelete: Cascade)
+  question         String // the test question this follow-up relates to
+  studentAnswer    String // what the kid originally answered
+  explanation      String // how they explain their thinking, in their own words
+  classification   String // "correct_reasoning" | "conceptual_gap" | "careless_slip" | "misread_question"
+  note             String @db.Text // brief, kind, actionable feedback
+  createdAt        DateTime @default(now())
+
+  @@index([studentProfileId, createdAt])
 }
 
 model ConceptMastery {

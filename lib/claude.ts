@@ -137,6 +137,76 @@ export async function gradeShortAnswer(
   }
 }
 
+export type ReasoningClassification =
+  | "correct_reasoning"
+  | "conceptual_gap"
+  | "careless_slip"
+  | "misread_question";
+
+export interface ReasoningResult {
+  classification: ReasoningClassification;
+  note: string;
+}
+
+const VALID_CLASSIFICATIONS: ReasoningClassification[] = [
+  "correct_reasoning",
+  "conceptual_gap",
+  "careless_slip",
+  "misread_question",
+];
+
+/**
+ * Classifies *why* an answer was right or wrong from the kid's own
+ * explanation - a conceptual gap, a careless slip, or a misread question are
+ * three different fixes, and a raw score can't tell them apart. Feeds the
+ * Reasoning Interview (PLATFORM_PLAN.md §2.4) and later the Prep Planner.
+ */
+export async function classifyReasoning(
+  question: string,
+  studentAnswer: string,
+  explanation: string
+): Promise<ReasoningResult> {
+  const trimmedExplanation = explanation.trim().slice(0, 1000);
+
+  const response = await getClient().messages.create({
+    model: MODEL,
+    max_tokens: 300,
+    system:
+      "You are a kind Grade 5 tutor figuring out WHY a student answered the way they did, from their " +
+      "own explanation of their thinking. Classify into exactly one of: " +
+      '"correct_reasoning" (their thinking was sound, whether or not the final answer was marked right), ' +
+      '"conceptual_gap" (they do not yet understand the underlying idea), ' +
+      '"careless_slip" (they understand it but made a slip - rushing, a small error), ' +
+      '"misread_question" (they misunderstood what was being asked, not the concept itself). ' +
+      "Respond with ONLY a JSON object, no other text: " +
+      '{"classification": string, "note": string}. ' +
+      "The note is a short (under 50 words), warm, specific reaction to their explanation - never " +
+      "mention marks or scores, this is about understanding their thinking, not grading it.",
+    messages: [
+      {
+        role: "user",
+        content: `Question: ${question}\n\nStudent's answer: ${studentAnswer}\n\nStudent's explanation of their thinking: ${trimmedExplanation}`,
+      },
+    ],
+  });
+
+  const textBlock = response.content.find((block) => block.type === "text");
+  const raw = textBlock && textBlock.type === "text" ? textBlock.text : "{}";
+
+  try {
+    const parsed = JSON.parse(raw) as { classification: string; note: string };
+    const classification = VALID_CLASSIFICATIONS.includes(parsed.classification as ReasoningClassification)
+      ? (parsed.classification as ReasoningClassification)
+      : "correct_reasoning";
+    return { classification, note: parsed.note };
+  } catch {
+    return {
+      classification: "correct_reasoning",
+      note: "Thanks for walking me through your thinking!",
+    };
+  }
+}
+
 export interface ExpectedConcept {
   concept_id: string;
   concept_name: string;

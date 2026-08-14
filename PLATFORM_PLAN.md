@@ -46,6 +46,7 @@
 - **Live on Railway** — https://studyezy-production.up.railway.app, Postgres plugin + a `/data` volume for uploaded photos, `DATABASE_URL`/`UPLOADS_DIR`/`NODE_ENV` configured, Node pinned to 20+ for the Nixpacks build. Verified live: register → select curriculum → open Unit 1 → see real seeded content.
 - **Brand identity** — `components/Logo.tsx`, a kangaroo mascot (small set-back ears + elongated snout - the cues that actually read as "kangaroo" rather than fox/rabbit, verified by rendering and reading back each design attempt) matching `components/Avatar.tsx`, the in-lesson character. Navy/orange/warm-cream palette (`tailwind.config.ts` `brand.*` tokens) applied across every primary action, replacing the old blue-600. Used as the favicon and in a shared `AppHeader` across every authenticated screen; login/register/profiles show it above the form.
 - **Public landing page** — `/` now shows marketing content (differentiators, how-it-works, an honestly-labeled roadmap section, a plans section that says pilot-free rather than inventing pricing) to signed-out visitors instead of redirecting straight to `/login`.
+- **In-Unit Micro-Checks** (plan §2.2) — after the last teaching checkpoint for a concept, Ezy asks 1-2 short ungraded questions (reusing the concept's own `voice_qa_samples` - no Claude call needed, works even without credit) before opening into free Q&A. Answers are logged to `InteractionEvent`, not graded. Verified end-to-end against local Postgres.
 - **Security/quality baseline** — server-side-only API key handling, in-memory rate limiting, input validation on all API routes, `npm audit` clean, secrets/uploads gitignored, Vitest unit tests passing, clean build/lint/typecheck
 
 ### ⏳ Pending / not built yet
@@ -53,10 +54,9 @@
 - **Units 2–9** for English Stage 5, and **any Math/other-subject content** — not started, though `/manage` now makes adding them a UI action rather than a code change
 - **Reasoning Interview** (plan §2.4) — voice follow-up after a test to classify *why* an answer was wrong (conceptual gap vs. careless slip vs. misread question), not just score it
 - **Written Exam Capture & Coaching** (plan §2.5) — photograph a real handwritten paper, get exam-technique feedback (structure, working shown, time use) with marks shown last
-- **In-Unit Micro-Checks** (plan §2.2) — short ungraded questions while a unit is currently being taught in class
 - **Prep Planner** (plan §2.6) — weekly "what to revisit" view generated from mastery + Reasoning Interview data
 - **Live-verified voice Q&A, AI grading, and extraction** — code paths confirmed correct, but blocked on Anthropic account credit top-up to see a real answer end-to-end
-- **Adaptive teaching from interaction patterns** — the `InteractionEvent` table exists in the schema (foundation for logging question patterns, retry behavior, etc. per kid) but nothing writes to it yet and no behavior-changing logic sits on top of it - deliberately deferred to a later pass once there's real usage data to design against
+- **Adaptive teaching from interaction patterns** — `InteractionEvent` now has its first real writer (Micro-Checks), but nothing reads it back yet to change teaching behavior - still deliberately deferred until there's enough real usage data to design against
 - **A deeper UI/UX pass per-screen** — this round added consistent branding/color/nav; individual screens (test runner, avatar chat, forms) still use fairly plain Tailwind layout, not yet a full visual design pass
 - **CI pipeline + E2E tests** — build/test/lint all pass locally but nothing runs them automatically on push; no Playwright coverage yet. Queued next (2026-08-14) - the deterministic flows (auth, navigation, content) don't need Anthropic credit, so this can happen before the credit top-up.
 - **Payment plans** — explicitly deferred by the user ("later") - not designing or building anything payment-related yet.
