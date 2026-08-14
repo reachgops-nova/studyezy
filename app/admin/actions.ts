@@ -35,7 +35,12 @@ export async function deleteAccount(formData: FormData) {
     redirect("/admin?error=cannot_change_self");
   }
 
-  await db.user.delete({ where: { id: userId } }).catch(() => {});
+  try {
+    await db.user.delete({ where: { id: userId } });
+  } catch (err) {
+    console.error("deleteAccount failed", err);
+    redirect("/admin?error=delete_failed");
+  }
 
   redirect("/admin");
 }

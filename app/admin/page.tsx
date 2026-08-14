@@ -9,6 +9,7 @@ import { toggleAdminRole, deleteAccount } from "./actions";
 const ERROR_MESSAGES: Record<string, string> = {
   cannot_change_self: "You can't change or delete your own account from here.",
   unknown_user: "That account wasn't found - it may have already been removed.",
+  delete_failed: "Couldn't delete that account - please try again.",
 };
 
 export default async function AdminPage({

@@ -95,7 +95,7 @@ export async function getUploadedPageImages(key: string): Promise<string[]> {
   if (!unit) return [];
 
   const pages = await db.uploadedPage.findMany({
-    where: { unitId: unit.id },
+    where: { unitId: unit.id, purpose: "textbook_source" },
     orderBy: { createdAt: "asc" },
   });
   return pages.map((p) => `/api/uploads/${p.storageKey}`);

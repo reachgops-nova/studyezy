@@ -32,6 +32,8 @@ export async function POST(req: NextRequest) {
 
   const formData = await req.formData();
   const unitKey = formData.get("unitKey");
+  const purposeRaw = formData.get("purpose");
+  const purpose = purposeRaw === "exam_page" ? "exam_page" : "textbook_source";
 
   if (typeof unitKey !== "string" || !UNIT_KEY_PATTERN.test(unitKey)) {
     return NextResponse.json({ error: "Missing or invalid unit." }, { status: 400 });
@@ -79,6 +81,7 @@ export async function POST(req: NextRequest) {
         originalFilename: file.name,
         mimeType: file.type,
         byteSize: file.size,
+        purpose,
       },
     });
 

@@ -323,3 +323,76 @@ export async function extractConceptsFromPages(
       };
     });
 }
+
+export interface ExamCoachingResult {
+  technique_notes: string[];
+  overall_note: string;
+  marks_note: string;
+}
+
+const EXAM_COACHING_SYSTEM_PROMPT = `You are coaching a Grade 5 (Cambridge Stage 5) student on exam WRITING TECHNIQUE from photos of a real handwritten practice paper they just completed, timed like a real exam.
+
+Your focus is HOW they wrote the answers, not just whether they were correct:
+- Was working/reasoning shown, or just a final answer?
+- Is the final answer clearly indicated (underlined, boxed, "Answer:" etc.) or hard to find?
+- Does handwriting/layout suggest rushing on later questions (messier, shorter, incomplete)?
+- If time spent is given, does it look proportional across questions, or did they get stuck on one?
+
+Respond with ONLY a JSON object, no other text, no markdown fences:
+{"technique_notes": string[], "overall_note": string, "marks_note": string}
+
+- technique_notes: 2-4 short, specific, kind, ACTIONABLE tips framed as "next time, try..." - never "you failed to...". Reference specific questions/pages where useful.
+- overall_note: 1-2 encouraging sentences on their exam technique as a whole.
+- marks_note: a brief, low-emphasis note only about correctness/marks - this is shown LAST and de-emphasized, never the headline.
+
+Never use words like "wrong", "failed", or "bad" - this is coaching on craft, not a verdict.`;
+
+/**
+ * Written Exam Capture & Coaching (PLATFORM_PLAN.md §2.5): reads photos of a
+ * real handwritten practice paper directly (no separate OCR step - Claude's
+ * vision reads handwriting and reasons about technique in one pass) and
+ * coaches HOW it was written, not just whether it was right. Uses the
+ * extraction-tier model since this is a rare, high-value call, not a
+ * per-interaction one.
+ */
+export async function coachWrittenExam(
+  images: UploadedPageImage[],
+  timeSpentMinutes: number | null
+): Promise<ExamCoachingResult> {
+  const timeContext = timeSpentMinutes
+    ? `The student reports spending ${timeSpentMinutes} minutes on this paper.`
+    : "No time information was provided.";
+
+  const response = await getClient().messages.create({
+    model: EXTRACTION_MODEL,
+    max_tokens: 1000,
+    output_config: { effort: "medium" },
+    system: EXAM_COACHING_SYSTEM_PROMPT,
+    messages: [
+      {
+        role: "user",
+        content: [
+          ...images.map((img) => ({
+            type: "image" as const,
+            source: { type: "base64" as const, media_type: img.mediaType, data: img.base64 },
+          })),
+          { type: "text" as const, text: timeContext },
+        ],
+      },
+    ],
+  });
+
+  const textBlock = response.content.find((block) => block.type === "text");
+  const raw = textBlock && textBlock.type === "text" ? textBlock.text : "{}";
+
+  try {
+    const parsed = JSON.parse(raw) as ExamCoachingResult;
+    return {
+      technique_notes: parsed.technique_notes ?? [],
+      overall_note: parsed.overall_note ?? "",
+      marks_note: parsed.marks_note ?? "",
+    };
+  } catch {
+    throw new Error("Couldn't read that paper right now - please try again.");
+  }
+}

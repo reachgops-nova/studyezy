@@ -44,6 +44,7 @@ model StudentProfile {
   conceptMasteries  ConceptMastery[]
   interactionEvents InteractionEvent[]
   reasoningLogs     ReasoningLog[]
+  examSubmissions   ExamSubmission[]
 }
 
 // --- curriculum hierarchy ---
@@ -103,9 +104,10 @@ model Unit {
   createdBy            User?    @relation("UnitCreatedBy", fields: [createdByUserId], references: [id])
   createdAt            DateTime @default(now())
 
-  concepts      Concept[]
-  uploadedPages UploadedPage[]
-  testAttempts  TestAttempt[]
+  concepts        Concept[]
+  uploadedPages   UploadedPage[]
+  testAttempts    TestAttempt[]
+  examSubmissions ExamSubmission[]
 
   @@unique([subjectId, number])
 }
@@ -150,12 +152,34 @@ model UploadedPage {
   unitId           String
   unit             Unit     @relation(fields: [unitId], references: [id], onDelete: Cascade)
   uploadedByUserId String
-  uploadedBy       User     @relation(fields: [uploadedByUserId], references: [id])
+  uploadedBy       User     @relation(fields: [uploadedByUserId], references: [id], onDelete: Cascade)
   storageKey       String // relative path under UPLOADS_DIR, e.g. "cambridge-5-english-1/171...-ab12.jpg"
   originalFilename String
   mimeType         String
   byteSize         Int
+  purpose          String   @default("textbook_source") // "textbook_source" | "exam_page"
+  examSubmissionId String?
+  examSubmission   ExamSubmission? @relation(fields: [examSubmissionId], references: [id], onDelete: SetNull)
   createdAt        DateTime @default(now())
+}
+
+// Written Exam Capture & Coaching (PLATFORM_PLAN.md §2.5): a kid photographs
+// a real handwritten practice paper and gets feedback on exam technique
+// (working shown, time use) before marks - marks are one data point among
+// several, not the headline.
+model ExamSubmission {
+  id                String         @id @default(cuid())
+  studentProfileId  String
+  studentProfile    StudentProfile @relation(fields: [studentProfileId], references: [id], onDelete: Cascade)
+  unitId            String
+  unit              Unit           @relation(fields: [unitId], references: [id], onDelete: Cascade)
+  timeSpentMinutes  Int?
+  status            String         @default("pending") // "pending" | "coached" | "failed"
+  techniqueNotes     String[]
+  overallNote        String?       @db.Text
+  marksNote          String?       @db.Text
+  pages             UploadedPage[]
+  createdAt         DateTime       @default(now())
 }
 
 // --- progress / mastery ---
