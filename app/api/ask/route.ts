@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getActiveProfileId } from "@/lib/auth";
 import { getUnit } from "@/lib/content";
 import { askConceptQuestion, isConfigured } from "@/lib/claude";
+import { findLocalAnswer } from "@/lib/localAnswers";
 import { checkRateLimit } from "@/lib/rateLimit";
 
 const UNIT_KEY_PATTERN = /^[a-z0-9]+-\d+-[a-z0-9]+-\d+$/i;
@@ -17,13 +18,6 @@ export async function POST(req: NextRequest) {
     return NextResponse.json(
       { error: "Too many questions at once - take a short breather and try again." },
       { status: 429 }
-    );
-  }
-
-  if (!isConfigured()) {
-    return NextResponse.json(
-      { error: "Voice Q&A isn't configured yet - add ANTHROPIC_API_KEY to .env.local." },
-      { status: 503 }
     );
   }
 
@@ -57,14 +51,18 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Concept not found." }, { status: 404 });
   }
 
+  // Falls back to a locally-matched answer whenever Claude isn't available
+  // (no credit configured, or a transient failure) - a kid mid-lesson gets a
+  // real, grounded answer either way, never a dead end.
+  if (!isConfigured()) {
+    return NextResponse.json({ answer: findLocalAnswer(concept, question), source: "local" });
+  }
+
   try {
     const answer = await askConceptQuestion(concept, question);
-    return NextResponse.json({ answer });
+    return NextResponse.json({ answer, source: "ai" });
   } catch (err) {
-    console.error("askConceptQuestion failed", err);
-    return NextResponse.json(
-      { error: "Couldn't get an answer right now - please try again." },
-      { status: 502 }
-    );
+    console.error("askConceptQuestion failed, falling back to local answer", err);
+    return NextResponse.json({ answer: findLocalAnswer(concept, question), source: "local" });
   }
 }
