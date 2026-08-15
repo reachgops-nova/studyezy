@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getActiveProfileId } from "@/lib/auth";
 import { getUnit } from "@/lib/content";
 import { askConceptQuestion, isConfigured } from "@/lib/claude";
+import { askConceptQuestionGroq, isGroqConfigured } from "@/lib/groq";
 import { findLocalAnswer } from "@/lib/localAnswers";
 import { checkRateLimit } from "@/lib/rateLimit";
 
@@ -51,18 +52,27 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Concept not found." }, { status: 404 });
   }
 
-  // Falls back to a locally-matched answer whenever Claude isn't available
-  // (no credit configured, or a transient failure) - a kid mid-lesson gets a
-  // real, grounded answer either way, never a dead end.
-  if (!isConfigured()) {
-    return NextResponse.json({ answer: findLocalAnswer(concept, question), source: "local" });
+  // Three-tier fallback so a kid mid-lesson always gets a real, grounded
+  // answer: Claude first (best quality), then Groq's open-weight model (still
+  // genuinely dynamic, works without Anthropic credit), then the local
+  // pattern-matcher (always available, no network dependency at all).
+  if (isConfigured()) {
+    try {
+      const answer = await askConceptQuestion(concept, question);
+      return NextResponse.json({ answer, source: "ai" });
+    } catch (err) {
+      console.error("askConceptQuestion failed, trying next fallback", err);
+    }
   }
 
-  try {
-    const answer = await askConceptQuestion(concept, question);
-    return NextResponse.json({ answer, source: "ai" });
-  } catch (err) {
-    console.error("askConceptQuestion failed, falling back to local answer", err);
-    return NextResponse.json({ answer: findLocalAnswer(concept, question), source: "local" });
+  if (isGroqConfigured()) {
+    try {
+      const answer = await askConceptQuestionGroq(concept, question);
+      return NextResponse.json({ answer, source: "ai-groq" });
+    } catch (err) {
+      console.error("askConceptQuestionGroq failed, falling back to local answer", err);
+    }
   }
+
+  return NextResponse.json({ answer: findLocalAnswer(concept, question), source: "local" });
 }

@@ -69,22 +69,14 @@ const REPEAT_ACKS = ["No problem, let me explain that again.", "Sure, here it is
 // own voice_qa_samples rather than generating new questions, so this works
 // even without Anthropic credit. Answers aren't graded - just logged as an
 // InteractionEvent for future adaptive-teaching work.
+//
+// The ack itself is computed server-side (app/api/micro-check/route.ts):
+// obvious non-answers ("ok", "idk") get an honest reply with no AI call,
+// anything else gets a real, content-aware reaction from Groq's open-weight
+// model when configured - so the reply actually reflects what the kid said
+// instead of a canned phrase.
 const MICRO_CHECK_COUNT = 2;
-const MICRO_CHECK_ACKS = ["Nice thinking!", "Good effort - thanks for trying that one!", "Noted, thank you!"];
-
-// A real explanation gets real praise; a low-effort reply ("ok", "yes", "idk")
-// gets an honest, still-warm response instead of pretending it was an answer
-// - no AI call needed, just a length/pattern check.
-const LOW_EFFORT_PATTERN =
-  /^(ok(ay)?|k|yes|yeah|yep|no|nope|sure|fine|good|nice|idk|i ?don'?t ?know|dunno|hmm+|maybe|not sure)[.!?]*$/i;
-const LOW_EFFORT_ACKS = [
-  "That's okay if you're not sure yet - we'll come back to this kind of question.",
-  "No worries - it'll come with more practice. Let's keep going.",
-];
-
-function isLowEffortAnswer(text: string): boolean {
-  return text.trim().length < 4 || LOW_EFFORT_PATTERN.test(text.trim());
-}
+const FALLBACK_ACK = "Thanks for sharing your thinking!";
 
 // Recognizes natural replies to a checkpoint pause ("okay", "got it", "again?")
 // without needing an AI call - this is what lets typing/saying a normal
@@ -384,21 +376,37 @@ export default function AvatarChat({
       }
     }
 
-    // Micro-check answers aren't graded or routed to Claude - just
-    // acknowledged warmly and logged for later, so this works even without
-    // Anthropic credit.
+    // Micro-check answers aren't graded - just logged, with a genuinely
+    // content-aware reaction computed server-side (see comment above
+    // MICRO_CHECK_COUNT). Awaited (not fire-and-forget) so what's spoken back
+    // actually reflects what the kid said, not a canned line picked before
+    // the server even sees the answer.
     if (inMicroCheck) {
       const questionAsked = concept.voice_qa_samples?.[microCheckIndex]?.question ?? "";
-      const ack = isLowEffortAnswer(trimmed)
-        ? LOW_EFFORT_ACKS[microCheckIndex % LOW_EFFORT_ACKS.length]
-        : MICRO_CHECK_ACKS[microCheckIndex % MICRO_CHECK_ACKS.length];
+      setLoading(true);
+      let ack = FALLBACK_ACK;
+      try {
+        const res = await fetch("/api/micro-check", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            unitKey,
+            conceptId: concept.concept_id,
+            question: questionAsked,
+            answer: trimmed,
+            index: microCheckIndex,
+          }),
+        });
+        if (res.ok) {
+          const data = (await res.json()) as { ack: string };
+          if (data.ack) ack = data.ack;
+        }
+      } catch {
+        // keep FALLBACK_ACK
+      }
+      setLoading(false);
       const ackId = nextId();
       setMessages((prev) => [...prev, { id: ackId, sender: "avatar", text: ack }]);
-      fetch("/api/micro-check", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ unitKey, conceptId: concept.concept_id, question: questionAsked, answer: trimmed }),
-      }).catch(() => {});
       const token = playTokenRef.current;
       speakText(ack, ackId, () => askMicroCheck(microCheckIndex + 1, token));
       return;
