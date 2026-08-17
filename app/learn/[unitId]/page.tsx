@@ -3,6 +3,8 @@ import Link from "next/link";
 import { getActiveProfile } from "@/lib/auth";
 import { getCurrentUser } from "@/lib/session";
 import { getUnit, getUploadedPageImages } from "@/lib/content";
+import { getUnitResourceGroupsByKey } from "@/lib/queries/unitResources";
+import { FREEZABLE_TYPES } from "@/lib/unitResources";
 import { LogoMark } from "@/components/Logo";
 import UnitView from "@/components/UnitView";
 
@@ -20,6 +22,9 @@ export default async function LearnPage({ params }: { params: Promise<{ unitId: 
   if (!unit) notFound();
 
   const pageImages = await getUploadedPageImages(unitId);
+  const resourceGroups = (await getUnitResourceGroupsByKey(unitId)).filter((g) =>
+    (FREEZABLE_TYPES as string[]).includes(g.type)
+  );
 
   return (
     <main className="grid gap-6">
@@ -52,7 +57,7 @@ export default async function LearnPage({ params }: { params: Promise<{ unitId: 
         </div>
       </header>
 
-      <UnitView unit={unit} unitKey={unitId} initialPageImages={pageImages} />
+      <UnitView unit={unit} unitKey={unitId} initialPageImages={pageImages} resourceGroups={resourceGroups} />
     </main>
   );
 }

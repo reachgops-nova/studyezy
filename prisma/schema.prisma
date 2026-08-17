@@ -16,11 +16,13 @@ model User {
   role         String   @default("parent") // "parent" | "admin" - the very first account ever registered becomes admin automatically
   createdAt    DateTime @default(now())
 
-  sessions        Session[]
-  studentProfiles StudentProfile[]
-  uploadedPages   UploadedPage[]
-  createdSubjects Subject[] @relation("SubjectCreatedBy")
-  createdUnits    Unit[]    @relation("UnitCreatedBy")
+  sessions          Session[]
+  studentProfiles   StudentProfile[]
+  uploadedPages     UploadedPage[]
+  createdSubjects   Subject[]      @relation("SubjectCreatedBy")
+  createdUnits      Unit[]         @relation("UnitCreatedBy")
+  uploadedResources UnitResource[] @relation("ResourceUploadedBy")
+  approvedResources UnitResource[] @relation("ResourceApprovedBy")
 }
 
 model Session {
@@ -108,6 +110,7 @@ model Unit {
   uploadedPages   UploadedPage[]
   testAttempts    TestAttempt[]
   examSubmissions ExamSubmission[]
+  resources       UnitResource[]
 
   @@unique([subjectId, number])
 }
@@ -161,6 +164,38 @@ model UploadedPage {
   examSubmissionId String?
   examSubmission   ExamSubmission? @relation(fields: [examSubmissionId], references: [id], onDelete: SetNull)
   createdAt        DateTime @default(now())
+}
+
+// Admin-curated curriculum content (PLATFORM_PLAN.md §2.7): the canonical
+// textbook/worksheet/classwork/homework set for a unit, shared across every
+// student of that grade+curriculum once an admin approves it - not a
+// per-family copy like UploadedPage. A family can still contribute one (goes
+// in as "pending"), but once a type has an approved resource for a unit,
+// further family uploads of that same type are frozen (see
+// lib/unitResources.ts's FREEZABLE_TYPES) - one canonical copy is enough,
+// and an admin can always add more. Exam question papers and answer sheets
+// are also curatable here (as reference material for question-paper
+// generation) but are deliberately never frozen for families - a student's
+// own exam attempt is personal (Written Exam Capture & Coaching /
+// ExamSubmission above), never a single shared copy.
+model UnitResource {
+  id               String    @id @default(cuid())
+  unitId           String
+  unit             Unit      @relation(fields: [unitId], references: [id], onDelete: Cascade)
+  resourceType     String    // "textbook" | "worksheet" | "classwork" | "homework" | "exam_question_paper" | "answer_sheet"
+  storageKey       String
+  originalFilename String
+  mimeType         String
+  byteSize         Int
+  status           String    @default("pending") // "pending" | "approved"
+  uploadedByUserId String
+  uploadedBy       User      @relation("ResourceUploadedBy", fields: [uploadedByUserId], references: [id], onDelete: Cascade)
+  approvedByUserId String?
+  approvedBy       User?     @relation("ResourceApprovedBy", fields: [approvedByUserId], references: [id], onDelete: SetNull)
+  approvedAt       DateTime?
+  createdAt        DateTime  @default(now())
+
+  @@index([unitId, resourceType, status])
 }
 
 // Written Exam Capture & Coaching (PLATFORM_PLAN.md §2.5): a kid photographs

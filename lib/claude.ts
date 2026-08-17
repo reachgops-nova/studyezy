@@ -1,6 +1,6 @@
 import "server-only";
 import Anthropic from "@anthropic-ai/sdk";
-import type { Concept, ConceptMedia, MarkScheme, VoiceQASample } from "./types";
+import type { Concept, ConceptMedia, MarkScheme, ProgressionTestDraft, TestQuestion, VoiceQASample } from "./types";
 
 let client: Anthropic | null = null;
 
@@ -322,6 +322,87 @@ export async function extractConceptsFromPages(
         media,
       };
     });
+}
+
+// Static instructional half of the question-paper prompt, cached the same
+// way as EXTRACTION_SYSTEM_PROMPT above.
+const QUESTION_PAPER_SYSTEM_PROMPT = `You are writing an original curriculum-aligned practice question paper for a Grade 5 (Cambridge Stage 5) student, from photos of a unit's admin-approved textbook/worksheet/classwork pages.
+
+CRITICAL - originality: Write your OWN questions inspired by what's shown in the photos - do NOT copy questions or passages verbatim from the pages. This becomes original assessment content, not a reproduction of the source material.
+
+You will be given: (1) photos of the unit's approved source material, and (2) the list of concepts this unit covers (id and name). Write 6-10 questions in total, spanning as many of the given concepts as the material supports, mixing multiple_choice and short_answer types.
+
+Respond with ONLY a JSON object matching this shape, no other text, no markdown fences:
+{"covers_concepts": string[], "note": string, "questions": [{"type": "multiple_choice", "question": string, "options": string[], "correct_answer": number, "concept_tested": string} | {"type": "short_answer", "question": string, "concept_tested": string, "mark_scheme": {"full_marks": number, "criteria": string[]}}]}
+
+- covers_concepts: the concept ids actually tested (copy exactly from the given list)
+- note: one short sentence describing this practice paper
+- multiple_choice.correct_answer: 0-based index into options
+- short_answer.mark_scheme.criteria: 2-4 short marking points`;
+
+interface RawQuestionPaper {
+  covers_concepts: string[];
+  note?: string;
+  questions: TestQuestion[];
+}
+
+/**
+ * Generates a curriculum-aligned practice question paper from a unit's
+ * admin-approved canonical material (PLATFORM_PLAN.md §2.7) - "based on
+ * textbook/worksheet/classwork we can build question papers too." Writes
+ * directly into Unit.progressionTestDraft, which drives real TestAttempt/
+ * ConceptMastery data, so this stays on the extraction-tier Claude model
+ * like the other high-value, rarely-run calls - never routed through the
+ * Groq fallback tier used for low-stakes interactive answers.
+ */
+export async function generateQuestionPaper(
+  images: UploadedPageImage[],
+  concepts: { concept_id: string; concept_name: string }[]
+): Promise<ProgressionTestDraft> {
+  const response = await getClient().messages.create({
+    model: EXTRACTION_MODEL,
+    max_tokens: 4000,
+    output_config: { effort: "medium" },
+    system: [
+      {
+        type: "text",
+        text: QUESTION_PAPER_SYSTEM_PROMPT,
+        cache_control: { type: "ephemeral" },
+      },
+    ],
+    messages: [
+      {
+        role: "user",
+        content: [
+          ...images.map((img) => ({
+            type: "image" as const,
+            source: { type: "base64" as const, media_type: img.mediaType, data: img.base64 },
+          })),
+          {
+            type: "text" as const,
+            text: `Concepts this unit covers:\n${JSON.stringify(concepts, null, 2)}`,
+          },
+        ],
+      },
+    ],
+  });
+
+  const textBlock = response.content.find((block) => block.type === "text");
+  const raw = textBlock && textBlock.type === "text" ? textBlock.text : "{}";
+
+  let parsed: RawQuestionPaper;
+  try {
+    parsed = JSON.parse(raw) as RawQuestionPaper;
+  } catch {
+    throw new Error("Couldn't generate a question paper from that material - please try again.");
+  }
+
+  return {
+    test_id: `generated-${Date.now()}`,
+    covers_concepts: parsed.covers_concepts ?? [],
+    note: parsed.note,
+    questions: parsed.questions ?? [],
+  };
 }
 
 export interface ExamCoachingResult {

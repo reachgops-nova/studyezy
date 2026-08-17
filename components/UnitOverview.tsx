@@ -3,11 +3,14 @@
 import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import type { CurriculumUnit } from "@/lib/types";
+import type { ResourceGroup } from "@/lib/queries/unitResources";
+import UnitResources from "./UnitResources";
 
 export default function UnitOverview({
   unit,
   unitKey,
   pageImages,
+  resourceGroups,
   onPageImagesUploaded,
   onStartDiagnostic,
   onSkipToTeaching,
@@ -15,6 +18,7 @@ export default function UnitOverview({
   unit: CurriculumUnit;
   unitKey: string;
   pageImages: string[];
+  resourceGroups: ResourceGroup[];
   onPageImagesUploaded: (paths: string[]) => void;
   onStartDiagnostic: () => void;
   onSkipToTeaching: () => void;
@@ -101,6 +105,8 @@ export default function UnitOverview({
           ))}
         </ul>
       </div>
+
+      <UnitResources unitKey={unitKey} groups={resourceGroups} />
 
       <div className="rounded-xl border border-slate-200 bg-white p-5">
         <div className="flex items-center justify-between">

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import type { CurriculumUnit } from "@/lib/types";
+import type { ResourceGroup } from "@/lib/queries/unitResources";
 import AvatarChat from "./AvatarChat";
 import UnitOverview from "./UnitOverview";
 import UnitDiagnostic from "./UnitDiagnostic";
@@ -12,10 +13,12 @@ export default function UnitView({
   unit,
   unitKey,
   initialPageImages,
+  resourceGroups,
 }: {
   unit: CurriculumUnit;
   unitKey: string;
   initialPageImages: string[];
+  resourceGroups: ResourceGroup[];
 }) {
   const [stage, setStage] = useState<Stage>("overview");
   const [selectedId, setSelectedId] = useState(unit.concepts[0]?.concept_id);
@@ -28,6 +31,7 @@ export default function UnitView({
         unit={unit}
         unitKey={unitKey}
         pageImages={pageImages}
+        resourceGroups={resourceGroups}
         onPageImagesUploaded={(newPaths) => setPageImages((prev) => [...prev, ...newPaths])}
         onStartDiagnostic={() => setStage("diagnostic")}
         onSkipToTeaching={() => setStage("lesson")}

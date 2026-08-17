@@ -7,8 +7,9 @@ import { UPLOADS_DIR } from "@/lib/uploads";
 
 export const runtime = "nodejs";
 
-// Personal family textbook photos - never served without an active login,
-// never CDN-cached publicly.
+// Covers both personal family photos (UploadedPage) and admin-curated
+// curriculum resources (UnitResource, storageKey prefixed "resources/") -
+// never served without an active login, never CDN-cached publicly.
 export async function GET(_req: NextRequest, { params }: { params: Promise<{ path: string[] }> }) {
   const user = await getCurrentUser();
   if (!user) {
@@ -18,8 +19,10 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ pat
   const { path: segments } = await params;
   const storageKey = segments.join("/");
 
-  const page = await db.uploadedPage.findFirst({ where: { storageKey } });
-  if (!page) {
+  const file = storageKey.startsWith("resources/")
+    ? await db.unitResource.findFirst({ where: { storageKey } })
+    : await db.uploadedPage.findFirst({ where: { storageKey } });
+  if (!file) {
     return NextResponse.json({ error: "Not found." }, { status: 404 });
   }
 
@@ -27,8 +30,8 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ pat
     const bytes = await readFile(path.join(UPLOADS_DIR, storageKey));
     return new NextResponse(new Uint8Array(bytes), {
       headers: {
-        "Content-Type": page.mimeType,
-        "Content-Length": String(page.byteSize),
+        "Content-Type": file.mimeType,
+        "Content-Length": String(file.byteSize),
         "Cache-Control": "private, max-age=3600",
       },
     });

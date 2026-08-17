@@ -1,7 +1,7 @@
 import Link from "next/link";
 import Logo from "./Logo";
 
-type NavKey = "select" | "dashboard" | "plan" | "manage" | "admin";
+type NavKey = "select" | "dashboard" | "plan" | "manage" | "admin" | "admin-resources";
 
 export default function AppHeader({
   profile,
@@ -35,9 +35,14 @@ export default function AppHeader({
           + Add subject or unit
         </NavLink>
         {isAdmin && (
-          <NavLink href="/admin" isActive={active === "admin"}>
-            Admin
-          </NavLink>
+          <>
+            <NavLink href="/admin" isActive={active === "admin"}>
+              Admin
+            </NavLink>
+            <NavLink href="/admin/resources" isActive={active === "admin-resources"}>
+              Curriculum materials
+            </NavLink>
+          </>
         )}
         <Link
           href="/profiles"
