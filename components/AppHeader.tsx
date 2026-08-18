@@ -24,7 +24,7 @@ export default function AppHeader({
   return (
     <header className="mb-6 flex items-center justify-between gap-2 border-b border-slate-200 pb-4">
       <Link href="/select" className="shrink-0" aria-label="StudyEzy home">
-        <Logo textClassName="text-sm sm:text-lg" className="h-7 w-7 sm:h-8 sm:w-8" />
+        <Logo className="h-8 sm:h-9" />
       </Link>
 
       <nav className="flex min-w-0 items-center gap-1 text-sm">

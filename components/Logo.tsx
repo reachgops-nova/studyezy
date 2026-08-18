@@ -39,61 +39,18 @@ export function LogoMark({ className = "h-8 w-8" }: { className?: string }) {
   );
 }
 
-// The wordmark's "E" (of "St[u]dy[E]zy") is a stylized double-chevron arrow
-// rather than a literal letterform - matches the shared brand reference:
-// "Study" in navy, then this arrow, then "zy" and a trailing dot motif, all
-// in the orange mascot accent.
-function ArrowGlyph({ className = "h-[0.85em] w-[0.85em]" }: { className?: string }) {
-  const id = `arrow-${++gradientIdCounter}`;
+// Full wordmark: the exact banner the user shared and asked to use
+// verbatim, unaltered ("public/brand/studyezy-logo-banner.webp" - saved as
+// its original bytes, not redrawn). 1370x412 natural size - always sized by
+// height with width auto so the real aspect ratio is preserved, never
+// stretched or cropped.
+export default function Logo({ className = "h-10 w-auto" }: { className?: string }) {
   return (
-    <svg viewBox="0 0 40 40" className={className} aria-hidden>
-      <defs>
-        <linearGradient id={id} x1="4" y1="8" x2="36" y2="32" gradientUnits="userSpaceOnUse">
-          <stop offset="0" stopColor="#fdba74" />
-          <stop offset="1" stopColor="#ea580c" />
-        </linearGradient>
-      </defs>
-      <path
-        d="M4,8 L20,8 L36,20 L20,32 L4,32"
-        stroke={`url(#${id})`}
-        strokeWidth="6"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        fill="none"
-      />
-    </svg>
-  );
-}
-
-function DotTrail({ className = "" }: { className?: string }) {
-  return (
-    <svg viewBox="0 0 30 12" className={`h-[0.5em] w-auto ${className}`} aria-hidden>
-      <circle cx="4" cy="6" r="4" fill="#1e2a4a" />
-      <circle cx="16" cy="6" r="3" fill="#94a3b8" />
-      <circle cx="26" cy="6" r="2" fill="#fb923c" />
-    </svg>
-  );
-}
-
-export default function Logo({
-  className = "h-8 w-8",
-  textClassName = "text-lg",
-  showMark = true,
-}: {
-  className?: string;
-  textClassName?: string;
-  showMark?: boolean;
-}) {
-  return (
-    <span className="inline-flex items-center gap-2">
-      {showMark && <LogoMark className={className} />}
-      <span className={`inline-flex items-center font-display font-bold tracking-tight ${textClassName}`}>
-        <span className="text-brand-navy">Stud</span>
-        <span className="text-brand-navy">y</span>
-        <ArrowGlyph className="mx-0.5 h-[0.8em] w-[0.8em] translate-y-[0.05em]" />
-        <span className="text-orange-500">zy</span>
-        <DotTrail className="ml-1 self-end" />
-      </span>
-    </span>
+    // eslint-disable-next-line @next/next/no-img-element
+    <img
+      src="/brand/studyezy-logo-banner.webp"
+      alt="StudyEzy - making complexity easy, from kids to grown-ups"
+      className={className}
+    />
   );
 }

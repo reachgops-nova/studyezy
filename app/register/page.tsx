@@ -19,7 +19,7 @@ export default async function RegisterPage({
   return (
     <main className="flex min-h-[80vh] flex-col items-center justify-center gap-8">
       <div className="flex flex-col items-center gap-3 text-center">
-        <Logo className="h-14 w-14" textClassName="text-3xl" />
+        <Logo className="h-16 sm:h-20" />
         <p className="text-slate-600">Create an account to get started.</p>
       </div>
 

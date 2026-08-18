@@ -20,7 +20,7 @@ function LandingPage() {
   return (
     <div className="grid gap-20 pb-16">
       <nav className="flex items-center justify-between gap-2 pt-2">
-        <Logo textClassName="text-base sm:text-xl" className="h-7 w-7 sm:h-8 sm:w-8" />
+        <Logo className="h-9 sm:h-11" />
         <div className="flex shrink-0 items-center gap-2 sm:gap-4">
           <Link
             href="/login"
