@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getActiveProfileId } from "@/lib/auth";
 import { getUnit } from "@/lib/content";
 import { gradeShortAnswer, isConfigured } from "@/lib/claude";
+import { gradeShortAnswerGroq, isGroqConfigured } from "@/lib/groq";
 import { checkRateLimit } from "@/lib/rateLimit";
 
 const UNIT_KEY_PATTERN = /^[a-z0-9]+-\d+-[a-z0-9]+-\d+$/i;
@@ -17,9 +18,9 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Too many requests - try again shortly." }, { status: 429 });
   }
 
-  if (!isConfigured()) {
+  if (!isConfigured() && !isGroqConfigured()) {
     return NextResponse.json(
-      { error: "Grading isn't configured yet - add ANTHROPIC_API_KEY to .env.local." },
+      { error: "Grading isn't configured yet - add ANTHROPIC_API_KEY or GROQ_API_KEY." },
       { status: 503 }
     );
   }
@@ -54,11 +55,27 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Question not found or not gradeable this way." }, { status: 404 });
   }
 
-  try {
-    const result = await gradeShortAnswer(question.question, question.mark_scheme, studentAnswer);
-    return NextResponse.json(result);
-  } catch (err) {
-    console.error("gradeShortAnswer failed", err);
-    return NextResponse.json({ error: "Couldn't grade this right now - please try again." }, { status: 502 });
+  // Claude tried first (higher quality, and this writes directly into
+  // ConceptMastery/retest scheduling); Groq is a real, working fallback -
+  // not a silent no-op - for whenever Claude isn't configured or fails,
+  // per the user's explicit call to extend it here.
+  if (isConfigured()) {
+    try {
+      const result = await gradeShortAnswer(question.question, question.mark_scheme, studentAnswer);
+      return NextResponse.json({ ...result, source: "ai" });
+    } catch (err) {
+      console.error("gradeShortAnswer failed, trying Groq fallback", err);
+    }
   }
+
+  if (isGroqConfigured()) {
+    try {
+      const result = await gradeShortAnswerGroq(question.question, question.mark_scheme, studentAnswer);
+      return NextResponse.json({ ...result, source: "ai-groq" });
+    } catch (err) {
+      console.error("gradeShortAnswerGroq failed", err);
+    }
+  }
+
+  return NextResponse.json({ error: "Couldn't grade this right now - please try again." }, { status: 502 });
 }

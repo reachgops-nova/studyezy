@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getActiveProfileId } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { classifyReasoning, isConfigured } from "@/lib/claude";
+import { classifyReasoningGroq, isGroqConfigured } from "@/lib/groq";
 import { checkRateLimit } from "@/lib/rateLimit";
 
 const UNIT_KEY_PATTERN = /^[a-z0-9]+-\d+-[a-z0-9]+-\d+$/i;
@@ -17,9 +18,9 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Too many requests - try again shortly." }, { status: 429 });
   }
 
-  if (!isConfigured()) {
+  if (!isConfigured() && !isGroqConfigured()) {
     return NextResponse.json(
-      { error: "The Reasoning Interview isn't configured yet - add ANTHROPIC_API_KEY to .env.local." },
+      { error: "The Reasoning Interview isn't configured yet - add ANTHROPIC_API_KEY or GROQ_API_KEY." },
       { status: 503 }
     );
   }
@@ -56,24 +57,44 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Concept not found." }, { status: 404 });
   }
 
-  try {
-    const result = await classifyReasoning(question, studentAnswer, explanation);
+  // Lower stakes than grading (this only shapes the explanatory "note" shown
+  // to the parent/kid - it doesn't drive ConceptMastery/retest scheduling),
+  // but still tries Claude first when available.
+  let result: { classification: string; note: string; source: "ai" | "ai-groq" } | null = null;
 
-    await db.reasoningLog.create({
-      data: {
-        studentProfileId: profileId,
-        conceptId: concept.id,
-        question,
-        studentAnswer,
-        explanation,
-        classification: result.classification,
-        note: result.note,
-      },
-    });
+  if (isConfigured()) {
+    try {
+      const r = await classifyReasoning(question, studentAnswer, explanation);
+      result = { ...r, source: "ai" };
+    } catch (err) {
+      console.error("classifyReasoning failed, trying Groq fallback", err);
+    }
+  }
 
-    return NextResponse.json(result);
-  } catch (err) {
-    console.error("classifyReasoning failed", err);
+  if (!result && isGroqConfigured()) {
+    try {
+      const r = await classifyReasoningGroq(question, studentAnswer, explanation);
+      result = { ...r, source: "ai-groq" };
+    } catch (err) {
+      console.error("classifyReasoningGroq failed", err);
+    }
+  }
+
+  if (!result) {
     return NextResponse.json({ error: "Couldn't process that right now - please try again." }, { status: 502 });
   }
+
+  await db.reasoningLog.create({
+    data: {
+      studentProfileId: profileId,
+      conceptId: concept.id,
+      question,
+      studentAnswer,
+      explanation,
+      classification: result.classification,
+      note: result.note,
+    },
+  });
+
+  return NextResponse.json(result);
 }

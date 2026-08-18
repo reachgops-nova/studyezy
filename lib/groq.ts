@@ -1,5 +1,6 @@
 import "server-only";
-import type { Concept } from "./types";
+import type { Concept, MarkScheme } from "./types";
+import type { GradeResult, ReasoningClassification, ReasoningResult } from "./claude";
 
 // Groq hosts open-weight models (Llama etc.) behind a fast, OpenAI-compatible
 // endpoint - used as a genuinely-dynamic middle tier between full Claude
@@ -63,6 +64,41 @@ async function groqChat(model: string, system: string, user: string, maxTokens: 
   return text;
 }
 
+// Same shape as groqChat, but requests structured JSON output - used by
+// grading/classification, which need a real object back, not prose.
+// Verified against the live API with this project's actual grading and
+// Reasoning Interview prompts before relying on it (response_format:
+// json_object works with QA_MODEL).
+async function groqChatJSON<T>(model: string, system: string, user: string, maxTokens: number): Promise<T> {
+  const res = await fetch(GROQ_API_URL, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${process.env.GROQ_API_KEY}`,
+    },
+    body: JSON.stringify({
+      model,
+      max_tokens: maxTokens,
+      temperature: 0.3,
+      reasoning_effort: "low",
+      response_format: { type: "json_object" },
+      messages: [
+        { role: "system", content: system },
+        { role: "user", content: user },
+      ],
+    }),
+  });
+
+  if (!res.ok) {
+    throw new Error(`Groq request failed: ${res.status} ${await res.text()}`);
+  }
+
+  const data = (await res.json()) as { choices?: { message?: { content?: string } }[] };
+  const raw = data.choices?.[0]?.message?.content?.trim();
+  if (!raw) throw new Error("Groq returned no content");
+  return JSON.parse(raw) as T;
+}
+
 /**
  * Same contract as lib/claude.ts's askConceptQuestion, for whenever
  * ANTHROPIC_API_KEY isn't configured but GROQ_API_KEY is - grounded in the
@@ -111,4 +147,80 @@ export async function groqMicroCheckReaction(question: string, studentAnswer: st
     `Question asked: ${question}\n\nStudent's answer: ${studentAnswer.trim().slice(0, 500)}`,
     80
   );
+}
+
+// 2026-08-19: extended to grading and Reasoning Interview classification too
+// - explicit user decision (both were previously Claude-only on the
+// reasoning that a wrong guess would corrupt ConceptMastery/retest
+// scheduling). Grading in particular still writes directly into that data,
+// so this is a real, acknowledged quality/consistency tradeoff versus
+// Claude, not a free upgrade - accepted because "some feedback now" beats
+// "no feedback until credit exists" for this pilot's scale, and Claude
+// still gets tried first whenever it's configured (see the API routes).
+
+/** Same contract as lib/claude.ts's gradeShortAnswer. */
+export async function gradeShortAnswerGroq(
+  questionText: string,
+  markScheme: MarkScheme,
+  studentAnswer: string
+): Promise<GradeResult> {
+  const trimmedAnswer = studentAnswer.trim().slice(0, 2000);
+
+  const parsed = await groqChatJSON<{ marks_awarded: number; feedback: string }>(
+    QA_MODEL,
+    "You are grading a Grade 5 student's short-answer response, kindly and constructively. " +
+      "Respond with ONLY a JSON object matching this shape, no other text: " +
+      '{"marks_awarded": number, "feedback": string}. ' +
+      "The feedback should focus on how to write the answer better next time (e.g. show your " +
+      "reasoning, use evidence from the text), not just whether it was right or wrong. Keep feedback " +
+      "under 80 words and encouraging in tone.",
+    `Question: ${questionText}\n\nMark scheme (full marks: ${markScheme.full_marks}):\n${markScheme.criteria
+      .map((c) => `- ${c}`)
+      .join("\n")}\n\nStudent's answer: ${trimmedAnswer}`,
+    400
+  );
+
+  return {
+    marks_awarded: Math.max(0, Math.min(markScheme.full_marks, Math.round(parsed.marks_awarded))),
+    full_marks: markScheme.full_marks,
+    feedback: parsed.feedback,
+  };
+}
+
+const VALID_CLASSIFICATIONS: ReasoningClassification[] = [
+  "correct_reasoning",
+  "conceptual_gap",
+  "careless_slip",
+  "misread_question",
+];
+
+/** Same contract as lib/claude.ts's classifyReasoning. */
+export async function classifyReasoningGroq(
+  question: string,
+  studentAnswer: string,
+  explanation: string
+): Promise<ReasoningResult> {
+  const trimmedExplanation = explanation.trim().slice(0, 1000);
+
+  const parsed = await groqChatJSON<{ classification: string; note: string }>(
+    QA_MODEL,
+    "You are a kind Grade 5 tutor figuring out WHY a student answered the way they did, from their " +
+      "own explanation of their thinking. Classify into exactly one of: " +
+      '"correct_reasoning" (their thinking was sound, whether or not the final answer was marked right), ' +
+      '"conceptual_gap" (they do not yet understand the underlying idea), ' +
+      '"careless_slip" (they understand it but made a slip - rushing, a small error), ' +
+      '"misread_question" (they misunderstood what was being asked, not the concept itself). ' +
+      "Respond with ONLY a JSON object, no other text: " +
+      '{"classification": string, "note": string}. ' +
+      "The note is a short (under 50 words), warm, specific reaction to their explanation - never " +
+      "mention marks or scores, this is about understanding their thinking, not grading it.",
+    `Question: ${question}\n\nStudent's answer: ${studentAnswer}\n\nStudent's explanation of their thinking: ${trimmedExplanation}`,
+    400
+  );
+
+  const classification = VALID_CLASSIFICATIONS.includes(parsed.classification as ReasoningClassification)
+    ? (parsed.classification as ReasoningClassification)
+    : "correct_reasoning";
+
+  return { classification, note: parsed.note };
 }
