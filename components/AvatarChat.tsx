@@ -468,8 +468,8 @@ export default function AvatarChat({
   return (
     <div className="grid gap-4">
       {(concept.media?.source_image_path || concept.media?.illustration_key) && (
-        <div className="flex gap-3 rounded-xl border border-slate-200 bg-white p-3">
-          <div className="h-24 w-40 shrink-0 overflow-hidden rounded-lg">
+        <div className="flex gap-3 rounded-2xl border border-slate-200/70 bg-white p-3 shadow-soft">
+          <div className="h-24 w-40 shrink-0 overflow-hidden rounded-xl">
             {concept.media?.source_image_path ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img
@@ -573,7 +573,7 @@ export default function AvatarChat({
               placeholder={
                 !readyForInput ? "Ezy is teaching..." : inMicroCheck ? "Type your answer..." : "Type or use the mic..."
               }
-              className="flex-1 rounded-lg border border-slate-300 px-3 py-2 text-sm disabled:bg-slate-50"
+              className="flex-1 rounded-xl border border-slate-300 px-3 py-2 text-sm disabled:bg-slate-50"
             />
             {speechInputSupported && (
               <button
@@ -582,7 +582,7 @@ export default function AvatarChat({
                 disabled={!readyForInput}
                 aria-pressed={listening}
                 aria-label={listening ? "Stop listening" : "Start voice question"}
-                className={`rounded-lg px-3 py-2 text-sm disabled:opacity-40 ${
+                className={`rounded-xl px-3 py-2 text-sm disabled:opacity-40 ${
                   listening ? "bg-red-500 text-white" : "border border-slate-300 bg-white"
                 }`}
               >
@@ -593,7 +593,7 @@ export default function AvatarChat({
               type="button"
               onClick={() => sendMessage(inputText)}
               disabled={!readyForInput || loading}
-              className="rounded-lg bg-practice-accent px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
+              className="rounded-xl bg-practice-accent px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
             >
               Send
             </button>

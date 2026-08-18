@@ -26,7 +26,7 @@ export default async function PlanPage() {
       </div>
 
       {items.length === 0 ? (
-        <p className="rounded-lg border border-slate-200 bg-white p-4 text-sm text-slate-500">
+        <p className="rounded-xl border border-slate-200 bg-white p-4 text-sm text-slate-500">
           Nothing urgent right now - either everything&apos;s mastered, or there&apos;s no test history yet. Take a
           progression test to get a plan tailored to what actually needs review.
         </p>
@@ -35,7 +35,7 @@ export default async function PlanPage() {
           {items.map((item) => (
             <div
               key={item.conceptId}
-              className="flex items-center justify-between gap-4 rounded-xl border border-slate-200 bg-white p-4"
+              className="flex items-center justify-between gap-4 rounded-2xl border border-slate-200/70 bg-white p-4 shadow-soft"
             >
               <div>
                 <span
@@ -53,7 +53,7 @@ export default async function PlanPage() {
               </div>
               <Link
                 href={`/learn/${item.unitKey}`}
-                className="shrink-0 rounded-lg bg-brand-navy px-4 py-2 text-sm font-medium text-white hover:bg-brand-navy-dark"
+                className="shrink-0 rounded-full bg-brand-navy px-5 py-2.5 text-sm font-medium text-white transition active:scale-95 hover:bg-brand-navy-dark"
               >
                 Practice this
               </Link>

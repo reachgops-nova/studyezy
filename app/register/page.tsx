@@ -25,7 +25,7 @@ export default async function RegisterPage({
 
       <form action={register} className="grid w-full max-w-sm gap-4">
         {error && ERROR_MESSAGES[error] && (
-          <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600">{ERROR_MESSAGES[error]}</p>
+          <p className="rounded-xl bg-red-50 px-3 py-2 text-sm text-red-600">{ERROR_MESSAGES[error]}</p>
         )}
 
         <label className="grid gap-1 text-sm font-medium text-slate-700">
@@ -34,7 +34,7 @@ export default async function RegisterPage({
             type="email"
             name="email"
             required
-            className="rounded-lg border border-slate-300 px-3 py-2 text-base"
+            className="rounded-xl border border-slate-300 px-3 py-2 text-base"
             autoComplete="email"
           />
         </label>
@@ -46,7 +46,7 @@ export default async function RegisterPage({
             name="password"
             required
             minLength={8}
-            className="rounded-lg border border-slate-300 px-3 py-2 text-base"
+            className="rounded-xl border border-slate-300 px-3 py-2 text-base"
             autoComplete="new-password"
           />
         </label>
@@ -58,11 +58,11 @@ export default async function RegisterPage({
             name="kidName"
             required
             placeholder="e.g. Aarav"
-            className="rounded-lg border border-slate-300 px-3 py-2 text-base"
+            className="rounded-xl border border-slate-300 px-3 py-2 text-base"
           />
         </label>
 
-        <button type="submit" className="rounded-lg bg-brand-navy px-4 py-2.5 text-base font-medium text-white">
+        <button type="submit" className="rounded-full bg-brand-navy px-5 py-3 text-base font-medium text-white transition active:scale-95">
           Create account
         </button>
       </form>

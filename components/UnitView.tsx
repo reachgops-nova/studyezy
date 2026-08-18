@@ -58,7 +58,7 @@ export default function UnitView({
       <nav className="grid gap-1">
         <button
           onClick={() => setStage("overview")}
-          className="mb-2 rounded-lg px-3 py-2 text-left text-xs font-medium uppercase tracking-wide text-slate-400 hover:text-slate-600"
+          className="mb-2 rounded-xl px-3 py-2 text-left text-xs font-medium uppercase tracking-wide text-slate-400 hover:text-slate-600"
         >
           &larr; Unit overview
         </button>
@@ -66,7 +66,7 @@ export default function UnitView({
           <button
             key={c.concept_id}
             onClick={() => setSelectedId(c.concept_id)}
-            className={`rounded-lg px-3 py-2 text-left text-sm ${
+            className={`rounded-xl px-3 py-2 text-left text-sm ${
               c.concept_id === selectedId ? "bg-brand-navy text-white" : "hover:bg-slate-100"
             }`}
           >
@@ -76,7 +76,7 @@ export default function UnitView({
         {unit.remaining_unit_outline.map((c) => (
           <div
             key={c.concept_id}
-            className="rounded-lg px-3 py-2 text-left text-sm text-slate-400"
+            className="rounded-xl px-3 py-2 text-left text-sm text-slate-400"
             title="Not built yet"
           >
             {c.concept_id} {c.concept_name} <span className="text-[10px] uppercase">soon</span>

@@ -97,7 +97,7 @@ export default function ReasoningInterview({
         <div className="mt-4 grid gap-2">
           <p className="text-sm font-medium text-slate-700">{current.prompt}</p>
           <textarea
-            className="w-full rounded-lg border border-slate-300 p-2 text-sm"
+            className="w-full rounded-xl border border-slate-300 p-2 text-sm"
             rows={3}
             placeholder="Explain how you thought about it..."
             value={explanation}
@@ -109,7 +109,7 @@ export default function ReasoningInterview({
               type="button"
               onClick={submit}
               disabled={submitting || !explanation.trim()}
-              className="rounded-lg bg-practice-accent px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
+              className="rounded-xl bg-practice-accent px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
             >
               {submitting ? "Thinking..." : "Share my thinking"}
             </button>
@@ -117,7 +117,7 @@ export default function ReasoningInterview({
               type="button"
               onClick={next}
               disabled={submitting}
-              className="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm text-slate-600 disabled:opacity-50"
+              className="rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm text-slate-600 disabled:opacity-50"
             >
               Skip
             </button>
@@ -125,7 +125,7 @@ export default function ReasoningInterview({
         </div>
       ) : (
         <div className="mt-4 grid gap-3">
-          <div className="rounded-lg bg-white p-3">
+          <div className="rounded-xl bg-white p-3">
             <span className="text-xs font-medium uppercase tracking-wide text-slate-400">
               {CLASSIFICATION_LABELS[currentResult.classification] ?? "Noted"}
             </span>
@@ -134,7 +134,7 @@ export default function ReasoningInterview({
           <button
             type="button"
             onClick={next}
-            className="justify-self-start rounded-lg bg-practice-accent px-4 py-2 text-sm font-medium text-white"
+            className="justify-self-start rounded-xl bg-practice-accent px-4 py-2 text-sm font-medium text-white"
           >
             {index + 1 >= items.length ? "Done" : "Next"}
           </button>

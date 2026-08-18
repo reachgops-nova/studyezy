@@ -10,6 +10,20 @@ body {
   @apply bg-brand-cream text-slate-900;
 }
 
+/* Fredoka on every heading app-wide (font-sans/Nunito stays the body
+   default) - one rule instead of adding font-display to ~60 heading
+   classNames individually. */
+h1,
+h2,
+h3 {
+  font-family: var(--font-display), var(--font-body), ui-sans-serif, sans-serif;
+}
+
+::selection {
+  background: #fdba74;
+  color: #1e2a4a;
+}
+
 @keyframes message-enter {
   from {
     opacity: 0;
@@ -23,4 +37,20 @@ body {
 
 .message-enter {
   animation: message-enter 0.25s ease-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .message-enter {
+    animation: none;
+  }
+}
+
+@keyframes float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-6px);
+  }
 }

@@ -4,6 +4,7 @@ import { getActiveProfileId } from "@/lib/auth";
 import { getCurrentUser } from "@/lib/session";
 import Logo, { LogoMark } from "@/components/Logo";
 import HeroIllustration from "@/components/HeroIllustration";
+import { AtomIcon, LightbulbIcon } from "@/components/BrandIcons";
 
 export default async function Home() {
   const user = await getCurrentUser();
@@ -18,15 +19,18 @@ export default async function Home() {
 function LandingPage() {
   return (
     <div className="grid gap-20 pb-16">
-      <nav className="flex items-center justify-between pt-2">
-        <Logo textClassName="text-xl" />
-        <div className="flex items-center gap-4">
-          <Link href="/login" className="text-sm font-medium text-slate-600 hover:text-slate-900">
+      <nav className="flex items-center justify-between gap-2 pt-2">
+        <Logo textClassName="text-base sm:text-xl" className="h-7 w-7 sm:h-8 sm:w-8" />
+        <div className="flex shrink-0 items-center gap-2 sm:gap-4">
+          <Link
+            href="/login"
+            className="whitespace-nowrap text-sm font-medium text-slate-600 hover:text-slate-900"
+          >
             Sign in
           </Link>
           <Link
             href="/register"
-            className="rounded-lg bg-brand-navy px-4 py-2 text-sm font-medium text-white hover:bg-brand-navy-dark"
+            className="whitespace-nowrap rounded-full bg-brand-navy px-3.5 py-2 text-sm font-medium text-white transition active:scale-95 hover:bg-brand-navy-dark sm:px-5 sm:py-2.5"
           >
             Get started free
           </Link>
@@ -34,7 +38,11 @@ function LandingPage() {
       </nav>
 
       <header className="grid gap-6 pt-4 text-center">
-        <HeroIllustration className="mx-auto w-56 sm:w-72" />
+        <div className="relative mx-auto w-56 sm:w-72">
+          <AtomIcon className="absolute -left-8 top-6 hidden h-10 w-10 motion-safe:animate-[float_5s_ease-in-out_infinite] sm:-left-14 sm:top-10 sm:block sm:h-12 sm:w-12" />
+          <LightbulbIcon className="absolute -right-6 top-2 hidden h-9 w-9 motion-safe:animate-[float_4.5s_ease-in-out_infinite_0.5s] sm:-right-12 sm:top-6 sm:block sm:h-11 sm:w-11" />
+          <HeroIllustration className="mx-auto w-full" />
+        </div>
         <h1 className="mx-auto max-w-2xl text-4xl font-bold tracking-tight text-slate-900 sm:text-5xl">
           Homework help that actually checks if it clicked.
         </h1>
@@ -45,13 +53,13 @@ function LandingPage() {
         <div className="flex flex-wrap items-center justify-center gap-3">
           <Link
             href="/register"
-            className="rounded-lg bg-brand-navy px-6 py-3 text-base font-medium text-white hover:bg-brand-navy-dark"
+            className="rounded-full bg-brand-navy px-7 py-3.5 text-base font-medium text-white transition hover:bg-brand-navy-dark active:scale-95"
           >
             Get started free
           </Link>
           <Link
             href="/login"
-            className="rounded-lg border border-slate-300 bg-white px-6 py-3 text-base font-medium text-slate-700 hover:bg-slate-50"
+            className="rounded-xl border border-slate-300 bg-white px-6 py-3 text-base font-medium text-slate-700 hover:bg-slate-50"
           >
             Sign in
           </Link>
@@ -117,7 +125,7 @@ function LandingPage() {
         </p>
         <Link
           href="/register"
-          className="mt-6 inline-block rounded-lg bg-brand-navy px-6 py-3 text-base font-medium text-white hover:bg-brand-navy-dark"
+          className="mt-6 inline-block rounded-full bg-brand-navy px-7 py-3.5 text-base font-medium text-white transition hover:bg-brand-navy-dark active:scale-95"
         >
           Get started free
         </Link>
@@ -135,7 +143,7 @@ function LandingPage() {
 
 function DifferentiatorCard({ title, body }: { title: string; body: string }) {
   return (
-    <div className="rounded-xl border border-slate-200 bg-white p-5">
+    <div className="rounded-2xl border border-slate-200/70 bg-white p-5 shadow-soft">
       <h3 className="font-semibold text-slate-900">{title}</h3>
       <p className="mt-1.5 text-sm text-slate-600">{body}</p>
     </div>
@@ -155,7 +163,7 @@ function StepCard({ number, body }: { number: number; body: string }) {
 
 function RoadmapItem({ title, body }: { title: string; body: string }) {
   return (
-    <div className="rounded-lg bg-slate-50 p-4">
+    <div className="rounded-xl bg-slate-50 p-4">
       <h3 className="text-sm font-semibold text-slate-800">{title}</h3>
       <p className="mt-1 text-xs text-slate-500">{body}</p>
     </div>

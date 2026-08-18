@@ -33,7 +33,7 @@ export default function GeneratePaperButton({ unitKey }: { unitKey: string }) {
   }
 
   return (
-    <div className="rounded-xl border border-slate-200 bg-white p-4">
+    <div className="rounded-2xl border border-slate-200/70 bg-white p-4 shadow-soft">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h2 className="font-semibold text-slate-800">Generate practice question paper</h2>
@@ -46,7 +46,7 @@ export default function GeneratePaperButton({ unitKey }: { unitKey: string }) {
           type="button"
           onClick={handleClick}
           disabled={busy}
-          className="shrink-0 rounded-lg bg-brand-navy px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
+          className="shrink-0 rounded-full bg-brand-navy px-5 py-2.5 text-sm font-medium text-white transition active:scale-95 disabled:opacity-50"
         >
           {busy ? "Generating..." : "Generate from approved material"}
         </button>

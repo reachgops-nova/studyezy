@@ -3,7 +3,7 @@ import type { StoredUnitResult } from "@/lib/types";
 export default function Dashboard({ results }: { results: StoredUnitResult[] }) {
   if (results.length === 0) {
     return (
-      <p className="rounded-lg border border-slate-200 bg-white p-4 text-sm text-slate-500">
+      <p className="rounded-xl border border-slate-200 bg-white p-4 text-sm text-slate-500">
         No progression tests taken yet. Once you take one, you&apos;ll see what to revisit here.
       </p>
     );
@@ -12,7 +12,7 @@ export default function Dashboard({ results }: { results: StoredUnitResult[] }) 
   return (
     <div className="grid gap-4">
       {results.map((r) => (
-        <div key={r.unitKey} className="rounded-xl border border-slate-200 bg-white p-4">
+        <div key={r.unitKey} className="rounded-2xl border border-slate-200/70 bg-white p-4 shadow-soft">
           <div className="flex items-center justify-between">
             <p className="font-medium">{r.unitKey}</p>
             <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${bandColor(r.band)}`}>

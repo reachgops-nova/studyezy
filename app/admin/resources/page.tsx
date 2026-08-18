@@ -52,13 +52,13 @@ export default async function AdminResourcesPage({
         </p>
       </div>
 
-      <form method="get" className="flex flex-wrap items-end gap-3 rounded-xl border border-slate-200 bg-white p-4">
+      <form method="get" className="flex flex-wrap items-end gap-3 rounded-2xl border border-slate-200/70 bg-white p-4 shadow-soft">
         <label className="grid gap-1 text-sm font-medium text-slate-700">
           Unit
           <select
             name="unitKey"
             defaultValue={selectedUnitKey ?? ""}
-            className="min-w-[320px] rounded-lg border border-slate-300 px-3 py-2 text-sm"
+            className="min-w-[320px] rounded-xl border border-slate-300 px-3 py-2 text-sm"
           >
             <option value="" disabled>
               Choose a unit...
@@ -70,7 +70,7 @@ export default async function AdminResourcesPage({
             ))}
           </select>
         </label>
-        <button type="submit" className="rounded-lg bg-brand-navy px-4 py-2 text-sm font-medium text-white">
+        <button type="submit" className="rounded-full bg-brand-navy px-5 py-2.5 text-sm font-medium text-white transition active:scale-95">
           View
         </button>
       </form>
@@ -82,7 +82,7 @@ export default async function AdminResourcesPage({
           {groups.map((group) => {
             const frozen = isFreezable(group.type) && group.approved.length > 0;
             return (
-              <div key={group.type} className="rounded-xl border border-slate-200 bg-white p-4">
+              <div key={group.type} className="rounded-2xl border border-slate-200/70 bg-white p-4 shadow-soft">
                 <div className="flex items-center justify-between">
                   <h2 className="font-semibold text-slate-800">{RESOURCE_TYPE_LABELS[group.type]}</h2>
                   <ResourceUploadButton
@@ -103,7 +103,7 @@ export default async function AdminResourcesPage({
                 {group.approved.length > 0 && (
                   <ul className="mt-3 grid gap-2">
                     {group.approved.map((f) => (
-                      <li key={f.id} className="flex items-center justify-between gap-2 rounded-lg bg-green-50 px-3 py-2 text-sm">
+                      <li key={f.id} className="flex items-center justify-between gap-2 rounded-xl bg-green-50 px-3 py-2 text-sm">
                         <a href={f.path} target="_blank" rel="noreferrer" className="truncate text-green-800 hover:underline">
                           ✓ {f.originalFilename}
                         </a>
@@ -125,7 +125,7 @@ export default async function AdminResourcesPage({
                 {group.pending.length > 0 && (
                   <ul className="mt-3 grid gap-2">
                     {group.pending.map((f) => (
-                      <li key={f.id} className="grid gap-1 rounded-lg bg-amber-50 px-3 py-2 text-sm">
+                      <li key={f.id} className="grid gap-1 rounded-xl bg-amber-50 px-3 py-2 text-sm">
                         <div className="flex items-center justify-between gap-2">
                           <a href={f.path} target="_blank" rel="noreferrer" className="truncate text-amber-900 hover:underline">
                             {f.originalFilename}

@@ -79,7 +79,7 @@ export default function ExamCapture({ unitKey }: { unitKey: string }) {
           <p className="mt-2 text-sm text-slate-700">{result.overall_note}</p>
           <ul className="mt-4 grid gap-2">
             {result.technique_notes.map((note, i) => (
-              <li key={i} className="rounded-lg bg-white p-3 text-sm text-slate-700">
+              <li key={i} className="rounded-xl bg-white p-3 text-sm text-slate-700">
                 {note}
               </li>
             ))}
@@ -96,14 +96,14 @@ export default function ExamCapture({ unitKey }: { unitKey: string }) {
 
   return (
     <div className="grid gap-6">
-      <div className="rounded-xl border border-slate-200 bg-white p-5">
+      <div className="rounded-2xl border border-slate-200/70 bg-white p-5 shadow-soft">
         <div className="flex items-center justify-between">
           <h2 className="text-lg font-semibold">Photograph each page</h2>
           <button
             type="button"
             onClick={() => fileInputRef.current?.click()}
             disabled={uploading}
-            className="rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50"
+            className="rounded-xl border border-slate-300 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50"
           >
             {uploading ? "Uploading..." : "+ Add pages"}
           </button>
@@ -122,17 +122,17 @@ export default function ExamCapture({ unitKey }: { unitKey: string }) {
           <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3">
             {pagePaths.map((src) => (
               // eslint-disable-next-line @next/next/no-img-element
-              <img key={src} src={src} alt="Exam page" className="w-full rounded-lg border border-slate-200 object-cover" />
+              <img key={src} src={src} alt="Exam page" className="w-full rounded-xl border border-slate-200 object-cover" />
             ))}
           </div>
         ) : (
-          <div className="mt-3 rounded-lg border border-dashed border-slate-300 bg-slate-50 p-4 text-sm text-slate-500">
+          <div className="mt-3 rounded-xl border border-dashed border-slate-300 bg-slate-50 p-4 text-sm text-slate-500">
             No pages added yet.
           </div>
         )}
       </div>
 
-      <div className="rounded-xl border border-slate-200 bg-white p-5">
+      <div className="rounded-2xl border border-slate-200/70 bg-white p-5 shadow-soft">
         <label className="grid gap-1 text-sm font-medium text-slate-700">
           How many minutes did this take? (optional)
           <input
@@ -140,7 +140,7 @@ export default function ExamCapture({ unitKey }: { unitKey: string }) {
             min={0}
             value={timeSpent}
             onChange={(e) => setTimeSpent(e.target.value)}
-            className="w-32 rounded-lg border border-slate-300 px-3 py-2 text-base"
+            className="w-32 rounded-xl border border-slate-300 px-3 py-2 text-base"
           />
         </label>
 
@@ -148,7 +148,7 @@ export default function ExamCapture({ unitKey }: { unitKey: string }) {
           type="button"
           onClick={getFeedback}
           disabled={pagePaths.length === 0 || coaching}
-          className="mt-4 rounded-lg bg-brand-navy px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
+          className="mt-4 rounded-full bg-brand-navy px-5 py-2.5 text-sm font-medium text-white transition active:scale-95 disabled:opacity-50"
         >
           {coaching ? "Reading your paper..." : "Get feedback"}
         </button>

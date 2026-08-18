@@ -27,7 +27,7 @@ export default async function ProfilesPage({
       </div>
 
       {error && (
-        <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600">
+        <p className="rounded-xl bg-red-50 px-3 py-2 text-sm text-red-600">
           Add a name for the new profile first.
         </p>
       )}
@@ -54,11 +54,11 @@ export default async function ProfilesPage({
           type="text"
           name="displayName"
           placeholder="Add another kid's name"
-          className="flex-1 rounded-lg border border-slate-300 px-3 py-2 text-sm"
+          className="flex-1 rounded-xl border border-slate-300 px-3 py-2 text-sm"
         />
         <button
           type="submit"
-          className="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
+          className="rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
         >
           + Add
         </button>

@@ -10,7 +10,7 @@ import ResourceUploadButton from "./ResourceUploadButton";
 // admin to review.
 export default function UnitResources({ unitKey, groups }: { unitKey: string; groups: ResourceGroup[] }) {
   return (
-    <div className="rounded-xl border border-slate-200 bg-white p-5">
+    <div className="rounded-2xl border border-slate-200/70 bg-white p-5 shadow-soft">
       <h2 className="text-lg font-semibold">Curriculum materials</h2>
       <p className="mt-1 text-sm text-slate-500">
         Shared, admin-approved textbook, worksheet, classwork, and homework pages for this unit.
@@ -18,7 +18,7 @@ export default function UnitResources({ unitKey, groups }: { unitKey: string; gr
 
       <div className="mt-3 grid gap-3 sm:grid-cols-2">
         {groups.map((group) => (
-          <div key={group.type} className="rounded-lg border border-slate-200 p-3">
+          <div key={group.type} className="rounded-xl border border-slate-200 p-3">
             <div className="flex items-center justify-between gap-2">
               <h3 className="text-sm font-medium text-slate-700">{RESOURCE_TYPE_LABELS[group.type]}</h3>
               {group.approved.length === 0 && (

@@ -44,13 +44,13 @@ export default async function LearnPage({ params }: { params: Promise<{ unitId: 
         <div className="flex shrink-0 flex-col gap-2 sm:flex-row">
           <Link
             href={`/exam/${unitId}`}
-            className="rounded-lg border border-slate-300 bg-white px-4 py-2 text-center text-sm font-medium text-slate-700 hover:bg-slate-50"
+            className="rounded-xl border border-slate-300 bg-white px-4 py-2 text-center text-sm font-medium text-slate-700 hover:bg-slate-50"
           >
             Written exam practice
           </Link>
           <Link
             href={`/test/${unitId}`}
-            className="rounded-lg border border-test-border bg-test-bg px-4 py-2 text-center text-sm font-medium text-test-accent"
+            className="rounded-xl border border-test-border bg-test-bg px-4 py-2 text-center text-sm font-medium text-test-accent"
           >
             Take Progression Test
           </Link>

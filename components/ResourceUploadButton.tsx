@@ -50,7 +50,7 @@ export default function ResourceUploadButton({
         type="button"
         onClick={() => fileInputRef.current?.click()}
         disabled={uploading}
-        className="rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50"
+        className="rounded-xl border border-slate-300 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50"
       >
         {uploading ? "Uploading..." : label}
       </button>

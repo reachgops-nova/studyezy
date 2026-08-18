@@ -18,7 +18,7 @@ export default async function LoginPage({
 
       <form action={authenticate} className="grid w-full max-w-sm gap-4">
         {error === "invalid_credentials" && (
-          <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600">
+          <p className="rounded-xl bg-red-50 px-3 py-2 text-sm text-red-600">
             That email and password combination doesn&apos;t match an account.
           </p>
         )}
@@ -29,7 +29,7 @@ export default async function LoginPage({
             type="email"
             name="email"
             required
-            className="rounded-lg border border-slate-300 px-3 py-2 text-base"
+            className="rounded-xl border border-slate-300 px-3 py-2 text-base"
             autoComplete="email"
           />
         </label>
@@ -40,12 +40,12 @@ export default async function LoginPage({
             type="password"
             name="password"
             required
-            className="rounded-lg border border-slate-300 px-3 py-2 text-base"
+            className="rounded-xl border border-slate-300 px-3 py-2 text-base"
             autoComplete="current-password"
           />
         </label>
 
-        <button type="submit" className="rounded-lg bg-brand-navy px-4 py-2.5 text-base font-medium text-white">
+        <button type="submit" className="rounded-full bg-brand-navy px-5 py-3 text-base font-medium text-white transition active:scale-95">
           Sign in
         </button>
       </form>

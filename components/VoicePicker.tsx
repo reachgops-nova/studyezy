@@ -67,7 +67,7 @@ export default function VoicePicker({ onClose }: { onClose: () => void }) {
   }
 
   return (
-    <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-lg">
+    <div className="rounded-2xl border border-slate-200/70 bg-white p-4 shadow-soft shadow-lg">
       <div className="flex items-center justify-between">
         <h3 className="font-semibold text-slate-800">Choose Ezy&apos;s voice</h3>
         <button type="button" onClick={onClose} className="text-sm text-slate-400 hover:text-slate-600">
@@ -100,7 +100,7 @@ export default function VoicePicker({ onClose }: { onClose: () => void }) {
           {voices.map((v) => (
             <li
               key={v.name}
-              className="flex items-center justify-between gap-2 rounded-lg px-2 py-1.5 hover:bg-slate-50"
+              className="flex items-center justify-between gap-2 rounded-xl px-2 py-1.5 hover:bg-slate-50"
             >
               <button
                 type="button"

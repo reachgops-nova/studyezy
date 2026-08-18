@@ -75,7 +75,7 @@ export default function CurriculumSelector({ catalog }: { catalog: CatalogCurric
             {subject.units.map((u) => (
               <div
                 key={u.id}
-                className={`flex items-center justify-between rounded-lg border px-4 py-3 ${
+                className={`flex items-center justify-between rounded-xl border px-4 py-3 ${
                   u.available ? "border-orange-200 bg-orange-50" : "border-slate-200 bg-slate-50 text-slate-400"
                 }`}
               >

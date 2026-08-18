@@ -142,7 +142,7 @@ export default function TestRunner({
           <div className="mt-4 grid gap-2">
             {answers.map((a, i) =>
               a.type === "short_answer" && a.feedback ? (
-                <p key={i} className="rounded-lg bg-white p-3 text-sm text-slate-700">
+                <p key={i} className="rounded-xl bg-white p-3 text-sm text-slate-700">
                   <strong>Q{i + 1} feedback:</strong> {a.feedback}
                 </p>
               ) : null
@@ -187,7 +187,7 @@ export default function TestRunner({
 
           {q.type === "short_answer" && (
             <textarea
-              className="mt-3 w-full rounded-lg border border-slate-300 p-2 text-sm"
+              className="mt-3 w-full rounded-xl border border-slate-300 p-2 text-sm"
               rows={3}
               placeholder="Write your answer..."
               value={(answers[i] as Extract<Answer, { type: "short_answer" }>).text}
@@ -201,7 +201,7 @@ export default function TestRunner({
         type="button"
         onClick={submitTest}
         disabled={submitting}
-        className="justify-self-start rounded-lg bg-test-accent px-5 py-2.5 font-medium text-white disabled:opacity-50"
+        className="justify-self-start rounded-xl bg-test-accent px-5 py-2.5 font-medium text-white disabled:opacity-50"
       >
         {submitting ? "Checking..." : "Submit test"}
       </button>

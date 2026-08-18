@@ -46,18 +46,18 @@ export default async function ManagePage({
       </div>
 
       {error && ERROR_MESSAGES[error] && (
-        <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600">{ERROR_MESSAGES[error]}</p>
+        <p className="rounded-xl bg-red-50 px-3 py-2 text-sm text-red-600">{ERROR_MESSAGES[error]}</p>
       )}
       {success === "subject_added" && (
-        <p className="rounded-lg bg-green-50 px-3 py-2 text-sm text-green-700">Subject added.</p>
+        <p className="rounded-xl bg-green-50 px-3 py-2 text-sm text-green-700">Subject added.</p>
       )}
 
-      <section className="rounded-xl border border-slate-200 bg-white p-5">
+      <section className="rounded-2xl border border-slate-200/70 bg-white p-5 shadow-soft">
         <h2 className="text-lg font-semibold">Add a subject</h2>
         <form action={createSubject} className="mt-3 grid max-w-md gap-3">
           <label className="grid gap-1 text-sm font-medium text-slate-700">
             Stage
-            <select name="stageId" required className="rounded-lg border border-slate-300 px-3 py-2 text-base">
+            <select name="stageId" required className="rounded-xl border border-slate-300 px-3 py-2 text-base">
               {stages.map((s) => (
                 <option key={s.id} value={s.id}>
                   {s.curriculum.name} - {s.label}
@@ -72,21 +72,21 @@ export default async function ManagePage({
               name="name"
               required
               placeholder="e.g. Math"
-              className="rounded-lg border border-slate-300 px-3 py-2 text-base"
+              className="rounded-xl border border-slate-300 px-3 py-2 text-base"
             />
           </label>
-          <button type="submit" className="justify-self-start rounded-lg bg-brand-navy px-4 py-2 text-sm font-medium text-white">
+          <button type="submit" className="justify-self-start rounded-full bg-brand-navy px-5 py-2.5 text-sm font-medium text-white transition active:scale-95">
             Add subject
           </button>
         </form>
       </section>
 
-      <section className="rounded-xl border border-slate-200 bg-white p-5">
+      <section className="rounded-2xl border border-slate-200/70 bg-white p-5 shadow-soft">
         <h2 className="text-lg font-semibold">Add a unit</h2>
         <form action={createUnit} className="mt-3 grid max-w-md gap-3">
           <label className="grid gap-1 text-sm font-medium text-slate-700">
             Subject
-            <select name="subjectId" required className="rounded-lg border border-slate-300 px-3 py-2 text-base">
+            <select name="subjectId" required className="rounded-xl border border-slate-300 px-3 py-2 text-base">
               {subjects.map((s) => (
                 <option key={s.id} value={s.id}>
                   {s.label}
@@ -101,7 +101,7 @@ export default async function ManagePage({
               name="number"
               min={1}
               required
-              className="rounded-lg border border-slate-300 px-3 py-2 text-base"
+              className="rounded-xl border border-slate-300 px-3 py-2 text-base"
             />
           </label>
           <label className="grid gap-1 text-sm font-medium text-slate-700">
@@ -111,16 +111,16 @@ export default async function ManagePage({
               name="title"
               required
               placeholder="e.g. Fractions and decimals"
-              className="rounded-lg border border-slate-300 px-3 py-2 text-base"
+              className="rounded-xl border border-slate-300 px-3 py-2 text-base"
             />
           </label>
           <label className="grid gap-1 text-sm font-medium text-slate-700">
             Textbook publisher (optional)
-            <input type="text" name="publisher" className="rounded-lg border border-slate-300 px-3 py-2 text-base" />
+            <input type="text" name="publisher" className="rounded-xl border border-slate-300 px-3 py-2 text-base" />
           </label>
           <label className="grid gap-1 text-sm font-medium text-slate-700">
             Textbook title (optional)
-            <input type="text" name="bookTitle" className="rounded-lg border border-slate-300 px-3 py-2 text-base" />
+            <input type="text" name="bookTitle" className="rounded-xl border border-slate-300 px-3 py-2 text-base" />
           </label>
           <label className="grid gap-1 text-sm font-medium text-slate-700">
             Concepts this unit covers (optional, one per line as <code>id: name</code>)
@@ -128,10 +128,10 @@ export default async function ManagePage({
               name="outline"
               rows={4}
               placeholder={"2.1: Adding fractions\n2.2: Comparing decimals"}
-              className="rounded-lg border border-slate-300 px-3 py-2 text-sm font-mono"
+              className="rounded-xl border border-slate-300 px-3 py-2 text-sm font-mono"
             />
           </label>
-          <button type="submit" className="justify-self-start rounded-lg bg-brand-navy px-4 py-2 text-sm font-medium text-white">
+          <button type="submit" className="justify-self-start rounded-full bg-brand-navy px-5 py-2.5 text-sm font-medium text-white transition active:scale-95">
             Add unit
           </button>
         </form>

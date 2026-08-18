@@ -94,7 +94,7 @@ export default function UnitOverview({
 
   return (
     <div className="grid gap-6">
-      <div className="rounded-xl border border-slate-200 bg-white p-5">
+      <div className="rounded-2xl border border-slate-200/70 bg-white p-5 shadow-soft">
         <h2 className="text-lg font-semibold">What we&apos;re covering</h2>
         <p className="mt-1 text-sm text-slate-500">
           By the end of this unit, you&apos;ll be able to:
@@ -108,14 +108,14 @@ export default function UnitOverview({
 
       <UnitResources unitKey={unitKey} groups={resourceGroups} />
 
-      <div className="rounded-xl border border-slate-200 bg-white p-5">
+      <div className="rounded-2xl border border-slate-200/70 bg-white p-5 shadow-soft">
         <div className="flex items-center justify-between">
           <h2 className="text-lg font-semibold">The pages we&apos;re working from</h2>
           <button
             type="button"
             onClick={() => fileInputRef.current?.click()}
             disabled={uploading}
-            className="rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50"
+            className="rounded-xl border border-slate-300 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50"
           >
             {uploading ? "Uploading..." : "+ Add photos"}
           </button>
@@ -144,12 +144,12 @@ export default function UnitOverview({
                 key={src}
                 src={src}
                 alt={`Textbook page ${i + 1} for ${unit.unit_title}`}
-                className="w-full rounded-lg border border-slate-200 object-cover"
+                className="w-full rounded-xl border border-slate-200 object-cover"
               />
             ))}
           </div>
         ) : (
-          <div className="mt-3 rounded-lg border border-dashed border-slate-300 bg-slate-50 p-4 text-sm text-slate-500">
+          <div className="mt-3 rounded-xl border border-dashed border-slate-300 bg-slate-50 p-4 text-sm text-slate-500">
             No pages added yet - a parent can snap photos of this unit&apos;s textbook pages with &ldquo;+ Add
             photos&rdquo; above.
           </div>
@@ -157,7 +157,7 @@ export default function UnitOverview({
       </div>
 
       {unit.remaining_unit_outline.length > 0 && (
-        <div className="rounded-xl border border-slate-200 bg-white p-5">
+        <div className="rounded-2xl border border-slate-200/70 bg-white p-5 shadow-soft">
           <h2 className="text-lg font-semibold">Fill in the rest of the unit</h2>
           <p className="mt-1 text-sm text-slate-600">
             {pageImages.length > 0
@@ -170,7 +170,7 @@ export default function UnitOverview({
             type="button"
             onClick={handleExtract}
             disabled={extracting || pageImages.length === 0}
-            className="mt-3 rounded-lg bg-brand-navy px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
+            className="mt-3 rounded-full bg-brand-navy px-5 py-2.5 text-sm font-medium text-white transition active:scale-95 disabled:opacity-50"
           >
             {extracting ? "Reading the pages..." : "Extract lesson content from these pages"}
           </button>
@@ -189,14 +189,14 @@ export default function UnitOverview({
           <button
             type="button"
             onClick={onStartDiagnostic}
-            className="rounded-lg bg-test-accent px-4 py-2 text-sm font-medium text-white"
+            className="rounded-xl bg-test-accent px-4 py-2 text-sm font-medium text-white"
           >
             Quick check: how much do I know?
           </button>
           <button
             type="button"
             onClick={onSkipToTeaching}
-            className="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700"
+            className="rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700"
           >
             Skip it, teach me from the start
           </button>

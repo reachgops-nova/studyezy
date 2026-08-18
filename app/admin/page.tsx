@@ -40,7 +40,7 @@ export default async function AdminPage({
       </div>
 
       {error && ERROR_MESSAGES[error] && (
-        <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600">{ERROR_MESSAGES[error]}</p>
+        <p className="rounded-xl bg-red-50 px-3 py-2 text-sm text-red-600">{ERROR_MESSAGES[error]}</p>
       )}
 
       <div className="overflow-x-auto rounded-xl border border-slate-200 bg-white">

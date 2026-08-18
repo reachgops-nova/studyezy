@@ -111,7 +111,7 @@ export default function UnitDiagnostic({
           return (
             <div
               key={c.concept_id}
-              className="flex items-center justify-between rounded-xl border border-slate-200 bg-white p-4"
+              className="flex items-center justify-between rounded-2xl border border-slate-200/70 bg-white p-4 shadow-soft"
             >
               <div>
                 <p className="font-medium">
@@ -127,7 +127,7 @@ export default function UnitDiagnostic({
                 <button
                   type="button"
                   onClick={() => onReviewConcept(c.concept_id)}
-                  className="rounded-lg bg-practice-accent px-3 py-1.5 text-sm font-medium text-white"
+                  className="rounded-xl bg-practice-accent px-3 py-1.5 text-sm font-medium text-white"
                 >
                   Review this
                 </button>
@@ -139,7 +139,7 @@ export default function UnitDiagnostic({
           <button
             type="button"
             onClick={onAllMastered}
-            className="justify-self-start rounded-lg bg-green-600 px-5 py-2.5 font-medium text-white"
+            className="justify-self-start rounded-xl bg-green-600 px-5 py-2.5 font-medium text-white"
           >
             Great, let&apos;s move on
           </button>
@@ -170,7 +170,7 @@ export default function UnitDiagnostic({
           )}
           {q.type === "short_answer" && (
             <textarea
-              className="mt-3 w-full rounded-lg border border-slate-300 p-2 text-sm"
+              className="mt-3 w-full rounded-xl border border-slate-300 p-2 text-sm"
               rows={2}
               placeholder="Write your answer, or leave blank if you're not sure..."
               value={(answers[i] as Extract<Answer, { type: "short_answer" }>).text}
@@ -183,7 +183,7 @@ export default function UnitDiagnostic({
         type="button"
         onClick={submit}
         disabled={submitting}
-        className="justify-self-start rounded-lg bg-practice-accent px-5 py-2.5 font-medium text-white disabled:opacity-50"
+        className="justify-self-start rounded-xl bg-practice-accent px-5 py-2.5 font-medium text-white disabled:opacity-50"
       >
         {submitting ? "Checking..." : "See what I know"}
       </button>
