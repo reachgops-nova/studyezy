@@ -44,7 +44,7 @@ test.describe("Registration → unit selection → navigation → sign out", () 
     // Sign out is reachable from the account menu on every shell page, not
     // just /profiles - this was a real gap fixed earlier, worth covering.
     await page.getByRole("button", { name: new RegExp("E2E Kid", "i") }).click();
-    await page.getByRole("button", { name: /sign out/i }).click();
+    await page.getByRole("menuitem", { name: /sign out/i }).click();
     await expect(page).toHaveURL(/\/login/);
   });
 
@@ -54,7 +54,7 @@ test.describe("Registration → unit selection → navigation → sign out", () 
     await expect(page).toHaveURL(/\/select/);
 
     await page.getByRole("button", { name: new RegExp("Return Kid", "i") }).click();
-    await page.getByRole("button", { name: /sign out/i }).click();
+    await page.getByRole("menuitem", { name: /sign out/i }).click();
     await expect(page).toHaveURL(/\/login/);
 
     await page.getByLabel(/email/i).fill(email);
@@ -69,7 +69,7 @@ test.describe("Registration → unit selection → navigation → sign out", () 
     const email = uniqueEmail();
     await registerNewAccount(page, email, "Wrong Pass Kid");
     await page.getByRole("button", { name: new RegExp("Wrong Pass Kid", "i") }).click();
-    await page.getByRole("button", { name: /sign out/i }).click();
+    await page.getByRole("menuitem", { name: /sign out/i }).click();
 
     await page.getByLabel(/email/i).fill(email);
     await page.getByLabel(/password/i).fill("NotTheRightPassword");
