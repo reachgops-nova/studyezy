@@ -11,8 +11,17 @@ const GROQ_API_URL = "https://api.groq.com/openai/v1/chat/completions";
 // Larger model for grounded Q&A quality; smaller/faster one for the
 // high-frequency, low-stakes micro-check reaction - same cheap-vs-quality
 // split as lib/claude.ts's MODEL/EXTRACTION_MODEL.
-const QA_MODEL = "llama-3.3-70b-versatile";
-const REACTION_MODEL = "llama-3.1-8b-instant";
+//
+// 2026-08-18: the original llama-3.1-8b-instant/llama-3.3-70b-versatile IDs
+// were removed from Groq's catalog at some point after this integration
+// shipped - both returned 404 "model does not exist" (confirmed directly
+// against the API, not assumed), meaning every Groq call had been silently
+// failing and falling back to the local pattern-matcher/generic ack. Swapped
+// to OpenAI's open-weight gpt-oss models, now hosted on Groq - verified
+// against console.groq.com/openai/v1/models and re-tested against this
+// file's actual prompts/token budgets before shipping.
+const QA_MODEL = "openai/gpt-oss-120b";
+const REACTION_MODEL = "openai/gpt-oss-20b";
 
 export function isGroqConfigured(): boolean {
   return Boolean(process.env.GROQ_API_KEY);
@@ -29,6 +38,14 @@ async function groqChat(model: string, system: string, user: string, maxTokens: 
       model,
       max_tokens: maxTokens,
       temperature: 0.4,
+      // gpt-oss models reason before answering by default, and that
+      // reasoning counts against max_tokens - confirmed empirically that
+      // without capping effort, the 80-token micro-check budget was
+      // consumed entirely by the reasoning trace, leaving empty content
+      // (finish_reason: "length"). "low" leaves reasoning brief enough that
+      // the actual answer reliably fits within these small, latency-
+      // sensitive interactive-call budgets.
+      reasoning_effort: "low",
       messages: [
         { role: "system", content: system },
         { role: "user", content: user },
