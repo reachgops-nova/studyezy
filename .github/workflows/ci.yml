@@ -60,9 +60,16 @@ jobs:
           --health-timeout 5s
           --health-retries 5
     env:
+      # NODE_ENV is deliberately NOT set to "production" here, even though
+      # the app runs via `next start` (a production build) later in this
+      # job - `npm ci` respects NODE_ENV=production by skipping every
+      # devDependency, which silently broke this exact job (`tsx: not
+      # found` on the seed step, since tsx/prisma/playwright/vitest are all
+      # devDependencies). `next start` serves the `npm run build` output in
+      # production mode regardless of this env var, so nothing is lost by
+      # leaving it unset.
       DATABASE_URL: "postgresql://studyezy:studyezy@localhost:5432/studyezy_e2e"
       UPLOADS_DIR: "/tmp/studyezy-e2e-uploads"
-      NODE_ENV: "production"
       PORT: "3000"
     steps:
       - uses: actions/checkout@v4
