@@ -2,7 +2,7 @@ import { redirect } from "next/navigation";
 import { getActiveProfile } from "@/lib/auth";
 import { getCurrentUser } from "@/lib/session";
 import { getCatalog } from "@/lib/catalog";
-import AppHeader from "@/components/AppHeader";
+import AppShell from "@/components/AppShell";
 import CurriculumSelector from "@/components/CurriculumSelector";
 
 export default async function SelectPage() {
@@ -15,9 +15,7 @@ export default async function SelectPage() {
   const catalog = await getCatalog();
 
   return (
-    <main className="grid gap-8">
-      <AppHeader profile={profile} active="select" isAdmin={user.role === "admin"} />
-
+    <AppShell profile={profile} active="select" isAdmin={user.role === "admin"}>
       <div>
         <h1 className="text-2xl font-bold">What are we learning today?</h1>
         <p className="mt-1 text-slate-600">
@@ -26,6 +24,6 @@ export default async function SelectPage() {
       </div>
 
       <CurriculumSelector catalog={catalog} />
-    </main>
+    </AppShell>
   );
 }

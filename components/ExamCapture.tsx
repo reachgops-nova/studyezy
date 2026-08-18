@@ -148,7 +148,7 @@ export default function ExamCapture({ unitKey }: { unitKey: string }) {
           type="button"
           onClick={getFeedback}
           disabled={pagePaths.length === 0 || coaching}
-          className="mt-4 rounded-full bg-brand-navy px-5 py-2.5 text-sm font-medium text-white transition active:scale-95 disabled:opacity-50"
+          className="mt-4 rounded-full bg-gradient-to-br from-orange-400 to-orange-600 px-5 py-2.5 text-sm font-medium text-white transition active:scale-95 disabled:opacity-50"
         >
           {coaching ? "Reading your paper..." : "Get feedback"}
         </button>

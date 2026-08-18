@@ -2,7 +2,7 @@ import { redirect } from "next/navigation";
 import { getActiveProfile } from "@/lib/auth";
 import { getCurrentUser } from "@/lib/session";
 import { getDashboardData } from "@/lib/queries/dashboard";
-import AppHeader from "@/components/AppHeader";
+import AppShell from "@/components/AppShell";
 import Dashboard from "@/components/Dashboard";
 
 export default async function DashboardPage() {
@@ -14,12 +14,10 @@ export default async function DashboardPage() {
   const results = await getDashboardData(profile.id);
 
   return (
-    <main className="grid gap-6">
-      <AppHeader profile={profile} active="dashboard" isAdmin={user.role === "admin"} />
-
+    <AppShell profile={profile} active="dashboard" isAdmin={user.role === "admin"}>
       <h1 className="text-2xl font-bold">{profile.displayName}&apos;s progress</h1>
 
       <Dashboard results={results} />
-    </main>
+    </AppShell>
   );
 }

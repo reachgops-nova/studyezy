@@ -6,7 +6,7 @@ import { unitKey as buildUnitKey } from "@/lib/content";
 import { db } from "@/lib/db";
 import { getUnitResourceGroups } from "@/lib/queries/unitResources";
 import { RESOURCE_TYPE_LABELS, isFreezable } from "@/lib/unitResources";
-import AppHeader from "@/components/AppHeader";
+import AppShell from "@/components/AppShell";
 import ResourceUploadButton from "@/components/ResourceUploadButton";
 import GeneratePaperButton from "@/components/GeneratePaperButton";
 import ConfirmSubmitButton from "@/components/ConfirmSubmitButton";
@@ -20,6 +20,7 @@ export default async function AdminResourcesPage({
   const admin = await getCurrentAdmin();
   if (!admin) redirect("/select");
   const profile = await getActiveProfile();
+  if (!profile) redirect("/profiles");
 
   const { unitKey: selectedUnitKey } = await searchParams;
   const catalog = await getCatalog();
@@ -38,9 +39,7 @@ export default async function AdminResourcesPage({
   const groups = unitRow ? await getUnitResourceGroups(unitRow.id) : null;
 
   return (
-    <main className="grid gap-6">
-      {profile && <AppHeader profile={profile} active="admin-resources" isAdmin />}
-
+    <AppShell profile={profile} active="admin-resources" isAdmin>
       <div>
         <h1 className="text-2xl font-bold">Curriculum materials</h1>
         <p className="mt-1 text-slate-600">
@@ -70,7 +69,7 @@ export default async function AdminResourcesPage({
             ))}
           </select>
         </label>
-        <button type="submit" className="rounded-full bg-brand-navy px-5 py-2.5 text-sm font-medium text-white transition active:scale-95">
+        <button type="submit" className="rounded-full bg-gradient-to-br from-orange-400 to-orange-600 px-5 py-2.5 text-sm font-medium text-white transition active:scale-95">
           View
         </button>
       </form>
@@ -168,6 +167,6 @@ export default async function AdminResourcesPage({
           })}
         </div>
       )}
-    </main>
+    </AppShell>
   );
 }

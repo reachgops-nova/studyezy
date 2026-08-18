@@ -7,7 +7,13 @@
 }
 
 body {
-  @apply bg-brand-cream text-slate-900;
+  @apply text-slate-900;
+  background-color: #faf6ee;
+  background-image:
+    radial-gradient(ellipse 900px 500px at 8% -10%, rgba(253, 186, 116, 0.16), transparent 60%),
+    radial-gradient(ellipse 700px 500px at 100% 0%, rgba(30, 42, 74, 0.06), transparent 55%);
+  background-repeat: no-repeat;
+  background-attachment: fixed;
 }
 
 /* Fredoka on every heading app-wide (font-sans/Nunito stays the body
@@ -42,15 +48,5 @@ h3 {
 @media (prefers-reduced-motion: reduce) {
   .message-enter {
     animation: none;
-  }
-}
-
-@keyframes float {
-  0%,
-  100% {
-    transform: translateY(0);
-  }
-  50% {
-    transform: translateY(-6px);
   }
 }

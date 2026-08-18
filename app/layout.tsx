@@ -29,7 +29,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en" className={`${fredoka.variable} ${nunito.variable}`}>
       <body className="min-h-screen font-sans">
-        <div className="mx-auto max-w-3xl px-4 py-6">{children}</div>
+        {/* No max-width here on purpose - the sidebar app shell (AppShell)
+            and the narrower single-column pages (auth, landing, focused
+            lesson/test screens) each set their own width instead of
+            fighting a global one. */}
+        <div className="px-4 py-6">{children}</div>
       </body>
     </html>
   );

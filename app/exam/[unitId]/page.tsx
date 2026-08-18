@@ -20,7 +20,7 @@ export default async function ExamPage({ params }: { params: Promise<{ unitId: s
   if (!unit) notFound();
 
   return (
-    <main className="grid gap-6">
+    <main className="mx-auto grid w-full max-w-3xl gap-6">
       <header>
         <Link
           href={`/learn/${unitId}`}

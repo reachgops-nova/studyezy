@@ -17,9 +17,9 @@ export default async function RegisterPage({
   const { error } = await searchParams;
 
   return (
-    <main className="flex min-h-[80vh] flex-col items-center justify-center gap-8">
+    <main className="mx-auto flex min-h-[80vh] w-full max-w-3xl flex-col items-center justify-center gap-8">
       <div className="flex flex-col items-center gap-3 text-center">
-        <Logo className="h-16 sm:h-20" />
+        <Logo textClassName="text-3xl" className="h-14 w-14" />
         <p className="text-slate-600">Create an account to get started.</p>
       </div>
 
@@ -62,7 +62,7 @@ export default async function RegisterPage({
           />
         </label>
 
-        <button type="submit" className="rounded-full bg-brand-navy px-5 py-3 text-base font-medium text-white transition active:scale-95">
+        <button type="submit" className="rounded-full bg-gradient-to-br from-orange-400 to-orange-600 px-5 py-3 text-base font-medium text-white transition active:scale-95">
           Create account
         </button>
       </form>

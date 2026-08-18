@@ -27,7 +27,7 @@ export default async function LearnPage({ params }: { params: Promise<{ unitId: 
   );
 
   return (
-    <main className="grid gap-6">
+    <main className="mx-auto grid w-full max-w-3xl gap-6">
       <header className="flex items-center justify-between">
         <div>
           <Link href="/select" className="inline-flex items-center gap-2 text-sm text-slate-500 hover:text-slate-700">

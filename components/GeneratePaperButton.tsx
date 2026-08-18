@@ -46,7 +46,7 @@ export default function GeneratePaperButton({ unitKey }: { unitKey: string }) {
           type="button"
           onClick={handleClick}
           disabled={busy}
-          className="shrink-0 rounded-full bg-brand-navy px-5 py-2.5 text-sm font-medium text-white transition active:scale-95 disabled:opacity-50"
+          className="shrink-0 rounded-full bg-gradient-to-br from-orange-400 to-orange-600 px-5 py-2.5 text-sm font-medium text-white transition active:scale-95 disabled:opacity-50"
         >
           {busy ? "Generating..." : "Generate from approved material"}
         </button>

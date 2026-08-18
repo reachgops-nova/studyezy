@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import { getCurrentAdmin } from "@/lib/session";
 import { db } from "@/lib/db";
-import AppHeader from "@/components/AppHeader";
+import AppShell from "@/components/AppShell";
 import { getActiveProfile } from "@/lib/auth";
 import ConfirmSubmitButton from "@/components/ConfirmSubmitButton";
 import { toggleAdminRole, deleteAccount } from "./actions";
@@ -22,6 +22,7 @@ export default async function AdminPage({
 
   const { error } = await searchParams;
   const profile = await getActiveProfile();
+  if (!profile) redirect("/profiles");
 
   const users = await db.user.findMany({
     orderBy: { createdAt: "asc" },
@@ -29,8 +30,7 @@ export default async function AdminPage({
   });
 
   return (
-    <main className="grid gap-6">
-      {profile && <AppHeader profile={profile} active="admin" isAdmin />}
+    <AppShell profile={profile} active="admin" isAdmin>
 
       <div>
         <h1 className="text-2xl font-bold">Manage accounts</h1>
@@ -103,6 +103,6 @@ export default async function AdminPage({
           </tbody>
         </table>
       </div>
-    </main>
+    </AppShell>
   );
 }

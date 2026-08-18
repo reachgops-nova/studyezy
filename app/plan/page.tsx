@@ -3,7 +3,7 @@ import Link from "next/link";
 import { getActiveProfile } from "@/lib/auth";
 import { getCurrentUser } from "@/lib/session";
 import { getPrepPlan } from "@/lib/queries/prepPlanner";
-import AppHeader from "@/components/AppHeader";
+import AppShell from "@/components/AppShell";
 
 export default async function PlanPage() {
   const user = await getCurrentUser();
@@ -14,9 +14,7 @@ export default async function PlanPage() {
   const items = await getPrepPlan(profile.id);
 
   return (
-    <main className="grid gap-6">
-      <AppHeader profile={profile} active="plan" isAdmin={user.role === "admin"} />
-
+    <AppShell profile={profile} active="plan" isAdmin={user.role === "admin"}>
       <div>
         <h1 className="text-2xl font-bold">This week&apos;s prep plan</h1>
         <p className="mt-1 text-slate-600">
@@ -53,7 +51,7 @@ export default async function PlanPage() {
               </div>
               <Link
                 href={`/learn/${item.unitKey}`}
-                className="shrink-0 rounded-full bg-brand-navy px-5 py-2.5 text-sm font-medium text-white transition active:scale-95 hover:bg-brand-navy-dark"
+                className="shrink-0 rounded-full bg-gradient-to-br from-orange-400 to-orange-600 px-5 py-2.5 text-sm font-medium text-white transition active:scale-95 hover:brightness-110"
               >
                 Practice this
               </Link>
@@ -61,6 +59,6 @@ export default async function PlanPage() {
           ))}
         </div>
       )}
-    </main>
+    </AppShell>
   );
 }
