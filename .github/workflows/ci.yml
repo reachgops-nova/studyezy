@@ -1,0 +1,90 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+# Two jobs on purpose: `checks` (typecheck/lint/unit-test/build) needs no
+# database and runs in ~1 minute on every push - it's the fast, always-on
+# gate. `e2e` needs a real Postgres service container and a running app, so
+# it's slower and scoped to the deterministic flows only (auth, navigation,
+# content selection) - AI-dependent flows (Voice Q&A, grading, extraction,
+# Reasoning Interview, Exam Coaching) aren't covered here since they'd need
+# a real Anthropic/Groq API key in CI, which this pipeline deliberately
+# does not hold (no secret sprawl for a check that can't be meaningfully
+# asserted against a live model's output anyway).
+jobs:
+  checks:
+    name: Typecheck, lint, unit tests, build
+    runs-on: ubuntu-latest
+    env:
+      # prisma generate (via postinstall) needs DATABASE_URL to be a valid
+      # connection string to validate the schema - it never connects for
+      # `generate` or for `next build` (no pages here are statically
+      # generated against the DB), so a placeholder is fine and no Postgres
+      # service is needed for this job.
+      DATABASE_URL: "postgresql://ci:ci@localhost:5432/ci_placeholder"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+      - run: npm ci
+      - name: Typecheck
+        run: npx tsc --noEmit
+      - name: Lint
+        run: npm run lint
+      - name: Unit tests
+        run: npm test
+      - name: Build
+        run: npm run build
+
+  e2e:
+    name: E2E (Playwright)
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: studyezy
+          POSTGRES_PASSWORD: studyezy
+          POSTGRES_DB: studyezy_e2e
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      DATABASE_URL: "postgresql://studyezy:studyezy@localhost:5432/studyezy_e2e"
+      UPLOADS_DIR: "/tmp/studyezy-e2e-uploads"
+      NODE_ENV: "production"
+      PORT: "3000"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+      - run: npm ci
+      - name: Apply migrations
+        run: npx prisma migrate deploy
+      - name: Seed curriculum content
+        run: npm run db:seed
+      - name: Build
+        run: npm run build
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium
+      - name: Run E2E tests
+        run: npm run test:e2e
+      - name: Upload Playwright report
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 7

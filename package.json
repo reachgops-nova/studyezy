@@ -11,6 +11,7 @@
     "start": "next start -p ${PORT:-3000}",
     "lint": "eslint .",
     "test": "vitest run",
+    "test:e2e": "playwright test",
     "postinstall": "prisma generate",
     "db:migrate:dev": "prisma migrate dev",
     "db:seed": "tsx prisma/seed.ts",
@@ -28,6 +29,7 @@
     "react-dom": "^18.3.1"
   },
   "devDependencies": {
+    "@playwright/test": "^1.62.1",
     "@types/bcryptjs": "^2.4.6",
     "@types/node": "^20.14.9",
     "@types/react": "^18.3.3",
