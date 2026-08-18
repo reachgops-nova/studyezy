@@ -1,8 +1,14 @@
 import Link from "next/link";
 import Logo from "./Logo";
+import AccountMenu from "./AccountMenu";
+import { BookIcon, ChartIcon, ClipboardIcon } from "./NavIcons";
 
 type NavKey = "select" | "dashboard" | "plan" | "manage" | "admin" | "admin-resources";
 
+// Primary nav stays to the 3 things used every single day (Learn, Dashboard,
+// Prep Plan) - everything else (switching kids, adding content, admin
+// tools, signing out) lives in AccountMenu so the bar never grows past what
+// fits cleanly in one row, even on a phone.
 export default function AppHeader({
   profile,
   active,
@@ -12,45 +18,30 @@ export default function AppHeader({
   active?: NavKey;
   isAdmin?: boolean;
 }) {
+  const accountActive =
+    active === "manage" || active === "admin" || active === "admin-resources" ? active : undefined;
+
   return (
-    <header className="mb-6 flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 pb-4">
-      <Link href="/select" className="shrink-0">
-        <Logo />
+    <header className="mb-6 flex items-center justify-between gap-2 border-b border-slate-200 pb-4">
+      <Link href="/select" className="shrink-0" aria-label="StudyEzy home">
+        <Logo textClassName="text-sm sm:text-lg" className="h-7 w-7 sm:h-8 sm:w-8" />
       </Link>
 
-      <nav className="flex flex-wrap items-center gap-1 text-sm">
-        <span className="mr-2 hidden items-center gap-1.5 rounded-full bg-slate-100 px-3 py-1.5 text-slate-600 sm:inline-flex">
-          <span aria-hidden>{profile.avatarEmoji}</span> {profile.displayName}
-        </span>
-        <NavLink href="/select" isActive={active === "select"}>
+      <nav className="flex min-w-0 items-center gap-1 text-sm">
+        <NavLink href="/select" isActive={active === "select"} icon={<BookIcon />}>
           Learn
         </NavLink>
-        <NavLink href="/dashboard" isActive={active === "dashboard"}>
+        <NavLink href="/dashboard" isActive={active === "dashboard"} icon={<ChartIcon />}>
           Dashboard
         </NavLink>
-        <NavLink href="/plan" isActive={active === "plan"}>
+        <NavLink href="/plan" isActive={active === "plan"} icon={<ClipboardIcon />}>
           Prep Plan
         </NavLink>
-        <NavLink href="/manage" isActive={active === "manage"}>
-          + Add subject or unit
-        </NavLink>
-        {isAdmin && (
-          <>
-            <NavLink href="/admin" isActive={active === "admin"}>
-              Admin
-            </NavLink>
-            <NavLink href="/admin/resources" isActive={active === "admin-resources"}>
-              Curriculum materials
-            </NavLink>
-          </>
-        )}
-        <Link
-          href="/profiles"
-          className="rounded-full px-3 py-1.5 text-slate-400 transition hover:bg-slate-100 hover:text-slate-600"
-        >
-          Switch profile
-        </Link>
       </nav>
+
+      <div className="shrink-0">
+        <AccountMenu profile={profile} isAdmin={isAdmin} active={accountActive} />
+      </div>
     </header>
   );
 }
@@ -58,20 +49,25 @@ export default function AppHeader({
 function NavLink({
   href,
   isActive,
+  icon,
   children,
 }: {
   href: string;
   isActive: boolean;
+  icon: React.ReactNode;
   children: React.ReactNode;
 }) {
   return (
     <Link
       href={href}
-      className={`rounded-full px-3 py-1.5 font-medium transition ${
+      className={`flex items-center gap-1.5 rounded-full px-2.5 py-1.5 font-medium transition sm:px-3 ${
         isActive ? "bg-brand-navy text-white" : "text-slate-600 hover:bg-slate-100"
       }`}
     >
-      {children}
+      <span className={isActive ? "text-white" : "text-slate-400"}>{icon}</span>
+      {/* Visually hidden below sm (icon-only pill to save space), but
+          always present for screen readers - not just dropped on mobile. */}
+      <span className="sr-only sm:not-sr-only">{children}</span>
     </Link>
   );
 }
