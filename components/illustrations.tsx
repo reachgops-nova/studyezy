@@ -60,10 +60,136 @@ function ExplicitMeaningDirect() {
   );
 }
 
+function PredictingNextPage() {
+  return (
+    <svg viewBox="0 0 300 180" className="h-full w-full" role="img" aria-label="An open book with a question mark and a dotted path leading forward, representing predicting what happens next">
+      <rect width="300" height="180" fill="#e0f2fe" />
+      <path d="M40 130 L150 115 L260 130 L260 150 L150 138 L40 150 Z" fill="#ffffff" stroke="#0369a1" strokeWidth="4" strokeLinejoin="round" />
+      <line x1="150" y1="115" x2="150" y2="138" stroke="#0369a1" strokeWidth="3" />
+      <path d="M50 135 L140 122" stroke="#7dd3fc" strokeWidth="2" />
+      <path d="M55 143 L140 130" stroke="#7dd3fc" strokeWidth="2" />
+      <path d="M160 122 L250 135" stroke="#7dd3fc" strokeWidth="2" />
+      <path d="M160 130 L245 143" stroke="#7dd3fc" strokeWidth="2" />
+      <circle cx="150" cy="65" r="26" fill="#0284c7" opacity="0.15" />
+      <text x="150" y="76" textAnchor="middle" fontSize="34" fontWeight="700" fill="#0369a1" fontFamily="sans-serif">
+        ?
+      </text>
+      <path d="M195 95 Q220 85 235 95" stroke="#0284c7" strokeWidth="3" fill="none" strokeDasharray="2 8" strokeLinecap="round" />
+      <path d="M228 89 L237 96 L227 100" stroke="#0284c7" strokeWidth="3" fill="none" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+function PerspectiveTwoViews() {
+  return (
+    <svg viewBox="0 0 300 180" className="h-full w-full" role="img" aria-label="Two figures on opposite sides of an object, each with their own speech bubble, representing different perspectives on the same event">
+      <rect width="300" height="180" fill="#fdf4ff" />
+      <circle cx="150" cy="95" r="24" fill="#e9d5ff" stroke="#9333ea" strokeWidth="4" />
+      <circle cx="78" cy="120" r="18" fill="#60a5fa" />
+      <rect x="66" y="136" width="24" height="34" rx="8" fill="#3b82f6" />
+      <circle cx="222" cy="120" r="18" fill="#f97316" />
+      <rect x="210" y="136" width="24" height="34" rx="8" fill="#ea580c" />
+      <path d="M40 50 Q35 40 45 38 L85 38 Q95 40 90 50 L90 60 L78 68 L80 58 Q40 60 40 50 Z" fill="#ffffff" stroke="#3b82f6" strokeWidth="3" />
+      <path d="M260 50 Q265 40 255 38 L215 38 Q205 40 210 50 L210 60 L222 68 L220 58 Q260 60 260 50 Z" fill="#ffffff" stroke="#ea580c" strokeWidth="3" />
+    </svg>
+  );
+}
+
+function ProofreadingChecklist() {
+  return (
+    <svg viewBox="0 0 300 180" className="h-full w-full" role="img" aria-label="A clipboard checklist with a pencil, ticked boxes representing proofreading">
+      <rect width="300" height="180" fill="#f0fdf4" />
+      <rect x="90" y="30" width="120" height="150" rx="10" fill="#ffffff" stroke="#15803d" strokeWidth="5" />
+      <rect x="120" y="20" width="60" height="20" rx="6" fill="#16a34a" />
+      {[60, 88, 116, 144].map((y, i) => (
+        <g key={y}>
+          <rect x="106" y={y} width="16" height="16" rx="3" fill="none" stroke="#15803d" strokeWidth="3" />
+          {i < 3 && <path d={`M109 ${y + 8} L113 ${y + 12} L119 ${y + 3}`} stroke="#16a34a" strokeWidth="2.5" fill="none" strokeLinecap="round" strokeLinejoin="round" />}
+          <line x1="132" y1={y + 8} x2="192" y2={y + 8} stroke="#bbf7d0" strokeWidth="6" strokeLinecap="round" />
+        </g>
+      ))}
+      <path d="M215 150 L245 115 L258 128 L228 163 L212 166 Z" fill="#fbbf24" stroke="#b45309" strokeWidth="3" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+function FactVsOpinionScale() {
+  return (
+    <svg viewBox="0 0 300 180" className="h-full w-full" role="img" aria-label="A balance scale with a document on one side representing fact and a thought bubble on the other representing opinion">
+      <rect width="300" height="180" fill="#fff7ed" />
+      <rect x="146" y="40" width="8" height="100" fill="#78350f" />
+      <path d="M60 78 L240 78" stroke="#78350f" strokeWidth="6" strokeLinecap="round" />
+      <line x1="70" y1="80" x2="70" y2="115" stroke="#78350f" strokeWidth="3" />
+      <line x1="230" y1="80" x2="230" y2="115" stroke="#78350f" strokeWidth="3" />
+      <path d="M45 115 Q70 140 95 115 Z" fill="#bfdbfe" stroke="#1d4ed8" strokeWidth="3" />
+      <path d="M205 115 Q230 140 255 115 Z" fill="#fed7aa" stroke="#c2410c" strokeWidth="3" />
+      <rect x="55" y="90" width="30" height="22" rx="2" fill="#ffffff" stroke="#1d4ed8" strokeWidth="2.5" />
+      <line x1="60" y1="97" x2="80" y2="97" stroke="#1d4ed8" strokeWidth="2" />
+      <line x1="60" y1="103" x2="80" y2="103" stroke="#1d4ed8" strokeWidth="2" />
+      <path d="M212 88 Q205 78 215 74 Q225 66 235 74 Q248 72 246 84 Q252 92 242 98 Q234 108 222 100 Q210 100 212 88 Z" fill="#ffffff" stroke="#c2410c" strokeWidth="2.5" />
+      <rect x="140" y="145" width="20" height="14" rx="3" fill="#78350f" />
+    </svg>
+  );
+}
+
+function IdiomLiteralVsMeaning() {
+  return (
+    <svg viewBox="0 0 300 180" className="h-full w-full" role="img" aria-label="A cloud raining small cats and dogs, illustrating the literal-versus-real-meaning gap in idiomatic phrases">
+      <rect width="300" height="180" fill="#eef2ff" />
+      <ellipse cx="150" cy="55" rx="70" ry="30" fill="#c7d2fe" />
+      <ellipse cx="110" cy="45" rx="34" ry="24" fill="#c7d2fe" />
+      <ellipse cx="195" cy="48" rx="30" ry="22" fill="#c7d2fe" />
+      {[
+        { x: 90, y: 110 },
+        { x: 150, y: 130 },
+        { x: 205, y: 105 },
+      ].map((p, i) => (
+        <g key={i}>
+          <ellipse cx={p.x} cy={p.y} rx="12" ry="9" fill={i % 2 === 0 ? "#818cf8" : "#f472b6"} />
+          <circle cx={p.x - 6} cy={p.y - 8} r="5" fill={i % 2 === 0 ? "#818cf8" : "#f472b6"} />
+          <path d={`M${p.x - 9} ${p.y - 11} L${p.x - 11} ${p.y - 17} L${p.x - 5} ${p.y - 13} Z`} fill={i % 2 === 0 ? "#818cf8" : "#f472b6"} />
+          <path d={`M${p.x - 3} ${p.y - 11} L${p.x - 1} ${p.y - 17} L${p.x + 3} ${p.y - 13} Z`} fill={i % 2 === 0 ? "#818cf8" : "#f472b6"} />
+        </g>
+      ))}
+      <text x="150" y="170" textAnchor="middle" fontSize="14" fontWeight="600" fill="#4338ca" fontFamily="sans-serif">
+        (means: it&apos;s pouring rain!)
+      </text>
+    </svg>
+  );
+}
+
+function SentenceTypesBlocks() {
+  return (
+    <svg viewBox="0 0 300 180" className="h-full w-full" role="img" aria-label="Three rows of connected blocks of increasing length, representing simple, compound, and complex sentences">
+      <rect width="300" height="180" fill="#f5f3ff" />
+      <rect x="30" y="35" width="70" height="28" rx="6" fill="#a78bfa" />
+      <text x="150" y="35" textAnchor="middle" fontSize="12" fill="#5b21b6" fontFamily="sans-serif" fontWeight="600">
+        simple
+      </text>
+      <rect x="30" y="85" width="70" height="28" rx="6" fill="#818cf8" />
+      <rect x="110" y="85" width="70" height="28" rx="6" fill="#818cf8" />
+      <text x="220" y="103" textAnchor="middle" fontSize="12" fill="#3730a3" fontFamily="sans-serif" fontWeight="600">
+        compound
+      </text>
+      <rect x="30" y="135" width="55" height="28" rx="6" fill="#c4b5fd" />
+      <rect x="95" y="135" width="90" height="28" rx="6" fill="#7c3aed" />
+      <text x="240" y="153" textAnchor="middle" fontSize="12" fill="#4c1d95" fontFamily="sans-serif" fontWeight="600">
+        complex
+      </text>
+    </svg>
+  );
+}
+
 const ILLUSTRATIONS: Record<string, () => JSX.Element> = {
   cockerel_hyena_fable: CockerelHyenaFable,
   implicit_meaning_clue: ImplicitMeaningClue,
   explicit_meaning_direct: ExplicitMeaningDirect,
+  predicting_next_page: PredictingNextPage,
+  perspective_two_views: PerspectiveTwoViews,
+  proofreading_checklist: ProofreadingChecklist,
+  fact_vs_opinion_scale: FactVsOpinionScale,
+  idiom_literal_vs_meaning: IdiomLiteralVsMeaning,
+  sentence_types_blocks: SentenceTypesBlocks,
 };
 
 export function Illustration({ illustrationKey }: { illustrationKey: string }) {
