@@ -61,6 +61,12 @@ test.describe("Registration → unit selection → navigation → sign out", () 
     await page.getByLabel(/password/i).fill("TestPassword123!");
     await page.getByRole("button", { name: /sign in/i }).click();
 
+    // Login (unlike registration) doesn't know which kid to activate, so it
+    // lands on /profiles to ask - only registration auto-activates the one
+    // profile it just created. Pick the same kid to reach the unit selector.
+    await expect(page).toHaveURL(/\/profiles/);
+    await page.getByRole("button", { name: /return kid/i }).click();
+
     await expect(page).toHaveURL(/\/select/);
     await expect(page.getByRole("heading", { name: /what are we learning today/i })).toBeVisible();
   });
