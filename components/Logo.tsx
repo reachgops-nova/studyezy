@@ -1,18 +1,18 @@
-// Brand marks, both cropped/sourced directly from the user's shared
-// artwork (public/brand/studyezy-*) - not hand-redrawn.
+// Brand marks, all sourced directly from the user's shared artwork
+// (public/brand/studyezy-*) - not hand-redrawn.
 //
-// - LogoMark / Logo: just the bear, for compact nav/header spots -
-//   object-contain so a non-square source crop never distorts inside a
-//   square className box.
-// - Banner: the complete original image (bear + atom + lightbulb + full
-//   wordmark + tagline), reserved for a prominent hero placement, not the
-//   nav - see app/page.tsx.
+// - LogoMark / Logo: the mascot scene (bear + atom + lightbulb, no baked-in
+//   text) for compact nav/header spots - object-contain so the source's own
+//   aspect ratio never gets distorted inside a square className box.
+// - Banner: the complete original image (mascot scene + full wordmark +
+//   tagline), reserved for a prominent hero placement, not the nav - see
+//   app/page.tsx.
 
 export function LogoMark({ className = "h-8 w-8" }: { className?: string }) {
   return (
     // eslint-disable-next-line @next/next/no-img-element
     <img
-      src="/brand/studyezy-bear.png"
+      src="/brand/studyezy-mascot-scene.png"
       alt="StudyEzy"
       className={`object-contain ${className}`}
     />
