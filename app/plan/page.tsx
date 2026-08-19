@@ -4,6 +4,7 @@ import { getActiveProfile } from "@/lib/auth";
 import { getCurrentUser } from "@/lib/session";
 import { getPrepPlan } from "@/lib/queries/prepPlanner";
 import AppShell from "@/components/AppShell";
+import VocabPractice from "@/components/VocabPractice";
 
 export default async function PlanPage() {
   const user = await getCurrentUser();
@@ -59,6 +60,8 @@ export default async function PlanPage() {
           ))}
         </div>
       )}
+
+      <VocabPractice />
     </AppShell>
   );
 }

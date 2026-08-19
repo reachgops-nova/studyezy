@@ -24,6 +24,16 @@ async function tryFollowUps(concept: Concept, question: string, answer: string):
 
 const UNIT_KEY_PATTERN = /^[a-z0-9]+-\d+-[a-z0-9]+-\d+$/i;
 
+// Allowlisted, not passed through freely - this value is interpolated
+// straight into the AI system prompt (see lib/claude.ts/lib/groq.ts), so an
+// arbitrary client-supplied string would be a prompt-injection vector.
+// Keep in sync with components/AvatarChat.tsx's LANGUAGES list.
+const SUPPORTED_LANGUAGES = new Set(["English", "Tamil", "Hindi", "Telugu", "Kannada", "Malayalam", "French"]);
+
+function resolveLanguage(value: unknown): string {
+  return typeof value === "string" && SUPPORTED_LANGUAGES.has(value) ? value : "English";
+}
+
 export async function POST(req: NextRequest) {
   const profileId = await getActiveProfileId();
   if (!profileId) {
@@ -45,7 +55,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Invalid request body." }, { status: 400 });
   }
 
-  const { unitKey, conceptId, question } = (body ?? {}) as Record<string, unknown>;
+  const { unitKey, conceptId, question, language } = (body ?? {}) as Record<string, unknown>;
 
   if (
     typeof unitKey !== "string" ||
@@ -56,6 +66,8 @@ export async function POST(req: NextRequest) {
   ) {
     return NextResponse.json({ error: "Missing or invalid fields." }, { status: 400 });
   }
+
+  const resolvedLanguage = resolveLanguage(language);
 
   const [curriculumId, stageIdStr, subjectId, unitIdStr] = unitKey.split("-");
   const unit = await getUnit(curriculumId, Number(stageIdStr), subjectId, Number(unitIdStr));
@@ -74,7 +86,7 @@ export async function POST(req: NextRequest) {
   // pattern-matcher (always available, no network dependency at all).
   if (isConfigured()) {
     try {
-      const answer = await askConceptQuestion(concept, question);
+      const answer = await askConceptQuestion(concept, question, resolvedLanguage);
       const followUps = await tryFollowUps(concept, question, answer);
       return NextResponse.json({ answer, source: "ai", followUps });
     } catch (err) {
@@ -84,7 +96,7 @@ export async function POST(req: NextRequest) {
 
   if (isGroqConfigured()) {
     try {
-      const answer = await askConceptQuestionGroq(concept, question);
+      const answer = await askConceptQuestionGroq(concept, question, resolvedLanguage);
       const followUps = await tryFollowUps(concept, question, answer);
       return NextResponse.json({ answer, source: "ai-groq", followUps });
     } catch (err) {

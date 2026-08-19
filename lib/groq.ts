@@ -1,5 +1,5 @@
 import "server-only";
-import type { Concept, MarkScheme } from "./types";
+import type { Concept, MarkScheme, VocabItem } from "./types";
 import type { GradeResult, ReasoningClassification, ReasoningResult } from "./claude";
 
 // Groq hosts open-weight models (Llama etc.) behind a fast, OpenAI-compatible
@@ -104,7 +104,11 @@ async function groqChatJSON<T>(model: string, system: string, user: string, maxT
  * ANTHROPIC_API_KEY isn't configured but GROQ_API_KEY is - grounded in the
  * concept's own content, not a generic web answer.
  */
-export async function askConceptQuestionGroq(concept: Concept, question: string): Promise<string> {
+export async function askConceptQuestionGroq(
+  concept: Concept,
+  question: string,
+  language: string = "English"
+): Promise<string> {
   const contextBlock = [
     `Concept: ${concept.concept_name}`,
     concept.definition ? `Definition: ${concept.definition}` : null,
@@ -113,6 +117,14 @@ export async function askConceptQuestionGroq(concept: Concept, question: string)
   ]
     .filter(Boolean)
     .join("\n\n");
+
+  const languageInstruction =
+    language !== "English"
+      ? ` Respond in ${language}, not English - the student or parent needs this explanation in ${language} to ` +
+        `really understand it. This is still an English-curriculum lesson, so when you use the important ` +
+        `English subject term or vocabulary word being taught, say the ${language} explanation first and then ` +
+        `give that key term in English too (in parentheses), so they still pick up the English vocabulary.`
+      : "";
 
   return groqChat(
     QA_MODEL,
@@ -127,7 +139,8 @@ export async function askConceptQuestionGroq(concept: Concept, question: string)
       "bulleted lists (no '1.' '2.' '-' markers) - if you're covering more than one point, use spoken " +
       "connectors instead, like 'First, ... Also, ... Finally, ...'. If you need to refer to a letter " +
       "pattern or suffix by itself (like -ly or -er), spell it as separated letters (e.g. 'the letters L, Y') " +
-      "so it's not misread as a word.",
+      "so it's not misread as a word." +
+      languageInstruction,
     `${contextBlock}\n\nStudent's question: ${question.trim().slice(0, 500)}`,
     300
   );
@@ -171,6 +184,48 @@ export async function suggestFollowUpsGroq(
   );
 
   return (parsed.questions ?? []).filter((q) => typeof q === "string" && q.trim().length > 0).slice(0, 3);
+}
+
+/**
+ * Daily vocabulary practice (synonyms/antonyms) - a lightweight, always-
+ * fresh-generated MCQ set rather than a curated/persisted question bank.
+ * Deliberate MVP scope: no database table, no "don't repeat today's words"
+ * tracking, no per-unit grounding yet - see PLATFORM_PLAN.md's decision
+ * record for why (no usage data yet to design real persistence against).
+ * Falls back to lib/vocabPractice.ts's static set if this fails, so the
+ * feature always works even without Groq configured.
+ */
+export async function generateVocabPracticeGroq(): Promise<VocabItem[]> {
+  const parsed = await groqChatJSON<{ items: VocabItem[] }>(
+    QA_MODEL,
+    "You write vocabulary practice questions for a Grade 5 (9-10 year old, Cambridge Stage 5 English) " +
+      "student. Generate exactly 3 multiple-choice questions, each either a synonym question ('Which word " +
+      "means the SAME as X?') or an antonym question ('Which word means the OPPOSITE of X?'). Mix both " +
+      "types. Use words a Grade 5 student would plausibly meet in stories or everyday writing - not overly " +
+      "obscure, not trivially easy. Each question needs exactly 4 short single-word or short-phrase options, " +
+      "with exactly one correct answer, and the 3 wrong options should be plausible enough to actually make " +
+      "the student think, not obviously silly. Respond with ONLY a JSON object, no other text: " +
+      '{"items": [{"word": string, "type": "synonym"|"antonym", "question": string, "options": [string,string,string,string], "correctIndex": number}]}.',
+    "Generate 3 fresh vocabulary practice questions now, different words than typical overused examples " +
+      "like 'happy' or 'big'.",
+    600
+  );
+
+  const items = (parsed.items ?? []).filter(
+    (i) =>
+      i &&
+      typeof i.word === "string" &&
+      (i.type === "synonym" || i.type === "antonym") &&
+      typeof i.question === "string" &&
+      Array.isArray(i.options) &&
+      i.options.length === 4 &&
+      Number.isInteger(i.correctIndex) &&
+      i.correctIndex >= 0 &&
+      i.correctIndex < 4
+  );
+
+  if (items.length === 0) throw new Error("Groq returned no usable vocab items");
+  return items.slice(0, 3);
 }
 
 /**

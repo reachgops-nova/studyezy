@@ -42,7 +42,8 @@ export function isConfigured(): boolean {
  */
 export async function askConceptQuestion(
   concept: Concept,
-  question: string
+  question: string,
+  language: string = "English"
 ): Promise<string> {
   const trimmed = question.trim().slice(0, MAX_QUESTION_LENGTH);
   if (!trimmed) {
@@ -57,6 +58,20 @@ export async function askConceptQuestion(
   ]
     .filter(Boolean)
     .join("\n\n");
+
+  // Only added when a non-English language was actually chosen (see
+  // AvatarChat.tsx's language selector) - a parent who isn't fluent in
+  // English, or a kid who needs a native-language bridge for a hard idea,
+  // gets a real answer instead of one they can't fully follow. This is
+  // English-curriculum content though, so the key term being taught is kept
+  // in English too rather than fully translated away.
+  const languageInstruction =
+    language !== "English"
+      ? ` Respond in ${language}, not English - the student or parent needs this explanation in ${language} to ` +
+        `really understand it. This is still an English-curriculum lesson, so when you use the important ` +
+        `English subject term or vocabulary word being taught, say the ${language} explanation first and then ` +
+        `give that key term in English too (in parentheses), so they still pick up the English vocabulary.`
+      : "";
 
   const response = await getClient().messages.create({
     model: MODEL,
@@ -73,7 +88,8 @@ export async function askConceptQuestion(
       "bulleted lists (no '1.' '2.' '-' markers) - if you're covering more than one point, use spoken " +
       "connectors instead, like 'First, ... Also, ... Finally, ...'. If you need to refer to a letter " +
       "pattern or suffix by itself (like -ly or -er), spell it as separated letters (e.g. 'the letters L, Y') " +
-      "so it's not misread as a word.",
+      "so it's not misread as a word." +
+      languageInstruction,
     messages: [
       {
         role: "user",

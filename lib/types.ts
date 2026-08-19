@@ -1,5 +1,14 @@
 export type ConceptStatus = "drafted" | "outline";
 
+/** One multiple-choice vocabulary practice item (synonym or antonym) - see lib/vocabPractice.ts. */
+export interface VocabItem {
+  word: string;
+  type: "synonym" | "antonym";
+  question: string;
+  options: string[];
+  correctIndex: number;
+}
+
 export interface VoiceQASample {
   question: string;
   answer: string;

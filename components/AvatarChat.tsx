@@ -148,36 +148,59 @@ function matchCheckpointIntent(text: string): "continue" | "repeat" | null {
 // parent can tune it per-device now instead of a single fixed value.
 const SPEECH_LANG = "en-GB";
 
-// Voice INPUT (speech-to-text) language - was hardcoded to en-IN, which
-// meant a parent/kid asking their question in Tamil (or another home
-// language) simply wasn't transcribed correctly, since the browser's
-// speech recognizer was told to expect English. Now a persisted per-device
-// choice, same pattern as VoicePicker's saved TTS voice/rate. This only
-// controls what gets TRANSCRIBED - the tutor still answers in English,
-// since the lesson content itself is English-curriculum, but at least the
-// question itself is captured correctly rather than silently mis-heard.
-const STT_LANG_KEY = "studyezy_stt_lang";
-const STT_LANGUAGES: { code: string; label: string }[] = [
-  { code: "en-IN", label: "English" },
-  { code: "ta-IN", label: "Tamil" },
-  { code: "hi-IN", label: "Hindi" },
-  { code: "te-IN", label: "Telugu" },
-  { code: "kn-IN", label: "Kannada" },
-  { code: "ml-IN", label: "Malayalam" },
+// Shared language preference - was originally just speech-to-text input
+// (hardcoded to en-IN, so a parent/kid asking in Tamil wasn't transcribed
+// correctly), now also controls what language on-demand Q&A ANSWERS come
+// back in. Real, explicit need: a parent who isn't fluent in English can't
+// help their kid with an English-only explanation, and sometimes a
+// native-language framing helps a kid grasp a hard idea even in an English
+// class. The core lesson content itself (checkpoints, hand-authored
+// definitions/examples) always stays English - that's the point of an
+// English-curriculum unit - only /api/ask's on-demand answers switch
+// language, and even then the AI is told to keep key English subject terms
+// alongside the translation so the pedagogical goal isn't lost (see
+// lib/claude.ts / lib/groq.ts). ttsCode is the closest BCP-47 tag to ask
+// SpeechSynthesis for when speaking that language back - a browser/OS may
+// still not have a voice installed for it, which degrades gracefully to
+// no voice-read (see pickVoice) rather than mis-speaking English text.
+const LANGUAGE_KEY = "studyezy_language";
+const LANGUAGES: { code: string; label: string; ttsCode: string }[] = [
+  { code: "en-IN", label: "English", ttsCode: "en-GB" },
+  { code: "ta-IN", label: "Tamil", ttsCode: "ta-IN" },
+  { code: "hi-IN", label: "Hindi", ttsCode: "hi-IN" },
+  { code: "te-IN", label: "Telugu", ttsCode: "te-IN" },
+  { code: "kn-IN", label: "Kannada", ttsCode: "kn-IN" },
+  { code: "ml-IN", label: "Malayalam", ttsCode: "ml-IN" },
+  { code: "fr-FR", label: "French", ttsCode: "fr-FR" },
 ];
 
-function getSavedSttLang(): string {
+function getSavedLanguage(): string {
   if (typeof window === "undefined") return "en-IN";
-  return localStorage.getItem(STT_LANG_KEY) || "en-IN";
+  return localStorage.getItem(LANGUAGE_KEY) || "en-IN";
 }
 
 let cachedVoices: SpeechSynthesisVoice[] = [];
 
-function pickVoice(): SpeechSynthesisVoice | null {
+function pickVoice(targetLangCode?: string): SpeechSynthesisVoice | null {
   if (!("speechSynthesis" in window)) return null;
   const voices = window.speechSynthesis.getVoices();
   if (voices.length) cachedVoices = voices;
   const pool = cachedVoices.length ? cachedVoices : voices;
+
+  // Non-English responses need a voice that actually speaks that language -
+  // the saved English voice preference would just mispronounce it, so
+  // search by language instead of honoring that preference for this
+  // utterance. Returns null (no voice forced) rather than falling through
+  // to English if the device has nothing installed for this language -
+  // better to fall back to the browser/OS's own default than to
+  // confidently mis-speak French text with an English voice.
+  if (targetLangCode && !targetLangCode.toLowerCase().startsWith("en")) {
+    const target = targetLangCode.toLowerCase();
+    const exact = pool.find((v) => v.lang?.toLowerCase() === target);
+    if (exact) return exact;
+    const base = target.split("-")[0];
+    return pool.find((v) => v.lang?.toLowerCase().startsWith(base)) ?? null;
+  }
 
   // A voice picked and previewed in VoicePicker always wins - it's a real
   // choice made against what's actually installed on this device, better
@@ -241,7 +264,7 @@ export default function AvatarChat({
   const [error, setError] = useState<string | null>(null);
   const [listening, setListening] = useState(false);
   const [speechInputSupported, setSpeechInputSupported] = useState(false);
-  const [sttLang, setSttLang] = useState(getSavedSttLang);
+  const [language, setLanguage] = useState(getSavedLanguage);
   const [readAloud, setReadAloud] = useState(true);
   const [showVoicePicker, setShowVoicePicker] = useState(false);
   // Replaces the static starter suggestions once the AI has answered at
@@ -273,15 +296,15 @@ export default function AvatarChat({
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
   }, [messages]);
 
-  function speakText(text: string, messageId: string, onDone: () => void) {
+  function speakText(text: string, messageId: string, onDone: () => void, langCode?: string) {
     if (!(readAloud && "speechSynthesis" in window)) {
       setTimeout(onDone, 1400);
       return;
     }
     const utterance = new SpeechSynthesisUtterance(text);
-    utterance.lang = SPEECH_LANG;
+    utterance.lang = langCode ?? SPEECH_LANG;
     utterance.rate = getSavedRate();
-    const voice = pickVoice();
+    const voice = pickVoice(langCode);
     if (voice) utterance.voice = voice;
     utterance.onboundary = (event) => {
       if (event.name === "sentence") return;
@@ -536,10 +559,16 @@ export default function AvatarChat({
     setError(null);
 
     try {
+      const languageInfo = LANGUAGES.find((l) => l.code === language);
       const res = await fetch("/api/ask", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ unitKey, conceptId: concept.concept_id, question: trimmed }),
+        body: JSON.stringify({
+          unitKey,
+          conceptId: concept.concept_id,
+          question: trimmed,
+          language: languageInfo?.label ?? "English",
+        }),
       });
 
       if (!res.ok) {
@@ -551,7 +580,7 @@ export default function AvatarChat({
       const cleanAnswer = stripMarkdown(data.answer);
       const answerId = nextId();
       setMessages((prev) => [...prev, { id: answerId, sender: "avatar", text: cleanAnswer }]);
-      speakText(cleanAnswer, answerId, () => {});
+      speakText(cleanAnswer, answerId, () => {}, languageInfo?.ttsCode);
       // Only replace the suggestions if fresh ones actually came back -
       // keep showing the last known-good list rather than going blank if
       // this best-effort generation didn't produce anything usable.
@@ -567,7 +596,7 @@ export default function AvatarChat({
     const SpeechRecognitionCtor = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     if (!SpeechRecognitionCtor) return;
     const recognition: SpeechRecognitionLike = new SpeechRecognitionCtor();
-    recognition.lang = sttLang;
+    recognition.lang = language;
     recognition.interimResults = false;
     recognition.maxAlternatives = 1;
     recognition.onresult = (event) => setInputText(event.results[0][0].transcript);
@@ -762,25 +791,23 @@ export default function AvatarChat({
             >
               🎤
             </button>
-            {speechInputSupported && (
-              <select
-                value={sttLang}
-                onChange={(e) => {
-                  setSttLang(e.target.value);
-                  localStorage.setItem(STT_LANG_KEY, e.target.value);
-                }}
-                disabled={!readyForInput}
-                aria-label="Voice input language"
-                title="Voice input language - what language you'll speak the question in"
-                className="rounded-xl border border-slate-300 bg-white px-1 text-xs text-slate-600 disabled:opacity-40"
-              >
-                {STT_LANGUAGES.map((l) => (
-                  <option key={l.code} value={l.code}>
-                    {l.label}
-                  </option>
-                ))}
-              </select>
-            )}
+            <select
+              value={language}
+              onChange={(e) => {
+                setLanguage(e.target.value);
+                localStorage.setItem(LANGUAGE_KEY, e.target.value);
+              }}
+              disabled={!readyForInput}
+              aria-label="Language"
+              title="Language - for voice input, and for answers to your own questions (the lesson itself stays in English)"
+              className="rounded-xl border border-slate-300 bg-white px-1 text-xs text-slate-600 disabled:opacity-40"
+            >
+              {LANGUAGES.map((l) => (
+                <option key={l.code} value={l.code}>
+                  {l.label}
+                </option>
+              ))}
+            </select>
             <button
               type="button"
               onClick={() => sendMessage(inputText)}
