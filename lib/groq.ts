@@ -128,6 +128,46 @@ export async function askConceptQuestionGroq(concept: Concept, question: string)
 }
 
 /**
+ * Generates a fresh set of short follow-up questions a kid might naturally
+ * want to tap next, grounded in the concept AND the specific answer they
+ * were just given - so the suggested-question chips evolve as the
+ * conversation goes, instead of staying frozen on the same static list from
+ * the moment the lesson loaded. Uses the fast/cheap REACTION_MODEL since
+ * this is a low-stakes UI nicety, not graded content - if it fails or
+ * returns nothing usable, the caller keeps showing whatever suggestions it
+ * already had (never a hard failure for the kid).
+ */
+export async function suggestFollowUpsGroq(
+  concept: Concept,
+  lastQuestion: string,
+  lastAnswer: string
+): Promise<string[]> {
+  const contextBlock = [
+    `Concept: ${concept.concept_name}`,
+    concept.definition ? `Definition: ${concept.definition}` : null,
+  ]
+    .filter(Boolean)
+    .join("\n");
+
+  const parsed = await groqChatJSON<{ questions: string[] }>(
+    REACTION_MODEL,
+    "You suggest what a Grade 5 (9-10 year old) student might naturally want to ask NEXT in a tutoring " +
+      "chat, right after the tutor just answered one of their questions. Read the concept, the student's " +
+      "last question, and the tutor's answer, then write 3 short, distinct follow-up questions the student " +
+      "could tap to ask next - each under 12 words, in the student's own simple voice (e.g. 'What if...', " +
+      "'Can you give another example?', 'Why does that happen?'). Don't repeat the question just asked. " +
+      "Stay strictly on this one concept. Respond with ONLY a JSON object, no other text: " +
+      '{"questions": [string, string, string]}.',
+    `${contextBlock}\n\nStudent just asked: ${lastQuestion.trim().slice(0, 300)}\n\nTutor answered: ${lastAnswer
+      .trim()
+      .slice(0, 800)}`,
+    250
+  );
+
+  return (parsed.questions ?? []).filter((q) => typeof q === "string" && q.trim().length > 0).slice(0, 3);
+}
+
+/**
  * A real, content-aware reaction to a Micro-Check answer - replaces the
  * generic rotating ack with something that actually engages with what the
  * kid said, fixing the "false praise for a non-answer" gap a canned phrase

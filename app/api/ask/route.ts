@@ -2,9 +2,25 @@ import { NextRequest, NextResponse } from "next/server";
 import { getActiveProfileId } from "@/lib/auth";
 import { getUnit } from "@/lib/content";
 import { askConceptQuestion, isConfigured } from "@/lib/claude";
-import { askConceptQuestionGroq, isGroqConfigured } from "@/lib/groq";
+import { askConceptQuestionGroq, isGroqConfigured, suggestFollowUpsGroq } from "@/lib/groq";
 import { findLocalAnswer } from "@/lib/localAnswers";
 import { checkRateLimit } from "@/lib/rateLimit";
+import type { Concept } from "@/lib/types";
+
+// Follow-up suggestions are a UI nicety (evolving quick-reply chips), not the
+// answer itself - generated best-effort alongside whichever tier answered
+// the real question, and never allowed to fail the request. Falls back to
+// an empty list (the frontend just keeps its last known suggestions) rather
+// than surfacing a Groq error to the kid over something this low-stakes.
+async function tryFollowUps(concept: Concept, question: string, answer: string): Promise<string[]> {
+  if (!isGroqConfigured()) return [];
+  try {
+    return await suggestFollowUpsGroq(concept, question, answer);
+  } catch (err) {
+    console.error("suggestFollowUpsGroq failed, keeping existing suggestions", err);
+    return [];
+  }
+}
 
 const UNIT_KEY_PATTERN = /^[a-z0-9]+-\d+-[a-z0-9]+-\d+$/i;
 
@@ -59,7 +75,8 @@ export async function POST(req: NextRequest) {
   if (isConfigured()) {
     try {
       const answer = await askConceptQuestion(concept, question);
-      return NextResponse.json({ answer, source: "ai" });
+      const followUps = await tryFollowUps(concept, question, answer);
+      return NextResponse.json({ answer, source: "ai", followUps });
     } catch (err) {
       console.error("askConceptQuestion failed, trying next fallback", err);
     }
@@ -68,11 +85,12 @@ export async function POST(req: NextRequest) {
   if (isGroqConfigured()) {
     try {
       const answer = await askConceptQuestionGroq(concept, question);
-      return NextResponse.json({ answer, source: "ai-groq" });
+      const followUps = await tryFollowUps(concept, question, answer);
+      return NextResponse.json({ answer, source: "ai-groq", followUps });
     } catch (err) {
       console.error("askConceptQuestionGroq failed, falling back to local answer", err);
     }
   }
 
-  return NextResponse.json({ answer: findLocalAnswer(concept, question), source: "local" });
+  return NextResponse.json({ answer: findLocalAnswer(concept, question), source: "local", followUps: [] });
 }

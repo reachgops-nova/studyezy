@@ -82,21 +82,44 @@ const FALLBACK_ACK = "Thanks for sharing your thinking!";
 // without needing an AI call - this is what lets typing/saying a normal
 // response act like tapping the pause buttons, instead of always being sent
 // off as a real question.
-const REPEAT_INTENT = /\b(again|repeat|didn'?t (get|catch|understand)|not clear|confused|explain again|don'?t (get|understand)|what does that mean|come again|one more time|slower)\b/i;
-const CONTINUE_INTENT = /\b(ok(ay)?|yes|yeah|yep|yup|got it|good|fine|sure|continue|next|go on|keep going|ready|understood|makes sense|i (understand|get it)|alright)\b/i;
+//
+// Matched by EXACT phrase (after trimming/lowercasing/dropping trailing
+// punctuation), not by substring-search-anywhere-in-a-sentence. A previous
+// version used regex.test() plus a word-count cutoff as a proxy for "is this
+// just an ack" - that band-aid still broke on real input: "I don't
+// understand the part about story check" is exactly 8 words, sat right on
+// the cutoff, and still matched "don't understand" as a substring, so it
+// silently discarded the specific topic and reset the whole checkpoint
+// instead of answering the actual question. Exact-phrase matching is the
+// correct semantics (the message IS just an ack vs. it merely CONTAINS ack
+// words) and has no equivalent boundary case - any additional content at
+// all, of any length, correctly routes to the real grounded-answer pipeline.
+const CONTINUE_ACK_PHRASES = new Set([
+  "ok", "okay", "k", "yes", "yeah", "yep", "yup", "got it", "good", "fine", "sure",
+  "continue", "next", "go on", "keep going", "ready", "understood", "makes sense",
+  "i understand", "i get it", "i got it", "alright", "all good", "sounds good",
+  "yes got it", "got it thanks", "yep got it",
+]);
 
-// Only short acknowledgments count as a plain continue/repeat - a longer
-// message (e.g. "I don't understand the part about connectives") contains
-// one of the same trigger words but is a specific question, and should reach
-// the grounded-answer pipeline instead of being swallowed by a keyword match
-// and answered with a blind repeat that ignores what was actually asked.
-const ACK_WORD_LIMIT = 8;
+const REPEAT_ACK_PHRASES = new Set([
+  "again", "repeat", "not clear", "confused", "i'm confused", "im confused",
+  "explain again", "say again", "what does that mean", "come again",
+  "one more time", "slower",
+  "i don't understand", "i dont understand", "don't understand", "dont understand",
+  "i don't get it", "i dont get it", "don't get it", "dont get it",
+  "i didn't get it", "i didnt get it", "didn't get it", "didnt get it",
+  "i didn't catch that", "i didnt catch that", "didn't catch that",
+  "not sure", "no idea", "huh", "what",
+]);
+
+function normalizeAck(text: string): string {
+  return text.trim().toLowerCase().replace(/[?!.]+$/g, "").trim();
+}
 
 function matchCheckpointIntent(text: string): "continue" | "repeat" | null {
-  const t = text.trim().toLowerCase();
-  if (t.split(/\s+/).length > ACK_WORD_LIMIT) return null;
-  if (REPEAT_INTENT.test(t)) return "repeat";
-  if (CONTINUE_INTENT.test(t)) return "continue";
+  const t = normalizeAck(text);
+  if (REPEAT_ACK_PHRASES.has(t)) return "repeat";
+  if (CONTINUE_ACK_PHRASES.has(t)) return "continue";
   return null;
 }
 
@@ -175,6 +198,10 @@ export default function AvatarChat({
   const [speechInputSupported, setSpeechInputSupported] = useState(false);
   const [readAloud, setReadAloud] = useState(true);
   const [showVoicePicker, setShowVoicePicker] = useState(false);
+  // Replaces the static starter suggestions once the AI has answered at
+  // least one question - keeps evolving after every answer instead of
+  // staying frozen on the same list for the whole conversation.
+  const [dynamicFollowUps, setDynamicFollowUps] = useState<string[]>([]);
 
   const playTokenRef = useRef(0);
   const checkpointsRef = useRef<string[][]>([]);
@@ -329,6 +356,7 @@ export default function AvatarChat({
     setSpeaking(false);
     setSpeakingMessageId(null);
     setHighlightRange(null);
+    setDynamicFollowUps([]);
     /* eslint-enable react-hooks/set-state-in-effect */
     window.speechSynthesis?.cancel();
 
@@ -460,10 +488,14 @@ export default function AvatarChat({
         throw new Error(body.error || "Something went wrong. Try again in a moment.");
       }
 
-      const data = (await res.json()) as { answer: string };
+      const data = (await res.json()) as { answer: string; followUps?: string[] };
       const answerId = nextId();
       setMessages((prev) => [...prev, { id: answerId, sender: "avatar", text: data.answer }]);
       speakText(data.answer, answerId, () => {});
+      // Only replace the suggestions if fresh ones actually came back -
+      // keep showing the last known-good list rather than going blank if
+      // this best-effort generation didn't produce anything usable.
+      if (data.followUps?.length) setDynamicFollowUps(data.followUps);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Something went wrong.");
     } finally {
@@ -491,12 +523,17 @@ export default function AvatarChat({
     setListening(false);
   }
 
-  const quickReplies = [
+  // Starter suggestions, shown until the AI has answered at least one real
+  // question - dynamicFollowUps (regenerated after every answer, see
+  // sendMessage) takes over from there so the chips keep evolving with the
+  // conversation instead of staying frozen on this fixed list forever.
+  const starterReplies = [
     ...(concept.voice_qa_samples?.map((q) => q.question) ?? []),
     "Can you explain that differently?",
     "Give me another example",
     ...(concept.reasoning_interview_prompts ?? []),
   ].slice(0, 5);
+  const quickReplies = dynamicFollowUps.length > 0 ? dynamicFollowUps : starterReplies;
 
   return (
     <div className="grid gap-4">
@@ -621,24 +658,35 @@ export default function AvatarChat({
               onKeyDown={(e) => e.key === "Enter" && sendMessage(inputText)}
               disabled={!readyForInput}
               placeholder={
-                !readyForInput ? "Ezy is teaching..." : inMicroCheck ? "Type your answer..." : "Type or use the mic..."
+                !readyForInput
+                  ? "Ezy is teaching..."
+                  : inMicroCheck
+                  ? "Type your answer..."
+                  : speechInputSupported
+                  ? "Type or use the mic..."
+                  : "Type your question..."
               }
               className="flex-1 rounded-xl border border-slate-300 px-3 py-2 text-sm disabled:bg-slate-50"
             />
-            {speechInputSupported && (
-              <button
-                type="button"
-                onClick={listening ? stopListening : startListening}
-                disabled={!readyForInput}
-                aria-pressed={listening}
-                aria-label={listening ? "Stop listening" : "Start voice question"}
-                className={`rounded-xl px-3 py-2 text-sm disabled:opacity-40 ${
-                  listening ? "bg-red-500 text-white" : "border border-slate-300 bg-white"
-                }`}
-              >
-                🎤
-              </button>
-            )}
+            <button
+              type="button"
+              onClick={listening ? stopListening : startListening}
+              disabled={!readyForInput || !speechInputSupported}
+              aria-pressed={listening}
+              aria-label={
+                speechInputSupported
+                  ? listening
+                    ? "Stop listening"
+                    : "Start voice question"
+                  : "Voice input isn't available in this browser"
+              }
+              title={speechInputSupported ? undefined : "Voice input isn't available in this browser - try Chrome or Safari"}
+              className={`rounded-xl px-3 py-2 text-sm disabled:opacity-40 ${
+                listening ? "bg-red-500 text-white" : "border border-slate-300 bg-white"
+              }`}
+            >
+              🎤
+            </button>
             <button
               type="button"
               onClick={() => sendMessage(inputText)}
