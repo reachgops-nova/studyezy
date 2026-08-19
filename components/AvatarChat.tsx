@@ -116,6 +116,27 @@ function normalizeAck(text: string): string {
   return text.trim().toLowerCase().replace(/[?!.]+$/g, "").trim();
 }
 
+// AI answers are prompted to avoid markdown (see lib/claude.ts/lib/groq.ts),
+// but models don't always comply perfectly - left unstripped, this both
+// displays literal asterisks in the chat bubble and gets read aloud
+// character-by-character ("asterisk asterisk...") by SpeechSynthesis, which
+// has no markdown awareness. Applied once, right when a message is created,
+// so the SAME cleaned string is used for display, speech, and the
+// char-index-based read-along highlighting - sanitizing separately for
+// speech vs. display would let their character offsets drift apart and
+// break the highlight.
+function stripMarkdown(text: string): string {
+  return text
+    .replace(/\*\*(.*?)\*\*/g, "$1")
+    .replace(/\*(.*?)\*/g, "$1")
+    .replace(/`{1,3}([^`]*)`{1,3}/g, "$1")
+    .replace(/^#{1,6}\s+/gm, "")
+    .replace(/^[-*]\s+/gm, "")
+    .replace(/\b\d{1,2}\.\s+(?=[A-Z])/g, "")
+    .replace(/[ \t]{2,}/g, " ")
+    .trim();
+}
+
 function matchCheckpointIntent(text: string): "continue" | "repeat" | null {
   const t = normalizeAck(text);
   if (REPEAT_ACK_PHRASES.has(t)) return "repeat";
@@ -126,6 +147,29 @@ function matchCheckpointIntent(text: string): "continue" | "repeat" | null {
 // Default speech rate lives in VoicePicker.tsx (getSavedRate) - a kid or
 // parent can tune it per-device now instead of a single fixed value.
 const SPEECH_LANG = "en-GB";
+
+// Voice INPUT (speech-to-text) language - was hardcoded to en-IN, which
+// meant a parent/kid asking their question in Tamil (or another home
+// language) simply wasn't transcribed correctly, since the browser's
+// speech recognizer was told to expect English. Now a persisted per-device
+// choice, same pattern as VoicePicker's saved TTS voice/rate. This only
+// controls what gets TRANSCRIBED - the tutor still answers in English,
+// since the lesson content itself is English-curriculum, but at least the
+// question itself is captured correctly rather than silently mis-heard.
+const STT_LANG_KEY = "studyezy_stt_lang";
+const STT_LANGUAGES: { code: string; label: string }[] = [
+  { code: "en-IN", label: "English" },
+  { code: "ta-IN", label: "Tamil" },
+  { code: "hi-IN", label: "Hindi" },
+  { code: "te-IN", label: "Telugu" },
+  { code: "kn-IN", label: "Kannada" },
+  { code: "ml-IN", label: "Malayalam" },
+];
+
+function getSavedSttLang(): string {
+  if (typeof window === "undefined") return "en-IN";
+  return localStorage.getItem(STT_LANG_KEY) || "en-IN";
+}
 
 let cachedVoices: SpeechSynthesisVoice[] = [];
 
@@ -190,12 +234,14 @@ export default function AvatarChat({
   const [microCheckIndex, setMicroCheckIndex] = useState(0);
   const [speaking, setSpeaking] = useState(false);
   const [speakingMessageId, setSpeakingMessageId] = useState<string | null>(null);
+  const [speechPaused, setSpeechPaused] = useState(false);
   const [highlightRange, setHighlightRange] = useState<[number, number] | null>(null);
   const [inputText, setInputText] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [listening, setListening] = useState(false);
   const [speechInputSupported, setSpeechInputSupported] = useState(false);
+  const [sttLang, setSttLang] = useState(getSavedSttLang);
   const [readAloud, setReadAloud] = useState(true);
   const [showVoicePicker, setShowVoicePicker] = useState(false);
   // Replaces the static starter suggestions once the AI has answered at
@@ -256,7 +302,19 @@ export default function AvatarChat({
     };
     setSpeaking(true);
     setSpeakingMessageId(messageId);
+    setSpeechPaused(false);
     window.speechSynthesis.speak(utterance);
+  }
+
+  function togglePauseSpeech() {
+    if (!("speechSynthesis" in window)) return;
+    if (window.speechSynthesis.paused) {
+      window.speechSynthesis.resume();
+      setSpeechPaused(false);
+    } else if (window.speechSynthesis.speaking) {
+      window.speechSynthesis.pause();
+      setSpeechPaused(true);
+    }
   }
 
   function startFinalCheckIn(token: number) {
@@ -357,6 +415,7 @@ export default function AvatarChat({
     setSpeakingMessageId(null);
     setHighlightRange(null);
     setDynamicFollowUps([]);
+    setSpeechPaused(false);
     /* eslint-enable react-hooks/set-state-in-effect */
     window.speechSynthesis?.cancel();
 
@@ -460,7 +519,7 @@ export default function AvatarChat({
         });
         if (res.ok) {
           const data = (await res.json()) as { ack: string };
-          if (data.ack) ack = data.ack;
+          if (data.ack) ack = stripMarkdown(data.ack);
         }
       } catch {
         // keep FALLBACK_ACK
@@ -489,13 +548,14 @@ export default function AvatarChat({
       }
 
       const data = (await res.json()) as { answer: string; followUps?: string[] };
+      const cleanAnswer = stripMarkdown(data.answer);
       const answerId = nextId();
-      setMessages((prev) => [...prev, { id: answerId, sender: "avatar", text: data.answer }]);
-      speakText(data.answer, answerId, () => {});
+      setMessages((prev) => [...prev, { id: answerId, sender: "avatar", text: cleanAnswer }]);
+      speakText(cleanAnswer, answerId, () => {});
       // Only replace the suggestions if fresh ones actually came back -
       // keep showing the last known-good list rather than going blank if
       // this best-effort generation didn't produce anything usable.
-      if (data.followUps?.length) setDynamicFollowUps(data.followUps);
+      if (data.followUps?.length) setDynamicFollowUps(data.followUps.map(stripMarkdown));
     } catch (e) {
       setError(e instanceof Error ? e.message : "Something went wrong.");
     } finally {
@@ -507,7 +567,7 @@ export default function AvatarChat({
     const SpeechRecognitionCtor = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     if (!SpeechRecognitionCtor) return;
     const recognition: SpeechRecognitionLike = new SpeechRecognitionCtor();
-    recognition.lang = "en-IN";
+    recognition.lang = sttLang;
     recognition.interimResults = false;
     recognition.maxAlternatives = 1;
     recognition.onresult = (event) => setInputText(event.results[0][0].transcript);
@@ -625,6 +685,21 @@ export default function AvatarChat({
               >
                 ❓ I&apos;m stuck on one part
               </button>
+              {dynamicFollowUps.length > 0 && (
+                <div className="mt-1 flex w-full flex-wrap gap-2 border-t border-slate-200 pt-2">
+                  {dynamicFollowUps.map((q, i) => (
+                    <button
+                      key={i}
+                      type="button"
+                      onClick={() => sendMessage(q)}
+                      disabled={loading}
+                      className="rounded-full border border-brand-navy-light bg-white px-3 py-1.5 text-xs text-brand-navy hover:bg-brand-cream disabled:opacity-50"
+                    >
+                      {q}
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
           ) : inMicroCheck ? (
             <p className="mb-3 text-xs text-slate-400">
@@ -687,6 +762,25 @@ export default function AvatarChat({
             >
               🎤
             </button>
+            {speechInputSupported && (
+              <select
+                value={sttLang}
+                onChange={(e) => {
+                  setSttLang(e.target.value);
+                  localStorage.setItem(STT_LANG_KEY, e.target.value);
+                }}
+                disabled={!readyForInput}
+                aria-label="Voice input language"
+                title="Voice input language - what language you'll speak the question in"
+                className="rounded-xl border border-slate-300 bg-white px-1 text-xs text-slate-600 disabled:opacity-40"
+              >
+                {STT_LANGUAGES.map((l) => (
+                  <option key={l.code} value={l.code}>
+                    {l.label}
+                  </option>
+                ))}
+              </select>
+            )}
             <button
               type="button"
               onClick={() => sendMessage(inputText)}
@@ -712,9 +806,20 @@ export default function AvatarChat({
               </button>
             </div>
             {speaking && (
-              <span className="flex items-center gap-1 text-xs text-orange-600">
-                <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-orange-500" /> reading...
-              </span>
+              <button
+                type="button"
+                onClick={togglePauseSpeech}
+                className="flex items-center gap-1 text-xs font-medium text-orange-600 hover:underline"
+              >
+                {speechPaused ? (
+                  <>▶ resume reading</>
+                ) : (
+                  <>
+                    <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-orange-500" /> reading... (tap to
+                    pause)
+                  </>
+                )}
+              </button>
             )}
           </div>
 

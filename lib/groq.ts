@@ -121,7 +121,13 @@ export async function askConceptQuestionGroq(concept: Concept, question: string)
       "Explain simply, in plain words a 9-10 year old understands. Use an example from the " +
       "context if it helps. Keep the answer under 100 words. Never mention marks, scores, or grades - " +
       "this is a no-pressure practice conversation, not a test. If the question is unrelated to the " +
-      "concept, gently redirect back to it.",
+      "concept, gently redirect back to it. " +
+      "This answer is read aloud by text-to-speech, so write it exactly as you'd say it out loud: plain " +
+      "prose only, no markdown at all (no **bold**, *italic*, #headers, or `code`), and no numbered or " +
+      "bulleted lists (no '1.' '2.' '-' markers) - if you're covering more than one point, use spoken " +
+      "connectors instead, like 'First, ... Also, ... Finally, ...'. If you need to refer to a letter " +
+      "pattern or suffix by itself (like -ly or -er), spell it as separated letters (e.g. 'the letters L, Y') " +
+      "so it's not misread as a word.",
     `${contextBlock}\n\nStudent's question: ${question.trim().slice(0, 500)}`,
     300
   );
