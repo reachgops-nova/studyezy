@@ -65,3 +65,42 @@ export async function getCatalog(): Promise<CatalogCurriculum[]> {
     })),
   }));
 }
+
+export interface AssignableStage {
+  id: string; // Stage row id (cuid) - what StudentProfile.assignedStageId stores
+  label: string; // "Cambridge Primary / IGCSE pathway · Stage 5 (Grade 5)"
+}
+
+/**
+ * Flat list of every available Stage, for the "which book is this kid
+ * using" picker on /profiles - a parent can put a kid on a different
+ * grade's Stage than their nominal age would suggest (e.g. a Grade 4 kid
+ * working from the Grade 5 book). Only Stages with real content available
+ * are offered; assigning an empty "coming soon" Stage would just be a
+ * dead end.
+ */
+export async function getAssignableStages(): Promise<AssignableStage[]> {
+  const stages = await db.stage.findMany({
+    where: { available: true },
+    include: { curriculum: true },
+    orderBy: [{ curriculum: { name: "asc" } }, { number: "asc" }],
+  });
+
+  return stages.map((s) => ({
+    id: s.id,
+    label: `${s.curriculum.name} · ${s.label}`,
+  }));
+}
+
+/**
+ * Resolves a Stage's DB id back into the (curriculumSlug, stageNumber)
+ * pair CurriculumSelector's props are keyed on - used to default /select
+ * to a profile's assignedStageId without changing that component's shape.
+ */
+export async function getStageRef(
+  stageId: string
+): Promise<{ curriculumSlug: string; stageNumber: number } | null> {
+  const stage = await db.stage.findUnique({ where: { id: stageId }, include: { curriculum: true } });
+  if (!stage) return null;
+  return { curriculumSlug: stage.curriculum.slug, stageNumber: stage.number };
+}

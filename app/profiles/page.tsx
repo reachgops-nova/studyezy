@@ -1,9 +1,10 @@
 import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
 import { getCurrentUser } from "@/lib/session";
+import { getAssignableStages } from "@/lib/catalog";
 import { signOut } from "@/app/login/actions";
 import Logo from "@/components/Logo";
-import { selectProfile, addProfile } from "./actions";
+import { selectProfile, addProfile, setAssignedStage } from "./actions";
 
 export default async function ProfilesPage({
   searchParams,
@@ -14,10 +15,13 @@ export default async function ProfilesPage({
   if (!user) redirect("/login");
 
   const { error } = await searchParams;
-  const profiles = await db.studentProfile.findMany({
-    where: { userId: user.id },
-    orderBy: { createdAt: "asc" },
-  });
+  const [profiles, assignableStages] = await Promise.all([
+    db.studentProfile.findMany({
+      where: { userId: user.id },
+      orderBy: { createdAt: "asc" },
+    }),
+    getAssignableStages(),
+  ]);
 
   return (
     <main className="mx-auto flex min-h-[80vh] w-full max-w-3xl flex-col items-center justify-center gap-8">
@@ -28,26 +32,62 @@ export default async function ProfilesPage({
 
       {error && (
         <p className="rounded-xl bg-red-50 px-3 py-2 text-sm text-red-600">
-          Add a name for the new profile first.
+          {error === "unknown_stage"
+            ? "That book couldn't be found - please pick from the list."
+            : "Add a name for the new profile first."}
         </p>
       )}
 
       <div className="grid w-full max-w-sm gap-3">
         {profiles.map((profile) => (
-          <form key={profile.id} action={selectProfile}>
-            <input type="hidden" name="profileId" value={profile.id} />
-            <button
-              type="submit"
-              className="flex w-full items-center gap-3 rounded-xl border border-slate-200 bg-white px-5 py-4 text-left text-lg shadow-sm transition hover:border-brand-navy-light hover:shadow-md"
+          <div key={profile.id} className="rounded-xl border border-slate-200 bg-white shadow-sm">
+            <form action={selectProfile}>
+              <input type="hidden" name="profileId" value={profile.id} />
+              <button
+                type="submit"
+                className="flex w-full items-center gap-3 px-5 py-4 text-left text-lg transition hover:bg-slate-50"
+              >
+                <span className="text-2xl" aria-hidden>
+                  {profile.avatarEmoji}
+                </span>
+                <span>{profile.displayName}</span>
+              </button>
+            </form>
+            <form
+              action={setAssignedStage}
+              className="flex items-center gap-2 border-t border-slate-100 px-5 py-2.5"
             >
-              <span className="text-2xl" aria-hidden>
-                {profile.avatarEmoji}
-              </span>
-              <span>{profile.displayName}</span>
-            </button>
-          </form>
+              <input type="hidden" name="profileId" value={profile.id} />
+              <label htmlFor={`stage-${profile.id}`} className="shrink-0 text-xs text-slate-400">
+                Book:
+              </label>
+              <select
+                id={`stage-${profile.id}`}
+                name="stageId"
+                defaultValue={profile.assignedStageId ?? ""}
+                className="min-w-0 flex-1 rounded-lg border border-slate-200 bg-white px-2 py-1 text-xs text-slate-600"
+              >
+                <option value="">Browse freely (no fixed book)</option>
+                {assignableStages.map((s) => (
+                  <option key={s.id} value={s.id}>
+                    {s.label}
+                  </option>
+                ))}
+              </select>
+              <button
+                type="submit"
+                className="shrink-0 rounded-lg border border-slate-200 px-2 py-1 text-xs font-medium text-slate-600 hover:bg-slate-50"
+              >
+                Save
+              </button>
+            </form>
+          </div>
         ))}
       </div>
+      <p className="-mt-4 max-w-sm text-center text-xs text-slate-400">
+        Setting a book keeps a kid on the right grade&apos;s content even if it&apos;s different from their
+        usual class - like a Grade 4 kid working from the Grade 5 book.
+      </p>
 
       <form action={addProfile} className="flex w-full max-w-sm gap-2">
         <input

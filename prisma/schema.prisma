@@ -42,6 +42,16 @@ model StudentProfile {
   avatarEmoji String   @default("🦊")
   createdAt   DateTime @default(now())
 
+  // Optional override for which Stage's content this kid should see by
+  // default on /select - null means "browse normally" (matches their
+  // account's usual picks). Lets a parent put a kid on a different grade's
+  // book than their nominal age/grade would suggest (e.g. a Grade 4 kid
+  // working from the Grade 5 book) without changing anything about the
+  // shared, centralized curriculum data itself - every kid on the same
+  // Stage still reads the exact same Concept rows.
+  assignedStageId String?
+  assignedStage   Stage?   @relation(fields: [assignedStageId], references: [id], onDelete: SetNull)
+
   testAttempts      TestAttempt[]
   conceptMasteries  ConceptMastery[]
   interactionEvents InteractionEvent[]
@@ -66,6 +76,8 @@ model Stage {
   label        String
   available    Boolean    @default(false)
   subjects     Subject[]
+
+  assignedProfiles StudentProfile[]
 
   @@unique([curriculumId, number])
 }

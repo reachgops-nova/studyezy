@@ -34,7 +34,10 @@ export default function UnitView({
         resourceGroups={resourceGroups}
         onPageImagesUploaded={(newPaths) => setPageImages((prev) => [...prev, ...newPaths])}
         onStartDiagnostic={() => setStage("diagnostic")}
-        onSkipToTeaching={() => setStage("lesson")}
+        onSkipToTeaching={(conceptId) => {
+          if (conceptId) setSelectedId(conceptId);
+          setStage("lesson");
+        }}
       />
     );
   }

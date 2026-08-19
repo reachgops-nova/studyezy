@@ -4,12 +4,29 @@ import { useState } from "react";
 import Link from "next/link";
 import type { CatalogCurriculum } from "@/lib/catalog";
 
-export default function CurriculumSelector({ catalog }: { catalog: CatalogCurriculum[] }) {
-  const [curriculumId, setCurriculumId] = useState(catalog[0]?.id ?? "");
+export default function CurriculumSelector({
+  catalog,
+  defaultCurriculumId,
+  defaultStageId,
+}: {
+  catalog: CatalogCurriculum[];
+  /** A profile's assigned book, if set - pre-selects instead of the usual "first available" default. Still just a default: everything below stays freely browsable. */
+  defaultCurriculumId?: string;
+  defaultStageId?: number;
+}) {
+  const [curriculumId, setCurriculumId] = useState(
+    (defaultCurriculumId && catalog.some((c) => c.id === defaultCurriculumId) ? defaultCurriculumId : null) ??
+      catalog[0]?.id ??
+      ""
+  );
   const curriculum = catalog.find((c) => c.id === curriculumId);
 
   const [stageId, setStageId] = useState<number | null>(
-    curriculum?.stages.find((s) => s.available)?.id ?? null
+    (defaultStageId !== undefined && curriculum?.stages.some((s) => s.id === defaultStageId && s.available)
+      ? defaultStageId
+      : null) ??
+      curriculum?.stages.find((s) => s.available)?.id ??
+      null
   );
   const stage = curriculum?.stages.find((s) => s.id === stageId);
 

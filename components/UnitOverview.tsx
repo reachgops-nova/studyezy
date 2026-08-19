@@ -21,7 +21,7 @@ export default function UnitOverview({
   resourceGroups: ResourceGroup[];
   onPageImagesUploaded: (paths: string[]) => void;
   onStartDiagnostic: () => void;
-  onSkipToTeaching: () => void;
+  onSkipToTeaching: (conceptId?: string) => void;
 }) {
   const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -102,6 +102,46 @@ export default function UnitOverview({
         <ul className="mt-3 list-disc space-y-1 pl-5 text-sm text-slate-700">
           {unit.unit_mastery_checklist.items.map((item, i) => (
             <li key={i}>{item}</li>
+          ))}
+        </ul>
+      </div>
+
+      <div className="rounded-2xl border border-slate-200/70 bg-white p-5 shadow-soft">
+        <div className="flex items-center justify-between">
+          <h2 className="text-lg font-semibold">Lessons in this unit</h2>
+          <span className="text-xs font-medium text-slate-400">
+            {unit.concepts.length} of {unit.concepts.length + unit.remaining_unit_outline.length} ready
+          </span>
+        </div>
+        <p className="mt-1 text-xs text-slate-400">
+          Shared with every {unit.grade_stage ? `Stage ${unit.grade_stage}` : ""} {unit.subject} student on{" "}
+          {unit.curriculum} - not just yours.
+        </p>
+        <ul className="mt-3 grid gap-1.5">
+          {unit.concepts.map((c) => (
+            <li key={c.concept_id}>
+              <button
+                type="button"
+                onClick={() => onSkipToTeaching(c.concept_id)}
+                className="flex w-full items-center justify-between rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-left text-sm text-slate-700 transition hover:border-brand-navy-light hover:bg-white"
+              >
+                <span>
+                  {c.concept_id} {c.concept_name}
+                </span>
+                <span className="text-xs font-medium text-green-600">Ready</span>
+              </button>
+            </li>
+          ))}
+          {unit.remaining_unit_outline.map((c) => (
+            <li
+              key={c.concept_id}
+              className="flex items-center justify-between rounded-xl border border-dashed border-slate-200 px-3 py-2 text-sm text-slate-400"
+            >
+              <span>
+                {c.concept_id} {c.concept_name}
+              </span>
+              <span className="text-xs uppercase">coming soon</span>
+            </li>
           ))}
         </ul>
       </div>
