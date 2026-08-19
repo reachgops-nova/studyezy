@@ -85,8 +85,16 @@ const FALLBACK_ACK = "Thanks for sharing your thinking!";
 const REPEAT_INTENT = /\b(again|repeat|didn'?t (get|catch|understand)|not clear|confused|explain again|don'?t (get|understand)|what does that mean|come again|one more time|slower)\b/i;
 const CONTINUE_INTENT = /\b(ok(ay)?|yes|yeah|yep|yup|got it|good|fine|sure|continue|next|go on|keep going|ready|understood|makes sense|i (understand|get it)|alright)\b/i;
 
+// Only short acknowledgments count as a plain continue/repeat - a longer
+// message (e.g. "I don't understand the part about connectives") contains
+// one of the same trigger words but is a specific question, and should reach
+// the grounded-answer pipeline instead of being swallowed by a keyword match
+// and answered with a blind repeat that ignores what was actually asked.
+const ACK_WORD_LIMIT = 8;
+
 function matchCheckpointIntent(text: string): "continue" | "repeat" | null {
   const t = text.trim().toLowerCase();
+  if (t.split(/\s+/).length > ACK_WORD_LIMIT) return null;
   if (REPEAT_INTENT.test(t)) return "repeat";
   if (CONTINUE_INTENT.test(t)) return "continue";
   return null;
@@ -172,6 +180,7 @@ export default function AvatarChat({
   const checkpointsRef = useRef<string[][]>([]);
   const recognitionRef = useRef<SpeechRecognitionLike | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     const SpeechRecognitionCtor = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
@@ -354,6 +363,30 @@ export default function AvatarChat({
     speakText(ack, ackId, () => playCheckpoint(checkpointIndex, token));
   }
 
+  // Distinct from "say that again" (a verbatim repeat) - this asks for a
+  // genuinely different explanation, so it goes through the same
+  // grounded-answer pipeline as free-form questions (Claude -> Groq -> local
+  // fallback, see /api/ask) instead of replaying the same wording.
+  // Deliberately leaves awaitingContinue as-is so the pause buttons stay
+  // available - the kid might need another round before they're ready to
+  // continue.
+  function handleExplainDifferently() {
+    sendMessage("Can you explain that in a different, simpler way?");
+  }
+
+  // For confusion about one specific part rather than the whole checkpoint -
+  // pre-fills a sentence starter and focuses the input so the kid only has
+  // to finish the thought, instead of writing a question from scratch.
+  function promptForSpecificConfusion() {
+    setInputText("I don't understand the part about ");
+    requestAnimationFrame(() => {
+      const el = inputRef.current;
+      if (!el) return;
+      el.focus();
+      el.setSelectionRange(el.value.length, el.value.length);
+    });
+  }
+
   async function sendMessage(text: string) {
     const trimmed = text.trim();
     if (!trimmed || loading) return;
@@ -533,11 +566,27 @@ export default function AvatarChat({
               </button>
               <button
                 type="button"
+                onClick={handleExplainDifferently}
+                disabled={loading}
+                className="rounded-full border border-slate-300 bg-white px-4 py-1.5 text-xs text-slate-700 hover:bg-slate-50 disabled:opacity-50"
+              >
+                🤔 Kind of - explain it another way
+              </button>
+              <button
+                type="button"
                 onClick={handleRepeatCheckpoint}
                 disabled={loading}
                 className="rounded-full border border-slate-300 bg-white px-4 py-1.5 text-xs text-slate-700 hover:bg-slate-50 disabled:opacity-50"
               >
-                🔁 Can you say that again?
+                🔁 Say that again
+              </button>
+              <button
+                type="button"
+                onClick={promptForSpecificConfusion}
+                disabled={loading}
+                className="rounded-full border border-slate-300 bg-white px-4 py-1.5 text-xs text-slate-700 hover:bg-slate-50 disabled:opacity-50"
+              >
+                ❓ I&apos;m stuck on one part
               </button>
             </div>
           ) : inMicroCheck ? (
@@ -565,6 +614,7 @@ export default function AvatarChat({
 
           <div className="flex gap-2">
             <input
+              ref={inputRef}
               type="text"
               value={inputText}
               onChange={(e) => setInputText(e.target.value)}
