@@ -180,6 +180,94 @@ function SentenceTypesBlocks() {
   );
 }
 
+function NarrativeMountain() {
+  return (
+    <svg viewBox="0 0 300 180" className="h-full w-full" role="img" aria-label="A mountain shape labeled beginning, build up, problem at the peak, problem solved, and ending, representing story structure">
+      <rect width="300" height="180" fill="#fef2f2" />
+      <path d="M20 150 L110 55 L150 90 L190 40 L280 150 Z" fill="#fecaca" stroke="#b91c1c" strokeWidth="4" strokeLinejoin="round" />
+      <circle cx="190" cy="40" r="6" fill="#b91c1c" />
+      <text x="190" y="26" textAnchor="middle" fontSize="11" fontWeight="700" fill="#991b1b" fontFamily="sans-serif">
+        problem
+      </text>
+      <text x="45" y="168" textAnchor="middle" fontSize="9" fill="#7f1d1d" fontFamily="sans-serif">
+        beginning
+      </text>
+      <text x="115" y="168" textAnchor="middle" fontSize="9" fill="#7f1d1d" fontFamily="sans-serif">
+        build up
+      </text>
+      <text x="230" y="168" textAnchor="middle" fontSize="9" fill="#7f1d1d" fontFamily="sans-serif">
+        solved
+      </text>
+      <text x="270" y="168" textAnchor="middle" fontSize="9" fill="#7f1d1d" fontFamily="sans-serif">
+        ending
+      </text>
+    </svg>
+  );
+}
+
+function MoodSettingWords() {
+  return (
+    <svg viewBox="0 0 300 180" className="h-full w-full" role="img" aria-label="A single house split down the middle, one side bright and cheerful, the other dark and eerie, representing mood created through word choice">
+      <rect width="150" height="180" fill="#fef9c3" />
+      <rect x="150" width="150" height="180" fill="#1e293b" />
+      <circle cx="70" cy="45" r="24" fill="#fbbf24" />
+      <path d="M60 150 L60 100 L110 100 L110 150 Z" fill="#fef3c7" stroke="#ca8a04" strokeWidth="4" />
+      <path d="M50 100 L85 70 L120 100 Z" fill="#f59e0b" stroke="#ca8a04" strokeWidth="4" strokeLinejoin="round" />
+      <rect x="76" y="118" width="16" height="32" fill="#ca8a04" />
+      <path d="M190 150 L190 100 L240 100 L240 150 Z" fill="#334155" stroke="#0f172a" strokeWidth="4" />
+      <path d="M180 100 L215 65 L250 100 Z" fill="#0f172a" stroke="#0f172a" strokeWidth="4" strokeLinejoin="round" />
+      <circle cx="205" cy="118" r="3" fill="#fde68a" />
+      <circle cx="225" cy="130" r="3" fill="#fde68a" />
+      <path d="M170 50 Q180 40 190 50" stroke="#64748b" strokeWidth="3" fill="none" strokeLinecap="round" />
+      <path d="M255 60 Q265 50 275 60" stroke="#64748b" strokeWidth="3" fill="none" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function AdverbLadder() {
+  return (
+    <svg viewBox="0 0 300 180" className="h-full w-full" role="img" aria-label="Three steps rising like a staircase, labeled well, better, and best, representing comparative and superlative adverbs">
+      <rect width="300" height="180" fill="#ecfeff" />
+      <rect x="30" y="128" width="70" height="30" fill="#67e8f9" stroke="#0e7490" strokeWidth="3" />
+      <rect x="115" y="88" width="70" height="70" fill="#22d3ee" stroke="#0e7490" strokeWidth="3" />
+      <rect x="200" y="48" width="70" height="110" fill="#06b6d4" stroke="#0e7490" strokeWidth="3" />
+      <text x="65" y="148" textAnchor="middle" fontSize="12" fontWeight="600" fill="#164e63" fontFamily="sans-serif">
+        well
+      </text>
+      <text x="150" y="108" textAnchor="middle" fontSize="12" fontWeight="600" fill="#164e63" fontFamily="sans-serif">
+        better
+      </text>
+      <text x="235" y="68" textAnchor="middle" fontSize="12" fontWeight="700" fill="#f0fdff" fontFamily="sans-serif">
+        best
+      </text>
+      <path d="M235 44 L245 30 L255 44 Z" fill="#fbbf24" stroke="#b45309" strokeWidth="2" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+function WritingChecklistFinal() {
+  return (
+    <svg viewBox="0 0 300 180" className="h-full w-full" role="img" aria-label="A checklist with four checked boxes labeled mood, punctuation, apostrophes, and speech, representing a full writing checklist">
+      <rect width="300" height="180" fill="#f0f9ff" />
+      <rect x="70" y="20" width="160" height="150" rx="10" fill="#ffffff" stroke="#0369a1" strokeWidth="5" />
+      {[
+        { y: 45, label: "mood" },
+        { y: 78, label: "punctuation" },
+        { y: 111, label: "apostrophes" },
+        { y: 144, label: "speech" },
+      ].map((row) => (
+        <g key={row.label}>
+          <rect x="86" y={row.y} width="18" height="18" rx="3" fill="#e0f2fe" stroke="#0369a1" strokeWidth="3" />
+          <path d={`M90 ${row.y + 9} L96 ${row.y + 15} L102 ${row.y + 4}`} stroke="#0369a1" strokeWidth="3" fill="none" strokeLinecap="round" strokeLinejoin="round" />
+          <text x="112" y={row.y + 14} fontSize="13" fill="#0c4a6e" fontFamily="sans-serif">
+            {row.label}
+          </text>
+        </g>
+      ))}
+    </svg>
+  );
+}
+
 const ILLUSTRATIONS: Record<string, () => JSX.Element> = {
   cockerel_hyena_fable: CockerelHyenaFable,
   implicit_meaning_clue: ImplicitMeaningClue,
@@ -190,6 +278,10 @@ const ILLUSTRATIONS: Record<string, () => JSX.Element> = {
   fact_vs_opinion_scale: FactVsOpinionScale,
   idiom_literal_vs_meaning: IdiomLiteralVsMeaning,
   sentence_types_blocks: SentenceTypesBlocks,
+  narrative_mountain: NarrativeMountain,
+  mood_setting_words: MoodSettingWords,
+  adverb_ladder: AdverbLadder,
+  writing_checklist_final: WritingChecklistFinal,
 };
 
 export function Illustration({ illustrationKey }: { illustrationKey: string }) {
