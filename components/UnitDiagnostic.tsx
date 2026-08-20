@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import type { CurriculumUnit, MasteryBand } from "@/lib/types";
+import type { CurriculumUnit, MasteryBand, TestQuestion } from "@/lib/types";
 import { masteryBand } from "@/lib/mastery";
 import { recordAttempt } from "@/lib/attempts";
 
@@ -9,18 +9,23 @@ type Answer =
   | { type: "multiple_choice"; selected: number | null }
   | { type: "short_answer"; text: string };
 
+// Always runs against the "moderate" tier - a quick pre-check has no reason
+// to make a kid pick a difficulty before they've even started the unit.
+const DIAGNOSTIC_DIFFICULTY = "moderate" as const;
+
 export default function UnitDiagnostic({
   unit,
   unitKey,
+  questions,
   onReviewConcept,
   onAllMastered,
 }: {
   unit: CurriculumUnit;
   unitKey: string;
+  questions: TestQuestion[];
   onReviewConcept: (conceptId: string) => void;
   onAllMastered: () => void;
 }) {
-  const questions = unit.progression_test_draft.questions;
   const [answers, setAnswers] = useState<Answer[]>(
     questions.map((q) => (q.type === "multiple_choice" ? { type: "multiple_choice", selected: null } : { type: "short_answer", text: "" }))
   );
@@ -53,7 +58,7 @@ export default function UnitDiagnostic({
             const res = await fetch("/api/grade", {
               method: "POST",
               headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ unitKey, questionIndex: i, studentAnswer: a.text }),
+              body: JSON.stringify({ unitKey, difficulty: DIAGNOSTIC_DIFFICULTY, questionIndex: i, studentAnswer: a.text }),
             });
             if (res.ok) {
               const data = (await res.json()) as { marks_awarded: number; full_marks: number };
@@ -85,6 +90,7 @@ export default function UnitDiagnostic({
       await recordAttempt({
         unitKey,
         attemptType: "diagnostic",
+        difficulty: DIAGNOSTIC_DIFFICULTY,
         correct: correctSum,
         total: questions.length,
         perConcept,

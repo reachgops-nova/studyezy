@@ -1,27 +1,44 @@
 import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
 import { getCurrentUser } from "@/lib/session";
-import { getAssignableStages } from "@/lib/catalog";
+import { getAssignableStages, getCatalog } from "@/lib/catalog";
 import { signOut } from "@/app/login/actions";
 import Logo from "@/components/Logo";
-import { selectProfile, addProfile, setAssignedStage } from "./actions";
+import {
+  selectProfile,
+  addProfile,
+  setAssignedStage,
+  updateAccountDetails,
+  updateProfileDetails,
+} from "./actions";
+
+// Matches PricingPlan.curriculumLabel exactly (lib/pricing.ts) - a declared
+// intent, not an FK, since only Cambridge has real seeded content today.
+const CURRICULUM_LABELS = ["Matric / State Board", "CBSE", "ICSE", "Cambridge IGCSE", "IB"];
 
 export default async function ProfilesPage({
   searchParams,
 }: {
-  searchParams: Promise<{ error?: string }>;
+  searchParams: Promise<{ error?: string; saved?: string }>;
 }) {
   const user = await getCurrentUser();
   if (!user) redirect("/login");
 
-  const { error } = await searchParams;
-  const [profiles, assignableStages] = await Promise.all([
+  const { error, saved } = await searchParams;
+  const [profiles, assignableStages, catalog] = await Promise.all([
     db.studentProfile.findMany({
       where: { userId: user.id },
       orderBy: { createdAt: "asc" },
     }),
     getAssignableStages(),
+    getCatalog(),
   ]);
+
+  const subjectOptions = Array.from(
+    new Map(
+      catalog.flatMap((c) => c.stages.flatMap((s) => s.subjects.map((subj) => [subj.id, subj.name] as const)))
+    ).entries()
+  );
 
   return (
     <main className="mx-auto flex min-h-[80vh] w-full max-w-3xl flex-col items-center justify-center gap-8">
@@ -37,6 +54,7 @@ export default async function ProfilesPage({
             : "Add a name for the new profile first."}
         </p>
       )}
+      {saved && <p className="rounded-xl bg-green-50 px-3 py-2 text-sm text-green-700">Saved.</p>}
 
       <div className="grid w-full max-w-sm gap-3">
         {profiles.map((profile) => (
@@ -81,6 +99,53 @@ export default async function ProfilesPage({
                 Save
               </button>
             </form>
+
+            <details className="border-t border-slate-100 px-5 py-2.5">
+              <summary className="cursor-pointer text-xs font-medium text-slate-400 hover:text-slate-600">
+                More details (optional)
+              </summary>
+              <form action={updateProfileDetails} className="mt-2 grid gap-2">
+                <input type="hidden" name="profileId" value={profile.id} />
+                <input
+                  type="text"
+                  name="schoolName"
+                  placeholder="School name"
+                  defaultValue={profile.schoolName ?? ""}
+                  className="rounded-lg border border-slate-200 px-2 py-1.5 text-xs text-slate-700"
+                />
+                <select
+                  name="preferredCurriculumLabel"
+                  defaultValue={profile.preferredCurriculumLabel ?? ""}
+                  className="rounded-lg border border-slate-200 bg-white px-2 py-1.5 text-xs text-slate-700"
+                >
+                  <option value="">Curriculum board (not set)</option>
+                  {CURRICULUM_LABELS.map((label) => (
+                    <option key={label} value={label}>
+                      {label}
+                    </option>
+                  ))}
+                </select>
+                <div className="flex flex-wrap gap-x-3 gap-y-1 text-xs text-slate-600">
+                  {subjectOptions.map(([slug, name]) => (
+                    <label key={slug} className="flex items-center gap-1">
+                      <input
+                        type="checkbox"
+                        name="enrolledSubjectSlugs"
+                        value={slug}
+                        defaultChecked={profile.enrolledSubjectSlugs.includes(slug)}
+                      />
+                      {name}
+                    </label>
+                  ))}
+                </div>
+                <button
+                  type="submit"
+                  className="justify-self-start rounded-lg border border-slate-200 px-2 py-1 text-xs font-medium text-slate-600 hover:bg-slate-50"
+                >
+                  Save details
+                </button>
+              </form>
+            </details>
           </div>
         ))}
       </div>
@@ -88,6 +153,41 @@ export default async function ProfilesPage({
         Setting a book keeps a kid on the right grade&apos;s content even if it&apos;s different from their
         usual class - like a Grade 4 kid working from the Grade 5 book.
       </p>
+
+      <details className="w-full max-w-sm rounded-xl border border-slate-200 bg-white px-5 py-3">
+        <summary className="cursor-pointer text-sm font-medium text-slate-600">Your contact details (optional)</summary>
+        <form action={updateAccountDetails} className="mt-3 grid gap-2">
+          <input
+            type="tel"
+            name="phone"
+            placeholder="Phone number"
+            defaultValue={user.phone ?? ""}
+            className="rounded-lg border border-slate-200 px-2 py-1.5 text-sm text-slate-700"
+          />
+          <div className="flex gap-2">
+            <input
+              type="text"
+              name="state"
+              placeholder="State"
+              defaultValue={user.state ?? ""}
+              className="min-w-0 flex-1 rounded-lg border border-slate-200 px-2 py-1.5 text-sm text-slate-700"
+            />
+            <input
+              type="text"
+              name="district"
+              placeholder="District"
+              defaultValue={user.district ?? ""}
+              className="min-w-0 flex-1 rounded-lg border border-slate-200 px-2 py-1.5 text-sm text-slate-700"
+            />
+          </div>
+          <button
+            type="submit"
+            className="justify-self-start rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-600 hover:bg-slate-50"
+          >
+            Save
+          </button>
+        </form>
+      </details>
 
       <form action={addProfile} className="flex w-full max-w-sm gap-2">
         <input

@@ -20,6 +20,11 @@ model User {
   // global cutoff. Admin accounts bypass trial gating in code (lib/pricing.ts)
   // rather than getting special-cased here, so the column stays simple.
   trialEndsAt  DateTime @default(dbgenerated("(now() + interval '30 days')"))
+  // Parent/account-level contact + location, optional, self/admin-only
+  // visibility. Never interpolated into any AI prompt.
+  phone        String?
+  state        String?
+  district     String?
 
   sessions          Session[]
   studentProfiles   StudentProfile[]
@@ -56,6 +61,17 @@ model StudentProfile {
   // Stage still reads the exact same Concept rows.
   assignedStageId String?
   assignedStage   Stage?   @relation(fields: [assignedStageId], references: [id], onDelete: SetNull)
+
+  // Optional, self-reported "intelligence" fields (2026-08-20 decision) - not
+  // used to gate or select content (assignedStageId still does that), just
+  // declared context for admin visibility and future personalization once
+  // there's real usage data to design against. preferredCurriculumLabel
+  // matches PricingPlan.curriculumLabel's 5 values on purpose, but is a
+  // plain string, not an FK - only Cambridge has real seeded Curriculum rows
+  // today, the other 4 boards are pricing/intent-only so far.
+  schoolName               String?
+  preferredCurriculumLabel String?
+  enrolledSubjectSlugs     String[] @default([])
 
   testAttempts      TestAttempt[]
   conceptMasteries  ConceptMastery[]
@@ -118,7 +134,6 @@ model Unit {
   sourceSeriesEditors  String[]
   sourceNote           String?
   masteryChecklist     Json? // UnitMasteryChecklist passthrough
-  progressionTestDraft Json? // ProgressionTestDraft passthrough (MCQ/mark schemes as-is)
   createdByUserId      String?
   createdBy            User?    @relation("UnitCreatedBy", fields: [createdByUserId], references: [id])
   createdAt            DateTime @default(now())
@@ -128,8 +143,30 @@ model Unit {
   testAttempts    TestAttempt[]
   examSubmissions ExamSubmission[]
   resources       UnitResource[]
+  questionPapers  QuestionPaper[]
 
   @@unique([subjectId, number])
+}
+
+// Up to 3 self-test papers per unit, one per difficulty (2026-08-20 decision:
+// "easy/moderate/tough" so a kid can choose their own challenge level rather
+// than one fixed paper). Replaces the old single Unit.progressionTestDraft
+// Json? column - that could only ever hold one paper, and regenerating it
+// destroyed whatever was there before. questions/coversConcepts/note mirror
+// the old ProgressionTestDraft shape exactly (lib/types.ts) - only the
+// storage moved, not the content shape.
+model QuestionPaper {
+  id             String   @id @default(cuid())
+  unitId         String
+  unit           Unit     @relation(fields: [unitId], references: [id], onDelete: Cascade)
+  difficulty     String // "easy" | "moderate" | "tough"
+  coversConcepts String[]
+  note           String?
+  questions      Json // TestQuestion[]
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@unique([unitId, difficulty])
 }
 
 model Concept {
@@ -243,6 +280,7 @@ model TestAttempt {
   unitId           String
   unit             Unit           @relation(fields: [unitId], references: [id], onDelete: Cascade)
   attemptType      String         @default("progression_test") // "progression_test" | "diagnostic"
+  difficulty       String         @default("moderate") // "easy" | "moderate" | "tough" - which QuestionPaper tier this attempt was against ("moderate" for diagnostics/pre-tiering history too)
   scorePct         Int
   band             String // MasteryBand
   perConcept       Json // Record<conceptId, {correct, total}>

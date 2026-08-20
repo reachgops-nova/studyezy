@@ -71,7 +71,21 @@ export default async function AdminPage({
                   </span>
                 </td>
                 <td className="px-4 py-3 text-slate-600">
-                  {u.studentProfiles.map((p) => `${p.avatarEmoji} ${p.displayName}`).join(", ") || "-"}
+                  {u.studentProfiles.length === 0 ? (
+                    "-"
+                  ) : (
+                    <div className="flex flex-wrap gap-x-2 gap-y-1">
+                      {u.studentProfiles.map((p) => (
+                        <a
+                          key={p.id}
+                          href={`/admin/students/${p.id}`}
+                          className="rounded-full border border-slate-200 px-2 py-0.5 text-xs hover:bg-slate-50"
+                        >
+                          {p.avatarEmoji} {p.displayName}
+                        </a>
+                      ))}
+                    </div>
+                  )}
                 </td>
                 <td className="px-4 py-3 text-slate-500">{u.createdAt.toLocaleDateString()}</td>
                 <td className="px-4 py-3">

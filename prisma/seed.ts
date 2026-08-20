@@ -161,7 +161,6 @@ async function main() {
         sourceSeriesEditors: isUnit1 ? unit1Json.source_reference.series_editors : [],
         sourceNote: isUnit1 ? unit1Json.source_reference.note : null,
         masteryChecklist: isUnit1 ? (unit1Json.unit_mastery_checklist as object) : undefined,
-        progressionTestDraft: isUnit1 ? (unit1Json.progression_test_draft as object) : undefined,
       },
       update: {
         title: u.title,
@@ -171,6 +170,32 @@ async function main() {
 
     if (isUnit1) {
       await seedConceptsForUnit(unitRow.id, unit1Json);
+
+      // Original test content ships as the "moderate" tier - matches the
+      // QuestionPaper model that replaced the old single-blob
+      // Unit.progressionTestDraft field (see 2026-08-20 migration).
+      const draft = unit1Json.progression_test_draft as {
+        covers_concepts?: string[];
+        note?: string;
+        questions?: unknown;
+      };
+      if (draft?.questions) {
+        await db.questionPaper.upsert({
+          where: { unitId_difficulty: { unitId: unitRow.id, difficulty: "moderate" } },
+          create: {
+            unitId: unitRow.id,
+            difficulty: "moderate",
+            coversConcepts: draft.covers_concepts ?? [],
+            note: draft.note ?? null,
+            questions: draft.questions as object,
+          },
+          update: {
+            coversConcepts: draft.covers_concepts ?? [],
+            note: draft.note ?? null,
+            questions: draft.questions as object,
+          },
+        });
+      }
     }
   }
 

@@ -6,9 +6,12 @@ import { nextReviewDate, scorePercent } from "@/lib/mastery";
 
 const UNIT_KEY_PATTERN = /^[a-z0-9]+-\d+-[a-z0-9]+-\d+$/i;
 
+const VALID_DIFFICULTIES = ["easy", "moderate", "tough"];
+
 interface AttemptBody {
   unitKey: string;
   attemptType?: "progression_test" | "diagnostic";
+  difficulty?: string;
   correct: number;
   total: number;
   perConcept: Record<string, { correct: number; total: number }>;
@@ -32,7 +35,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Invalid request body." }, { status: 400 });
   }
 
-  const { unitKey, attemptType, correct, total, perConcept } = (body ?? {}) as Partial<AttemptBody>;
+  const { unitKey, attemptType, difficulty, correct, total, perConcept } = (body ?? {}) as Partial<AttemptBody>;
 
   if (
     typeof unitKey !== "string" ||
@@ -63,6 +66,7 @@ export async function POST(req: NextRequest) {
       studentProfileId: profileId,
       unitId: unit.id,
       attemptType: attemptType === "diagnostic" ? "diagnostic" : "progression_test",
+      difficulty: typeof difficulty === "string" && VALID_DIFFICULTIES.includes(difficulty) ? difficulty : "moderate",
       scorePct,
       band,
       perConcept,

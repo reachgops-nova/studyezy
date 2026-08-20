@@ -78,7 +78,10 @@ export async function createUnit(formData: FormData) {
       sourcePublisher: publisher || null,
       sourceTitle: bookTitle || null,
       masteryChecklist: { source_note: "", items: [] },
-      progressionTestDraft: { test_id: `PROG_TEST_${unitKey.toUpperCase()}`, covers_concepts: [], questions: [] },
+      // No initial QuestionPaper rows - an admin generates each difficulty
+      // tier from approved material once there's something to test (see
+      // app/admin/resources's GeneratePaperButton), same as before this
+      // moved off the old single-blob Unit.progressionTestDraft field.
     },
   });
 

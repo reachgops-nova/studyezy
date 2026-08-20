@@ -64,6 +64,32 @@ export const FALLBACK_VOCAB_ITEMS: VocabItem[] = [
     options: ["leave", "keep", "discard", "escape"],
     correctIndex: 1,
   },
+  {
+    word: "raining cats and dogs",
+    type: "idiom",
+    question: "What does 'it's raining cats and dogs' mean?",
+    options: ["It's raining pets", "It's raining very heavily", "Animals are falling", "It's a calm drizzle"],
+    correctIndex: 1,
+  },
+  {
+    word: "break the ice",
+    type: "idiom",
+    question: "What does 'to break the ice' mean?",
+    options: [
+      "To end an awkward silence and start a conversation",
+      "To literally crack ice",
+      "To cancel a plan",
+      "To make someone angry",
+    ],
+    correctIndex: 0,
+  },
+  {
+    word: "piece of cake",
+    type: "idiom",
+    question: "If something is 'a piece of cake', it means it is...",
+    options: ["Delicious", "Very easy", "Made of dessert", "Difficult"],
+    correctIndex: 1,
+  },
 ];
 
 /** A small random-without-repeat sample - used whenever Groq isn't available or fails. */

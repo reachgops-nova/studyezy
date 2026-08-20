@@ -1,6 +1,14 @@
 import "server-only";
 import Anthropic from "@anthropic-ai/sdk";
-import type { Concept, ConceptMedia, MarkScheme, ProgressionTestDraft, TestQuestion, VoiceQASample } from "./types";
+import type {
+  Concept,
+  ConceptMedia,
+  MarkScheme,
+  ProgressionTestDraft,
+  QuestionPaperDifficulty,
+  TestQuestion,
+  VoiceQASample,
+} from "./types";
 import { logAiCost } from "./aiCost";
 
 let client: Anthropic | null = null;
@@ -351,13 +359,38 @@ export async function extractConceptsFromPages(
     });
 }
 
+// Per-difficulty instruction appended to the shared prompt below - keeps the
+// three tiers meaningfully different (not just "same paper, relabeled"),
+// per the 2026-08-20 decision that kids should be able to choose their own
+// challenge level rather than get one fixed paper.
+const DIFFICULTY_INSTRUCTIONS: Record<QuestionPaperDifficulty, string> = {
+  easy:
+    "Difficulty: EASY. Favor multiple_choice over short_answer (at most 1-2 short_answer). Use simple, " +
+    "everyday vocabulary and short sentences. Give clearly distinct, unambiguous options - no trick answers. " +
+    "Each question should test one idea at a time, close to how the concept's own definition/examples state it.",
+  moderate:
+    "Difficulty: MODERATE. This is the standard, default level - mix multiple_choice and short_answer roughly " +
+    "evenly, matching how a concept would normally be assessed after learning it.",
+  tough:
+    "Difficulty: TOUGH. Favor short_answer over multiple_choice. Push beyond straight recall - ask the student " +
+    "to apply, compare, or explain reasoning, not just identify a fact. Multiple-choice options (where used) " +
+    "should include plausible near-misses, not obviously-wrong distractors. Less scaffolding in the question " +
+    "wording - a strong student should have to think, not just pattern-match.",
+};
+
 // Static instructional half of the question-paper prompt, cached the same
-// way as EXTRACTION_SYSTEM_PROMPT above.
-const QUESTION_PAPER_SYSTEM_PROMPT = `You are writing an original curriculum-aligned practice question paper for a Grade 5 (Cambridge Stage 5) student, from photos of a unit's admin-approved textbook/worksheet/classwork pages.
+// way as EXTRACTION_SYSTEM_PROMPT above (per-difficulty text is appended
+// before the cache_control block, so each tier gets its own cache entry -
+// generation is rare/admin-triggered, so a smaller cache-hit-rate hit here
+// is an acceptable trade for genuinely different papers per tier).
+function questionPaperSystemPrompt(difficulty: QuestionPaperDifficulty): string {
+  return `You are writing an original curriculum-aligned practice question paper for a Grade 5 (Cambridge Stage 5) student, from photos of a unit's admin-approved textbook/worksheet/classwork pages.
 
 CRITICAL - originality: Write your OWN questions inspired by what's shown in the photos - do NOT copy questions or passages verbatim from the pages. This becomes original assessment content, not a reproduction of the source material.
 
 You will be given: (1) photos of the unit's approved source material, and (2) the list of concepts this unit covers (id and name). Write 6-10 questions in total, spanning as many of the given concepts as the material supports, mixing multiple_choice and short_answer types.
+
+${DIFFICULTY_INSTRUCTIONS[difficulty]}
 
 Respond with ONLY a JSON object matching this shape, no other text, no markdown fences:
 {"covers_concepts": string[], "note": string, "questions": [{"type": "multiple_choice", "question": string, "options": string[], "correct_answer": number, "concept_tested": string} | {"type": "short_answer", "question": string, "concept_tested": string, "mark_scheme": {"full_marks": number, "criteria": string[]}}]}
@@ -366,6 +399,7 @@ Respond with ONLY a JSON object matching this shape, no other text, no markdown 
 - note: one short sentence describing this practice paper
 - multiple_choice.correct_answer: 0-based index into options
 - short_answer.mark_scheme.criteria: 2-4 short marking points`;
+}
 
 interface RawQuestionPaper {
   covers_concepts: string[];
@@ -374,17 +408,19 @@ interface RawQuestionPaper {
 }
 
 /**
- * Generates a curriculum-aligned practice question paper from a unit's
- * admin-approved canonical material (PLATFORM_PLAN.md §2.7) - "based on
- * textbook/worksheet/classwork we can build question papers too." Writes
- * directly into Unit.progressionTestDraft, which drives real TestAttempt/
- * ConceptMastery data, so this stays on the extraction-tier Claude model
- * like the other high-value, rarely-run calls - never routed through the
- * Groq fallback tier used for low-stakes interactive answers.
+ * Generates a curriculum-aligned practice question paper, at a chosen
+ * difficulty tier, from a unit's admin-approved canonical material
+ * (PLATFORM_PLAN.md §2.7) - "based on textbook/worksheet/classwork we can
+ * build question papers too." Writes into the QuestionPaper table (one row
+ * per unit+difficulty, see prisma/schema.prisma), which drives real
+ * TestAttempt/ConceptMastery data, so this stays on the extraction-tier
+ * Claude model like the other high-value, rarely-run calls - never routed
+ * through the Groq fallback tier used for low-stakes interactive answers.
  */
 export async function generateQuestionPaper(
   images: UploadedPageImage[],
-  concepts: { concept_id: string; concept_name: string }[]
+  concepts: { concept_id: string; concept_name: string }[],
+  difficulty: QuestionPaperDifficulty = "moderate"
 ): Promise<ProgressionTestDraft> {
   const response = await getClient().messages.create({
     model: EXTRACTION_MODEL,
@@ -393,7 +429,7 @@ export async function generateQuestionPaper(
     system: [
       {
         type: "text",
-        text: QUESTION_PAPER_SYSTEM_PROMPT,
+        text: questionPaperSystemPrompt(difficulty),
         cache_control: { type: "ephemeral" },
       },
     ],

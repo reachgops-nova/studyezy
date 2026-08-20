@@ -4,6 +4,7 @@ import { getActiveProfile } from "@/lib/auth";
 import { getCurrentUser } from "@/lib/session";
 import { getUnit, getUploadedPageImages } from "@/lib/content";
 import { getUnitResourceGroupsByKey } from "@/lib/queries/unitResources";
+import { getQuestionPaperByKey } from "@/lib/queries/questionPapers";
 import { FREEZABLE_TYPES } from "@/lib/unitResources";
 import { isTrialActive, getPricingPlanForKid } from "@/lib/pricing";
 import { LogoMark } from "@/components/Logo";
@@ -61,6 +62,11 @@ export default async function LearnPage({ params }: { params: Promise<{ unitId: 
   const resourceGroups = (await getUnitResourceGroupsByKey(unitId)).filter((g) =>
     (FREEZABLE_TYPES as string[]).includes(g.type)
   );
+  // Diagnostic always runs against "moderate" - [] (rather than a fetch
+  // error) when the admin hasn't generated that tier yet, same graceful
+  // empty-state the old single-draft field always had for a fresh unit.
+  const moderatePaper = await getQuestionPaperByKey(unitId, "moderate");
+  const diagnosticQuestions = moderatePaper?.questions ?? [];
 
   return (
     <main className="mx-auto grid w-full max-w-3xl gap-6">
@@ -93,7 +99,13 @@ export default async function LearnPage({ params }: { params: Promise<{ unitId: 
         </div>
       </header>
 
-      <UnitView unit={unit} unitKey={unitId} initialPageImages={pageImages} resourceGroups={resourceGroups} />
+      <UnitView
+        unit={unit}
+        unitKey={unitId}
+        initialPageImages={pageImages}
+        resourceGroups={resourceGroups}
+        diagnosticQuestions={diagnosticQuestions}
+      />
     </main>
   );
 }

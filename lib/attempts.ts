@@ -2,11 +2,12 @@
 // (Postgres now, not localStorage). No "server-only" - this runs in the
 // browser. The active student profile is derived from the session cookie
 // server-side, never sent from the client.
-import type { StoredUnitResult } from "./types";
+import type { QuestionPaperDifficulty, StoredUnitResult } from "./types";
 
 export async function recordAttempt(params: {
   unitKey: string;
   attemptType?: "progression_test" | "diagnostic";
+  difficulty?: QuestionPaperDifficulty;
   correct: number;
   total: number;
   perConcept: Record<string, { correct: number; total: number }>;

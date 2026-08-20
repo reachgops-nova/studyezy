@@ -1,11 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getActiveProfileId } from "@/lib/auth";
-import { getUnit } from "@/lib/content";
 import { gradeShortAnswer, isConfigured } from "@/lib/claude";
 import { gradeShortAnswerGroq, isGroqConfigured } from "@/lib/groq";
 import { checkRateLimit } from "@/lib/rateLimit";
+import { getQuestionPaperByKey } from "@/lib/queries/questionPapers";
+import { QUESTION_PAPER_DIFFICULTIES, type QuestionPaperDifficulty } from "@/lib/types";
 
 const UNIT_KEY_PATTERN = /^[a-z0-9]+-\d+-[a-z0-9]+-\d+$/i;
+
+function isDifficulty(value: unknown): value is QuestionPaperDifficulty {
+  return typeof value === "string" && (QUESTION_PAPER_DIFFICULTIES as string[]).includes(value);
+}
 
 export async function POST(req: NextRequest) {
   const profileId = await getActiveProfileId();
@@ -32,7 +37,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Invalid request body." }, { status: 400 });
   }
 
-  const { unitKey, questionIndex, studentAnswer } = (body ?? {}) as Record<string, unknown>;
+  const { unitKey, difficulty: rawDifficulty, questionIndex, studentAnswer } = (body ?? {}) as Record<string, unknown>;
 
   if (
     typeof unitKey !== "string" ||
@@ -43,14 +48,14 @@ export async function POST(req: NextRequest) {
   ) {
     return NextResponse.json({ error: "Missing or invalid fields." }, { status: 400 });
   }
+  const difficulty: QuestionPaperDifficulty = isDifficulty(rawDifficulty) ? rawDifficulty : "moderate";
 
-  const [curriculumId, stageIdStr, subjectId, unitIdStr] = unitKey.split("-");
-  const unit = await getUnit(curriculumId, Number(stageIdStr), subjectId, Number(unitIdStr));
-  if (!unit) {
-    return NextResponse.json({ error: "Unit not found." }, { status: 404 });
+  const paper = await getQuestionPaperByKey(unitKey, difficulty);
+  if (!paper) {
+    return NextResponse.json({ error: "Question paper not found." }, { status: 404 });
   }
 
-  const question = unit.progression_test_draft.questions[questionIndex];
+  const question = paper.questions[questionIndex];
   if (!question || question.type !== "short_answer") {
     return NextResponse.json({ error: "Question not found or not gradeable this way." }, { status: 404 });
   }

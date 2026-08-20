@@ -1,9 +1,9 @@
 export type ConceptStatus = "drafted" | "outline";
 
-/** One multiple-choice vocabulary practice item (synonym or antonym) - see lib/vocabPractice.ts. */
+/** One multiple-choice vocabulary practice item (synonym, antonym, or idiom meaning) - see lib/vocabPractice.ts. */
 export interface VocabItem {
   word: string;
-  type: "synonym" | "antonym";
+  type: "synonym" | "antonym" | "idiom";
   question: string;
   options: string[];
   correctIndex: number;
@@ -81,6 +81,24 @@ export interface ProgressionTestDraft {
   questions: TestQuestion[];
 }
 
+/** A unit can have up to one stored paper per tier - see prisma QuestionPaper model. */
+export type QuestionPaperDifficulty = "easy" | "moderate" | "tough";
+
+export const QUESTION_PAPER_DIFFICULTIES: QuestionPaperDifficulty[] = ["easy", "moderate", "tough"];
+
+export interface QuestionPaperSummary {
+  difficulty: QuestionPaperDifficulty;
+  available: boolean;
+  questionCount: number;
+}
+
+export interface QuestionPaperContent {
+  difficulty: QuestionPaperDifficulty;
+  coversConcepts: string[];
+  note: string | null;
+  questions: TestQuestion[];
+}
+
 export interface UnitMasteryChecklist {
   source_note?: string;
   items: string[];
@@ -104,7 +122,6 @@ export interface CurriculumUnit {
   concepts: Concept[];
   remaining_unit_outline: OutlineConcept[];
   unit_mastery_checklist: UnitMasteryChecklist;
-  progression_test_draft: ProgressionTestDraft;
 }
 
 // --- mastery / progress tracking ---

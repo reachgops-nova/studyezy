@@ -7,7 +7,15 @@ interface AnsweredState {
   [index: number]: number; // item index -> option index picked
 }
 
-export default function VocabPractice() {
+export default function VocabPractice({
+  onContinue,
+  continueLabel = "Continue to lesson",
+}: {
+  /** When set, renders a primary CTA (in place of the "no pressure" plan-page framing) - used for the
+   *  pre-session warm-up in UnitView. Omit for the standalone /plan widget. */
+  onContinue?: () => void;
+  continueLabel?: string;
+}) {
   const [items, setItems] = useState<VocabItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [answered, setAnswered] = useState<AnsweredState>({});
@@ -92,6 +100,21 @@ export default function VocabPractice() {
               </div>
             );
           })}
+        </div>
+      )}
+
+      {onContinue && (
+        <div className="mt-4 flex items-center justify-between gap-3 border-t border-slate-100 pt-3">
+          <button type="button" onClick={onContinue} className="text-xs font-medium text-slate-400 hover:text-slate-600">
+            Skip for now
+          </button>
+          <button
+            type="button"
+            onClick={onContinue}
+            className="rounded-full bg-gradient-to-br from-orange-400 to-orange-600 px-5 py-2.5 text-sm font-medium text-white transition active:scale-95"
+          >
+            {continueLabel}
+          </button>
         </div>
       )}
     </div>

@@ -211,15 +211,17 @@ export async function generateVocabPracticeGroq(): Promise<VocabItem[]> {
     "vocab-practice",
     QA_MODEL,
     "You write vocabulary practice questions for a Grade 5 (9-10 year old, Cambridge Stage 5 English) " +
-      "student. Generate exactly 3 multiple-choice questions, each either a synonym question ('Which word " +
-      "means the SAME as X?') or an antonym question ('Which word means the OPPOSITE of X?'). Mix both " +
-      "types. Use words a Grade 5 student would plausibly meet in stories or everyday writing - not overly " +
-      "obscure, not trivially easy. Each question needs exactly 4 short single-word or short-phrase options, " +
-      "with exactly one correct answer, and the 3 wrong options should be plausible enough to actually make " +
-      "the student think, not obviously silly. Respond with ONLY a JSON object, no other text: " +
-      '{"items": [{"word": string, "type": "synonym"|"antonym", "question": string, "options": [string,string,string,string], "correctIndex": number}]}.',
-    "Generate 3 fresh vocabulary practice questions now, different words than typical overused examples " +
-      "like 'happy' or 'big'.",
+      "student. Generate exactly 3 multiple-choice questions, mixing three kinds: a synonym question " +
+      "('Which word means the SAME as X?'), an antonym question ('Which word means the OPPOSITE of X?'), " +
+      "and an idiom-meaning question ('What does \"X\" mean?', where X is a common English idiom). Include " +
+      "at least one idiom question when possible, and vary which kinds appear each time rather than always " +
+      "the same mix. Use words/idioms a Grade 5 student would plausibly meet in stories or everyday writing - " +
+      "not overly obscure, not trivially easy. Each question needs exactly 4 short options, with exactly one " +
+      "correct answer, and the 3 wrong options should be plausible enough to actually make the student think, " +
+      "not obviously silly. Respond with ONLY a JSON object, no other text: " +
+      '{"items": [{"word": string, "type": "synonym"|"antonym"|"idiom", "question": string, "options": [string,string,string,string], "correctIndex": number}]}.',
+    "Generate 3 fresh vocabulary practice questions now, different words/idioms than typical overused " +
+      "examples like 'happy', 'big', or 'piece of cake'.",
     600
   );
 
@@ -227,7 +229,7 @@ export async function generateVocabPracticeGroq(): Promise<VocabItem[]> {
     (i) =>
       i &&
       typeof i.word === "string" &&
-      (i.type === "synonym" || i.type === "antonym") &&
+      (i.type === "synonym" || i.type === "antonym" || i.type === "idiom") &&
       typeof i.question === "string" &&
       Array.isArray(i.options) &&
       i.options.length === 4 &&

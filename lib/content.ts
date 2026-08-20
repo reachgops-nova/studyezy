@@ -81,7 +81,6 @@ export async function getUnit(
     concepts,
     remaining_unit_outline,
     unit_mastery_checklist: unit.masteryChecklist as unknown as CurriculumUnit["unit_mastery_checklist"],
-    progression_test_draft: unit.progressionTestDraft as unknown as CurriculumUnit["progression_test_draft"],
   };
 }
 

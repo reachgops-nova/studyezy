@@ -1,28 +1,36 @@
 "use client";
 
 import { useState } from "react";
-import type { CurriculumUnit } from "@/lib/types";
+import type { CurriculumUnit, TestQuestion } from "@/lib/types";
 import type { ResourceGroup } from "@/lib/queries/unitResources";
 import AvatarChat from "./AvatarChat";
 import UnitOverview from "./UnitOverview";
 import UnitDiagnostic from "./UnitDiagnostic";
+import VocabPractice from "./VocabPractice";
 
-type Stage = "overview" | "diagnostic" | "lesson";
+type Stage = "overview" | "warmup" | "diagnostic" | "lesson";
 
 export default function UnitView({
   unit,
   unitKey,
   initialPageImages,
   resourceGroups,
+  diagnosticQuestions,
 }: {
   unit: CurriculumUnit;
   unitKey: string;
   initialPageImages: string[];
   resourceGroups: ResourceGroup[];
+  diagnosticQuestions: TestQuestion[];
 }) {
   const [stage, setStage] = useState<Stage>("overview");
   const [selectedId, setSelectedId] = useState(unit.concepts[0]?.concept_id);
   const [pageImages, setPageImages] = useState(initialPageImages);
+  // Where to land once the warm-up is done/skipped - captured at the moment
+  // the kid picks "diagnostic" vs "skip to teaching" on the overview screen,
+  // since the warm-up sits in front of both paths (2026-08-20: "before
+  // starting every session" - not just one entry point).
+  const [afterWarmup, setAfterWarmup] = useState<() => void>(() => () => {});
   const selected = unit.concepts.find((c) => c.concept_id === selectedId);
 
   if (stage === "overview") {
@@ -33,12 +41,30 @@ export default function UnitView({
         pageImages={pageImages}
         resourceGroups={resourceGroups}
         onPageImagesUploaded={(newPaths) => setPageImages((prev) => [...prev, ...newPaths])}
-        onStartDiagnostic={() => setStage("diagnostic")}
+        onStartDiagnostic={() => {
+          setAfterWarmup(() => () => setStage("diagnostic"));
+          setStage("warmup");
+        }}
         onSkipToTeaching={(conceptId) => {
-          if (conceptId) setSelectedId(conceptId);
-          setStage("lesson");
+          setAfterWarmup(() => () => {
+            if (conceptId) setSelectedId(conceptId);
+            setStage("lesson");
+          });
+          setStage("warmup");
         }}
       />
+    );
+  }
+
+  if (stage === "warmup") {
+    return (
+      <div className="grid gap-4">
+        <div>
+          <h2 className="text-lg font-semibold">Quick warm-up</h2>
+          <p className="text-sm text-slate-500">A few words to get your brain going before we start.</p>
+        </div>
+        <VocabPractice onContinue={afterWarmup} continueLabel="Start" />
+      </div>
     );
   }
 
@@ -47,6 +73,7 @@ export default function UnitView({
       <UnitDiagnostic
         unit={unit}
         unitKey={unitKey}
+        questions={diagnosticQuestions}
         onReviewConcept={(conceptId) => {
           setSelectedId(conceptId);
           setStage("lesson");

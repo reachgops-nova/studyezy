@@ -67,3 +67,32 @@ export async function getUnitResourceGroupsByKey(unitKey: string): Promise<Resou
   if (!unit) return [];
   return getUnitResourceGroups(unit.id);
 }
+
+export interface PendingResourceRow extends ResourceFile {
+  resourceType: ResourceType;
+  unitKey: string;
+  unitTitle: string;
+}
+
+/**
+ * Every pending (not-yet-approved) resource across every unit, newest first
+ * - lets an admin see what needs review without guessing which unit's
+ * dropdown to check first (2026-08-20: "admin should have a view of what
+ * are the textbook/worksheets/classwork/test papers uploaded by students,
+ * consolidated"). The per-unit approve/reject actions are unchanged -
+ * this is purely a cross-unit read.
+ */
+export async function getAllPendingResources(): Promise<PendingResourceRow[]> {
+  const rows = await db.unitResource.findMany({
+    where: { status: "pending" },
+    include: { uploadedBy: { select: { email: true } }, approvedBy: { select: { email: true } }, unit: { select: { unitKey: true, title: true } } },
+    orderBy: { createdAt: "desc" },
+  });
+
+  return rows.map((r) => ({
+    ...toFile(r),
+    resourceType: r.resourceType as ResourceType,
+    unitKey: r.unit.unitKey,
+    unitTitle: r.unit.title,
+  }));
+}
