@@ -15,6 +15,11 @@ model User {
   passwordHash String
   role         String   @default("parent") // "parent" | "admin" - the very first account ever registered becomes admin automatically
   createdAt    DateTime @default(now())
+  // 30-day free trial from signup - set at INSERT time (now() + 30 days),
+  // so it's always relative to when this specific account registered, not a
+  // global cutoff. Admin accounts bypass trial gating in code (lib/pricing.ts)
+  // rather than getting special-cased here, so the column stays simple.
+  trialEndsAt  DateTime @default(dbgenerated("(now() + interval '30 days')"))
 
   sessions          Session[]
   studentProfiles   StudentProfile[]
@@ -279,6 +284,26 @@ model ConceptMastery {
   nextReviewDue    DateTime
 
   @@unique([studentProfileId, conceptId])
+}
+
+// Admin-editable price list (PLATFORM_PLAN.md, 2026-08-20 pricing entry):
+// one row per curriculum-board x grade-band cell, e.g. ("CBSE", "Grade 9-10",
+// 9, 10, 289). Deliberately NOT foreign-keyed to Curriculum/Stage - only the
+// Cambridge pathway has real seeded content today, but pricing needs to
+// cover all 5 boards (Matric/CBSE/ICSE/IGCSE/IB) ahead of that content
+// existing, since this is business planning, not a content gate. Grade-band
+// lookup for an actual kid happens via a small label mapping in
+// lib/pricing.ts, not a DB relation.
+model PricingPlan {
+  id                 String   @id @default(cuid())
+  curriculumLabel    String   // "Matric / State Board" | "CBSE" | "ICSE" | "Cambridge IGCSE" | "IB"
+  gradeBandLabel     String   // "Grade 3-5" | "Grade 6-8" | "Grade 9-10" | "Grade 11-12"
+  minGrade           Int
+  maxGrade           Int
+  pricePerSubjectInr Int
+  updatedAt          DateTime @updatedAt
+
+  @@unique([curriculumLabel, gradeBandLabel])
 }
 
 // Foundation for future adaptive personalization - logging only, no adaptive

@@ -80,6 +80,15 @@ export function ArchiveIcon({ className = base }: IconProps) {
   );
 }
 
+export function TagIcon({ className = base }: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" className={className} fill="none" stroke="currentColor" strokeWidth="1.75" aria-hidden>
+      <path d="M11.5 4H6a2 2 0 0 0-2 2v5.5a2 2 0 0 0 .59 1.41l7.5 7.5a2 2 0 0 0 2.82 0l5.5-5.5a2 2 0 0 0 0-2.82l-7.5-7.5A2 2 0 0 0 11.5 4Z" strokeLinejoin="round" />
+      <circle cx="8" cy="8" r="1.3" />
+    </svg>
+  );
+}
+
 export function LogoutIcon({ className = base }: IconProps) {
   return (
     <svg viewBox="0 0 24 24" className={className} fill="none" stroke="currentColor" strokeWidth="1.75" aria-hidden>

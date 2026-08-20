@@ -1,9 +1,9 @@
 import Link from "next/link";
 import Logo, { LogoMark } from "./Logo";
 import AccountMenu from "./AccountMenu";
-import { BookIcon, ChartIcon, ClipboardIcon, FolderPlusIcon, ShieldIcon, ArchiveIcon } from "./NavIcons";
+import { BookIcon, ChartIcon, ClipboardIcon, FolderPlusIcon, ShieldIcon, ArchiveIcon, TagIcon } from "./NavIcons";
 
-type NavKey = "select" | "dashboard" | "plan" | "manage" | "admin" | "admin-resources";
+type NavKey = "select" | "dashboard" | "plan" | "manage" | "admin" | "admin-resources" | "admin-pricing";
 
 // Desktop (lg+): fixed left sidebar for primary nav + a slim top bar holding
 // just the account menu ("topside configurations"), main content to the
@@ -23,7 +23,9 @@ export default function AppShell({
   children: React.ReactNode;
 }) {
   const accountActive =
-    active === "manage" || active === "admin" || active === "admin-resources" ? active : undefined;
+    active === "manage" || active === "admin" || active === "admin-resources" || active === "admin-pricing"
+      ? active
+      : undefined;
 
   return (
     <div className="mx-auto flex w-full max-w-6xl lg:min-h-[calc(100vh-3rem)] lg:gap-8">
@@ -58,6 +60,9 @@ export default function AppShell({
                 </SidebarLink>
                 <SidebarLink href="/admin/resources" isActive={active === "admin-resources"} icon={<ArchiveIcon />}>
                   Curriculum materials
+                </SidebarLink>
+                <SidebarLink href="/admin/pricing" isActive={active === "admin-pricing"} icon={<TagIcon />}>
+                  Pricing
                 </SidebarLink>
               </>
             )}
