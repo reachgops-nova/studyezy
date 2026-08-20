@@ -277,6 +277,18 @@ export default function AvatarChat({
   const recognitionRef = useRef<SpeechRecognitionLike | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  // Pause/resume state - see togglePauseSpeech for why this exists instead
+  // of just calling speechSynthesis.resume().
+  const currentUtteranceRef = useRef<{
+    text: string;
+    messageId: string;
+    onDone: () => void;
+    langCode?: string;
+    baseOffset: number;
+  } | null>(null);
+  const lastBoundaryOffsetRef = useRef(0);
+  const isPausingRef = useRef(false);
+  const [noVoiceForLanguage, setNoVoiceForLanguage] = useState(false);
 
   useEffect(() => {
     const SpeechRecognitionCtor = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
@@ -296,7 +308,16 @@ export default function AvatarChat({
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
   }, [messages]);
 
-  function speakText(text: string, messageId: string, onDone: () => void, langCode?: string) {
+  // baseOffset is where `text` starts within the "logical" full message -
+  // 0 for a normal from-scratch call, or a mid-message offset when resuming
+  // after a pause (see togglePauseSpeech). Keeping highlight math relative
+  // to baseOffset means the highlight range is always correct against the
+  // ORIGINAL full text, even when the utterance currently playing is only
+  // the remainder after a pause.
+  function speakText(text: string, messageId: string, onDone: () => void, langCode?: string, baseOffset = 0) {
+    isPausingRef.current = false;
+    setNoVoiceForLanguage(false);
+
     if (!(readAloud && "speechSynthesis" in window)) {
       setTimeout(onDone, 1400);
       return;
@@ -305,19 +326,36 @@ export default function AvatarChat({
     utterance.lang = langCode ?? SPEECH_LANG;
     utterance.rate = getSavedRate();
     const voice = pickVoice(langCode);
-    if (voice) utterance.voice = voice;
+    if (voice) {
+      utterance.voice = voice;
+    } else if (langCode && !langCode.toLowerCase().startsWith("en")) {
+      // No installed voice actually speaks this language - most default
+      // (English) voices can't render non-Latin scripts like Tamil/Hindi at
+      // all and just produce silence, which looks like a broken feature
+      // rather than a device limitation. Still attempt it (some devices
+      // genuinely do have a multi-lingual default voice), but say so.
+      setNoVoiceForLanguage(true);
+    }
+    lastBoundaryOffsetRef.current = baseOffset;
+    currentUtteranceRef.current = { text, messageId, onDone, langCode, baseOffset };
     utterance.onboundary = (event) => {
       if (event.name === "sentence") return;
       const charLength = (event as unknown as { charLength?: number }).charLength;
-      setHighlightRange(getWordRange(text, event.charIndex, charLength));
+      const [start, end] = getWordRange(text, event.charIndex, charLength);
+      lastBoundaryOffsetRef.current = baseOffset + start;
+      setHighlightRange([baseOffset + start, baseOffset + end]);
     };
     utterance.onend = () => {
+      if (isPausingRef.current) return;
+      currentUtteranceRef.current = null;
       setSpeaking(false);
       setSpeakingMessageId(null);
       setHighlightRange(null);
       onDone();
     };
     utterance.onerror = () => {
+      if (isPausingRef.current) return;
+      currentUtteranceRef.current = null;
       setSpeaking(false);
       setSpeakingMessageId(null);
       setHighlightRange(null);
@@ -329,14 +367,44 @@ export default function AvatarChat({
     window.speechSynthesis.speak(utterance);
   }
 
+  // Deliberately does NOT rely on speechSynthesis.pause()/resume() for the
+  // resume half - resume() is a long-documented Chrome bug where speech
+  // stays silently paused forever after pause() (reported: "tap pause
+  // worked, tap resume didn't"). Instead: pausing cancels the utterance but
+  // remembers exactly where playback stopped (lastBoundaryOffsetRef, kept
+  // current by onboundary), and resuming re-speaks just the remaining text
+  // as a fresh utterance - reliable on every browser, not just the ones
+  // whose resume() actually works. isPausingRef tells the onend/onerror
+  // handlers this cancel was intentional, so they don't fire onDone() (which
+  // would otherwise incorrectly advance the lesson as if speech had
+  // finished naturally).
   function togglePauseSpeech() {
     if (!("speechSynthesis" in window)) return;
-    if (window.speechSynthesis.paused) {
-      window.speechSynthesis.resume();
-      setSpeechPaused(false);
+
+    if (speechPaused) {
+      const paused = currentUtteranceRef.current;
+      if (!paused) {
+        setSpeechPaused(false);
+        return;
+      }
+      const consumed = Math.max(0, lastBoundaryOffsetRef.current - paused.baseOffset);
+      const remaining = paused.text.slice(consumed);
+      if (!remaining.trim()) {
+        setSpeechPaused(false);
+        setSpeaking(false);
+        setSpeakingMessageId(null);
+        setHighlightRange(null);
+        currentUtteranceRef.current = null;
+        paused.onDone();
+        return;
+      }
+      speakText(remaining, paused.messageId, paused.onDone, paused.langCode, lastBoundaryOffsetRef.current);
     } else if (window.speechSynthesis.speaking) {
-      window.speechSynthesis.pause();
+      isPausingRef.current = true;
+      window.speechSynthesis.cancel();
       setSpeechPaused(true);
+      // Leave speaking/speakingMessageId/highlightRange as-is - paused
+      // should freeze the display, not clear it.
     }
   }
 
@@ -443,9 +511,23 @@ export default function AvatarChat({
     window.speechSynthesis?.cancel();
 
     checkpointsRef.current = buildCheckpoints(concept);
-    playCheckpoint(0, myToken);
+
+    // AvatarChat is remounted (not just re-rendered) on every concept
+    // change - see UnitView.tsx's key={selected.concept_id}. React flushes
+    // the old instance's cleanup (cancel() above/below) and the new
+    // instance's effect in the same synchronous pass, so without a beat in
+    // between, this speak() call reaches the browser's speech engine before
+    // the previous cancel() has actually taken effect - a documented Chrome
+    // quirk where the two utterances end up queued back to back instead of
+    // the old one being interrupted (reported: switching concepts kept
+    // reading the OLD concept's intro before continuing into the new one).
+    // A short delay is a pragmatic, well-known workaround for this exact
+    // race - clearTimeout in the cleanup also protects a rapid double
+    // concept-switch from leaving a stale speak() scheduled.
+    const startTimer = setTimeout(() => playCheckpoint(0, myToken), 80);
 
     return () => {
+      clearTimeout(startTimer);
       window.speechSynthesis?.cancel();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -849,6 +931,13 @@ export default function AvatarChat({
               </button>
             )}
           </div>
+
+          {noVoiceForLanguage && (
+            <p className="mt-1 text-xs text-amber-600">
+              This device doesn&apos;t have a {LANGUAGES.find((l) => l.code === language)?.label ?? "matching"} voice
+              installed, so read-aloud may be silent for this answer - the text above is still correct.
+            </p>
+          )}
 
           {showVoicePicker && (
             <div className="mt-2">

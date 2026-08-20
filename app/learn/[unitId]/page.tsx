@@ -69,7 +69,12 @@ export default async function LearnPage({ params }: { params: Promise<{ unitId: 
   const diagnosticQuestions = moderatePaper?.questions ?? [];
 
   return (
-    <main className="mx-auto grid w-full max-w-3xl gap-6">
+    // Wider than the old max-w-3xl (768px) - on an actual desktop/laptop
+    // screen that left most of the viewport empty around a phone-width
+    // column (reported with a screenshot: lots of unused space either
+    // side). max-w-6xl matches AppShell's own container width so this page
+    // is visually consistent with the rest of the app, not just wider.
+    <main className="mx-auto grid w-full max-w-6xl gap-6">
       <header className="flex items-center justify-between">
         <div>
           <Link href="/select" className="inline-flex items-center gap-2 text-sm text-slate-500 hover:text-slate-700">
