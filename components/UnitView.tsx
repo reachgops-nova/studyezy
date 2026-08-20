@@ -7,6 +7,7 @@ import AvatarChat from "./AvatarChat";
 import UnitOverview from "./UnitOverview";
 import UnitDiagnostic from "./UnitDiagnostic";
 import VocabPractice from "./VocabPractice";
+import ImageLightbox from "./ImageLightbox";
 
 type Stage = "overview" | "warmup" | "diagnostic" | "lesson";
 
@@ -59,6 +60,22 @@ export default function UnitView({
   if (stage === "warmup") {
     return (
       <div className="grid gap-4">
+        {pageImages.length > 0 && (
+          <div className="rounded-2xl border border-slate-200/70 bg-white p-5 shadow-soft">
+            <h2 className="text-lg font-semibold">Here&apos;s what we&apos;re learning from</h2>
+            <p className="mt-1 text-sm text-slate-500">
+              The actual textbook page{pageImages.length > 1 ? "s" : ""} for this unit - tap to zoom in and read it
+              clearly.
+            </p>
+            <ImageLightbox
+              images={pageImages}
+              alt={(i) => `Textbook page ${i + 1} for ${unit.unit_title}`}
+              className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3"
+              imgClassName="w-full rounded-xl border border-slate-200 object-contain bg-slate-50"
+            />
+          </div>
+        )}
+
         <div>
           <h2 className="text-lg font-semibold">Quick warm-up</h2>
           <p className="text-sm text-slate-500">A few words to get your brain going before we start.</p>

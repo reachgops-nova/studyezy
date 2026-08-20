@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import type { CurriculumUnit } from "@/lib/types";
 import type { ResourceGroup } from "@/lib/queries/unitResources";
 import UnitResources from "./UnitResources";
+import ImageLightbox from "./ImageLightbox";
 
 export default function UnitOverview({
   unit,
@@ -177,17 +178,12 @@ export default function UnitOverview({
         {uploadSuccess && <p className="mt-2 text-sm text-green-600">✓ {uploadSuccess}</p>}
 
         {pageImages.length > 0 ? (
-          <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3">
-            {pageImages.map((src, i) => (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                key={src}
-                src={src}
-                alt={`Textbook page ${i + 1} for ${unit.unit_title}`}
-                className="w-full rounded-xl border border-slate-200 object-cover"
-              />
-            ))}
-          </div>
+          <ImageLightbox
+            images={pageImages}
+            alt={(i) => `Textbook page ${i + 1} for ${unit.unit_title}`}
+            className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3"
+            imgClassName="w-full rounded-xl border border-slate-200 object-cover aspect-square"
+          />
         ) : (
           <div className="mt-3 rounded-xl border border-dashed border-slate-300 bg-slate-50 p-4 text-sm text-slate-500">
             No pages added yet - a parent can snap photos of this unit&apos;s textbook pages with &ldquo;+ Add
