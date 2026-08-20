@@ -1,6 +1,7 @@
 import "server-only";
 import type { Concept, MarkScheme, VocabItem } from "./types";
 import type { GradeResult, ReasoningClassification, ReasoningResult } from "./claude";
+import { logAiCost } from "./aiCost";
 
 // Groq hosts open-weight models (Llama etc.) behind a fast, OpenAI-compatible
 // endpoint - used as a genuinely-dynamic middle tier between full Claude
@@ -28,7 +29,7 @@ export function isGroqConfigured(): boolean {
   return Boolean(process.env.GROQ_API_KEY);
 }
 
-async function groqChat(model: string, system: string, user: string, maxTokens: number): Promise<string> {
+async function groqChat(feature: string, model: string, system: string, user: string, maxTokens: number): Promise<string> {
   const res = await fetch(GROQ_API_URL, {
     method: "POST",
     headers: {
@@ -58,7 +59,11 @@ async function groqChat(model: string, system: string, user: string, maxTokens: 
     throw new Error(`Groq request failed: ${res.status} ${await res.text()}`);
   }
 
-  const data = (await res.json()) as { choices?: { message?: { content?: string } }[] };
+  const data = (await res.json()) as {
+    choices?: { message?: { content?: string } }[];
+    usage?: { prompt_tokens?: number; completion_tokens?: number };
+  };
+  if (data.usage) logAiCost(feature, model, data.usage.prompt_tokens ?? 0, data.usage.completion_tokens ?? 0);
   const text = data.choices?.[0]?.message?.content?.trim();
   if (!text) throw new Error("Groq returned no content");
   return text;
@@ -69,7 +74,7 @@ async function groqChat(model: string, system: string, user: string, maxTokens: 
 // Verified against the live API with this project's actual grading and
 // Reasoning Interview prompts before relying on it (response_format:
 // json_object works with QA_MODEL).
-async function groqChatJSON<T>(model: string, system: string, user: string, maxTokens: number): Promise<T> {
+async function groqChatJSON<T>(feature: string, model: string, system: string, user: string, maxTokens: number): Promise<T> {
   const res = await fetch(GROQ_API_URL, {
     method: "POST",
     headers: {
@@ -93,7 +98,11 @@ async function groqChatJSON<T>(model: string, system: string, user: string, maxT
     throw new Error(`Groq request failed: ${res.status} ${await res.text()}`);
   }
 
-  const data = (await res.json()) as { choices?: { message?: { content?: string } }[] };
+  const data = (await res.json()) as {
+    choices?: { message?: { content?: string } }[];
+    usage?: { prompt_tokens?: number; completion_tokens?: number };
+  };
+  if (data.usage) logAiCost(feature, model, data.usage.prompt_tokens ?? 0, data.usage.completion_tokens ?? 0);
   const raw = data.choices?.[0]?.message?.content?.trim();
   if (!raw) throw new Error("Groq returned no content");
   return JSON.parse(raw) as T;
@@ -127,6 +136,7 @@ export async function askConceptQuestionGroq(
       : "";
 
   return groqChat(
+    "ask",
     QA_MODEL,
     "You are a patient, encouraging tutor for a Grade 5 (Cambridge Stage 5) student. " +
       "Only answer using the concept context provided - stay on topic for this concept. " +
@@ -169,6 +179,7 @@ export async function suggestFollowUpsGroq(
     .join("\n");
 
   const parsed = await groqChatJSON<{ questions: string[] }>(
+    "follow-ups",
     REACTION_MODEL,
     "You suggest what a Grade 5 (9-10 year old) student might naturally want to ask NEXT in a tutoring " +
       "chat, right after the tutor just answered one of their questions. Read the concept, the student's " +
@@ -197,6 +208,7 @@ export async function suggestFollowUpsGroq(
  */
 export async function generateVocabPracticeGroq(): Promise<VocabItem[]> {
   const parsed = await groqChatJSON<{ items: VocabItem[] }>(
+    "vocab-practice",
     QA_MODEL,
     "You write vocabulary practice questions for a Grade 5 (9-10 year old, Cambridge Stage 5 English) " +
       "student. Generate exactly 3 multiple-choice questions, each either a synonym question ('Which word " +
@@ -239,6 +251,7 @@ export async function generateVocabPracticeGroq(): Promise<VocabItem[]> {
  */
 export async function groqMicroCheckReaction(question: string, studentAnswer: string): Promise<string> {
   return groqChat(
+    "micro-check",
     REACTION_MODEL,
     "You are a warm Grade 5 tutor giving a ONE-sentence reaction to a student's spoken answer to a " +
       "quick check-in question during a lesson. React specifically to what they actually said - if it's " +
@@ -268,6 +281,7 @@ export async function gradeShortAnswerGroq(
   const trimmedAnswer = studentAnswer.trim().slice(0, 2000);
 
   const parsed = await groqChatJSON<{ marks_awarded: number; feedback: string }>(
+    "grade",
     QA_MODEL,
     "You are grading a Grade 5 student's short-answer response, kindly and constructively. " +
       "Respond with ONLY a JSON object matching this shape, no other text: " +
@@ -304,6 +318,7 @@ export async function classifyReasoningGroq(
   const trimmedExplanation = explanation.trim().slice(0, 1000);
 
   const parsed = await groqChatJSON<{ classification: string; note: string }>(
+    "reasoning",
     QA_MODEL,
     "You are a kind Grade 5 tutor figuring out WHY a student answered the way they did, from their " +
       "own explanation of their thinking. Classify into exactly one of: " +

@@ -80,27 +80,39 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Concept not found." }, { status: 404 });
   }
 
-  // Three-tier fallback so a kid mid-lesson always gets a real, grounded
-  // answer: Claude first (best quality), then Groq's open-weight model (still
-  // genuinely dynamic, works without Anthropic credit), then the local
-  // pattern-matcher (always available, no network dependency at all).
-  if (isConfigured()) {
-    try {
-      const answer = await askConceptQuestion(concept, question, resolvedLanguage);
-      const followUps = await tryFollowUps(concept, question, answer);
-      return NextResponse.json({ answer, source: "ai", followUps });
-    } catch (err) {
-      console.error("askConceptQuestion failed, trying next fallback", err);
-    }
-  }
-
+  // 2026-08-20: reordered to Groq-first, Claude-fallback (was the reverse).
+  // This is the highest-frequency AI call in the app (every voice question,
+  // every checkpoint-pause follow-up), so it's the one place where the tier
+  // order actually matters for cost/latency/resilience at scale - grading
+  // and Reasoning Interview classification deliberately stay Claude-first
+  // (see those routes), since they write into ConceptMastery/retest
+  // scheduling and a wrong answer there has a real data-quality cost that
+  // outweighs the savings. Reasoning for this one specifically: (1) Groq is
+  // materially cheaper per call (gpt-oss-120b vs Claude Haiku, see
+  // lib/aiCost.ts's rates) and compounds at real scale; (2) Groq is also
+  // faster, a genuine UX win for an interactive chat a kid is waiting on;
+  // (3) resilience - this session hit real Anthropic-credit gaps more than
+  // once, and Groq-first means the primary interactive feature keeps working
+  // through that without depending on a top-up. Quality was checked, not
+  // assumed, against this project's actual grounded-Q&A prompts before
+  // making this the default tier, not just the fallback.
   if (isGroqConfigured()) {
     try {
       const answer = await askConceptQuestionGroq(concept, question, resolvedLanguage);
       const followUps = await tryFollowUps(concept, question, answer);
       return NextResponse.json({ answer, source: "ai-groq", followUps });
     } catch (err) {
-      console.error("askConceptQuestionGroq failed, falling back to local answer", err);
+      console.error("askConceptQuestionGroq failed, trying next fallback", err);
+    }
+  }
+
+  if (isConfigured()) {
+    try {
+      const answer = await askConceptQuestion(concept, question, resolvedLanguage);
+      const followUps = await tryFollowUps(concept, question, answer);
+      return NextResponse.json({ answer, source: "ai", followUps });
+    } catch (err) {
+      console.error("askConceptQuestion failed, falling back to local answer", err);
     }
   }
 

@@ -1,6 +1,7 @@
 import "server-only";
 import Anthropic from "@anthropic-ai/sdk";
 import type { Concept, ConceptMedia, MarkScheme, ProgressionTestDraft, TestQuestion, VoiceQASample } from "./types";
+import { logAiCost } from "./aiCost";
 
 let client: Anthropic | null = null;
 
@@ -98,6 +99,7 @@ export async function askConceptQuestion(
     ],
   });
 
+  logAiCost("ask", MODEL, response.usage.input_tokens, response.usage.output_tokens);
   const textBlock = response.content.find((block) => block.type === "text");
   return textBlock && textBlock.type === "text" ? textBlock.text : "";
 }
@@ -140,6 +142,7 @@ export async function gradeShortAnswer(
     ],
   });
 
+  logAiCost("grade", MODEL, response.usage.input_tokens, response.usage.output_tokens);
   const textBlock = response.content.find((block) => block.type === "text");
   const raw = textBlock && textBlock.type === "text" ? textBlock.text : "{}";
 
@@ -212,6 +215,7 @@ export async function classifyReasoning(
     ],
   });
 
+  logAiCost("reasoning", MODEL, response.usage.input_tokens, response.usage.output_tokens);
   const textBlock = response.content.find((block) => block.type === "text");
   const raw = textBlock && textBlock.type === "text" ? textBlock.text : "{}";
 
@@ -313,6 +317,7 @@ export async function extractConceptsFromPages(
     ],
   });
 
+  logAiCost("extract", EXTRACTION_MODEL, response.usage.input_tokens, response.usage.output_tokens);
   const textBlock = response.content.find((block) => block.type === "text");
   const raw = textBlock && textBlock.type === "text" ? textBlock.text : "[]";
 
@@ -409,6 +414,7 @@ export async function generateQuestionPaper(
     ],
   });
 
+  logAiCost("question-paper", EXTRACTION_MODEL, response.usage.input_tokens, response.usage.output_tokens);
   const textBlock = response.content.find((block) => block.type === "text");
   const raw = textBlock && textBlock.type === "text" ? textBlock.text : "{}";
 
@@ -485,6 +491,7 @@ export async function coachWrittenExam(
     ],
   });
 
+  logAiCost("exam-coaching", EXTRACTION_MODEL, response.usage.input_tokens, response.usage.output_tokens);
   const textBlock = response.content.find((block) => block.type === "text");
   const raw = textBlock && textBlock.type === "text" ? textBlock.text : "{}";
 
