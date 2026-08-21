@@ -4,14 +4,14 @@ import { getActiveProfile } from "@/lib/auth";
 import { getCatalog } from "@/lib/catalog";
 import { unitKey as buildUnitKey } from "@/lib/content";
 import { db } from "@/lib/db";
-import { getUnitResourceGroups, getAllPendingResources } from "@/lib/queries/unitResources";
+import { getUnitResourceGroups, getAllPendingResources, getConceptImageAssignmentData } from "@/lib/queries/unitResources";
 import { getQuestionPaperSummaries } from "@/lib/queries/questionPapers";
 import { RESOURCE_TYPE_LABELS, isFreezable } from "@/lib/unitResources";
 import AppShell from "@/components/AppShell";
 import ResourceUploadButton from "@/components/ResourceUploadButton";
 import GeneratePaperButton from "@/components/GeneratePaperButton";
 import ConfirmSubmitButton from "@/components/ConfirmSubmitButton";
-import { approveResource, rejectResource } from "./actions";
+import { approveResource, rejectResource, assignConceptImage } from "./actions";
 
 export default async function AdminResourcesPage({
   searchParams,
@@ -37,9 +37,13 @@ export default async function AdminResourcesPage({
   );
 
   const unitRow = selectedUnitKey ? await db.unit.findUnique({ where: { unitKey: selectedUnitKey } }) : null;
-  const [groups, paperSummaries] = unitRow
-    ? await Promise.all([getUnitResourceGroups(unitRow.id), getQuestionPaperSummaries(unitRow.id)])
-    : [null, null];
+  const [groups, paperSummaries, conceptImages] = unitRow
+    ? await Promise.all([
+        getUnitResourceGroups(unitRow.id),
+        getQuestionPaperSummaries(unitRow.id),
+        getConceptImageAssignmentData(unitRow.id),
+      ])
+    : [null, null, null];
 
   return (
     <AppShell profile={profile} active="admin-resources" isAdmin>
@@ -224,6 +228,58 @@ export default async function AdminResourcesPage({
               </div>
             );
           })}
+        </div>
+      )}
+
+      {unitRow && conceptImages && (
+        <div className="rounded-2xl border border-slate-200/70 bg-white p-4 shadow-soft">
+          <h2 className="font-semibold text-slate-800">Concept illustrations</h2>
+          <p className="mt-1 text-xs text-slate-500">
+            Show the real textbook page for a concept instead of the generic icon - pick from pages already
+            uploaded under &quot;The pages we&apos;re working from&quot; on the Unit Overview screen. Leave on
+            &quot;Icon (default)&quot; to keep the original illustration.
+          </p>
+          {conceptImages.pageOptions.length === 0 ? (
+            <p className="mt-3 text-sm text-slate-400">
+              No reference pages uploaded for this unit yet - add some via &quot;+ Add photos&quot; on the Unit
+              Overview screen first, then come back here to assign them.
+            </p>
+          ) : (
+            <ul className="mt-3 grid gap-2">
+              {conceptImages.concepts.map((c) => {
+                const currentKey = c.currentSourceImagePath?.replace(/^\/api\/uploads\//, "") ?? "";
+                return (
+                  <li key={c.conceptId} className="flex flex-wrap items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm">
+                    <span className="min-w-0 flex-1 truncate text-slate-700">
+                      {c.conceptKey} {c.name}
+                    </span>
+                    <form action={assignConceptImage} className="flex items-center gap-2">
+                      <input type="hidden" name="conceptId" value={c.conceptId} />
+                      <input type="hidden" name="unitKey" value={unitRow.unitKey} />
+                      <select
+                        name="storageKey"
+                        defaultValue={currentKey}
+                        className="min-w-[220px] rounded-lg border border-slate-300 bg-white px-2 py-1.5 text-xs text-slate-700"
+                      >
+                        <option value="">Icon (default)</option>
+                        {conceptImages.pageOptions.map((p) => (
+                          <option key={p.storageKey} value={p.storageKey}>
+                            {p.originalFilename}
+                          </option>
+                        ))}
+                      </select>
+                      <button
+                        type="submit"
+                        className="rounded-lg border border-slate-300 px-2.5 py-1.5 text-xs font-medium text-slate-600 hover:bg-slate-50"
+                      >
+                        Save
+                      </button>
+                    </form>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
         </div>
       )}
     </AppShell>

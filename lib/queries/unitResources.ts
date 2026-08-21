@@ -68,6 +68,58 @@ export async function getUnitResourceGroupsByKey(unitKey: string): Promise<Resou
   return getUnitResourceGroups(unit.id);
 }
 
+export interface ConceptImageOption {
+  storageKey: string;
+  url: string;
+  originalFilename: string;
+}
+
+export interface ConceptImageAssignment {
+  conceptId: string;
+  conceptKey: string;
+  name: string;
+  currentSourceImagePath: string | null;
+}
+
+/**
+ * Data for the admin "which reference page shows for this concept" picker
+ * (2026-08-20 follow-up: concepts hand-authored via the manual chat pathway
+ * never went through the extraction pipeline's photo-matching step, so they
+ * kept a generic SVG icon even after real textbook pages were uploaded for
+ * the unit - Concept.sourceImagePath already exists and is already
+ * preferred over the icon by AvatarChat, it just had nothing to assign it).
+ */
+export async function getConceptImageAssignmentData(unitId: string): Promise<{
+  concepts: ConceptImageAssignment[];
+  pageOptions: ConceptImageOption[];
+}> {
+  const [concepts, pages] = await Promise.all([
+    db.concept.findMany({
+      where: { unitId, status: "drafted" },
+      orderBy: { orderIndex: "asc" },
+      select: { id: true, conceptKey: true, name: true, sourceImagePath: true },
+    }),
+    db.uploadedPage.findMany({
+      where: { unitId, purpose: "textbook_source" },
+      orderBy: { createdAt: "asc" },
+    }),
+  ]);
+
+  return {
+    concepts: concepts.map((c) => ({
+      conceptId: c.id,
+      conceptKey: c.conceptKey,
+      name: c.name,
+      currentSourceImagePath: c.sourceImagePath,
+    })),
+    pageOptions: pages.map((p) => ({
+      storageKey: p.storageKey,
+      url: `/api/uploads/${p.storageKey}`,
+      originalFilename: p.originalFilename,
+    })),
+  };
+}
+
 export interface PendingResourceRow extends ResourceFile {
   resourceType: ResourceType;
   unitKey: string;

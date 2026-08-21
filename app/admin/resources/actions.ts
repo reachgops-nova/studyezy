@@ -32,3 +32,23 @@ export async function rejectResource(formData: FormData) {
   }
   redirect(`/admin/resources?unitKey=${unitKey}`);
 }
+
+// Sets (or clears, via an empty storageKey) which uploaded reference page
+// shows as a concept's illustration - see getConceptImageAssignmentData.
+// Empty selection reverts to the concept's original SVG icon, since
+// AvatarChat only falls back to it when sourceImagePath is unset.
+export async function assignConceptImage(formData: FormData) {
+  const admin = await getCurrentAdmin();
+  if (!admin) redirect("/select");
+
+  const conceptId = String(formData.get("conceptId") ?? "");
+  const storageKey = String(formData.get("storageKey") ?? "").trim();
+  const unitKey = String(formData.get("unitKey") ?? "");
+  if (conceptId) {
+    await db.concept.update({
+      where: { id: conceptId },
+      data: { sourceImagePath: storageKey ? `/api/uploads/${storageKey}` : null },
+    });
+  }
+  redirect(`/admin/resources?unitKey=${unitKey}`);
+}
