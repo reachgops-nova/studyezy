@@ -709,13 +709,14 @@ export default function AvatarChat({
   return (
     <div className="grid gap-4">
       {(concept.media?.source_image_path || concept.media?.illustration_key) && (
-        // max-w caps this at a sensible width - the card's only real content
-        // is a small thumbnail + one-line caption, so letting it stretch to
-        // fill the full-width lesson column (widened 2026-08-20) left a
-        // large empty gap on wide screens, reported as "image not loaded"
-        // when it was actually just unused space next to a small card.
-        <div className="flex max-w-md gap-3 rounded-2xl border border-slate-200/70 bg-white p-3 shadow-soft">
-          <div className="h-24 w-40 shrink-0 overflow-hidden rounded-xl">
+        // max-w-xl + aspect-ratio (matching the illustrations' own 300x180
+        // viewBox) gives the artwork real presence instead of a small
+        // thumbnail, while still capping it well short of the full-width
+        // lesson column - an uncapped width was the earlier "empty space"
+        // regression (2026-08-21) when this card had little content to fill
+        // it with. A photo (object-cover) still respects the same box.
+        <div className="max-w-xl rounded-2xl border border-slate-200/70 bg-white p-4 shadow-soft">
+          <div className="aspect-[5/3] w-full overflow-hidden rounded-xl">
             {concept.media?.source_image_path ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img
@@ -727,10 +728,10 @@ export default function AvatarChat({
               <Illustration illustrationKey={concept.media!.illustration_key!} />
             )}
           </div>
-          <div className="flex flex-col justify-between">
+          <div className="mt-3 flex items-center justify-between gap-3">
             <p className="text-sm text-slate-600">{concept.media?.illustration_caption}</p>
             {concept.media?.video_status === "coming_soon" && (
-              <span className="w-fit rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-slate-500">
+              <span className="w-fit shrink-0 rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-slate-500">
                 🎬 Video coming soon
               </span>
             )}
