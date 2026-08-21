@@ -709,7 +709,12 @@ export default function AvatarChat({
   return (
     <div className="grid gap-4">
       {(concept.media?.source_image_path || concept.media?.illustration_key) && (
-        <div className="flex gap-3 rounded-2xl border border-slate-200/70 bg-white p-3 shadow-soft">
+        // max-w caps this at a sensible width - the card's only real content
+        // is a small thumbnail + one-line caption, so letting it stretch to
+        // fill the full-width lesson column (widened 2026-08-20) left a
+        // large empty gap on wide screens, reported as "image not loaded"
+        // when it was actually just unused space next to a small card.
+        <div className="flex max-w-md gap-3 rounded-2xl border border-slate-200/70 bg-white p-3 shadow-soft">
           <div className="h-24 w-40 shrink-0 overflow-hidden rounded-xl">
             {concept.media?.source_image_path ? (
               // eslint-disable-next-line @next/next/no-img-element
