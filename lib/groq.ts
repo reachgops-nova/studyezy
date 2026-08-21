@@ -116,7 +116,8 @@ async function groqChatJSON<T>(feature: string, model: string, system: string, u
 export async function askConceptQuestionGroq(
   concept: Concept,
   question: string,
-  language: string = "English"
+  language: string = "English",
+  subject: string = "English"
 ): Promise<string> {
   const contextBlock = [
     `Concept: ${concept.concept_name}`,
@@ -130,9 +131,9 @@ export async function askConceptQuestionGroq(
   const languageInstruction =
     language !== "English"
       ? ` Respond in ${language}, not English - the student or parent needs this explanation in ${language} to ` +
-        `really understand it. This is still an English-curriculum lesson, so when you use the important ` +
-        `English subject term or vocabulary word being taught, say the ${language} explanation first and then ` +
-        `give that key term in English too (in parentheses), so they still pick up the English vocabulary.`
+        `really understand it. When you use the important ${subject} term or vocabulary word being taught, say ` +
+        `the ${language} explanation first and then give that key term in English too (in parentheses), so ` +
+        `they still pick up the English vocabulary for it.`
       : "";
 
   return groqChat(

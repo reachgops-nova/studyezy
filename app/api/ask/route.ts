@@ -98,7 +98,7 @@ export async function POST(req: NextRequest) {
   // making this the default tier, not just the fallback.
   if (isGroqConfigured()) {
     try {
-      const answer = await askConceptQuestionGroq(concept, question, resolvedLanguage);
+      const answer = await askConceptQuestionGroq(concept, question, resolvedLanguage, unit.subject);
       const followUps = await tryFollowUps(concept, question, answer);
       return NextResponse.json({ answer, source: "ai-groq", followUps });
     } catch (err) {
@@ -108,7 +108,7 @@ export async function POST(req: NextRequest) {
 
   if (isConfigured()) {
     try {
-      const answer = await askConceptQuestion(concept, question, resolvedLanguage);
+      const answer = await askConceptQuestion(concept, question, resolvedLanguage, unit.subject);
       const followUps = await tryFollowUps(concept, question, answer);
       return NextResponse.json({ answer, source: "ai", followUps });
     } catch (err) {

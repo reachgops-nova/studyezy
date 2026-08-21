@@ -268,6 +268,165 @@ function WritingChecklistFinal() {
   );
 }
 
+function EquivalentFractions() {
+  return (
+    <svg viewBox="0 0 300 180" className="h-full w-full" role="img" aria-label="A bar split into two equal halves with one shaded, above an identical bar split into four quarters with two shaded, showing 1/2 equals 2/4">
+      <rect width="300" height="180" fill="#fff7ed" />
+      <rect x="30" y="15" width="120" height="35" fill="#f97316" stroke="#9a3412" strokeWidth="3" />
+      <rect x="150" y="15" width="120" height="35" fill="#ffffff" stroke="#9a3412" strokeWidth="3" />
+      <text x="150" y="65" textAnchor="middle" fontSize="16" fontWeight="600" fill="#7c2d12" fontFamily="sans-serif">
+        1/2
+      </text>
+      <text x="150" y="92" textAnchor="middle" fontSize="22" fontWeight="700" fill="#7c2d12" fontFamily="sans-serif">
+        =
+      </text>
+      <rect x="30" y="105" width="60" height="35" fill="#f97316" stroke="#9a3412" strokeWidth="3" />
+      <rect x="90" y="105" width="60" height="35" fill="#f97316" stroke="#9a3412" strokeWidth="3" />
+      <rect x="150" y="105" width="60" height="35" fill="#ffffff" stroke="#9a3412" strokeWidth="3" />
+      <rect x="210" y="105" width="60" height="35" fill="#ffffff" stroke="#9a3412" strokeWidth="3" />
+      <text x="150" y="155" textAnchor="middle" fontSize="16" fontWeight="600" fill="#7c2d12" fontFamily="sans-serif">
+        2/4
+      </text>
+    </svg>
+  );
+}
+
+function ComparingFractions() {
+  return (
+    <svg viewBox="0 0 300 180" className="h-full w-full" role="img" aria-label="A bar showing two thirds shaded above a bar showing three quarters shaded, with a less-than sign between them">
+      <rect width="300" height="180" fill="#eff6ff" />
+      <rect x="30" y="15" width="80" height="35" fill="#3b82f6" stroke="#1e40af" strokeWidth="3" />
+      <rect x="110" y="15" width="80" height="35" fill="#3b82f6" stroke="#1e40af" strokeWidth="3" />
+      <rect x="190" y="15" width="80" height="35" fill="#ffffff" stroke="#1e40af" strokeWidth="3" />
+      <text x="150" y="65" textAnchor="middle" fontSize="16" fontWeight="600" fill="#1e3a8a" fontFamily="sans-serif">
+        2/3
+      </text>
+      <text x="150" y="92" textAnchor="middle" fontSize="22" fontWeight="700" fill="#1e3a8a" fontFamily="sans-serif">
+        &lt;
+      </text>
+      <rect x="30" y="105" width="60" height="35" fill="#3b82f6" stroke="#1e40af" strokeWidth="3" />
+      <rect x="90" y="105" width="60" height="35" fill="#3b82f6" stroke="#1e40af" strokeWidth="3" />
+      <rect x="150" y="105" width="60" height="35" fill="#3b82f6" stroke="#1e40af" strokeWidth="3" />
+      <rect x="210" y="105" width="60" height="35" fill="#ffffff" stroke="#1e40af" strokeWidth="3" />
+      <text x="150" y="155" textAnchor="middle" fontSize="16" fontWeight="600" fill="#1e3a8a" fontFamily="sans-serif">
+        3/4
+      </text>
+    </svg>
+  );
+}
+
+function MixedImproperFractions() {
+  return (
+    <svg viewBox="0 0 300 180" className="h-full w-full" role="img" aria-label="Two full squares and a third square with one of three strips shaded, showing 2 and 1 third equals 7 thirds">
+      <rect width="300" height="180" fill="#f0fdfa" />
+      <rect x="15" y="35" width="70" height="75" fill="#0d9488" stroke="#134e4a" strokeWidth="3" />
+      <rect x="100" y="35" width="70" height="75" fill="#0d9488" stroke="#134e4a" strokeWidth="3" />
+      <rect x="185" y="35" width="23" height="75" fill="#0d9488" />
+      <rect x="208" y="35" width="23" height="75" fill="#ffffff" />
+      <rect x="231" y="35" width="24" height="75" fill="#ffffff" />
+      <rect x="185" y="35" width="70" height="75" fill="none" stroke="#134e4a" strokeWidth="3" />
+      <text x="150" y="150" textAnchor="middle" fontSize="17" fontWeight="700" fill="#134e4a" fontFamily="sans-serif">
+        2 1/3 = 7/3
+      </text>
+    </svg>
+  );
+}
+
+function FractionOfQuantity() {
+  const cols = [60, 120, 180, 240];
+  const rows = [40, 80, 120];
+  return (
+    <svg viewBox="0 0 300 180" className="h-full w-full" role="img" aria-label="A grid of twelve dots with nine of them highlighted, showing three quarters of twelve equals nine">
+      <rect width="300" height="180" fill="#fffbeb" />
+      {rows.map((y) =>
+        cols.map((x, colIndex) => (
+          <circle
+            key={`${x}-${y}`}
+            cx={x}
+            cy={y}
+            r="16"
+            fill={colIndex < 3 ? "#f59e0b" : "#ffffff"}
+            stroke="#92400e"
+            strokeWidth="3"
+          />
+        ))
+      )}
+      <text x="150" y="165" textAnchor="middle" fontSize="16" fontWeight="700" fill="#78350f" fontFamily="sans-serif">
+        3/4 of 12 = 9
+      </text>
+    </svg>
+  );
+}
+
+function PercentFractionDecimal() {
+  return (
+    <svg viewBox="0 0 300 180" className="h-full w-full" role="img" aria-label="Three connected circles labeled 50 percent, 1/2, and 0.5, showing they are equal values">
+      <rect width="300" height="180" fill="#f5f3ff" />
+      <line x1="150" y1="45" x2="70" y2="140" stroke="#6d28d9" strokeWidth="3" />
+      <line x1="150" y1="45" x2="230" y2="140" stroke="#6d28d9" strokeWidth="3" />
+      <line x1="70" y1="140" x2="230" y2="140" stroke="#6d28d9" strokeWidth="3" />
+      <circle cx="150" cy="45" r="36" fill="#8b5cf6" />
+      <text x="150" y="52" textAnchor="middle" fontSize="15" fontWeight="700" fill="#ffffff" fontFamily="sans-serif">
+        50%
+      </text>
+      <circle cx="70" cy="140" r="36" fill="#8b5cf6" />
+      <text x="70" y="147" textAnchor="middle" fontSize="15" fontWeight="700" fill="#ffffff" fontFamily="sans-serif">
+        1/2
+      </text>
+      <circle cx="230" cy="140" r="36" fill="#8b5cf6" />
+      <text x="230" y="147" textAnchor="middle" fontSize="15" fontWeight="700" fill="#ffffff" fontFamily="sans-serif">
+        0.5
+      </text>
+    </svg>
+  );
+}
+
+function RatioBarModel() {
+  return (
+    <svg viewBox="0 0 300 180" className="h-full w-full" role="img" aria-label="A bar split into two blue segments and three orange segments, representing a ratio of 2 to 3">
+      <rect width="300" height="180" fill="#f8fafc" />
+      <text x="150" y="45" textAnchor="middle" fontSize="18" fontWeight="700" fill="#1e293b" fontFamily="sans-serif">
+        2 : 3
+      </text>
+      <rect x="30" y="60" width="48" height="50" fill="#3b82f6" stroke="#1e293b" strokeWidth="2" />
+      <rect x="78" y="60" width="48" height="50" fill="#3b82f6" stroke="#1e293b" strokeWidth="2" />
+      <rect x="126" y="60" width="48" height="50" fill="#f97316" stroke="#1e293b" strokeWidth="2" />
+      <rect x="174" y="60" width="48" height="50" fill="#f97316" stroke="#1e293b" strokeWidth="2" />
+      <rect x="222" y="60" width="48" height="50" fill="#f97316" stroke="#1e293b" strokeWidth="2" />
+      <text x="78" y="130" textAnchor="middle" fontSize="13" fontWeight="600" fill="#1e293b" fontFamily="sans-serif">
+        2 parts
+      </text>
+      <text x="198" y="130" textAnchor="middle" fontSize="13" fontWeight="600" fill="#1e293b" fontFamily="sans-serif">
+        3 parts
+      </text>
+    </svg>
+  );
+}
+
+function ProportionScaling() {
+  return (
+    <svg viewBox="0 0 300 180" className="h-full w-full" role="img" aria-label="One small square scaling up by 4 into a 2 by 2 grid of four squares, representing proportion">
+      <rect width="300" height="180" fill="#ecfdf5" />
+      <rect x="30" y="80" width="45" height="45" fill="#10b981" stroke="#065f46" strokeWidth="3" />
+      <text x="52" y="145" textAnchor="middle" fontSize="14" fontWeight="600" fill="#065f46" fontFamily="sans-serif">
+        1 unit
+      </text>
+      <line x1="90" y1="100" x2="175" y2="100" stroke="#065f46" strokeWidth="4" />
+      <path d="M175 100 L163 93 L163 107 Z" fill="#065f46" />
+      <text x="132" y="85" textAnchor="middle" fontSize="15" fontWeight="700" fill="#065f46" fontFamily="sans-serif">
+        x 4
+      </text>
+      <rect x="190" y="75" width="40" height="40" fill="#10b981" stroke="#065f46" strokeWidth="3" />
+      <rect x="235" y="75" width="40" height="40" fill="#10b981" stroke="#065f46" strokeWidth="3" />
+      <rect x="190" y="120" width="40" height="40" fill="#10b981" stroke="#065f46" strokeWidth="3" />
+      <rect x="235" y="120" width="40" height="40" fill="#10b981" stroke="#065f46" strokeWidth="3" />
+      <text x="232" y="175" textAnchor="middle" fontSize="14" fontWeight="600" fill="#065f46" fontFamily="sans-serif">
+        4 units
+      </text>
+    </svg>
+  );
+}
+
 const ILLUSTRATIONS: Record<string, () => JSX.Element> = {
   cockerel_hyena_fable: CockerelHyenaFable,
   implicit_meaning_clue: ImplicitMeaningClue,
@@ -282,6 +441,13 @@ const ILLUSTRATIONS: Record<string, () => JSX.Element> = {
   mood_setting_words: MoodSettingWords,
   adverb_ladder: AdverbLadder,
   writing_checklist_final: WritingChecklistFinal,
+  equivalent_fractions: EquivalentFractions,
+  comparing_fractions: ComparingFractions,
+  mixed_improper_fractions: MixedImproperFractions,
+  fraction_of_quantity: FractionOfQuantity,
+  percent_fraction_decimal: PercentFractionDecimal,
+  ratio_bar_model: RatioBarModel,
+  proportion_scaling: ProportionScaling,
 };
 
 export function Illustration({ illustrationKey }: { illustrationKey: string }) {
