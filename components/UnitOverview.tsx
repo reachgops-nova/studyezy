@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import type { CurriculumUnit } from "@/lib/types";
 import type { ResourceGroup } from "@/lib/queries/unitResources";
 import UnitResources from "./UnitResources";
-import ImageLightbox from "./ImageLightbox";
+import Booklet from "./Booklet";
 
 export default function UnitOverview({
   unit,
@@ -178,11 +178,10 @@ export default function UnitOverview({
         {uploadSuccess && <p className="mt-2 text-sm text-green-600">✓ {uploadSuccess}</p>}
 
         {pageImages.length > 0 ? (
-          <ImageLightbox
+          <Booklet
             images={pageImages}
             alt={(i) => `Textbook page ${i + 1} for ${unit.unit_title}`}
-            className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3"
-            imgClassName="w-full rounded-xl border border-slate-200 object-cover aspect-square"
+            className="mt-3"
           />
         ) : (
           <div className="mt-3 rounded-xl border border-dashed border-slate-300 bg-slate-50 p-4 text-sm text-slate-500">

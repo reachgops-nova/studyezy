@@ -7,7 +7,7 @@ import AvatarChat from "./AvatarChat";
 import UnitOverview from "./UnitOverview";
 import UnitDiagnostic from "./UnitDiagnostic";
 import VocabPractice from "./VocabPractice";
-import ImageLightbox from "./ImageLightbox";
+import Booklet from "./Booklet";
 
 type Stage = "overview" | "warmup" | "diagnostic" | "lesson";
 
@@ -67,11 +67,10 @@ export default function UnitView({
               The actual textbook page{pageImages.length > 1 ? "s" : ""} for this unit - tap to zoom in and read it
               clearly.
             </p>
-            <ImageLightbox
+            <Booklet
               images={pageImages}
               alt={(i) => `Textbook page ${i + 1} for ${unit.unit_title}`}
-              className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3"
-              imgClassName="w-full rounded-xl border border-slate-200 object-contain bg-slate-50"
+              className="mt-3"
             />
           </div>
         )}
