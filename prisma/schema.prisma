@@ -188,6 +188,15 @@ model Concept {
   voiceQaSamples            Json?
   illustrationKey           String?
   sourceImagePath           String?
+  // A precise transcript of what's actually printed on sourceImagePath -
+  // generated once via Claude vision when the image is linked (see
+  // lib/conceptImageTranscription.ts), never re-derived per question. Without
+  // this, askConceptQuestion/askConceptQuestionGroq only know the
+  // hand-authored definition/key_points/examples text, not the specific
+  // content of the real reference page they're displaying, so a student
+  // asking about something visible in the picture ("solve no 6 above") got
+  // "I'm not able to see the picture" - a real gap reported 2026-08-22.
+  sourceImageTranscript     String?  @db.Text
   illustrationCaption       String?
   // Extra visual analogies (e.g. a pizza AND a bar model for fractions),
   // beyond the one primary illustration shown on the lesson card - lets the

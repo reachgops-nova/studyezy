@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
 import { getCurrentAdmin } from "@/lib/session";
 import { clearAnswerCache } from "@/lib/answerCache";
+import { transcribeAndSaveConceptImage } from "@/lib/conceptImageTranscription";
 
 export async function approveResource(formData: FormData) {
   const admin = await getCurrentAdmin();
@@ -48,8 +49,28 @@ export async function assignConceptImage(formData: FormData) {
   if (conceptId) {
     await db.concept.update({
       where: { id: conceptId },
-      data: { sourceImagePath: storageKey ? `/api/uploads/${storageKey}` : null },
+      data: {
+        sourceImagePath: storageKey ? `/api/uploads/${storageKey}` : null,
+        // Clear the old transcript immediately on unassign/reassign so a
+        // stale transcript from a previous image never lingers and gets fed
+        // to the AI as if it described the new (or no) picture.
+        sourceImageTranscript: null,
+      },
     });
+
+    // Best-effort: transcribe the newly-linked page so the AI tutor can
+    // answer questions about its specific content (see
+    // lib/conceptImageTranscription.ts). Awaited so the admin sees it take
+    // effect immediately, but never blocks the actual image assignment - if
+    // Claude is briefly unavailable, the image still saves and can be
+    // backfilled later via the same helper.
+    if (storageKey) {
+      try {
+        await transcribeAndSaveConceptImage(conceptId, storageKey);
+      } catch (err) {
+        console.error("transcribeAndSaveConceptImage failed", err);
+      }
+    }
   }
   redirect(`/admin/resources?unitKey=${unitKey}`);
 }

@@ -65,6 +65,9 @@ export async function askConceptQuestion(
     concept.definition ? `Definition: ${concept.definition}` : null,
     concept.key_points?.length ? `Key points:\n${concept.key_points.map((p) => `- ${p}`).join("\n")}` : null,
     concept.examples?.length ? `Examples:\n${concept.examples.map((e) => `- ${e}`).join("\n")}` : null,
+    concept.media?.source_image_transcript
+      ? `The picture shown above this chat is the actual reference page for this concept. Here is exactly what's printed on it, so you can answer questions about its specific content:\n${concept.media.source_image_transcript}`
+      : null,
   ]
     .filter(Boolean)
     .join("\n\n");
@@ -269,6 +272,51 @@ export interface UploadedPageImage {
   path: string; // public URL, e.g. /uploads/{unitKey}/xyz.jpg
   mediaType: "image/jpeg" | "image/png" | "image/webp";
   base64: string;
+}
+
+const TRANSCRIBE_SYSTEM_PROMPT = `You transcribe the printed content of a textbook/workbook page image, precisely and completely, for a tutoring app to use as reference when answering a student's questions about this exact page.
+
+Preserve:
+- Any question/exercise numbering exactly as printed (e.g. "6.", "a)", "Q3")
+- All specific numbers, fractions, values, words, and answer options exactly as printed
+- Section headers or instructions, in reading order
+
+Do NOT solve or answer any of the questions, and do NOT add commentary or explanation - just transcribe what is printed.
+
+If there is handwriting, pencil marks, or teacher's red-pen marks on the page, IGNORE them completely and transcribe only the originally-printed content - never transcribe a handwritten answer, even partially. This is critical: some pages are a student's own completed homework, and showing them their own past answer would defeat the point of using it for fresh practice.
+
+Respond with ONLY the transcript as plain text, no preamble, no markdown fences, no commentary.`;
+
+/**
+ * Transcribes a real reference page's printed content once, so it can be
+ * baked into a concept's context permanently (see
+ * lib/conceptImageTranscription.ts) instead of re-sent as an image on every
+ * single student question - far cheaper and faster, and fixes a real gap
+ * where the AI tutor had no idea what was actually on the picture it was
+ * showing (reported 2026-08-22: "I'm not able to see the picture you're
+ * referring to").
+ */
+export async function transcribeReferencePage(image: UploadedPageImage): Promise<string> {
+  const response = await getClient().messages.create({
+    model: EXTRACTION_MODEL,
+    max_tokens: 1500,
+    system: TRANSCRIBE_SYSTEM_PROMPT,
+    messages: [
+      {
+        role: "user",
+        content: [
+          {
+            type: "image" as const,
+            source: { type: "base64" as const, media_type: image.mediaType, data: image.base64 },
+          },
+        ],
+      },
+    ],
+  });
+
+  logAiCost("transcribe", EXTRACTION_MODEL, response.usage.input_tokens, response.usage.output_tokens);
+  const textBlock = response.content.find((block) => block.type === "text");
+  return textBlock && textBlock.type === "text" ? textBlock.text.trim() : "";
 }
 
 // Static instructional half of the extraction prompt - identical on every

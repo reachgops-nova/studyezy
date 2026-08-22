@@ -29,6 +29,8 @@ export interface ConceptMedia {
   illustration_key?: string;
   /** A real uploaded textbook page photo (/uploads/{unitKey}/...) - takes priority over illustration_key when set, since it's the actual source page. */
   source_image_path?: string;
+  /** Precise transcript of source_image_path's printed content, generated once via Claude vision when the image is linked - lets the AI tutor answer questions about what's specifically on the page, not just the hand-authored concept text. */
+  source_image_transcript?: string;
   illustration_caption?: string;
   /** Real video needs a licensed/production content pipeline - not built yet, so the UI shows a clearly-labeled placeholder instead. */
   video_status: "not_planned" | "coming_soon";

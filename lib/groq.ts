@@ -152,6 +152,9 @@ export async function askConceptQuestionGroq(
     concept.definition ? `Definition: ${concept.definition}` : null,
     concept.key_points?.length ? `Key points:\n${concept.key_points.map((p) => `- ${p}`).join("\n")}` : null,
     concept.examples?.length ? `Examples:\n${concept.examples.map((e) => `- ${e}`).join("\n")}` : null,
+    concept.media?.source_image_transcript
+      ? `The picture shown above this chat is the actual reference page for this concept. Here is exactly what's printed on it, so you can answer questions about its specific content:\n${concept.media.source_image_transcript}`
+      : null,
   ]
     .filter(Boolean)
     .join("\n\n");
@@ -223,6 +226,9 @@ export async function askConceptQuestionGroqWithUsage(
     concept.definition ? `Definition: ${concept.definition}` : null,
     concept.key_points?.length ? `Key points:\n${concept.key_points.map((p) => `- ${p}`).join("\n")}` : null,
     concept.examples?.length ? `Examples:\n${concept.examples.map((e) => `- ${e}`).join("\n")}` : null,
+    concept.media?.source_image_transcript
+      ? `The picture shown above this chat is the actual reference page for this concept. Here is exactly what's printed on it, so you can answer questions about its specific content:\n${concept.media.source_image_transcript}`
+      : null,
   ]
     .filter(Boolean)
     .join("\n\n");

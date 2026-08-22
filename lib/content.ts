@@ -27,6 +27,7 @@ function toDrafted(c: DbConcept): Concept {
     media: {
       illustration_key: c.illustrationKey ?? undefined,
       source_image_path: c.sourceImagePath ?? undefined,
+      source_image_transcript: c.sourceImageTranscript ?? undefined,
       illustration_caption: c.illustrationCaption ?? undefined,
       video_status: c.videoStatus as "not_planned" | "coming_soon",
       alternate_illustrations:
