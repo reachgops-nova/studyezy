@@ -1,6 +1,6 @@
 import "server-only";
 import type { Concept, MarkScheme, VocabItem } from "./types";
-import type { GradeResult, ReasoningClassification, ReasoningResult } from "./claude";
+import type { GradeResult, ReasoningClassification, ReasoningResult, UploadedPageImage } from "./claude";
 import { logAiCost } from "./aiCost";
 
 // Groq hosts open-weight models (Llama etc.) behind a fast, OpenAI-compatible
@@ -264,6 +264,68 @@ export async function askConceptQuestionGroqWithUsage(
     // closer analog (minimal reasoning overhead, same intent as "low" here).
     model === QWEN_MODEL ? "none" : "low"
   );
+}
+
+const TRANSCRIBE_SYSTEM_PROMPT = `You transcribe the printed content of a textbook/workbook page image, precisely and completely, for a tutoring app to use as reference when answering a student's questions about this exact page.
+
+Preserve:
+- Any question/exercise numbering exactly as printed (e.g. "6.", "a)", "Q3")
+- All specific numbers, fractions, values, words, and answer options exactly as printed
+- Section headers or instructions, in reading order
+
+Do NOT solve or answer any of the questions, and do NOT add commentary or explanation - just transcribe what is printed.
+
+If there is handwriting, pencil marks, or teacher's red-pen marks on the page, IGNORE them completely and transcribe only the originally-printed content - never transcribe a handwritten answer, even partially. This is critical: some pages are a student's own completed homework, and showing them their own past answer would defeat the point of using it for fresh practice.
+
+Respond with ONLY the transcript as plain text, no preamble, no markdown fences, no commentary.`;
+
+/**
+ * Same contract/prompt as lib/claude.ts's transcribeReferencePage, using
+ * Qwen3.6-27B on Groq (confirmed multimodal - verified live 2026-08-22 via
+ * the OpenAI-compatible image_url content block, same format documented at
+ * console.groq.com). This is the PRIMARY path, not just a fallback: this
+ * deployment currently has no ANTHROPIC_API_KEY configured at all (real
+ * Anthropic-credit gap, same root cause documented in app/api/ask/route.ts),
+ * so a Claude-only transcription function would silently never run. See
+ * lib/conceptImageTranscription.ts for the Groq-first/Claude-fallback tiering.
+ */
+export async function transcribeReferencePageGroq(image: UploadedPageImage): Promise<string> {
+  const res = await fetch(GROQ_API_URL, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${process.env.GROQ_API_KEY}`,
+    },
+    body: JSON.stringify({
+      model: QWEN_MODEL,
+      max_tokens: 1500,
+      temperature: 0.2,
+      reasoning_effort: "none",
+      messages: [
+        { role: "system", content: TRANSCRIBE_SYSTEM_PROMPT },
+        {
+          role: "user",
+          content: [
+            { type: "image_url", image_url: { url: `data:${image.mediaType};base64,${image.base64}` } },
+            { type: "text", text: "Transcribe this page." },
+          ],
+        },
+      ],
+    }),
+  });
+
+  if (!res.ok) {
+    throw new Error(`Groq vision request failed: ${res.status} ${await res.text()}`);
+  }
+
+  const data = (await res.json()) as {
+    choices?: { message?: { content?: string } }[];
+    usage?: { prompt_tokens?: number; completion_tokens?: number };
+  };
+  if (data.usage) logAiCost("transcribe", QWEN_MODEL, data.usage.prompt_tokens ?? 0, data.usage.completion_tokens ?? 0);
+  const text = data.choices?.[0]?.message?.content?.trim();
+  if (!text) throw new Error("Groq returned no transcript content");
+  return text;
 }
 
 /**

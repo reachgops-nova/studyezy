@@ -3,6 +3,7 @@ import { getCurrentAdmin } from "@/lib/session";
 import { db } from "@/lib/db";
 import { transcribeAndSaveConceptImage } from "@/lib/conceptImageTranscription";
 import { isConfigured } from "@/lib/claude";
+import { isGroqConfigured } from "@/lib/groq";
 
 // Admin-only utility: (re)generates the transcript for a concept's already-
 // linked reference image. assignConceptImage (app/admin/resources/actions.ts)
@@ -17,8 +18,8 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Admin only." }, { status: 403 });
   }
 
-  if (!isConfigured()) {
-    return NextResponse.json({ error: "Transcription isn't configured - ANTHROPIC_API_KEY missing." }, { status: 503 });
+  if (!isGroqConfigured() && !isConfigured()) {
+    return NextResponse.json({ error: "Transcription isn't configured - no GROQ_API_KEY or ANTHROPIC_API_KEY." }, { status: 503 });
   }
 
   let body: unknown;
