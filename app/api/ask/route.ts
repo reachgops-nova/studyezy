@@ -5,6 +5,8 @@ import { askConceptQuestion, isConfigured } from "@/lib/claude";
 import { askConceptQuestionGroq, isGroqConfigured, suggestFollowUpsGroq } from "@/lib/groq";
 import { findLocalAnswer } from "@/lib/localAnswers";
 import { checkRateLimit } from "@/lib/rateLimit";
+import { getCachedAnswer, saveCachedAnswer } from "@/lib/answerCache";
+import { logCacheHit } from "@/lib/aiCost";
 import type { Concept } from "@/lib/types";
 
 // Follow-up suggestions are a UI nicety (evolving quick-reply chips), not the
@@ -80,6 +82,17 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Concept not found." }, { status: 404 });
   }
 
+  // Checked before any model call - a repeated or near-identical question
+  // (same wording, different casing/punctuation), asked by a *different*
+  // kid on the same concept, is served free instead of triggering a new
+  // Groq/Claude call. See lib/answerCache.ts for the matching rules.
+  const cached = await getCachedAnswer(unitKey, concept.concept_id, resolvedLanguage, question);
+  if (cached) {
+    logCacheHit("ask");
+    const followUps = await tryFollowUps(concept, question, cached.answer);
+    return NextResponse.json({ answer: cached.answer, source: "cache", followUps });
+  }
+
   // 2026-08-20: reordered to Groq-first, Claude-fallback (was the reverse).
   // This is the highest-frequency AI call in the app (every voice question,
   // every checkpoint-pause follow-up), so it's the one place where the tier
@@ -99,6 +112,7 @@ export async function POST(req: NextRequest) {
   if (isGroqConfigured()) {
     try {
       const answer = await askConceptQuestionGroq(concept, question, resolvedLanguage, unit.subject);
+      await saveCachedAnswer(unitKey, concept.concept_id, resolvedLanguage, question, answer);
       const followUps = await tryFollowUps(concept, question, answer);
       return NextResponse.json({ answer, source: "ai-groq", followUps });
     } catch (err) {
@@ -109,6 +123,7 @@ export async function POST(req: NextRequest) {
   if (isConfigured()) {
     try {
       const answer = await askConceptQuestion(concept, question, resolvedLanguage, unit.subject);
+      await saveCachedAnswer(unitKey, concept.concept_id, resolvedLanguage, question, answer);
       const followUps = await tryFollowUps(concept, question, answer);
       return NextResponse.json({ answer, source: "ai", followUps });
     } catch (err) {

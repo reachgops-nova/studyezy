@@ -3,6 +3,7 @@
 import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
 import { getCurrentAdmin } from "@/lib/session";
+import { clearAnswerCache } from "@/lib/answerCache";
 
 export async function approveResource(formData: FormData) {
   const admin = await getCurrentAdmin();
@@ -49,6 +50,20 @@ export async function assignConceptImage(formData: FormData) {
       where: { id: conceptId },
       data: { sourceImagePath: storageKey ? `/api/uploads/${storageKey}` : null },
     });
+  }
+  redirect(`/admin/resources?unitKey=${unitKey}`);
+}
+
+// Operational safety valve for a wrong/stale cached answer (lib/answerCache.ts) -
+// clears every cached AI answer for this unit, so the next matching
+// question generates a fresh one instead of reusing a bad cache entry.
+export async function clearUnitAnswerCache(formData: FormData) {
+  const admin = await getCurrentAdmin();
+  if (!admin) redirect("/select");
+
+  const unitKey = String(formData.get("unitKey") ?? "");
+  if (unitKey) {
+    await clearAnswerCache(unitKey);
   }
   redirect(`/admin/resources?unitKey=${unitKey}`);
 }

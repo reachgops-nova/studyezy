@@ -27,3 +27,13 @@ export function logAiCost(feature: string, model: string, inputTokens: number, o
       `cost_usd=${costUsd !== null ? costUsd.toFixed(6) : "unknown"}`
   );
 }
+
+/**
+ * Same log line shape as logAiCost, for a request served from
+ * lib/answerCache.ts instead of a real model call - so cache savings show
+ * up in the exact same `railway logs` grep as real cost, not a separate
+ * metric nobody looks at.
+ */
+export function logCacheHit(feature: string): void {
+  console.log(`[ai-cost] feature=${feature} model=cache in_tokens=0 out_tokens=0 cost_usd=0.000000`);
+}

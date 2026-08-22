@@ -11,7 +11,7 @@ import AppShell from "@/components/AppShell";
 import ResourceUploadButton from "@/components/ResourceUploadButton";
 import GeneratePaperButton from "@/components/GeneratePaperButton";
 import ConfirmSubmitButton from "@/components/ConfirmSubmitButton";
-import { approveResource, rejectResource, assignConceptImage } from "./actions";
+import { approveResource, rejectResource, assignConceptImage, clearUnitAnswerCache } from "./actions";
 
 export default async function AdminResourcesPage({
   searchParams,
@@ -37,13 +37,14 @@ export default async function AdminResourcesPage({
   );
 
   const unitRow = selectedUnitKey ? await db.unit.findUnique({ where: { unitKey: selectedUnitKey } }) : null;
-  const [groups, paperSummaries, conceptImages] = unitRow
+  const [groups, paperSummaries, conceptImages, cachedAnswerCount] = unitRow
     ? await Promise.all([
         getUnitResourceGroups(unitRow.id),
         getQuestionPaperSummaries(unitRow.id),
         getConceptImageAssignmentData(unitRow.id),
+        db.answerCache.count({ where: { unitKey: unitRow.unitKey } }),
       ])
-    : [null, null, null];
+    : [null, null, null, null];
 
   return (
     <AppShell profile={profile} active="admin-resources" isAdmin>
@@ -280,6 +281,31 @@ export default async function AdminResourcesPage({
               })}
             </ul>
           )}
+        </div>
+      )}
+
+      {unitRow && cachedAnswerCount !== null && (
+        <div className="rounded-2xl border border-slate-200/70 bg-white p-4 shadow-soft">
+          <h2 className="font-semibold text-slate-800">AI answer cache</h2>
+          <p className="mt-1 text-xs text-slate-500">
+            Repeated or near-identical questions on this unit are answered from a saved copy instead of a new AI
+            call. Clear it if a cached answer turns out to be wrong or outdated - the next matching question will
+            generate a fresh one.
+          </p>
+          <div className="mt-3 flex items-center justify-between gap-3">
+            <span className="text-sm text-slate-600">
+              {cachedAnswerCount} cached answer{cachedAnswerCount === 1 ? "" : "s"} for this unit
+            </span>
+            <form action={clearUnitAnswerCache}>
+              <input type="hidden" name="unitKey" value={unitRow.unitKey} />
+              <ConfirmSubmitButton
+                confirmMessage="Clear every cached answer for this unit? The next matching question will call the AI again."
+                className="rounded-lg border border-slate-300 px-2.5 py-1.5 text-xs font-medium text-slate-600 hover:bg-slate-50 disabled:opacity-50"
+              >
+                Clear cached answers
+              </ConfirmSubmitButton>
+            </form>
+          </div>
         </div>
       )}
     </AppShell>

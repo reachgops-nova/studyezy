@@ -349,6 +349,31 @@ model PricingPlan {
   @@unique([curriculumLabel, gradeBandLabel])
 }
 
+// Caches AI-generated answers to student questions so a repeated or
+// near-identical question - asked by a *different* kid, on the same
+// concept - is served free instead of triggering a new Groq/Claude call
+// (PLATFORM_PLAN.md, 2026-08-22 caching entry). Keyed by plain strings
+// (unitKey/conceptKey), not a real foreign key to Unit/Concept -
+// getUnit()'s returned shape doesn't expose the raw Prisma row id, and
+// resolving it would cost an extra DB round-trip on the app's single
+// hottest endpoint (/api/ask). Orphaned rows if a concept is ever deleted
+// are harmless - they just never get hit again.
+model AnswerCache {
+  id                 String   @id @default(cuid())
+  unitKey            String
+  conceptKey         String
+  language           String
+  normalizedQuestion String // lowercased/trimmed/punctuation-stripped - the actual match key
+  originalQuestion   String // first real question that produced this entry, for admin visibility
+  answer             String   @db.Text
+  hitCount           Int      @default(1)
+  createdAt          DateTime @default(now())
+  lastUsedAt         DateTime @default(now())
+
+  @@unique([unitKey, conceptKey, language, normalizedQuestion])
+  @@index([unitKey, conceptKey])
+}
+
 // Foundation for future adaptive personalization - logging only, no adaptive
 // behavior-change logic built on top of this yet (deliberately deferred).
 model InteractionEvent {
