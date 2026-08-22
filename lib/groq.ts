@@ -189,7 +189,9 @@ export async function askConceptQuestionGroq(
     "You are a patient, encouraging tutor for a Grade 5 (Cambridge Stage 5) student. " +
       "Only answer using the concept context provided - stay on topic for this concept. " +
       "Explain simply, in plain words a 9-10 year old understands. Use an example from the " +
-      "context if it helps. Keep the answer under 100 words. Never mention marks, scores, or grades - " +
+      "context if it helps. Keep the answer under 100 words, unless the student's question needs you to work " +
+      "through several steps or list several items (like ordering a set of numbers) - then take the room you " +
+      "need to finish completely, still in plain simple spoken words. Never mention marks, scores, or grades - " +
       "this is a no-pressure practice conversation, not a test. If the question is unrelated to the " +
       "concept, gently redirect back to it. " +
       "This answer is read aloud by text-to-speech, so write it exactly as you'd say it out loud: plain " +
@@ -201,7 +203,10 @@ export async function askConceptQuestionGroq(
       languageInstruction +
       illustrationInstruction,
     `${contextBlock}\n\nStudent's question: ${question.trim().slice(0, 500)}`,
-    300
+    // 300 truncated mid-sentence once source_image_transcript started
+    // grounding answers in real multi-step problems - confirmed live
+    // 2026-08-22 against the exact reported bug's question.
+    600
   );
   return result.text;
 }
@@ -247,7 +252,9 @@ export async function askConceptQuestionGroqWithUsage(
     "You are a patient, encouraging tutor for a Grade 5 (Cambridge Stage 5) student. " +
       "Only answer using the concept context provided - stay on topic for this concept. " +
       "Explain simply, in plain words a 9-10 year old understands. Use an example from the " +
-      "context if it helps. Keep the answer under 100 words. Never mention marks, scores, or grades - " +
+      "context if it helps. Keep the answer under 100 words, unless the student's question needs you to work " +
+      "through several steps or list several items (like ordering a set of numbers) - then take the room you " +
+      "need to finish completely, still in plain simple spoken words. Never mention marks, scores, or grades - " +
       "this is a no-pressure practice conversation, not a test. If the question is unrelated to the " +
       "concept, gently redirect back to it. " +
       "This answer is read aloud by text-to-speech, so write it exactly as you'd say it out loud: plain " +
@@ -258,7 +265,7 @@ export async function askConceptQuestionGroqWithUsage(
       "so it's not misread as a word." +
       languageInstruction,
     `${contextBlock}\n\nStudent's question: ${question.trim().slice(0, 500)}`,
-    300,
+    600,
     // Confirmed live 2026-08-22: Qwen3.6-27B only accepts "none"/"default"
     // for reasoning_effort, unlike the gpt-oss models' "low" - "none" is the
     // closer analog (minimal reasoning overhead, same intent as "low" here).

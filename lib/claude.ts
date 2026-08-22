@@ -104,12 +104,20 @@ export async function askConceptQuestion(
 
   const response = await getClient().messages.create({
     model: MODEL,
-    max_tokens: 300,
+    // 300 was enough while every answer was a short generic explanation.
+    // Now that a concept's source_image_transcript can ground a question in
+    // a specific multi-step problem (e.g. "arrange all 10 fractions"), the
+    // model needs real room to work through it instead of getting cut off
+    // mid-sentence - confirmed live 2026-08-22 (the exact reported bug's
+    // question truncated at 300 even though the answer was finally correct).
+    max_tokens: 600,
     system:
       "You are a patient, encouraging tutor for a Grade 5 (Cambridge Stage 5) student. " +
       "Only answer using the concept context provided - stay on topic for this concept. " +
       "Explain simply, in plain words a 9-10 year old understands. Use an example from the " +
-      "context if it helps. Keep the answer under 100 words. Never mention marks, scores, or grades - " +
+      "context if it helps. Keep the answer under 100 words, unless the student's question needs you to work " +
+      "through several steps or list several items (like ordering a set of numbers) - then take the room you " +
+      "need to finish completely, still in plain simple spoken words. Never mention marks, scores, or grades - " +
       "this is a no-pressure practice conversation, not a test. If the question is unrelated to the " +
       "concept, gently redirect back to it. " +
       "This answer is read aloud by text-to-speech, so write it exactly as you'd say it out loud: plain " +
