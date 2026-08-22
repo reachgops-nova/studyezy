@@ -49,7 +49,8 @@ async function groqChat(
   model: string,
   system: string,
   user: string,
-  maxTokens: number
+  maxTokens: number,
+  reasoningEffort: string = "low"
 ): Promise<GroqChatResult> {
   const res = await fetch(GROQ_API_URL, {
     method: "POST",
@@ -67,8 +68,11 @@ async function groqChat(
       // consumed entirely by the reasoning trace, leaving empty content
       // (finish_reason: "length"). "low" leaves reasoning brief enough that
       // the actual answer reliably fits within these small, latency-
-      // sensitive interactive-call budgets.
-      reasoning_effort: "low",
+      // sensitive interactive-call budgets. Not every model accepts "low"
+      // though - confirmed live 2026-08-22 that qwen/qwen3.6-27b rejects it
+      // (400: "must be one of `none` or `default`"), so this is a per-call
+      // param, not a hardcoded constant.
+      reasoning_effort: reasoningEffort,
       messages: [
         { role: "system", content: system },
         { role: "user", content: user },
@@ -248,7 +252,11 @@ export async function askConceptQuestionGroqWithUsage(
       "so it's not misread as a word." +
       languageInstruction,
     `${contextBlock}\n\nStudent's question: ${question.trim().slice(0, 500)}`,
-    300
+    300,
+    // Confirmed live 2026-08-22: Qwen3.6-27B only accepts "none"/"default"
+    // for reasoning_effort, unlike the gpt-oss models' "low" - "none" is the
+    // closer analog (minimal reasoning overhead, same intent as "low" here).
+    model === QWEN_MODEL ? "none" : "low"
   );
 }
 
