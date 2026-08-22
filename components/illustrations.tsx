@@ -427,6 +427,30 @@ function ProportionScaling() {
   );
 }
 
+function PizzaFractionSlices() {
+  return (
+    <svg viewBox="0 0 300 180" className="h-full w-full" role="img" aria-label="Two pizzas cut into slices - one cut in half with one slice shaded, another cut into quarters with two slices shaded, showing 1/2 equals 2/4">
+      <rect width="300" height="180" fill="#fff7ed" />
+      <circle cx="75" cy="82" r="60" fill="#ffe8d1" stroke="#9a3412" strokeWidth="4" />
+      <path d="M75,82 L75,22 A60,60 0 0,0 75,142 Z" fill="#f97316" stroke="#9a3412" strokeWidth="3" />
+      <text x="75" y="168" textAnchor="middle" fontSize="16" fontWeight="600" fill="#7c2d12" fontFamily="sans-serif">
+        1/2
+      </text>
+      <text x="150" y="90" textAnchor="middle" fontSize="26" fontWeight="700" fill="#7c2d12" fontFamily="sans-serif">
+        =
+      </text>
+      <circle cx="225" cy="82" r="60" fill="#ffe8d1" stroke="#9a3412" strokeWidth="4" />
+      <path d="M225,82 L225,22 A60,60 0 0,0 165,82 Z" fill="#f97316" stroke="#9a3412" strokeWidth="3" />
+      <path d="M225,82 L165,82 A60,60 0 0,0 225,142 Z" fill="#f97316" stroke="#9a3412" strokeWidth="3" />
+      <line x1="225" y1="22" x2="225" y2="142" stroke="#9a3412" strokeWidth="3" />
+      <line x1="165" y1="82" x2="285" y2="82" stroke="#9a3412" strokeWidth="3" />
+      <text x="225" y="168" textAnchor="middle" fontSize="16" fontWeight="600" fill="#7c2d12" fontFamily="sans-serif">
+        2/4
+      </text>
+    </svg>
+  );
+}
+
 const ILLUSTRATIONS: Record<string, () => JSX.Element> = {
   cockerel_hyena_fable: CockerelHyenaFable,
   implicit_meaning_clue: ImplicitMeaningClue,
@@ -448,7 +472,16 @@ const ILLUSTRATIONS: Record<string, () => JSX.Element> = {
   percent_fraction_decimal: PercentFractionDecimal,
   ratio_bar_model: RatioBarModel,
   proportion_scaling: ProportionScaling,
+  pizza_fraction_slices: PizzaFractionSlices,
 };
+
+// Lets callers check a key is real before rendering a wrapper around it -
+// Illustration itself silently returns null for an unknown key, which is
+// fine for a full-card slot but would leave an empty box if wrapped in a
+// fixed-aspect chat bubble (see AvatarChat.tsx's inline illustration token).
+export function hasIllustration(illustrationKey: string): boolean {
+  return illustrationKey in ILLUSTRATIONS;
+}
 
 export function Illustration({ illustrationKey }: { illustrationKey: string }) {
   const Component = ILLUSTRATIONS[illustrationKey];

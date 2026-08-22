@@ -136,6 +136,22 @@ export async function askConceptQuestionGroq(
         `they still pick up the English vocabulary for it.`
       : "";
 
+  // Lets the tutor actually show a matching picture instead of just
+  // describing one in words when a student asks to see/draw something - a
+  // real gap reported 2026-08-22 (a kid asked for a pizza picture and got
+  // told "I'm not able to share a picture" even though a matching one
+  // exists). Only added when the concept actually has alternates configured.
+  const alternates = concept.media?.alternate_illustrations ?? [];
+  const illustrationInstruction = alternates.length
+    ? ` Special exception to the plain-prose rule: if the student asks to see, show, or draw a picture, image, or ` +
+      `diagram, and one of these matches what you're explaining - ${alternates
+        .map((a) => `"${a.illustration_key}" (${a.caption})`)
+        .join(", ")} - include the exact token [[illustration:KEY]] once, anywhere in your answer, using one of ` +
+      `those exact keys (never invent one). This token is stripped out before the answer is shown or read aloud, ` +
+      `so it's fine to include even though everything else must be spoken-style prose. If nothing available ` +
+      `actually matches, just say in words that you don't have a matching picture for that.`
+    : "";
+
   return groqChat(
     "ask",
     QA_MODEL,
@@ -151,7 +167,8 @@ export async function askConceptQuestionGroq(
       "connectors instead, like 'First, ... Also, ... Finally, ...'. If you need to refer to a letter " +
       "pattern or suffix by itself (like -ly or -er), spell it as separated letters (e.g. 'the letters L, Y') " +
       "so it's not misread as a word." +
-      languageInstruction,
+      languageInstruction +
+      illustrationInstruction,
     `${contextBlock}\n\nStudent's question: ${question.trim().slice(0, 500)}`,
     300
   );

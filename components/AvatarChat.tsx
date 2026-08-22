@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import type { Concept } from "@/lib/types";
 import Avatar from "./Avatar";
-import { Illustration } from "./illustrations";
+import { Illustration, hasIllustration } from "./illustrations";
 import VoicePicker, { getSavedRate, getSavedVoiceName } from "./VoicePicker";
 
 interface SpeechRecognitionResultLike {
@@ -24,6 +24,22 @@ interface ChatMessage {
   id: string;
   sender: "avatar" | "kid";
   text: string;
+  illustrationKey?: string;
+}
+
+// Matches a [[illustration:some_key]] token the AI tutor can emit when a
+// student asks to see a picture and one of the concept's alternate
+// illustrations genuinely matches (see lib/claude.ts/lib/groq.ts's
+// illustrationInstruction) - stripped from the displayed/spoken text and
+// rendered as a real inline image instead.
+const ILLUSTRATION_TOKEN_RE = /\[\[illustration:([a-z0-9_]+)\]\]/i;
+
+function extractIllustrationToken(raw: string): { text: string; illustrationKey?: string } {
+  const match = raw.match(ILLUSTRATION_TOKEN_RE);
+  if (!match) return { text: raw };
+  const key = match[1];
+  const text = raw.replace(ILLUSTRATION_TOKEN_RE, "").replace(/\s{2,}/g, " ").trim();
+  return { text, illustrationKey: hasIllustration(key) ? key : undefined };
 }
 
 let messageCounter = 0;
@@ -659,9 +675,10 @@ export default function AvatarChat({
       }
 
       const data = (await res.json()) as { answer: string; followUps?: string[] };
-      const cleanAnswer = stripMarkdown(data.answer);
+      const { text: withoutToken, illustrationKey } = extractIllustrationToken(data.answer);
+      const cleanAnswer = stripMarkdown(withoutToken);
       const answerId = nextId();
-      setMessages((prev) => [...prev, { id: answerId, sender: "avatar", text: cleanAnswer }]);
+      setMessages((prev) => [...prev, { id: answerId, sender: "avatar", text: cleanAnswer, illustrationKey }]);
       speakText(cleanAnswer, answerId, () => {}, languageInfo?.ttsCode);
       // Only replace the suggestions if fresh ones actually came back -
       // keep showing the last known-good list rather than going blank if
@@ -747,6 +764,11 @@ export default function AvatarChat({
                 <Avatar speaking={m.id === speakingMessageId} />
                 <div className="rounded-2xl rounded-tl-sm bg-white px-4 py-2 text-sm leading-relaxed text-slate-800 shadow-sm">
                   <HighlightedText text={m.text} range={m.id === speakingMessageId ? highlightRange : null} />
+                  {m.illustrationKey && (
+                    <div className="mt-2 aspect-[5/3] w-64 max-w-full overflow-hidden rounded-xl">
+                      <Illustration illustrationKey={m.illustrationKey} />
+                    </div>
+                  )}
                 </div>
               </div>
             ) : (

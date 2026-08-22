@@ -32,6 +32,8 @@ export interface ConceptMedia {
   illustration_caption?: string;
   /** Real video needs a licensed/production content pipeline - not built yet, so the UI shows a clearly-labeled placeholder instead. */
   video_status: "not_planned" | "coming_soon";
+  /** Extra visual analogies beyond the primary illustration - the AI tutor can insert one of these into the chat itself when a student asks to see a picture mid-conversation (see AvatarChat.tsx's illustration token). */
+  alternate_illustrations?: { illustration_key: string; caption: string }[];
 }
 
 export interface Concept {

@@ -29,6 +29,8 @@ function toDrafted(c: DbConcept): Concept {
       source_image_path: c.sourceImagePath ?? undefined,
       illustration_caption: c.illustrationCaption ?? undefined,
       video_status: c.videoStatus as "not_planned" | "coming_soon",
+      alternate_illustrations:
+        (c.alternateIllustrations as { illustration_key: string; caption: string }[] | null) ?? undefined,
     },
     source: c.source as "hand_authored" | "extracted",
   };

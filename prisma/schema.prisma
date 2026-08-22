@@ -189,6 +189,11 @@ model Concept {
   illustrationKey           String?
   sourceImagePath           String?
   illustrationCaption       String?
+  // Extra visual analogies (e.g. a pizza AND a bar model for fractions),
+  // beyond the one primary illustration shown on the lesson card - lets the
+  // AI tutor insert a matching picture into the chat itself when a student
+  // asks to see one mid-conversation. Array of {illustration_key, caption}.
+  alternateIllustrations    Json?
   videoStatus               String   @default("not_planned")
   source                    String   @default("hand_authored") // "hand_authored" | "extracted"
   orderIndex                Int      @default(0)
