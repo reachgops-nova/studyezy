@@ -66,6 +66,6 @@ export async function saveCachedAnswer(
 
 /** Operational safety valve for a wrong/stale cached answer - clears one unit's cache, or all of it. */
 export async function clearAnswerCache(unitKey?: string): Promise<number> {
-  const result = await db.answerCache.deleteMany(unitKey ? { where: { unitKey } } : {});
+  const result = await db.answerCache.deleteMany({ where: unitKey ? { unitKey } : {} });
   return result.count;
 }
