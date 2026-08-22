@@ -25,11 +25,32 @@ const GROQ_API_URL = "https://api.groq.com/openai/v1/chat/completions";
 const QA_MODEL = "openai/gpt-oss-120b";
 const REACTION_MODEL = "openai/gpt-oss-20b";
 
+// Real open-weight model (Qwen3.6-27B, released April 2026) hosted on Groq
+// like everything else in this file - not a self-hosted deployment, since
+// Railway (this app's host) has no GPU compute and its own docs say not to
+// try running even small models on CPU (verified 2026-08-22, not assumed).
+// Exposed for /admin/model-compare's side-by-side comparison against the
+// current QA_MODEL - not used on the live student-facing path unless that
+// comparison shows it's actually better.
+export const QWEN_MODEL = "qwen/qwen3.6-27b";
+
 export function isGroqConfigured(): boolean {
   return Boolean(process.env.GROQ_API_KEY);
 }
 
-async function groqChat(feature: string, model: string, system: string, user: string, maxTokens: number): Promise<string> {
+interface GroqChatResult {
+  text: string;
+  inputTokens: number;
+  outputTokens: number;
+}
+
+async function groqChat(
+  feature: string,
+  model: string,
+  system: string,
+  user: string,
+  maxTokens: number
+): Promise<GroqChatResult> {
   const res = await fetch(GROQ_API_URL, {
     method: "POST",
     headers: {
@@ -63,10 +84,12 @@ async function groqChat(feature: string, model: string, system: string, user: st
     choices?: { message?: { content?: string } }[];
     usage?: { prompt_tokens?: number; completion_tokens?: number };
   };
-  if (data.usage) logAiCost(feature, model, data.usage.prompt_tokens ?? 0, data.usage.completion_tokens ?? 0);
+  const inputTokens = data.usage?.prompt_tokens ?? 0;
+  const outputTokens = data.usage?.completion_tokens ?? 0;
+  if (data.usage) logAiCost(feature, model, inputTokens, outputTokens);
   const text = data.choices?.[0]?.message?.content?.trim();
   if (!text) throw new Error("Groq returned no content");
-  return text;
+  return { text, inputTokens, outputTokens };
 }
 
 // Same shape as groqChat, but requests structured JSON output - used by
@@ -117,7 +140,8 @@ export async function askConceptQuestionGroq(
   concept: Concept,
   question: string,
   language: string = "English",
-  subject: string = "English"
+  subject: string = "English",
+  modelOverride?: string
 ): Promise<string> {
   const contextBlock = [
     `Concept: ${concept.concept_name}`,
@@ -152,9 +176,9 @@ export async function askConceptQuestionGroq(
       `actually matches, just say in words that you don't have a matching picture for that.`
     : "";
 
-  return groqChat(
+  const result = await groqChat(
     "ask",
-    QA_MODEL,
+    modelOverride ?? QA_MODEL,
     "You are a patient, encouraging tutor for a Grade 5 (Cambridge Stage 5) student. " +
       "Only answer using the concept context provided - stay on topic for this concept. " +
       "Explain simply, in plain words a 9-10 year old understands. Use an example from the " +
@@ -169,6 +193,60 @@ export async function askConceptQuestionGroq(
       "so it's not misread as a word." +
       languageInstruction +
       illustrationInstruction,
+    `${contextBlock}\n\nStudent's question: ${question.trim().slice(0, 500)}`,
+    300
+  );
+  return result.text;
+}
+
+/**
+ * Same prompt/contract as askConceptQuestionGroq, but returns real token
+ * usage alongside the answer - used only by /admin/model-compare, which
+ * needs actual cost/latency numbers to compare, not another estimate.
+ * Kept separate from askConceptQuestionGroq's Promise<string> contract so
+ * the live student-facing call site (app/api/ask/route.ts) never has to
+ * change shape for a comparison-only need.
+ */
+export async function askConceptQuestionGroqWithUsage(
+  concept: Concept,
+  question: string,
+  language: string,
+  subject: string,
+  model: string
+): Promise<GroqChatResult> {
+  const contextBlock = [
+    `Concept: ${concept.concept_name}`,
+    concept.definition ? `Definition: ${concept.definition}` : null,
+    concept.key_points?.length ? `Key points:\n${concept.key_points.map((p) => `- ${p}`).join("\n")}` : null,
+    concept.examples?.length ? `Examples:\n${concept.examples.map((e) => `- ${e}`).join("\n")}` : null,
+  ]
+    .filter(Boolean)
+    .join("\n\n");
+
+  const languageInstruction =
+    language !== "English"
+      ? ` Respond in ${language}, not English - the student or parent needs this explanation in ${language} to ` +
+        `really understand it. When you use the important ${subject} term or vocabulary word being taught, say ` +
+        `the ${language} explanation first and then give that key term in English too (in parentheses), so ` +
+        `they still pick up the English vocabulary for it.`
+      : "";
+
+  return groqChat(
+    "model-compare",
+    model,
+    "You are a patient, encouraging tutor for a Grade 5 (Cambridge Stage 5) student. " +
+      "Only answer using the concept context provided - stay on topic for this concept. " +
+      "Explain simply, in plain words a 9-10 year old understands. Use an example from the " +
+      "context if it helps. Keep the answer under 100 words. Never mention marks, scores, or grades - " +
+      "this is a no-pressure practice conversation, not a test. If the question is unrelated to the " +
+      "concept, gently redirect back to it. " +
+      "This answer is read aloud by text-to-speech, so write it exactly as you'd say it out loud: plain " +
+      "prose only, no markdown at all (no **bold**, *italic*, #headers, or `code`), and no numbered or " +
+      "bulleted lists (no '1.' '2.' '-' markers) - if you're covering more than one point, use spoken " +
+      "connectors instead, like 'First, ... Also, ... Finally, ...'. If you need to refer to a letter " +
+      "pattern or suffix by itself (like -ly or -er), spell it as separated letters (e.g. 'the letters L, Y') " +
+      "so it's not misread as a word." +
+      languageInstruction,
     `${contextBlock}\n\nStudent's question: ${question.trim().slice(0, 500)}`,
     300
   );
@@ -270,7 +348,7 @@ export async function generateVocabPracticeGroq(): Promise<VocabItem[]> {
  * Reasoning Interview classification, which stay Claude-only.
  */
 export async function groqMicroCheckReaction(question: string, studentAnswer: string): Promise<string> {
-  return groqChat(
+  const result = await groqChat(
     "micro-check",
     REACTION_MODEL,
     "You are a warm Grade 5 tutor giving a ONE-sentence reaction to a student's spoken answer to a " +
@@ -281,6 +359,7 @@ export async function groqMicroCheckReaction(question: string, studentAnswer: st
     `Question asked: ${question}\n\nStudent's answer: ${studentAnswer.trim().slice(0, 500)}`,
     80
   );
+  return result.text;
 }
 
 // 2026-08-19: extended to grading and Reasoning Interview classification too

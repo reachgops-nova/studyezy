@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { signOut } from "@/app/login/actions";
-import { ChevronDownIcon, FolderPlusIcon, LogoutIcon, ShieldIcon, UsersIcon, ArchiveIcon, TagIcon } from "./NavIcons";
+import { ChevronDownIcon, FolderPlusIcon, LogoutIcon, ShieldIcon, UsersIcon, ArchiveIcon, TagIcon, ScaleIcon } from "./NavIcons";
 
 // Everything that isn't a daily-use action (Switch profile, adding
 // content, admin tools, sign out) lives behind one clearly-labeled menu
@@ -18,7 +18,7 @@ export default function AccountMenu({
 }: {
   profile: { avatarEmoji: string; displayName: string };
   isAdmin?: boolean;
-  active?: "manage" | "admin" | "admin-resources" | "admin-pricing";
+  active?: "manage" | "admin" | "admin-resources" | "admin-pricing" | "admin-compare";
 }) {
   const [open, setOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -81,6 +81,9 @@ export default function AccountMenu({
                 </MenuLink>
                 <MenuLink href="/admin/pricing" icon={<TagIcon />} isActive={active === "admin-pricing"}>
                   Pricing
+                </MenuLink>
+                <MenuLink href="/admin/model-compare" icon={<ScaleIcon />} isActive={active === "admin-compare"}>
+                  Model comparison
                 </MenuLink>
               </>
             )}

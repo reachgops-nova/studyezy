@@ -1,9 +1,9 @@
 import Link from "next/link";
 import Logo, { LogoMark } from "./Logo";
 import AccountMenu from "./AccountMenu";
-import { BookIcon, ChartIcon, ClipboardIcon, FolderPlusIcon, ShieldIcon, ArchiveIcon, TagIcon } from "./NavIcons";
+import { BookIcon, ChartIcon, ClipboardIcon, FolderPlusIcon, ShieldIcon, ArchiveIcon, TagIcon, ScaleIcon } from "./NavIcons";
 
-type NavKey = "select" | "dashboard" | "plan" | "manage" | "admin" | "admin-resources" | "admin-pricing";
+type NavKey = "select" | "dashboard" | "plan" | "manage" | "admin" | "admin-resources" | "admin-pricing" | "admin-compare";
 
 // Desktop (lg+): fixed left sidebar for primary nav + a slim top bar holding
 // just the account menu ("topside configurations"), main content to the
@@ -23,7 +23,11 @@ export default function AppShell({
   children: React.ReactNode;
 }) {
   const accountActive =
-    active === "manage" || active === "admin" || active === "admin-resources" || active === "admin-pricing"
+    active === "manage" ||
+    active === "admin" ||
+    active === "admin-resources" ||
+    active === "admin-pricing" ||
+    active === "admin-compare"
       ? active
       : undefined;
 
@@ -63,6 +67,9 @@ export default function AppShell({
                 </SidebarLink>
                 <SidebarLink href="/admin/pricing" isActive={active === "admin-pricing"} icon={<TagIcon />}>
                   Pricing
+                </SidebarLink>
+                <SidebarLink href="/admin/model-compare" isActive={active === "admin-compare"} icon={<ScaleIcon />}>
+                  Model comparison
                 </SidebarLink>
               </>
             )}

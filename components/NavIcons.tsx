@@ -89,6 +89,16 @@ export function TagIcon({ className = base }: IconProps) {
   );
 }
 
+export function ScaleIcon({ className = base }: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" className={className} fill="none" stroke="currentColor" strokeWidth="1.75" aria-hidden>
+      <path d="M12 3v18M8 21h8" strokeLinecap="round" />
+      <path d="M12 6 5 8l3.2 6.2a3.2 3.2 0 0 0 5.6 0L17 8l-7-2Z" strokeLinejoin="round" />
+      <path d="M5 8h0M17 8h0" strokeLinecap="round" />
+    </svg>
+  );
+}
+
 export function LogoutIcon({ className = base }: IconProps) {
   return (
     <svg viewBox="0 0 24 24" className={className} fill="none" stroke="currentColor" strokeWidth="1.75" aria-hidden>

@@ -13,15 +13,22 @@ const PRICE_PER_MILLION_USD: Record<string, { input: number; output: number }> =
   "claude-sonnet-5": { input: 2.0, output: 10.0 },
   "openai/gpt-oss-120b": { input: 0.15, output: 0.6 },
   "openai/gpt-oss-20b": { input: 0.075, output: 0.3 },
+  // Verified 2026-08-22 against console.groq.com/docs/model/qwen/qwen3.6-27b
+  "qwen/qwen3.6-27b": { input: 0.6, output: 3.0 },
 };
+
+/** Shared by logAiCost and anything else (e.g. /admin/model-compare) that needs the same real per-call number. */
+export function estimateCostUsd(model: string, inputTokens: number, outputTokens: number): number | null {
+  const price = PRICE_PER_MILLION_USD[model];
+  return price ? (inputTokens / 1_000_000) * price.input + (outputTokens / 1_000_000) * price.output : null;
+}
 
 /**
  * `feature` identifies the call site (e.g. "ask", "grade", "vocab-practice")
  * so cost can later be broken down by feature, not just totalled blindly.
  */
 export function logAiCost(feature: string, model: string, inputTokens: number, outputTokens: number): void {
-  const price = PRICE_PER_MILLION_USD[model];
-  const costUsd = price ? (inputTokens / 1_000_000) * price.input + (outputTokens / 1_000_000) * price.output : null;
+  const costUsd = estimateCostUsd(model, inputTokens, outputTokens);
   console.log(
     `[ai-cost] feature=${feature} model=${model} in_tokens=${inputTokens} out_tokens=${outputTokens} ` +
       `cost_usd=${costUsd !== null ? costUsd.toFixed(6) : "unknown"}`
