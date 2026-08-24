@@ -104,6 +104,38 @@ async function callVisionModel(
   throw new Error("Neither Groq nor Claude is configured for content-pack extraction.");
 }
 
+interface RawQuestion {
+  id?: string;
+  [key: string]: unknown;
+}
+interface RawSheet {
+  id?: string;
+  no?: number;
+  questions?: RawQuestion[];
+  [key: string]: unknown;
+}
+
+// Real bug found live 2026-08-24, converting a full unit across batches: each
+// page is extracted independently, so every page's model call invents its
+// own "sheet-1" - merging pages verbatim left 4 sheets all sharing the id
+// "sheet-1" (and question ids like "q1a" reused too), which would silently
+// break the player's per-sheet tab navigation (only one of the four sheets
+// would ever be reachable, since ids are used as lookup keys). Renumbered
+// deterministically here, using how many sheets are already in the running
+// pack as the starting index, so ids stay unique across every batch.
+function renumberSheets(sheets: unknown[], startIndex: number): unknown[] {
+  return sheets.map((s, i) => {
+    const sheet = s as RawSheet;
+    const newSheetId = `sheet-${startIndex + i + 1}`;
+    const questions = (sheet.questions ?? []).map((q, qi) => {
+      const question = q as RawQuestion;
+      const originalId = question.id || `q${qi + 1}`;
+      return { ...question, id: `${newSheetId}-${originalId}` };
+    });
+    return { ...sheet, id: newSheetId, no: startIndex + i + 1, questions };
+  });
+}
+
 function parsePackJson(raw: string): { error?: string; sheets?: unknown[] } | null {
   const cleaned = raw.replace(/^```(?:json)?/m, "").replace(/```$/m, "").trim();
   try {
@@ -197,7 +229,7 @@ export async function convertPagesToPack(
         `problems and return the corrected pack in full. Do not change anything else.\n\n${v.errors.join("\n")}`;
     }
 
-    allSheets.push(...sheets);
+    allSheets.push(...renumberSheets(sheets, allSheets.length));
     perPage.push({
       imagePath: image.path,
       sheets: sheets.length,

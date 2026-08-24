@@ -124,7 +124,7 @@ export default function UnitView({
 
   return (
     <div className="grid gap-6">
-      {contentPack && (
+      {contentPack && contentPack.status === "clean" && contentPack.questionsCount > 0 && (
         <div className="rounded-2xl border border-slate-200/70 bg-white shadow-soft">
           <div className="flex items-center justify-between gap-3 p-4">
             <div>
@@ -137,16 +137,14 @@ export default function UnitView({
               </p>
             </div>
             <div className="flex shrink-0 items-center gap-2">
-              {contentPack.status !== "failed" && contentPack.questionsCount > 0 && (
-                <a
-                  href={`/learn/${unitKey}/worksheet/${contentPack.packId}`}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="rounded-full bg-gradient-to-br from-orange-400 to-orange-600 px-4 py-2 text-xs font-medium text-white transition active:scale-95"
-                >
-                  Practise this unit&apos;s worksheet
-                </a>
-              )}
+              <a
+                href={`/learn/${unitKey}/worksheet/${contentPack.packId}`}
+                target="_blank"
+                rel="noreferrer"
+                className="rounded-full bg-gradient-to-br from-orange-400 to-orange-600 px-4 py-2 text-xs font-medium text-white transition active:scale-95"
+              >
+                Practise this unit&apos;s worksheet
+              </a>
               <button
                 type="button"
                 onClick={() => setDocExpanded((v) => !v)}
