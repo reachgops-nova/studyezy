@@ -44,6 +44,22 @@ export interface ContentPackResult {
   validation: { errors: string[]; warnings: string[]; counts: { sheets: number; questions: number; fields: number; needsHuman: number } };
 }
 
+// Real gap found live 2026-08-24: content/prompts/extract-worksheet.md tells
+// the model to "return one JSON object matching schema/pack.schema.json" but
+// neither this file nor the original content/engine/convert.mjs ever
+// actually SENDS that schema's content in the call - it's referenced by
+// name only. On a real run, Qwen3.6-27B put every single-answer question's
+// "check" directly on the question object instead of wrapping it in a
+// "fields" array (9/9 questions, survived 3 repair attempts even with the
+// validator's exact error text fed back), and used "label" instead of the
+// required "title"/"no" at the sheet level. A concrete worked example
+// (proven more reliable for structured generation than an abstract JSON
+// Schema) fixes both, without editing extract-worksheet.md itself.
+const FIELD_SHAPE_REMINDER = `
+
+IMPORTANT - exact shape reminder, because this is commonly gotten wrong: every question needs a "fields" array, even for a single blank. Never put "check" directly on the question object. Every sheet needs "title" (a short worksheet title) and "no" (its number) - "label" only belongs on questions and fields, never on a sheet. Example of a correctly-shaped sheet with one single-answer question:
+{"id": "sheet-1", "no": 1, "title": "Comprehension: Why Cockerels Crow", "objective": "Recall characters and setting from the story.", "skill": "reading-comprehension", "questions": [{"id": "q1a", "label": "a", "prompt": "Who are the main characters in this story?", "fields": [{"key": "a", "label": "Your answer", "input": "text", "check": {"kind": "keywords", "allOf": [["Hyena", "Cockerel"]], "modelAnswer": "Hyena and Cockerel."}}], "hint": "Look for the names mentioned in the dialogue.", "explanation": "The text names two characters: Hyena and Cockerel."}]}`;
+
 let cachedPrompt: { system: string; userTemplate: string } | null = null;
 
 async function loadPrompt(): Promise<{ system: string; userTemplate: string }> {
@@ -129,7 +145,7 @@ export async function convertPagesToPack(
       `book. Extract only the sheet(s) whose full content appears on this page. If a question's content clearly ` +
       `continues onto a page you don't have, set "needsHuman": true with a reviewReason explaining that it spans pages.`;
 
-    let userText = filledUser + pagingNote;
+    let userText = filledUser + pagingNote + FIELD_SHAPE_REMINDER;
     let sheets: unknown[] = [];
     let lastErrors: string[] = [];
 
@@ -146,7 +162,7 @@ export async function convertPagesToPack(
       if (!parsed) {
         lastErrors = ["model did not return valid JSON"];
         if (attempt === MAX_REPAIR_ATTEMPTS) break;
-        userText = `${filledUser}${pagingNote}\n\nYour previous attempt did not return valid JSON. Return ONLY the JSON object, no markdown fences, no commentary.`;
+        userText = `${filledUser}${pagingNote}${FIELD_SHAPE_REMINDER}\n\nYour previous attempt did not return valid JSON. Return ONLY the JSON object, no markdown fences, no commentary.`;
         continue;
       }
       if (parsed.error) {
@@ -171,7 +187,7 @@ export async function convertPagesToPack(
       lastErrors = v.errors;
       if (attempt === MAX_REPAIR_ATTEMPTS) break;
       userText =
-        `${filledUser}${pagingNote}\n\nYour previous attempt failed automated validation. Fix exactly these ` +
+        `${filledUser}${pagingNote}${FIELD_SHAPE_REMINDER}\n\nYour previous attempt failed automated validation. Fix exactly these ` +
         `problems and return the corrected pack in full. Do not change anything else.\n\n${v.errors.join("\n")}`;
     }
 
