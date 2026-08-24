@@ -9,14 +9,15 @@ import { validatePack } from "../content/engine/validate.mjs";
 const PROMPT_PATH = path.join(process.cwd(), "content", "prompts", "extract-worksheet.md");
 const MAX_REPAIR_ATTEMPTS = 3;
 
-// Real, empirically-hit constraint (not assumed): a single call here reserves
-// close to Groq's entire 8000 TPM budget on its own (system prompt + one
-// image + a several-thousand-token completion), so calling back-to-back with
-// zero delay - which the first attempt at this feature did - hits a 429
-// almost immediately. Same fix shape as the sourceImageTranscript backfill's
-// external pacing, just applied internally here since a conversion run makes
-// several calls (one per page, plus any repairs) within one request.
-const CALL_SPACING_MS = 25_000;
+// Real, empirically-hit constraint (not assumed - measured live against a
+// real English page): a single call here needs ~6800 of Groq's 8000 TPM
+// budget on its own (dense system prompt + one photo full of body text +
+// completion). Groq's limit is a ROLLING 60s window, so two such calls
+// anywhere within 60s of each other still sum past the cap regardless of
+// how they're spaced within that window - a first attempt at 25s spacing
+// still collided. The only reliable fix is spacing calls a full minute-plus
+// apart so each one's tokens age out of the window before the next starts.
+const CALL_SPACING_MS = 65_000;
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 export interface PackMeta {
