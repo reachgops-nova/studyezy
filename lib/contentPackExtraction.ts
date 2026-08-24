@@ -122,16 +122,22 @@ function parsePackJson(raw: string): { error?: string; sheets?: unknown[] } | nu
  * multi-sheet 32000-token completion. Each page gets up to
  * MAX_REPAIR_ATTEMPTS tries, feeding the validator's own error text back as
  * a correction prompt, exactly like the original convert.mjs's repair loop.
+ *
+ * `existing` lets a full unit be converted across several smaller, more
+ * observable calls (e.g. ~5 pages at a time) instead of one very long-lived
+ * request: pass the previous batch's resulting sheets/photoCount back in and
+ * this batch's pages get appended onto the same running pack.
  */
 export async function convertPagesToPack(
   images: UploadedPageImage[],
   meta: PackMeta,
-  packId: string
+  packId: string,
+  existing?: { sheets: unknown[]; photoCount: number }
 ): Promise<ContentPackResult> {
   const { system, userTemplate } = await loadPrompt();
   const filledUser = fillTemplate(userTemplate, meta);
 
-  const allSheets: unknown[] = [];
+  const allSheets: unknown[] = existing ? [...existing.sheets] : [];
   const perPage: PageResult[] = [];
   let totalInput = 0;
   let totalOutput = 0;
@@ -207,7 +213,7 @@ export async function convertPagesToPack(
     source: {
       book: meta.book,
       capturedAs: "parent photo upload",
-      photoCount: images.length,
+      photoCount: (existing?.photoCount ?? 0) + images.length,
       extractedOn: new Date().toISOString().slice(0, 10),
       confidence: perPage.some((p) => p.errors.length) ? "low" : "mixed",
     },

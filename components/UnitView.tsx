@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { CurriculumUnit, TestQuestion } from "@/lib/types";
 import type { ResourceGroup } from "@/lib/queries/unitResources";
 import AvatarChat from "./AvatarChat";
@@ -11,22 +11,45 @@ import Booklet from "./Booklet";
 
 type Stage = "overview" | "warmup" | "diagnostic" | "lesson";
 
+export interface UnitContentPack {
+  packId: string;
+  status: string;
+  questionsCount: number;
+}
+
 export default function UnitView({
   unit,
   unitKey,
   initialPageImages,
   resourceGroups,
   diagnosticQuestions,
+  contentPack,
 }: {
   unit: CurriculumUnit;
   unitKey: string;
   initialPageImages: string[];
   resourceGroups: ResourceGroup[];
   diagnosticQuestions: TestQuestion[];
+  contentPack: UnitContentPack | null;
 }) {
   const [stage, setStage] = useState<Stage>("overview");
   const [selectedId, setSelectedId] = useState(unit.concepts[0]?.concept_id);
   const [pageImages, setPageImages] = useState(initialPageImages);
+  const [docExpanded, setDocExpanded] = useState(true);
+  const loggedLessonStart = useRef(false);
+
+  // Honest engagement signal (not a comprehension check - see
+  // lib/worksheetGate.ts) that unlocks the worksheet banner and, later, the
+  // formal test - fires once per mount the first time the lesson is reached.
+  useEffect(() => {
+    if (stage !== "lesson" || loggedLessonStart.current) return;
+    loggedLessonStart.current = true;
+    fetch("/api/interaction", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ unitKey, eventType: "lesson_started" }),
+    }).catch(() => {});
+  }, [stage, unitKey]);
   // Where to land once the warm-up is done/skipped - captured at the moment
   // the kid picks "diagnostic" vs "skip to teaching" on the overview screen,
   // since the warm-up sits in front of both paths (2026-08-20: "before
@@ -100,7 +123,50 @@ export default function UnitView({
   }
 
   return (
-    <div className="grid gap-6 md:grid-cols-[220px_1fr]">
+    <div className="grid gap-6">
+      {contentPack && (
+        <div className="rounded-2xl border border-slate-200/70 bg-white shadow-soft">
+          <div className="flex items-center justify-between gap-3 p-4">
+            <div>
+              <h2 className="text-sm font-semibold text-slate-800">
+                {unit.unit_title} - the real textbook, right here
+              </h2>
+              <p className="text-xs text-slate-500">
+                The actual unit pages, matching what&apos;s taught in class - read through it, then practise the
+                worksheet below.
+              </p>
+            </div>
+            <div className="flex shrink-0 items-center gap-2">
+              {contentPack.status !== "failed" && contentPack.questionsCount > 0 && (
+                <a
+                  href={`/learn/${unitKey}/worksheet/${contentPack.packId}`}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="rounded-full bg-gradient-to-br from-orange-400 to-orange-600 px-4 py-2 text-xs font-medium text-white transition active:scale-95"
+                >
+                  Practise this unit&apos;s worksheet
+                </a>
+              )}
+              <button
+                type="button"
+                onClick={() => setDocExpanded((v) => !v)}
+                className="rounded-full border border-slate-300 px-3 py-2 text-xs font-medium text-slate-600 hover:bg-slate-50"
+              >
+                {docExpanded ? "Collapse" : "Expand"}
+              </button>
+            </div>
+          </div>
+          {docExpanded && (
+            <iframe
+              src={`/learn/${unitKey}/worksheet/${contentPack.packId}`}
+              title={`${unit.unit_title} textbook and worksheet`}
+              className="h-[70vh] w-full rounded-b-2xl border-t border-slate-100"
+            />
+          )}
+        </div>
+      )}
+
+      <div className="grid gap-6 md:grid-cols-[220px_1fr]">
       <nav className="grid gap-1">
         <button
           onClick={() => setStage("overview")}
@@ -140,6 +206,7 @@ export default function UnitView({
           <AvatarChat key={selected.concept_id} unitKey={unitKey} concept={selected} />
         </div>
       )}
+      </div>
     </div>
   );
 }

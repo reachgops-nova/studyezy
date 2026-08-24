@@ -26,6 +26,9 @@ const MAX_PAGES_PER_CONVERSION = 10;
 // PLATFORM_PLAN.md's 2026-08-24 entry). Reads real files already sitting on
 // the uploads volume, runs them through the vision-extract -> validate ->
 // repair loop (lib/contentPackExtraction.ts), and persists a ContentPack row.
+// Pass `appendToPackId` to fold this batch's pages into an existing pack
+// instead of starting a new one - how a full unit gets converted across
+// several smaller, observable calls into one running "unit document."
 export async function POST(req: NextRequest) {
   const admin = await getCurrentAdmin();
   if (!admin) {
@@ -39,7 +42,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Invalid request body." }, { status: 400 });
   }
 
-  const { unitKey, storageKeys, book, subject, board, stage } = (body ?? {}) as Record<string, unknown>;
+  const { unitKey, storageKeys, book, subject, board, stage, appendToPackId } = (body ?? {}) as Record<string, unknown>;
 
   if (
     typeof unitKey !== "string" ||
@@ -49,7 +52,8 @@ export async function POST(req: NextRequest) {
     typeof book !== "string" ||
     typeof subject !== "string" ||
     typeof board !== "string" ||
-    typeof stage !== "string"
+    typeof stage !== "string" ||
+    (appendToPackId !== undefined && typeof appendToPackId !== "string")
   ) {
     return NextResponse.json({ error: "Missing or invalid fields." }, { status: 400 });
   }
@@ -57,6 +61,21 @@ export async function POST(req: NextRequest) {
   const unit = await db.unit.findUnique({ where: { unitKey } });
   if (!unit) {
     return NextResponse.json({ error: "Unit not found." }, { status: 404 });
+  }
+
+  // Batch/append mode: lets a full unit's pages be converted across several
+  // smaller, observable calls into ONE running pack, instead of one call per
+  // whole book (Groq's TPM cap makes that impossible anyway) or one pack per
+  // batch (which would leave the "unit document" fragmented).
+  let existingPack: { id: string; data: unknown; sourceImageKeys: string[]; inputTokens: number; outputTokens: number } | null = null;
+  if (appendToPackId) {
+    existingPack = await db.contentPack.findUnique({
+      where: { packId: appendToPackId as string },
+      select: { id: true, data: true, sourceImageKeys: true, inputTokens: true, outputTokens: true },
+    });
+    if (!existingPack) {
+      return NextResponse.json({ error: "appendToPackId not found." }, { status: 404 });
+    }
   }
 
   const selectedKeys = (storageKeys as string[]).slice(0, MAX_PAGES_PER_CONVERSION);
@@ -77,10 +96,14 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "No readable image files found for the selected pages." }, { status: 400 });
   }
 
-  const packId = `${unitKey}-${Date.now()}`;
+  const packId = existingPack ? (appendToPackId as string) : `${unitKey}-${Date.now()}`;
+  const existingData = existingPack?.data as { sheets?: unknown[]; source?: { photoCount?: number } } | undefined;
+  const existingArg = existingPack
+    ? { sheets: existingData?.sheets ?? [], photoCount: existingData?.source?.photoCount ?? 0 }
+    : undefined;
 
   try {
-    const result = await convertPagesToPack(images, { book, subject, board, stage }, packId);
+    const result = await convertPagesToPack(images, { book, subject, board, stage }, packId, existingArg);
 
     const status =
       result.validation.errors.length > 0
@@ -89,8 +112,13 @@ export async function POST(req: NextRequest) {
           ? "needs_review"
           : "clean";
 
-    await db.contentPack.create({
-      data: {
+    const combinedSourceKeys = existingPack ? [...existingPack.sourceImageKeys, ...selectedKeys] : selectedKeys;
+    const combinedInputTokens = (existingPack?.inputTokens ?? 0) + result.totals.inputTokens;
+    const combinedOutputTokens = (existingPack?.outputTokens ?? 0) + result.totals.outputTokens;
+
+    await db.contentPack.upsert({
+      where: { packId },
+      create: {
         packId,
         unitId: unit.id,
         data: result.pack as unknown as Prisma.InputJsonValue,
@@ -100,10 +128,23 @@ export async function POST(req: NextRequest) {
         errorsCount: result.validation.errors.length,
         warningsCount: result.validation.warnings.length,
         status,
-        sourceImageKeys: selectedKeys,
+        sourceImageKeys: combinedSourceKeys,
         model: result.modelUsed,
-        inputTokens: result.totals.inputTokens,
-        outputTokens: result.totals.outputTokens,
+        inputTokens: combinedInputTokens,
+        outputTokens: combinedOutputTokens,
+      },
+      update: {
+        data: result.pack as unknown as Prisma.InputJsonValue,
+        sheetsCount: result.validation.counts.sheets,
+        questionsCount: result.validation.counts.questions,
+        needsHumanCount: result.validation.counts.needsHuman,
+        errorsCount: result.validation.errors.length,
+        warningsCount: result.validation.warnings.length,
+        status,
+        sourceImageKeys: combinedSourceKeys,
+        model: result.modelUsed,
+        inputTokens: combinedInputTokens,
+        outputTokens: combinedOutputTokens,
       },
     });
 

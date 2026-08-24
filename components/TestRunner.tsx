@@ -1,8 +1,10 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import type { CurriculumUnit, QuestionPaperDifficulty, StoredUnitResult, TestQuestion } from "@/lib/types";
 import { recordAttempt } from "@/lib/attempts";
+import { masteryBand } from "@/lib/mastery";
 import ReasoningInterview, { type ReasoningItem } from "./ReasoningInterview";
 
 const MAX_REASONING_ITEMS = 2;
@@ -154,6 +156,8 @@ export default function TestRunner({
           </div>
         </div>
 
+        <NextStepSummary unit={unit} perConcept={result.perConcept} />
+
         {reasoningItems.length > 0 && !reasoningDone && (
           <ReasoningInterview
             unitKey={unitKey}
@@ -209,6 +213,47 @@ export default function TestRunner({
       >
         {submitting ? "Checking..." : "Submit test"}
       </button>
+    </div>
+  );
+}
+
+// Concrete "what to work on next" built from the perConcept data the attempt
+// response already returns - no new AI call, just surfaces it clearly on the
+// results screen instead of leaving it buried in /plan (Prep Planner).
+function NextStepSummary({
+  unit,
+  perConcept,
+}: {
+  unit: CurriculumUnit;
+  perConcept: Record<string, { correct: number; total: number }>;
+}) {
+  const weak = Object.entries(perConcept)
+    .map(([conceptId, { correct, total }]) => {
+      const scorePct = total > 0 ? Math.round((correct / total) * 100) : 0;
+      const concept = unit.concepts.find((c) => c.concept_id === conceptId);
+      return { conceptId, name: concept?.concept_name ?? conceptId, scorePct, band: masteryBand(scorePct) };
+    })
+    .filter((c) => c.band !== "mastered")
+    .sort((a, b) => a.scorePct - b.scorePct);
+
+  return (
+    <div className="mt-4 rounded-xl border border-slate-200/70 bg-white p-4">
+      <h3 className="text-sm font-semibold text-slate-800">What to work on next</h3>
+      {weak.length === 0 ? (
+        <p className="mt-2 text-sm text-slate-600">Solid across every concept tested here - nice work.</p>
+      ) : (
+        <ul className="mt-2 grid gap-1.5">
+          {weak.map((c) => (
+            <li key={c.conceptId} className="text-sm text-slate-700">
+              <strong>{c.name}</strong> ({c.scorePct}%) -{" "}
+              {c.band === "needs_reteach" ? "worth going over again before retesting" : "a quick brush-up would help"}
+            </li>
+          ))}
+        </ul>
+      )}
+      <Link href="/plan" className="mt-3 inline-block text-sm font-medium text-brand-navy underline">
+        See your full prep plan &rarr;
+      </Link>
     </div>
   );
 }

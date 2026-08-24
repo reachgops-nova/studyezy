@@ -78,6 +78,7 @@ model StudentProfile {
   interactionEvents InteractionEvent[]
   reasoningLogs     ReasoningLog[]
   examSubmissions   ExamSubmission[]
+  worksheetAttempts WorksheetAttempt[]
 }
 
 // --- curriculum hierarchy ---
@@ -145,6 +146,7 @@ model Unit {
   resources       UnitResource[]
   questionPapers  QuestionPaper[]
   contentPacks    ContentPack[]
+  worksheetAttempts WorksheetAttempt[]
 
   @@unique([subjectId, number])
 }
@@ -175,7 +177,33 @@ model ContentPack {
   outputTokens    Int      @default(0)
   createdAt       DateTime @default(now())
 
+  worksheetAttempts WorksheetAttempt[]
+
   @@index([unitId])
+}
+
+// A single practice attempt at a ContentPack worksheet - low-stakes,
+// retry-as-many-times practice, deliberately kept separate from
+// TestAttempt/ConceptMastery (see PLATFORM_PLAN.md's 2026-08-24 entry): a
+// wrong answer here never affects mastery data, it just measures "is this
+// kid ready to unlock the formal test" (lib/worksheetGate.ts) and how much
+// tougher an older unit's recommended test tier should be
+// (lib/adaptiveDifficulty.ts).
+model WorksheetAttempt {
+  id               String   @id @default(cuid())
+  studentProfileId String
+  studentProfile   StudentProfile @relation(fields: [studentProfileId], references: [id], onDelete: Cascade)
+  contentPackId    String
+  contentPack      ContentPack    @relation(fields: [contentPackId], references: [id], onDelete: Cascade)
+  unitId           String
+  unit             Unit           @relation(fields: [unitId], references: [id], onDelete: Cascade)
+  correctCount     Int
+  totalCount       Int
+  scorePct         Int
+  answers          Json     // snapshot of {questionId: {value, correct}}, for later review
+  attemptedAt      DateTime @default(now())
+
+  @@index([studentProfileId, unitId])
 }
 
 // Up to 3 self-test papers per unit, one per difficulty (2026-08-20 decision:

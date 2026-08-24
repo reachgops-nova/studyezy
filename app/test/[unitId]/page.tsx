@@ -4,6 +4,9 @@ import { getActiveProfile } from "@/lib/auth";
 import { getCurrentUser } from "@/lib/session";
 import { getUnit } from "@/lib/content";
 import { getQuestionPaperSummariesByKey } from "@/lib/queries/questionPapers";
+import { db } from "@/lib/db";
+import { getQualifyingWorksheetAttempt } from "@/lib/worksheetGate";
+import { recommendedDifficulty } from "@/lib/adaptiveDifficulty";
 import { LogoMark } from "@/components/Logo";
 import type { QuestionPaperDifficulty } from "@/lib/types";
 
@@ -34,6 +37,54 @@ export default async function TestPage({ params }: { params: Promise<{ unitId: s
 
   const summaries = await getQuestionPaperSummariesByKey(unitId);
 
+  // Confidence gate + cross-unit adaptive difficulty (PLATFORM_PLAN.md's
+  // 2026-08-24 entry): a unit the student has never tested on is "new" -
+  // locked behind a qualifying worksheet practice attempt first. Once
+  // unlocked (or for a unit they've already tested on before), the tier
+  // that best matches how far they've progressed past this unit is
+  // recommended, not force-selected - a student can still pick any tier.
+  const unitRow = await db.unit.findUnique({ where: { unitKey: unitId } });
+  let locked = false;
+  let recommended: QuestionPaperDifficulty = "easy";
+  if (unitRow) {
+    const priorAttempts = await db.testAttempt.count({ where: { studentProfileId: profile.id, unitId: unitRow.id } });
+    if (priorAttempts === 0) {
+      const qualifying = await getQualifyingWorksheetAttempt(profile.id, unitRow.id);
+      locked = !qualifying;
+    }
+    recommended = await recommendedDifficulty(profile.id, unitRow);
+  }
+
+  if (locked) {
+    return (
+      <main className="mx-auto grid w-full max-w-2xl gap-6">
+        <header>
+          <Link
+            href={`/learn/${unitId}`}
+            className="inline-flex items-center gap-2 text-sm text-slate-500 hover:text-slate-700"
+          >
+            <LogoMark className="h-6 w-6" />
+            &larr; Back to unit
+          </Link>
+          <h1 className="mt-2 text-2xl font-bold">
+            Progression Test - Unit {unit.unit}: {unit.unit_title}
+          </h1>
+        </header>
+        <div className="rounded-2xl border border-slate-200/70 bg-white p-6 text-center shadow-soft">
+          <p className="text-sm text-slate-600">
+            This is a new unit - practise the worksheet first (70% or better) to unlock the test.
+          </p>
+          <Link
+            href={`/learn/${unitId}`}
+            className="mt-4 inline-block rounded-xl bg-gradient-to-br from-orange-400 to-orange-600 px-5 py-2.5 text-sm font-medium text-white"
+          >
+            Go practise the worksheet
+          </Link>
+        </div>
+      </main>
+    );
+  }
+
   return (
     <main className="mx-auto grid w-full max-w-2xl gap-6">
       <header>
@@ -56,9 +107,16 @@ export default async function TestPage({ params }: { params: Promise<{ unitId: s
             key={s.difficulty}
             className={`rounded-2xl border p-4 shadow-soft ${
               s.available ? "border-slate-200/70 bg-white" : "border-slate-200/70 bg-slate-50"
-            }`}
+            } ${s.difficulty === recommended ? "ring-2 ring-brand-navy" : ""}`}
           >
-            <h2 className="font-semibold text-slate-800">{DIFFICULTY_LABELS[s.difficulty]}</h2>
+            <div className="flex items-center justify-between gap-2">
+              <h2 className="font-semibold text-slate-800">{DIFFICULTY_LABELS[s.difficulty]}</h2>
+              {s.difficulty === recommended && (
+                <span className="rounded-full bg-brand-navy px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-white">
+                  Suggested
+                </span>
+              )}
+            </div>
             <p className="mt-1 text-xs text-slate-500">{DIFFICULTY_DESCRIPTIONS[s.difficulty]}</p>
             {s.available ? (
               <>

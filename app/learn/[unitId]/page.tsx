@@ -7,8 +7,9 @@ import { getUnitResourceGroupsByKey } from "@/lib/queries/unitResources";
 import { getQuestionPaperByKey } from "@/lib/queries/questionPapers";
 import { FREEZABLE_TYPES } from "@/lib/unitResources";
 import { isTrialActive, getPricingPlanForKid } from "@/lib/pricing";
+import { db } from "@/lib/db";
 import { LogoMark } from "@/components/Logo";
-import UnitView from "@/components/UnitView";
+import UnitView, { type UnitContentPack } from "@/components/UnitView";
 
 export default async function LearnPage({ params }: { params: Promise<{ unitId: string }> }) {
   const user = await getCurrentUser();
@@ -68,6 +69,16 @@ export default async function LearnPage({ params }: { params: Promise<{ unitId: 
   const moderatePaper = await getQuestionPaperByKey(unitId, "moderate");
   const diagnosticQuestions = moderatePaper?.questions ?? [];
 
+  // Most recent content-pack "unit document" for this unit, if any real
+  // pages have been converted - see lib/contentPackExtraction.ts and
+  // PLATFORM_PLAN.md's 2026-08-24 entry. Not every unit has one yet.
+  const latestPack = await db.contentPack.findFirst({
+    where: { unit: { unitKey: unitId } },
+    orderBy: { createdAt: "desc" },
+    select: { packId: true, status: true, questionsCount: true },
+  });
+  const contentPack: UnitContentPack | null = latestPack ?? null;
+
   return (
     // Wider than the old max-w-3xl (768px) - on an actual desktop/laptop
     // screen that left most of the viewport empty around a phone-width
@@ -110,6 +121,7 @@ export default async function LearnPage({ params }: { params: Promise<{ unitId: 
         initialPageImages={pageImages}
         resourceGroups={resourceGroups}
         diagnosticQuestions={diagnosticQuestions}
+        contentPack={contentPack}
       />
     </main>
   );
