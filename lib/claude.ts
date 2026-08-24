@@ -327,6 +327,49 @@ export async function transcribeReferencePage(image: UploadedPageImage): Promise
   return textBlock && textBlock.type === "text" ? textBlock.text.trim() : "";
 }
 
+export interface VisionExtractResult {
+  text: string;
+  inputTokens: number;
+  outputTokens: number;
+}
+
+/**
+ * Claude fallback for extractPackFragmentGroq (lib/groq.ts) - same contract,
+ * used when Groq isn't configured or fails, matching the Groq-first/Claude-
+ * fallback tiering already established in lib/conceptImageTranscription.ts.
+ * temperature 0 (deterministic), matching content/prompts/extract-worksheet.md's
+ * own instruction - this generates graded content, not a chat answer.
+ */
+export async function extractPackFragmentClaude(
+  image: UploadedPageImage,
+  system: string,
+  userText: string
+): Promise<VisionExtractResult> {
+  const response = await getClient().messages.create({
+    model: EXTRACTION_MODEL,
+    max_tokens: 4000,
+    temperature: 0,
+    system,
+    messages: [
+      {
+        role: "user",
+        content: [
+          { type: "image", source: { type: "base64", media_type: image.mediaType, data: image.base64 } },
+          { type: "text", text: userText },
+        ],
+      },
+    ],
+  });
+
+  logAiCost("content-pack", EXTRACTION_MODEL, response.usage.input_tokens, response.usage.output_tokens);
+  const textBlock = response.content.find((block) => block.type === "text");
+  return {
+    text: textBlock && textBlock.type === "text" ? textBlock.text.trim() : "",
+    inputTokens: response.usage.input_tokens,
+    outputTokens: response.usage.output_tokens,
+  };
+}
+
 // Static instructional half of the extraction prompt - identical on every
 // call for a given unit, so it's worth a cache_control breakpoint: the
 // per-call variable part (which concepts are still missing) is appended

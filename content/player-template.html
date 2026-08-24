@@ -1,0 +1,3811 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>SmartIGCSE — pack player</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bitter:ital,wght@0,500;0,700;1,500&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  /* Palette: squared exercise paper, graphite pencil, ballpoint blue, teacher's red pen */
+  --paper:#F2F5F8;
+  --paper-card:#FFFFFF;
+  --grid-line:#DCE7F0;
+  --grid-line-strong:#C7D8E6;
+  --ink:#14243A;
+  --ink-soft:#4A5B70;
+  --ink-faint:#7B8A9C;
+  --pen:#1D5FA8;
+  --pen-dark:#164B85;
+  --pen-wash:#E7EFF9;
+  --red:#C42F2F;
+  --red-wash:#FCEDED;
+  --green:#14713F;
+  --green-wash:#E8F5EE;
+  --amber:#8A5A00;
+  --amber-wash:#FBF2DF;
+  --rule:#D3DEE8;
+
+  --r-sm:6px; --r-md:10px; --r-lg:16px;
+  --tap:44px;
+  --shadow:0 1px 2px rgba(20,36,58,.06), 0 8px 24px -12px rgba(20,36,58,.18);
+
+  --font-display:'Bitter', Georgia, 'Times New Roman', serif;
+  --font-body:'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-mono:'IBM Plex Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+}
+
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{
+  margin:0;
+  font-family:var(--font-body);
+  color:var(--ink);
+  background-color:var(--paper);
+  background-image:
+    linear-gradient(var(--grid-line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
+  background-size:24px 24px;
+  line-height:1.55;
+  font-size:16px;
+}
+@media (prefers-reduced-motion: reduce){
+  *{animation-duration:.001ms !important; transition-duration:.001ms !important}
+}
+
+/* ---------- Masthead ---------- */
+.masthead{
+  background:var(--ink);
+  color:#fff;
+  border-bottom:3px solid var(--pen);
+}
+.masthead-in{
+  max-width:900px;margin:0 auto;padding:18px 20px 16px;
+  display:flex;align-items:flex-start;gap:14px;flex-wrap:wrap;
+}
+.crest{
+  width:38px;height:38px;flex:0 0 38px;border-radius:50%;
+  background:var(--pen);display:grid;place-items:center;margin-top:2px;
+}
+.crest svg{width:22px;height:22px}
+.masthead h1{
+  font-family:var(--font-display);font-weight:700;font-size:1.25rem;
+  margin:0;letter-spacing:-.01em;line-height:1.25;
+}
+.masthead p{margin:3px 0 0;color:#B9C8DA;font-size:.82rem}
+.masthead .spacer{flex:1 1 auto}
+
+/* progress meter */
+.meter{min-width:190px;padding-top:2px}
+.meter-top{display:flex;justify-content:space-between;font-size:.72rem;color:#B9C8DA;
+  text-transform:uppercase;letter-spacing:.09em;font-weight:600;margin-bottom:6px}
+.meter-track{height:8px;border-radius:99px;background:#2B3F5C;overflow:hidden}
+.meter-fill{height:100%;width:0;background:linear-gradient(90deg,var(--pen),#4E9BE8);
+  border-radius:99px;transition:width .5s cubic-bezier(.2,.8,.2,1)}
+
+/* ---------- Worksheet tabs ---------- */
+.tabs-wrap{position:sticky;top:0;z-index:30;background:rgba(242,245,248,.94);
+  backdrop-filter:blur(8px);border-bottom:1px solid var(--rule)}
+.tabs{max-width:900px;margin:0 auto;display:flex;gap:6px;padding:8px 12px;
+  overflow-x:auto;scrollbar-width:thin;-webkit-overflow-scrolling:touch}
+.tab{
+  flex:0 0 auto;min-height:var(--tap);padding:8px 14px;border-radius:var(--r-md);
+  border:1px solid var(--rule);background:var(--paper-card);color:var(--ink-soft);
+  font-family:var(--font-body);font-size:.84rem;font-weight:600;cursor:pointer;
+  display:flex;flex-direction:column;justify-content:center;line-height:1.2;
+  transition:background .15s, color .15s, border-color .15s;
+}
+.tab small{font-size:.68rem;font-weight:500;color:var(--ink-faint);letter-spacing:.02em}
+.tab:hover{border-color:var(--pen);color:var(--pen)}
+.tab:focus-visible{outline:3px solid var(--pen);outline-offset:2px}
+.tab[aria-selected="true"]{background:var(--ink);border-color:var(--ink);color:#fff}
+.tab[aria-selected="true"] small{color:#A9BCD2}
+.tab .dot{position:absolute}
+
+/* ---------- Layout ---------- */
+main{max-width:900px;margin:0 auto;padding:22px 16px 90px}
+
+.sheet-head{
+  background:var(--paper-card);border:1px solid var(--rule);border-radius:var(--r-lg);
+  padding:20px 22px;box-shadow:var(--shadow);margin-bottom:20px;
+  border-left:5px solid var(--pen);
+}
+.eyebrow{font-family:var(--font-mono);font-size:.74rem;font-weight:600;
+  letter-spacing:.12em;text-transform:uppercase;color:var(--pen);margin:0 0 6px}
+.sheet-head h2{font-family:var(--font-display);font-size:1.42rem;margin:0 0 8px;line-height:1.25}
+.sheet-head .obj{margin:0;color:var(--ink-soft);font-size:.94rem}
+.sheet-meta{display:flex;gap:16px;flex-wrap:wrap;margin-top:12px;padding-top:12px;
+  border-top:1px dashed var(--rule);font-size:.8rem;color:var(--ink-faint);font-family:var(--font-mono)}
+
+/* trick banner */
+.trick{
+  background:var(--amber-wash);border:1px solid #EBD9AE;border-radius:var(--r-md);
+  padding:14px 16px;margin-bottom:20px;display:flex;gap:12px;align-items:flex-start;
+}
+.trick svg{flex:0 0 20px;width:20px;height:20px;color:var(--amber);margin-top:2px}
+.trick h3{margin:0 0 3px;font-family:var(--font-display);font-size:.95rem;color:var(--amber)}
+.trick p{margin:0;font-size:.9rem;color:#5E4405}
+
+/* ---------- Question card ---------- */
+.q{
+  background:var(--paper-card);border:1px solid var(--rule);border-radius:var(--r-lg);
+  padding:18px 20px;margin-bottom:16px;box-shadow:var(--shadow);position:relative;
+  transition:border-color .2s;
+}
+.q.is-right{border-color:#A9D8BF}
+.q.is-wrong{border-color:#EFB6B6}
+.q-head{display:flex;gap:12px;align-items:flex-start;margin-bottom:12px}
+.q-no{
+  flex:0 0 auto;min-width:30px;height:30px;padding:0 7px;border-radius:8px;
+  background:var(--pen-wash);color:var(--pen-dark);font-family:var(--font-mono);
+  font-weight:600;font-size:.85rem;display:grid;place-items:center;margin-top:1px;
+}
+.q-prompt{margin:0;font-size:1rem;line-height:1.5}
+.q-prompt .sub{display:block;color:var(--ink-soft);font-size:.9rem;margin-top:4px}
+
+/* fields */
+.fields{display:flex;flex-direction:column;gap:12px;margin:14px 0 0}
+.fields.row{flex-direction:row;flex-wrap:wrap;align-items:flex-end;gap:10px 14px}
+.field{display:flex;flex-direction:column;gap:5px;min-width:0}
+.field > label{font-size:.8rem;font-weight:600;color:var(--ink-soft);letter-spacing:.01em}
+.field .lead{font-family:var(--font-mono);color:var(--ink);font-size:.95rem}
+input[type="text"]{
+  font-family:var(--font-mono);font-size:1rem;color:var(--pen-dark);
+  min-height:var(--tap);padding:8px 12px;border:1.5px solid var(--grid-line-strong);
+  border-radius:var(--r-sm);background:#FCFDFE;width:100%;
+  transition:border-color .15s, box-shadow .15s;
+}
+input[type="text"]::placeholder{color:#AEBCCB;font-style:italic}
+input[type="text"]:hover{border-color:#A9BFD4}
+input[type="text"]:focus{outline:none;border-color:var(--pen);box-shadow:0 0 0 3px var(--pen-wash)}
+input[type="text"]:focus-visible{outline:none}
+.field.w-sm input{max-width:110px}
+.field.w-md input{max-width:190px}
+.field.w-lg input{max-width:340px}
+.field.correct input{border-color:var(--green);background:var(--green-wash)}
+.field.incorrect input{border-color:var(--red);background:var(--red-wash)}
+.mark{font-family:var(--font-mono);font-size:.78rem;font-weight:600;margin-top:2px}
+.mark.ok{color:var(--green)}
+.mark.no{color:var(--red)}
+
+/* choice buttons */
+.choices{display:flex;flex-wrap:wrap;gap:8px}
+.choice{
+  min-height:var(--tap);padding:9px 16px;border-radius:var(--r-md);cursor:pointer;
+  border:1.5px solid var(--grid-line-strong);background:#FCFDFE;color:var(--ink);
+  font-family:var(--font-mono);font-size:.95rem;font-weight:500;transition:all .15s;
+}
+.choice:hover{border-color:var(--pen);color:var(--pen-dark)}
+.choice:focus-visible{outline:3px solid var(--pen);outline-offset:2px}
+.choice[aria-pressed="true"]{background:var(--pen);border-color:var(--pen);color:#fff}
+.choice.correct{background:var(--green-wash);border-color:var(--green);color:var(--green)}
+.choice.incorrect{background:var(--red-wash);border-color:var(--red);color:var(--red)}
+
+/* table style inputs */
+.tbl{width:100%;border-collapse:collapse;font-family:var(--font-mono);font-size:.9rem;margin-top:12px}
+.tbl th,.tbl td{border:1px solid var(--grid-line-strong);padding:6px 8px;text-align:left;vertical-align:middle}
+.tbl th{background:var(--pen-wash);color:var(--pen-dark);font-weight:600;font-size:.78rem;
+  text-transform:uppercase;letter-spacing:.06em}
+.tbl td input{min-height:38px;padding:5px 8px;font-size:.9rem}
+.tbl-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch;margin:0 -4px;padding:0 4px}
+
+/* hundred grid */
+.grid100{display:grid;grid-template-columns:repeat(10,minmax(0,1fr));gap:3px;max-width:460px;margin-top:12px}
+.cellbtn{
+  aspect-ratio:1;min-height:0;border:1px solid var(--grid-line-strong);border-radius:5px;
+  background:#FCFDFE;font-family:var(--font-mono);font-size:.72rem;color:var(--ink-soft);
+  cursor:pointer;padding:0;display:grid;place-items:center;transition:all .12s;
+}
+.cellbtn:hover{border-color:var(--pen);color:var(--pen)}
+.cellbtn:focus-visible{outline:2px solid var(--pen);outline-offset:1px}
+.cellbtn[aria-pressed="true"]{background:var(--pen);border-color:var(--pen);color:#fff;font-weight:600}
+.cellbtn.hit{background:var(--green-wash);border-color:var(--green);color:var(--green);font-weight:600}
+.cellbtn.miss{background:var(--red-wash);border-color:var(--red);color:var(--red)}
+.cellbtn.missed-prime{border-color:var(--amber);border-style:dashed;color:var(--amber)}
+.grid-legend{display:flex;gap:14px;flex-wrap:wrap;font-size:.76rem;color:var(--ink-faint);margin-top:10px}
+.grid-legend span{display:flex;align-items:center;gap:5px}
+.swatch{width:11px;height:11px;border-radius:3px;border:1px solid}
+
+/* diagrams */
+.diagram{background:#FBFCFD;border:1px solid var(--rule);border-radius:var(--r-md);
+  padding:14px;margin:12px 0;overflow-x:auto}
+.diagram svg{display:block;max-width:100%;height:auto}
+.redrawn{font-size:.74rem;color:var(--ink-faint);font-style:italic;margin:8px 0 0}
+
+/* ---------- Actions & feedback ---------- */
+.q-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:16px;align-items:center}
+.btn{
+  min-height:var(--tap);padding:10px 18px;border-radius:var(--r-md);cursor:pointer;
+  font-family:var(--font-body);font-size:.9rem;font-weight:600;border:1.5px solid transparent;
+  display:inline-flex;align-items:center;gap:7px;transition:all .15s;
+}
+.btn svg{width:16px;height:16px}
+.btn:focus-visible{outline:3px solid var(--pen);outline-offset:2px}
+.btn-primary{background:var(--pen);color:#fff;border-color:var(--pen)}
+.btn-primary:hover{background:var(--pen-dark);border-color:var(--pen-dark)}
+.btn-ghost{background:transparent;color:var(--ink-soft);border-color:var(--rule)}
+.btn-ghost:hover{border-color:var(--ink-soft);color:var(--ink)}
+.btn-hint{background:transparent;color:var(--amber);border-color:#E4CE9B}
+.btn-hint:hover{background:var(--amber-wash)}
+
+.tickbox{width:34px;height:34px;flex:0 0 34px;margin-left:auto}
+.tickbox svg{width:34px;height:34px}
+.tickbox path{
+  stroke:var(--red);stroke-width:3.2;fill:none;stroke-linecap:round;stroke-linejoin:round;
+  stroke-dasharray:var(--len,60);stroke-dashoffset:var(--len,60);
+  animation:draw .45s cubic-bezier(.5,0,.3,1) forwards;
+}
+.tickbox.ok path{stroke:var(--green)}
+@keyframes draw{to{stroke-dashoffset:0}}
+
+.panel{margin-top:14px;border-radius:var(--r-md);padding:14px 16px;font-size:.92rem;
+  border:1px solid;animation:rise .28s ease-out}
+@keyframes rise{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:none}}
+.panel h4{margin:0 0 6px;font-family:var(--font-display);font-size:.9rem;
+  text-transform:uppercase;letter-spacing:.08em}
+.panel p{margin:0 0 8px}
+.panel p:last-child{margin-bottom:0}
+.panel code{font-family:var(--font-mono);background:rgba(20,36,58,.06);
+  padding:1px 5px;border-radius:4px;font-size:.88em}
+.panel.explain{background:var(--pen-wash);border-color:#BFD6EF;color:#12365E}
+.panel.explain h4{color:var(--pen-dark)}
+.panel.hint{background:var(--amber-wash);border-color:#EBD9AE;color:#5E4405}
+.panel.hint h4{color:var(--amber)}
+.panel.solved{background:var(--green-wash);border-color:#A9D8BF;color:#0D5730}
+.panel.solved h4{color:var(--green)}
+
+/* ---------- Sheet footer ---------- */
+.sheet-foot{
+  background:var(--paper-card);border:1px solid var(--rule);border-radius:var(--r-lg);
+  padding:18px 20px;margin-top:22px;box-shadow:var(--shadow);
+  display:flex;gap:12px;flex-wrap:wrap;align-items:center;justify-content:space-between;
+}
+.score{font-family:var(--font-mono);font-size:.9rem;color:var(--ink-soft)}
+.score strong{color:var(--ink);font-size:1.15rem}
+
+/* index page */
+.index-note{margin:0 0 18px;color:var(--ink-soft);font-size:.94rem}
+.idx{width:100%;border-collapse:collapse;font-size:.88rem;background:var(--paper-card)}
+.idx th,.idx td{border:1px solid var(--grid-line-strong);padding:9px 10px;text-align:left;vertical-align:top}
+.idx th{background:var(--ink);color:#fff;font-size:.74rem;text-transform:uppercase;
+  letter-spacing:.08em;font-weight:600}
+.idx td:first-child{font-family:var(--font-mono);font-weight:600;color:var(--pen-dark);width:44px}
+.idx td:nth-child(2){width:26%;font-weight:500}
+.idx tr.ready td:first-child{background:var(--green-wash);color:var(--green)}
+.idx .status{font-family:var(--font-mono);font-size:.74rem;white-space:nowrap}
+.idx .status.on{color:var(--green)}
+.idx .status.off{color:var(--ink-faint)}
+
+.toast{
+  position:fixed;left:50%;bottom:22px;transform:translateX(-50%) translateY(80px);
+  background:var(--ink);color:#fff;padding:12px 20px;border-radius:99px;font-size:.88rem;
+  font-weight:500;box-shadow:0 10px 30px -8px rgba(20,36,58,.5);z-index:60;
+  transition:transform .3s cubic-bezier(.2,.8,.2,1);pointer-events:none;
+}
+.toast.show{transform:translateX(-50%) translateY(0)}
+
+.visually-hidden{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+
+@media (max-width:768px){
+  .masthead-in{padding:14px 16px}
+  .masthead h1{font-size:1.08rem}
+  .meter{min-width:100%;order:3}
+  main{padding:16px 12px 80px}
+  .q{padding:16px 14px}
+  .sheet-head{padding:16px 16px}
+  .sheet-head h2{font-size:1.2rem}
+  .grid100{gap:2px}
+  .cellbtn{font-size:.62rem}
+  .idx td:nth-child(2){width:auto}
+}
+@media (max-width:420px){
+  .fields.row{flex-direction:column;align-items:stretch}
+  .field.w-sm input,.field.w-md input,.field.w-lg input{max-width:none}
+}
+
+.langbar{display:flex;align-items:center;gap:8px}
+.langbar label{font-size:.72rem;color:#B9C8DA;text-transform:uppercase;letter-spacing:.09em;font-weight:600}
+.langbar select{min-height:38px;padding:6px 10px;border-radius:8px;border:1px solid #3A5170;
+  background:#1C2E47;color:#fff;font-family:var(--font-body);font-size:.85rem;cursor:pointer}
+.langbar select:focus-visible{outline:3px solid var(--pen);outline-offset:2px}
+</style>
+</head>
+<body>
+<header class="masthead">
+  <div class="masthead-in">
+    <div class="crest" aria-hidden="true">
+      <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
+      </svg>
+    </div>
+    <div><h1 id="packName">Loading…</h1><p id="packSub"></p></div>
+    <div class="spacer"></div>
+    <div class="langbar"><label for="lang">Parent language</label><select id="lang"></select></div>
+    <div class="meter">
+      <div class="meter-top"><span>Answered correctly</span><span id="meterLabel">0 / 0</span></div>
+      <div class="meter-track"><div class="meter-fill" id="meterFill"></div></div>
+    </div>
+  </div>
+</header>
+<div class="tabs-wrap"><div class="tabs" role="tablist" aria-label="Worksheets" id="tabs"></div></div>
+<main id="main"></main>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script id="pack" type="application/json">{
+  "packVersion": "1.0",
+  "packId": "holy-sai-stage6-maths-numbers",
+  "source": {
+    "school": "Holy Sai International School",
+    "book": "Maths Worksheet Book 26-27",
+    "capturedAs": "parent photo upload",
+    "photoCount": 11,
+    "extractedOn": "2026-08-23",
+    "confidence": "high",
+    "reviewNotes": "Worksheet 3 diagrams were not legible in the photographs and were rebuilt from the stated counts. Flagged with media.redrawn."
+  },
+  "curriculum": {
+    "board": "Cambridge",
+    "stage": "Stage 6 / IGCSE lower secondary",
+    "subject": "Mathematics",
+    "strand": "Numbers and Calculations"
+  },
+  "language": "en",
+  "contents": [
+    {
+      "no": 1,
+      "topic": "Numbers and Calculations",
+      "objective": "To count on and count back (including negative numbers)",
+      "page": 4,
+      "sheetId": "ws1"
+    },
+    {
+      "no": 2,
+      "topic": "Numbers and Calculations",
+      "objective": "To find any term of a linear sequence",
+      "page": 6,
+      "sheetId": "ws2"
+    },
+    {
+      "no": 3,
+      "topic": "Numbers and Calculations",
+      "objective": "To extend the spatial pattern of square and triangular numbers",
+      "page": 7,
+      "sheetId": "ws3"
+    },
+    {
+      "no": 4,
+      "topic": "Numbers and Calculations",
+      "objective": "To find square and triangular numbers",
+      "page": 8,
+      "sheetId": "ws4"
+    },
+    {
+      "no": 5,
+      "topic": "Numbers and Calculations",
+      "objective": "To find the difference between prime and composite numbers",
+      "page": 9,
+      "sheetId": "ws5"
+    },
+    {
+      "no": 6,
+      "topic": "Numbers and Calculations",
+      "objective": "To solve problems using arithmetic operations",
+      "page": 11,
+      "sheetId": "ws6"
+    },
+    {
+      "no": 7,
+      "topic": "Numbers and Calculations",
+      "objective": "To add and subtract integers",
+      "page": 15,
+      "sheetId": null
+    },
+    {
+      "no": 8,
+      "topic": "Numbers and Calculations",
+      "objective": "To identify the values of unknown symbols",
+      "page": 16,
+      "sheetId": null
+    },
+    {
+      "no": 9,
+      "topic": "Numbers and Calculations",
+      "objective": "To use laws of arithmetic and order of operations",
+      "page": 18,
+      "sheetId": null
+    },
+    {
+      "no": 10,
+      "topic": "Fractions, decimals, percentages and proportion",
+      "objective": "To compose, decompose, regroup and round off decimals",
+      "page": 20,
+      "sheetId": null
+    },
+    {
+      "no": 11,
+      "topic": "Fractions, decimals, percentages and proportion",
+      "objective": "To multiply and divide decimals by 10, 100 and 1000",
+      "page": 22,
+      "sheetId": null
+    },
+    {
+      "no": 12,
+      "topic": "Fractions, decimals, percentages and proportion",
+      "objective": "To do arithmetic operations in decimals",
+      "page": 23,
+      "sheetId": null
+    },
+    {
+      "no": 13,
+      "topic": "Fractions, decimals, percentages and proportion",
+      "objective": "Equivalent fractions, comparing, mixed numbers and improper fractions",
+      "page": 26,
+      "sheetId": null
+    },
+    {
+      "no": 14,
+      "topic": "Fractions, decimals, percentages and proportion",
+      "objective": "Percentage of shapes, fraction–decimal–percentage equivalence, ratio and proportion",
+      "page": 31,
+      "sheetId": null
+    },
+    {
+      "no": 15,
+      "topic": "Time",
+      "objective": "Time intervals in seconds, minutes and hours; time zones",
+      "page": 35,
+      "sheetId": null
+    },
+    {
+      "no": 16,
+      "topic": "Angles and shapes",
+      "objective": "Identify, describe and sketch 3 types of triangles and symmetry",
+      "page": 39,
+      "sheetId": null
+    },
+    {
+      "no": 17,
+      "topic": "Angles and shapes",
+      "objective": "Identify, describe and sketch 3D shapes; nets of a cube",
+      "page": 42,
+      "sheetId": null
+    },
+    {
+      "no": 18,
+      "topic": "Angles and shapes",
+      "objective": "Compare and classify angles; missing angles on a straight line",
+      "page": 44,
+      "sheetId": null
+    },
+    {
+      "no": 19,
+      "topic": "Angles and shapes",
+      "objective": "Estimate and measure area and perimeter of 2D shapes",
+      "page": 47,
+      "sheetId": null
+    },
+    {
+      "no": 20,
+      "topic": "Location and Movement",
+      "objective": "Plot coordinates; translate and reflect 2D shapes",
+      "page": 50,
+      "sheetId": null
+    },
+    {
+      "no": 21,
+      "topic": "Statistical Methods",
+      "objective": "Represent categorical, discrete and continuous data in graphs and charts",
+      "page": 52,
+      "sheetId": null
+    },
+    {
+      "no": 22,
+      "topic": "Statistical Methods",
+      "objective": "Find the mode and median for a given set of data",
+      "page": 57,
+      "sheetId": null
+    },
+    {
+      "no": 23,
+      "topic": "Probability",
+      "objective": "Describe results using the language of probability",
+      "page": 59,
+      "sheetId": null
+    }
+  ],
+  "sheets": [
+    {
+      "id": "ws1",
+      "no": 1,
+      "title": "Count on and count back",
+      "objective": "Counting on and back in steps, including through zero into negative numbers.",
+      "page": "4–5",
+      "date": "2 / 7 / 26",
+      "skill": "counting-on-back-negatives",
+      "strategy": {
+        "title": "The jump trick",
+        "body": "To find a step size when you can see the first and last number: (last − first) ÷ number of jumps. From 213 to 245 there are 4 jumps, and 32 ÷ 4 = 8. Now you never have to guess."
+      },
+      "reviewNote": null,
+      "questions": [
+        {
+          "id": "ws1-q0",
+          "label": "1a",
+          "prompt": "Count on and write the steps.",
+          "sub": "213, ___ , ___ , ___ , 245",
+          "layout": "stack",
+          "media": null,
+          "table": null,
+          "fields": [
+            {
+              "key": "a",
+              "label": "The three missing numbers",
+              "placeholder": "e.g. 221, 229, 237",
+              "width": "md",
+              "input": "text",
+              "options": null,
+              "inTable": false,
+              "check": {
+                "kind": "sequence",
+                "values": [
+                  221,
+                  229,
+                  237
+                ]
+              },
+              "answerText": null
+            }
+          ],
+          "hint": "Four jumps take you from 213 to 245. How big is one jump?",
+          "explanation": "245 − 213 = 32, and there are 4 jumps, so each step is 32 ÷ 4 = 8. Counting on in 8s: 213 → 221 → 229 → 237 → 245.",
+          "needsHuman": false
+        },
+        {
+          "id": "ws1-q1",
+          "label": "1b",
+          "prompt": "Count on and write the steps.",
+          "sub": "−477, ___ , ___ , −456, ___",
+          "layout": "stack",
+          "media": null,
+          "table": null,
+          "fields": [
+            {
+              "key": "a",
+              "label": "The three missing numbers",
+              "placeholder": "e.g. -470, -463, -449",
+              "width": "md",
+              "input": "text",
+              "options": null,
+              "inTable": false,
+              "check": {
+                "kind": "sequence",
+                "values": [
+                  -470,
+                  -463,
+                  -449
+                ],
+                "gapped": true
+              },
+              "answerText": null
+            }
+          ],
+          "hint": "Careful — with negatives, counting ON means moving towards zero, so the numbers get bigger (−477 → −470).",
+          "explanation": "From −477 to −456 is 21 in 3 jumps, so each step is +7. The sequence is −477 → −470 → −463 → −456 → −449.",
+          "needsHuman": false
+        },
+        {
+          "id": "ws1-q2",
+          "label": "2",
+          "prompt": "Count on 8 from 156 and write the first five numbers of the sequence.",
+          "sub": null,
+          "layout": "stack",
+          "media": null,
+          "table": null,
+          "fields": [
+            {
+              "key": "a",
+              "label": "First five numbers",
+              "placeholder": "e.g. 164, 172, ...",
+              "width": "lg",
+              "input": "text",
+              "options": null,
+              "inTable": false,
+              "check": {
+                "kind": "sequence",
+                "values": [
+                  164,
+                  172,
+                  180,
+                  188,
+                  196
+                ]
+              },
+              "answerText": null
+            }
+          ],
+          "hint": "The first number of the sequence is 156 + 8, not 156 itself.",
+          "explanation": "Starting at 156 and adding 8 each time: 164, 172, 180, 188, 196.",
+          "needsHuman": false
+        },
+        {
+          "id": "ws1-q3",
+          "label": "3a",
+          "prompt": "Count back in 4s from 10 and write the sequence.",
+          "sub": "Use a number line from −10 to 10 to help.",
+          "layout": "stack",
+          "media": null,
+          "table": null,
+          "fields": [
+            {
+              "key": "a",
+              "label": "Sequence down to −10",
+              "placeholder": "e.g. 10, 6, 2, ...",
+              "width": "lg",
+              "input": "text",
+              "options": null,
+              "inTable": false,
+              "check": {
+                "kind": "sequence",
+                "values": [
+                  10,
+                  6,
+                  2,
+                  -2,
+                  -6,
+                  -10
+                ]
+              },
+              "answerText": null
+            }
+          ],
+          "hint": "Counting back doesn't stop at zero. After 2, the next jump of 4 lands you at −2.",
+          "explanation": "10 → 6 → 2 → −2 → −6 → −10. Zero is just another number on the line; the step size never changes as you cross it.",
+          "needsHuman": false
+        },
+        {
+          "id": "ws1-q4",
+          "label": "3b",
+          "prompt": "Count on in 5s from −9 and write the sequence.",
+          "sub": null,
+          "layout": "stack",
+          "media": null,
+          "table": null,
+          "fields": [
+            {
+              "key": "a",
+              "label": "Sequence",
+              "placeholder": "e.g. -9, -4, 1, ...",
+              "width": "lg",
+              "input": "text",
+              "options": null,
+              "inTable": false,
+              "check": {
+                "kind": "sequence_any_of",
+                "options": [
+                  [
+                    -9,
+                    -4,
+                    1,
+                    6,
+                    11
+                  ],
+                  [
+                    -9,
+                    -4,
+                    1,
+                    6
+                  ],
+                  [
+                    -9,
+                    -4,
+                    1,
+                    6,
+                    11,
+                    16
+                  ]
+                ]
+              },
+              "answerText": "−9, −4, 1, 6, 11"
+            }
+          ],
+          "hint": "−9 + 5 = −4. Keep adding 5 and you will cross zero.",
+          "explanation": "−9 → −4 → 1 → 6 → 11. Notice the jump from −4 to 1 also crosses zero and is still exactly 5.",
+          "needsHuman": false
+        },
+        {
+          "id": "ws1-q5",
+          "label": "4",
+          "prompt": "You have a basket with 275 apples. You give away 120 apples to your friends.",
+          "sub": "How many apples are left? Now count on 50 more apples. What is the new total?",
+          "layout": "row",
+          "media": null,
+          "table": null,
+          "fields": [
+            {
+              "key": "a",
+              "label": "Apples left",
+              "placeholder": "?",
+              "width": "sm",
+              "input": "text",
+              "options": null,
+              "inTable": false,
+              "check": {
+                "kind": "exact_number",
+                "value": 155
+              },
+              "answerText": null
+            },
+            {
+              "key": "b",
+              "label": "New total",
+              "placeholder": "?",
+              "width": "sm",
+              "input": "text",
+              "options": null,
+              "inTable": false,
+              "check": {
+                "kind": "exact_number",
+                "value": 205
+              },
+              "answerText": null
+            }
+          ],
+          "hint": "Two steps: one subtraction, then one addition. Do them in order and keep the middle answer.",
+          "explanation": "275 − 120 = 155 apples left. Then 155 + 50 = 205 apples as the new total.",
+          "needsHuman": false
+        },
+        {
+          "id": "ws1-q6",
+          "label": "5",
+          "prompt": "Your bank account has $345. You deposit $120 and then withdraw $80.",
+          "sub": "What is your new account balance? Now count back $50. What is the updated balance?",
+          "layout": "row",
+          "media": null,
+          "table": null,
+          "fields": [
+            {
+              "key": "a",
+              "label": "New balance ($)",
+              "placeholder": "?",
+              "width": "md",
+              "input": "text",
+              "options": null,
+              "inTable": false,
+              "check": {
+                "kind": "exact_number",
+                "value": 385
+              },
+              "answerText": null
+            },
+            {
+              "key": "b",
+              "label": "Updated balance ($)",
+              "placeholder": "?",
+              "width": "md",
+              "input": "text",
+              "options": null,
+              "inTable": false,
+              "check": {
+                "kind": "exact_number",
+                "value": 335
+              },
+              "answerText": null
+            }
+          ],
+          "hint": "Deposit means add, withdraw means subtract. Work left to right and don't skip the middle answer.",
+          "explanation": "345 + 120 = 465, then 465 − 80 = 385. That is the new balance. Counting back 50: 385 − 50 = 335.",
+          "needsHuman": false
+        },
+        {
+          "id": "ws1-q7",
+          "label": "6",
+          "prompt": "A temperature drops by 5 degrees each day for 4 consecutive days. If the initial temperature was 20 °C, what will the temperature be after the 4th day?",
+          "sub": null,
+          "layout": "stack",
+          "media": null,
+          "table": null,
+          "fields": [
+            {
+              "key": "a",
+              "label": "Temperature after day 4 (°C)",
+              "placeholder": "?",
+              "width": "sm",
+              "input": "text",
+              "options": null,
+              "inTable": false,
+              "check": {
+                "kind": "exact_number",
+                "value": 0
+              },
+              "answerText": null
+            }
+          ],
+          "hint": "You could count back 5 four times, or notice that 4 drops of 5 is one drop of 20.",
+          "explanation": "Day 1: 20 − 5 = 15. Day 2: 10. Day 3: 5. Day 4: 0. So the temperature is 0 °C. Shortcut: 20 − (4 × 5) = 0.",
+          "needsHuman": false
+        },
+        {
+          "id": "ws1-q8",
+          "label": "7",
+          "prompt": "Jake withdraws $30 from his bank account, which currently has a balance of $15. What is his new account balance?",
+          "sub": null,
+          "layout": "stack",
+          "media": {
+            "kind": "thermometer",
+            "min": -15,
+            "max": 35,
+            "step": 5,
+            "reading": 23
+          },
+          "table": null,
+          "fields": [
+            {
+              "key": "a",
+              "label": "New balance ($)",
+              "placeholder": "?",
+              "width": "sm",
+              "input": "text",
+              "options": null,
+              "inTable": false,
+              "check": {
+                "kind": "exact_number",
+                "value": -15
+              },
+              "answerText": null
+            }
+          ],
+          "hint": "He is taking out more than he has. The answer must be below zero.",
+          "explanation": "15 − 30 = −15. Jake's balance is −$15, meaning he owes the bank $15. This is called an overdraft.",
+          "needsHuman": false
+        },
+        {
+          "id": "ws1-q9",
+          "label": "8",
+          "prompt": "Read the thermometer, then answer the three parts.",
+          "sub": null,
+          "layout": "row",
+          "media": null,
+          "table": null,
+          "fields": [
+            {
+              "key": "a",
+              "label": "a) Temperature shown (°C)",
+              "placeholder": "?",
+              "width": "sm",
+              "input": "text",
+              "options": null,
+              "inTable": false,
+              "check": {
+                "kind": "exact_number",
+                "value": 23
+              },
+              "answerText": null
+            },
+            {
+              "key": "b",
+              "label": "b) After falling 27 °C",
+              "placeholder": "?",
+              "width": "sm",
+              "input": "text",
+              "options": null,
+              "inTable": false,
+              "check": {
+                "kind": "exact_number",
+                "value": -4
+              },
+              "answerText": null
+            },
+            {
+              "key": "c",
+              "label": "c) After rising 13 °C",
+              "placeholder": "?",
+              "width": "sm",
+              "input": "text",
+              "options": null,
+              "inTable": false,
+              "check": {
+                "kind": "exact_number",
+                "value": 36
+              },
+              "answerText": null
+            }
+          ],
+          "hint": "Each small mark on this scale is 1 degree, and the labelled marks are 5 apart. For part b, going down 27 from 23 will take you past zero.",
+          "explanation": "a) The red column stops 3 marks past 20, so it reads 23 °C.\nb) 23 − 27 = −4 °C. Think of it as: drop 23 to reach 0, then drop 4 more.\nc) 23 + 13 = 36 °C.",
+          "needsHuman": false
+        }
+      ]
+    },
+    {
+      "id": "ws2",
+      "no": 2,
+      "title": "Any term of a linear sequence",
+      "objective": "Finding the term-to-term rule and using it to fill in missing terms and solve word problems.",
+      "page": "6",
+      "date": "20 / 2 / 26",
+      "skill": "linear-sequences",
+      "strategy": {
+        "title": "Count the gaps, not the numbers",
+        "body": "Five terms have only four gaps between them. Almost every mistake in this worksheet comes from counting terms instead of jumps. Say the rule out loud as \"+9 each time\" before you write anything."
+      },
+      "reviewNote": null,
+      "questions": [
+        {
+          "id": "ws2-q0",
+          "label": "1a",
+          "prompt": "Find the rule and the missing terms.",
+          "sub": "48, ___ , ___ , ___ , 68",
+          "layout": "row",
+          "media": null,
+          "table": null,
+          "fields": [
+            {
+              "key": "a",
+              "label": "Missing terms",
+              "placeholder": "e.g. 53, 58, 63",
+              "width": "md",
+              "input": "text",
+              "options": null,
+              "inTable": false,
+              "check": {
+                "kind": "sequence",
+                "values": [
+                  53,
+                  58,
+                  63
+                ]
+              },
+              "answerText": null
+            },
+            {
+              "key": "b",
+              "label": "Rule",
+              "placeholder": "e.g. +5",
+              "width": "sm",
+              "input": "text",
+              "options": null,
+              "inTable": false,
+              "check": {
+                "kind": "text_exact",
+                "accept": [
+                  "+5",
+                  "5",
+                  "add 5",
+                  "plus 5"
+                ]
+              },
+              "answerText": null
+            }
+          ],
+          "hint": "68 − 48 = 20, spread over 4 gaps.",
+          "explanation": "20 ÷ 4 = 5, so the rule is +5. The sequence is 48, 53, 58, 63, 68.",
+          "needsHuman": false
+        },
+        {
+          "id": "ws2-q1",
+          "label": "1b",
+          "prompt": "Find the rule and the missing terms.",
+          "sub": "225, ___ , ___ , ___ , ___ , 270",
+          "layout": "row",
+          "media": null,
+          "table": null,
+          "fields": [
+            {
+              "key": "a",
+              "label": "Missing terms",
+              "placeholder": "e.g. 234, 243, ...",
+              "width": "lg",
+              "input": "text",
+              "options": null,
+              "inTable": false,
+              "check": {
+                "kind": "sequence",
+                "values": [
+                  234,
+                  243,
+                  252,
+                  261
+                ]
+              },
+              "answerText": null
+            },
+            {
+              "key": "b",
+              "label": "Rule",
+              "placeholder": "e.g. +9",
+              "width": "sm",
+              "input": "text",
+              "options": null,
+              "inTable": false,
+              "check": {
+                "kind": "text_exact",
+                "accept": [
+                  "+9",
+                  "9",
+                  "add 9",
+                  "plus 9"
+                ]
+              },
+              "answerText": null
+            }
+          ],
+          "hint": "This time there are 5 gaps, not 4. 270 − 225 = 45.",
+          "explanation": "45 ÷ 5 = 9, so the rule is +9. The sequence is 225, 234, 243, 252, 261, 270.",
+          "needsHuman": false
+        },
+        {
+          "id": "ws2-q2",
+          "label": "1c",
+          "prompt": "Find the rule and the missing terms.",
+          "sub": "118, ___ , ___ , ___ , 90",
+          "layout": "row",
+          "media": null,
+          "table": null,
+          "fields": [
+            {
+              "key": "a",
+              "label": "Missing terms",
+              "placeholder": "e.g. 111, 104, 97",
+              "width": "md",
+              "input": "text",
+              "options": null,
+              "inTable": false,
+              "check": {
+                "kind": "sequence",
+                "values": [
+                  111,
+                  104,
+                  97
+                ]
+              },
+              "answerText": null
+            },
+            {
+              "key": "b",
+              "label": "Rule",
+              "placeholder": "e.g. -7",
+              "width": "sm",
+              "input": "text",
+              "options": null,
+              "inTable": false,
+              "check": {
+                "kind": "text_exact",
+                "accept": [
+                  "-7",
+                  "−7",
+                  "7",
+                  "subtract 7",
+                  "minus 7",
+                  "take away 7"
+                ]
+              },
+              "answerText": null
+            }
+          ],
+          "hint": "The sequence is going down. 118 − 90 = 28 over 4 gaps.",
+          "explanation": "28 ÷ 4 = 7, and the terms decrease, so the rule is −7. The sequence is 118, 111, 104, 97, 90.",
+          "needsHuman": false
+        },
+        {
+          "id": "ws2-q3",
+          "label": "2",
+          "prompt": "A book has 30 pages in each chapter. If the first chapter ends on page 127, on which page does the third chapter begin?",
+          "sub": null,
+          "layout": "stack",
+          "media": null,
+          "table": null,
+          "fields": [
+            {
+              "key": "a",
+              "label": "Third chapter begins on page",
+              "placeholder": "?",
+              "width": "sm",
+              "input": "text",
+              "options": null,
+              "inTable": false,
+              "check": {
+                "kind": "exact_number",
+                "value": 158
+              },
+              "answerText": null
+            }
+          ],
+          "hint": "Chapter 2 starts on the page right after 127. Then it runs for exactly 30 pages.",
+          "explanation": "Chapter 2 starts on page 128 and covers 30 pages, so it ends on 128 + 29 = 157. Chapter 3 therefore begins on page 158.",
+          "needsHuman": false
+        },
+        {
+          "id": "ws2-q4",
+          "label": "3",
+          "prompt": "In a theatre, each row has 18 seats. If the first row is numbered 121 to 138, what would be the seat numbers in the fifth row?",
+          "sub": null,
+          "layout": "row",
+          "media": null,
+          "table": null,
+          "fields": [
+            {
+              "key": "a",
+              "label": "First seat",
+              "placeholder": "?",
+              "width": "sm",
+              "input": "text",
+              "options": null,
+              "inTable": false,
+              "check": {
+                "kind": "exact_number",
+                "value": 193
+              },
+              "answerText": null
+            },
+            {
+              "key": "b",
+              "label": "Last seat",
+              "placeholder": "?",
+              "width": "sm",
+              "input": "text",
+              "options": null,
+              "inTable": false,
+              "check": {
+                "kind": "exact_number",
+                "value": 210
+              },
+              "answerText": null
+            }
+          ],
+          "hint": "Going from row 1 to row 5 is 4 rows of 18 seats, not 5. Add 4 × 18 to both ends.",
+          "explanation": "4 × 18 = 72. So the fifth row runs from 121 + 72 = 193 to 138 + 72 = 210. Check: 210 − 193 + 1 = 18 seats. Adding 5 × 18 by mistake gives 211–228, which is actually row 6.",
+          "needsHuman": false
+        },
+        {
+          "id": "ws2-q5",
+          "label": "4",
+          "prompt": "The masses of 5 boxes of oranges form a linear sequence. The first box has a mass of 38 kg and the 5th box has a mass of 58 kg. What are the masses of the other 3 boxes?",
+          "sub": null,
+          "layout": "stack",
+          "media": null,
+          "table": null,
+          "fields": [
+            {
+              "key": "a",
+              "label": "Boxes 2, 3 and 4 (kg)",
+              "placeholder": "e.g. 43, 48, 53",
+              "width": "md",
+              "input": "text",
+              "options": null,
+              "inTable": false,
+              "check": {
+                "kind": "sequence",
+                "values": [
+                  43,
+                  48,
+                  53
+                ]
+              },
+              "answerText": null
+            }
+          ],
+          "hint": "From box 1 to box 5 there are 4 gaps. The total climb is 20 kg.",
+          "explanation": "20 ÷ 4 = 5, so each box is 5 kg heavier than the one before: 38, 43, 48, 53, 58. The three middle boxes are 43 kg, 48 kg and 53 kg.",
+          "needsHuman": false
+        }
+      ]
+    },
+    {
+      "id": "ws3",
+      "no": 3,
+      "title": "Spatial patterns",
+      "objective": "Extending a spatial pattern and writing a position-to-term rule.",
+      "page": "7",
+      "date": "—",
+      "skill": "spatial-patterns",
+      "strategy": {
+        "title": "Build the rule from the jump",
+        "body": "If a pattern grows by the same amount every time, the rule is always (jump × position) + a fixed number. Find the jump first, multiply it by the position, then ask \"what do I still need to add to make it fit?\""
+      },
+      "reviewNote": "The pattern photographs weren't sharp enough to count every square reliably, so these two diagrams have been redrawn cleanly. The method you practise is exactly the same.",
+      "questions": [
+        {
+          "id": "ws3-q0",
+          "label": "1",
+          "prompt": "Here is a pattern made from squares.",
+          "sub": "Pattern 1 has 7 squares, pattern 2 has 9, pattern 3 has 11.",
+          "layout": "stack",
+          "media": {
+            "kind": "square_pattern",
+            "stages": [
+              [
+                4,
+                3
+              ],
+              [
+                5,
+                4
+              ],
+              [
+                6,
+                5
+              ]
+            ],
+            "redrawn": true
+          },
+          "table": null,
+          "fields": [
+            {
+              "key": "a",
+              "label": "a) Squares in pattern 6",
+              "placeholder": "?",
+              "width": "sm",
+              "input": "text",
+              "options": null,
+              "inTable": false,
+              "check": {
+                "kind": "exact_number",
+                "value": 17
+              },
+              "answerText": null
+            },
+            {
+              "key": "b",
+              "label": "b) Position-to-term rule",
+              "placeholder": "e.g. 2n + 5",
+              "width": "md",
+              "input": "text",
+              "options": null,
+              "inTable": false,
+              "check": {
+                "kind": "expression",
+                "accept": [
+                  "2n + 5",
+                  "2 x position + 5",
+                  "5 + 2n"
+                ]
+              },
+              "answerText": "2 × position + 5  (2n + 5)"
+            },
+            {
+              "key": "c",
+              "label": "c) Squares in pattern 15",
+              "placeholder": "?",
+              "width": "sm",
+              "input": "text",
+              "options": null,
+              "inTable": false,
+              "check": {
+                "kind": "exact_number",
+                "value": 35
+              },
+              "answerText": null
+            }
+          ],
+          "hint": "The pattern grows by 2 each time, so the rule contains 2 × position. 2 × 1 = 2, but pattern 1 has 7 squares — so what is added on?",
+          "explanation": "a) The jump is +2, so pattern 6 has 7 + (5 × 2) = 17 squares.\nb) 2 × position + 5. Check: 2 × 1 + 5 = 7 ✓, 2 × 3 + 5 = 11 ✓.\nc) 2 × 15 + 5 = 35 squares.",
+          "needsHuman": false
+        },
+        {
+          "id": "ws3-q1",
+          "label": "2a",
+          "prompt": "Triangles: how many matchsticks do you need to add to get the next pattern?",
+          "sub": "The strip uses 3, 5, 7, 9 matchsticks.",
+          "layout": "stack",
+          "media": {
+            "kind": "matchstick",
+            "shape": "triangle",
+            "stages": 4,
+            "redrawn": true
+          },
+          "table": null,
+          "fields": [
+            {
+              "key": "a",
+              "label": "Matchsticks added each time",
+              "placeholder": "?",
+              "width": "sm",
+              "input": "text",
+              "options": null,
+              "inTable": false,
+              "check": {
+                "kind": "exact_number",
+                "value": 2
+              },
+              "answerText": null
+            }
+          ],
+          "hint": "The first triangle costs 3 sticks. Every extra triangle borrows one side from its neighbour.",
+          "explanation": "Each new triangle needs only 2 new sticks because it shares a side. The rule is add 2 each time, or 2 × position + 1.",
+          "needsHuman": false
+        },
+        {
+          "id": "ws3-q2",
+          "label": "2b",
+          "prompt": "Squares: how many matchsticks do you need to add to get the next pattern?",
+          "sub": "The strip uses 4, 7, 10, 13 matchsticks.",
+          "layout": "stack",
+          "media": {
+            "kind": "matchstick",
+            "shape": "square",
+            "stages": 4,
+            "redrawn": true
+          },
+          "table": null,
+          "fields": [
+            {
+              "key": "a",
+              "label": "Matchsticks added each time",
+              "placeholder": "?",
+              "width": "sm",
+              "input": "text",
+              "options": null,
+              "inTable": false,
+              "check": {
+                "kind": "exact_number",
+                "value": 3
+              },
+              "answerText": null
+            }
+          ],
+          "hint": "A lone square needs 4 sticks. A square joined to another one is missing a side.",
+          "explanation": "Each new square shares one side, so it costs 3 new sticks. The rule is add 3 each time, or 3 × position + 1.",
+          "needsHuman": false
+        },
+        {
+          "id": "ws3-q3",
+          "label": "2c",
+          "prompt": "Houses: how many matchsticks do you need to add to get the next pattern?",
+          "sub": "The row uses 5, 9, 13, 17 matchsticks.",
+          "layout": "stack",
+          "media": {
+            "kind": "matchstick",
+            "shape": "house",
+            "stages": 4,
+            "redrawn": true
+          },
+          "table": null,
+          "fields": [
+            {
+              "key": "a",
+              "label": "Matchsticks added each time",
+              "placeholder": "?",
+              "width": "sm",
+              "input": "text",
+              "options": null,
+              "inTable": false,
+              "check": {
+                "kind": "exact_number",
+                "value": 4
+              },
+              "answerText": null
+            }
+          ],
+          "hint": "A house is a square with a roof: 5 sticks on its own. Joined houses share one wall.",
+          "explanation": "Each new house shares a wall, so it costs 4 new sticks instead of 5. The rule is add 4 each time, or 4 × position + 1.",
+          "needsHuman": false
+        }
+      ]
+    },
+    {
+      "id": "ws4",
+      "no": 4,
+      "title": "Square and triangular numbers",
+      "objective": "Finding square numbers and triangular numbers, and spotting numbers that are both.",
+      "page": "8",
+      "date": "13 / 3 / 26",
+      "skill": "square-triangular-numbers",
+      "strategy": {
+        "title": "Triangular numbers without adding it all up",
+        "body": "The nth triangular number is n × (n + 1) ÷ 2. For the 9th: 9 × 10 ÷ 2 = 45. Much faster than adding 1 + 2 + 3 + … + 9, and it never goes wrong."
+      },
+      "reviewNote": null,
+      "questions": [
+        {
+          "id": "ws4-q0",
+          "label": "1",
+          "prompt": "Complete the square numbers table.",
+          "sub": null,
+          "layout": "table",
+          "media": null,
+          "table": {
+            "head": [
+              "Number",
+              "Calculation",
+              "Square number"
+            ],
+            "rows": [
+              [
+                "3",
+                "3 × 3"
+              ],
+              [
+                "4",
+                "4 × 4"
+              ],
+              [
+                "5",
+                "5 × 5"
+              ],
+              [
+                "6",
+                "6 × 6"
+              ],
+              [
+                "7",
+                "7 × 7"
+              ],
+              [
+                "8",
+                "8 × 8"
+              ],
+              [
+                "9",
+                "9 × 9"
+              ],
+              [
+                "10",
+                "10 × 10"
+              ]
+            ]
+          },
+          "fields": [
+            {
+              "key": "a",
+              "label": "3 × 3",
+              "placeholder": "?",
+              "width": "sm",
+              "input": "text",
+              "options": null,
+              "inTable": true,
+              "check": {
+                "kind": "exact_number",
+                "value": 9
+              },
+              "answerText": null
+            },
+            {
+              "key": "b",
+              "label": "4 × 4",
+              "placeholder": "?",
+              "width": "sm",
+              "input": "text",
+              "options": null,
+              "inTable": true,
+              "check": {
+                "kind": "exact_number",
+                "value": 16
+              },
+              "answerText": null
+            },
+            {
+              "key": "c",
+              "label": "5 × 5",
+              "placeholder": "?",
+              "width": "sm",
+              "input": "text",
+              "options": null,
+              "inTable": true,
+              "check": {
+                "kind": "exact_number",
+                "value": 25
+              },
+              "answerText": null
+            },
+            {
+              "key": "d",
+              "label": "6 × 6",
+              "placeholder": "?",
+              "width": "sm",
+              "input": "text",
+              "options": null,
+              "inTable": true,
+              "check": {
+                "kind": "exact_number",
+                "value": 36
+              },
+              "answerText": null
+            },
+            {
+              "key": "e",
+              "label": "7 × 7",
+              "placeholder": "?",
+              "width": "sm",
+              "input": "text",
+              "options": null,
+              "inTable": true,
+              "check": {
+                "kind": "exact_number",
+                "value": 49
+              },
+              "answerText": null
+            },
+            {
+              "key": "f",
+              "label": "8 × 8",
+              "placeholder": "?",
+              "width": "sm",
+              "input": "text",
+              "options": null,
+              "inTable": true,
+              "check": {
+                "kind": "exact_number",
+                "value": 64
+              },
+              "answerText": null
+            },
+            {
+              "key": "g",
+              "label": "9 × 9",
+              "placeholder": "?",
+              "width": "sm",
+              "input": "text",
+              "options": null,
+              "inTable": true,
+              "check": {
+                "kind": "exact_number",
+                "value": 81
+              },
+              "answerText": null
+            },
+            {
+              "key": "h",
+              "label": "10 × 10",
+              "placeholder": "?",
+              "width": "sm",
+              "input": "text",
+              "options": null,
+              "inTable": true,
+              "check": {
+                "kind": "exact_number",
+                "value": 100
+              },
+              "answerText": null
+            }
+          ],
+          "hint": "A square number is what you get when a number is multiplied by itself.",
+          "explanation": "9, 16, 25, 36, 49, 64, 81, 100. Worth memorising up to 12 × 12 = 144 — it saves time in every future topic.",
+          "needsHuman": false
+        },
+        {
+          "id": "ws4-q1",
+          "label": "1(ii)",
+          "prompt": "Complete the triangular numbers table.",
+          "sub": null,
+          "layout": "table",
+          "media": null,
+          "table": {
+            "head": [
+              "Dots added",
+              "Triangular number"
+            ],
+            "rows": [
+              [
+                "1 + 2 + 3 + 4"
+              ],
+              [
+                "1 + 2 + 3 + 4 + 5"
+              ],
+              [
+                "1 + … + 6"
+              ],
+              [
+                "1 + … + 7"
+              ],
+              [
+                "1 + … + 8"
+              ],
+              [
+                "1 + … + 9"
+              ]
+            ]
+          },
+          "fields": [
+            {
+              "key": "a",
+              "label": "4th",
+              "placeholder": "?",
+              "width": "sm",
+              "input": "text",
+              "options": null,
+              "inTable": true,
+              "check": {
+                "kind": "exact_number",
+                "value": 10
+              },
+              "answerText": null
+            },
+            {
+              "key": "b",
+              "label": "5th",
+              "placeholder": "?",
+              "width": "sm",
+              "input": "text",
+              "options": null,
+              "inTable": true,
+              "check": {
+                "kind": "exact_number",
+                "value": 15
+              },
+              "answerText": null
+            },
+            {
+              "key": "c",
+              "label": "6th",
+              "placeholder": "?",
+              "width": "sm",
+              "input": "text",
+              "options": null,
+              "inTable": true,
+              "check": {
+                "kind": "exact_number",
+                "value": 21
+              },
+              "answerText": null
+            },
+            {
+              "key": "d",
+              "label": "7th",
+              "placeholder": "?",
+              "width": "sm",
+              "input": "text",
+              "options": null,
+              "inTable": true,
+              "check": {
+                "kind": "exact_number",
+                "value": 28
+              },
+              "answerText": null
+            },
+            {
+              "key": "e",
+              "label": "8th",
+              "placeholder": "?",
+              "width": "sm",
+              "input": "text",
+              "options": null,
+              "inTable": true,
+              "check": {
+                "kind": "exact_number",
+                "value": 36
+              },
+              "answerText": null
+            },
+            {
+              "key": "f",
+              "label": "9th",
+              "placeholder": "?",
+              "width": "sm",
+              "input": "text",
+              "options": null,
+              "inTable": true,
+              "check": {
+                "kind": "exact_number",
+                "value": 45
+              },
+              "answerText": null
+            }
+          ],
+          "hint": "Each new row of the triangle adds one more dot than the row before. Or use n × (n + 1) ÷ 2.",
+          "explanation": "10, 15, 21, 28, 36, 45. Check the last one with the formula: 9 × 10 ÷ 2 = 45 ✓",
+          "needsHuman": false
+        },
+        {
+          "id": "ws4-q2",
+          "label": "1a–c",
+          "prompt": "List the numbers you found, then compare the two lists.",
+          "sub": null,
+          "layout": "stack",
+          "media": null,
+          "table": null,
+          "fields": [
+            {
+              "key": "a",
+              "label": "a) Square numbers",
+              "placeholder": "1, 4, 9, ...",
+              "width": "lg",
+              "input": "text",
+              "options": null,
+              "inTable": false,
+              "check": {
+                "kind": "sequence",
+                "values": [
+                  1,
+                  4,
+                  9,
+                  16,
+                  25,
+                  36,
+                  49,
+                  64,
+                  81,
+                  100
+                ]
+              },
+              "answerText": null
+            },
+            {
+              "key": "b",
+              "label": "b) Triangular numbers",
+              "placeholder": "1, 3, 6, ...",
+              "width": "lg",
+              "input": "text",
+              "options": null,
+              "inTable": false,
+              "check": {
+                "kind": "sequence",
+                "values": [
+                  1,
+                  3,
+                  6,
+                  10,
+                  15,
+                  21,
+                  28,
+                  36,
+                  45
+                ]
+              },
+              "answerText": null
+            },
+            {
+              "key": "c",
+              "label": "c) Both square and triangular",
+              "placeholder": "e.g. 1, 36",
+              "width": "md",
+              "input": "text",
+              "options": null,
+              "inTable": false,
+              "check": {
+                "kind": "sequence",
+                "values": [
+                  1,
+                  36
+                ]
+              },
+              "answerText": null
+            }
+          ],
+          "hint": "For part c, put both lists side by side and look for numbers that appear in each.",
+          "explanation": "Squares: 1, 4, 9, 16, 25, 36, 49, 64, 81, 100.\nTriangular: 1, 3, 6, 10, 15, 21, 28, 36, 45.\nBoth: 1 and 36. (The next one after that is 1225 — they are very rare.)",
+          "needsHuman": false
+        },
+        {
+          "id": "ws4-q3",
+          "label": "2",
+          "prompt": "The first term is a triangular number, the second is a square number, and the third is the sum of the first two. If the first term is 10, find the next two terms.",
+          "sub": null,
+          "layout": "row",
+          "media": null,
+          "table": null,
+          "fields": [
+            {
+              "key": "a",
+              "label": "Second term",
+              "placeholder": "?",
+              "width": "sm",
+              "input": "text",
+              "options": null,
+              "inTable": false,
+              "check": {
+                "kind": "exact_number",
+                "value": 16
+              },
+              "answerText": null
+            },
+            {
+              "key": "b",
+              "label": "Third term",
+              "placeholder": "?",
+              "width": "sm",
+              "input": "text",
+              "options": null,
+              "inTable": false,
+              "check": {
+                "kind": "exact_number",
+                "value": 26
+              },
+              "answerText": null
+            }
+          ],
+          "hint": "10 is triangular. The second term must be a square number — the one that comes next after 10 in the squares list.",
+          "explanation": "The square number after 10 is 16, so the second term is 16. The third term is 10 + 16 = 26. The sequence is 10, 16, 26.",
+          "needsHuman": false
+        },
+        {
+          "id": "ws4-q4",
+          "label": "3",
+          "prompt": "Find three square numbers that add together to make another square number.",
+          "sub": "Write them as three numbers separated by commas.",
+          "layout": "stack",
+          "media": null,
+          "table": null,
+          "fields": [
+            {
+              "key": "a",
+              "label": "Three square numbers",
+              "placeholder": "e.g. 4, 9, 36",
+              "width": "md",
+              "input": "text",
+              "options": null,
+              "inTable": false,
+              "check": {
+                "kind": "squares_sum_to_square",
+                "count": 3,
+                "example": "4 + 9 + 36 = 49"
+              },
+              "answerText": "For example 4 + 9 + 36 = 49"
+            }
+          ],
+          "hint": "Try starting with small squares and aim for a total you recognise — 49, 64 and 100 are all squares.",
+          "explanation": "One neat answer is 4 + 9 + 36 = 49, that is 2² + 3² + 6² = 7². Others work too: 1 + 4 + 4 = 9, or 9 + 16 + 36 = 61 (no) — check your total is really a square. Any valid trio is accepted here.",
+          "needsHuman": false
+        }
+      ]
+    },
+    {
+      "id": "ws5",
+      "no": 5,
+      "title": "Factors, primes and composites",
+      "objective": "Listing factors, identifying prime and composite numbers, and using divisibility rules.",
+      "page": "9–10",
+      "date": "20 / 2 / 26",
+      "skill": "factors-primes-divisibility",
+      "strategy": {
+        "title": "Stop testing at the square root",
+        "body": "To check if 59 is prime you only need to try dividing by 2, 3, 5 and 7 — because 8 × 8 = 64 is already past 59. Factors always come in pairs, so once you pass the square root you would only be finding the same pairs backwards."
+      },
+      "reviewNote": null,
+      "questions": [
+        {
+          "id": "ws5-q0",
+          "label": "1",
+          "prompt": "List all the factors of each number.",
+          "sub": null,
+          "layout": "table",
+          "media": null,
+          "table": {
+            "head": [
+              "Number",
+              "Factors"
+            ],
+            "rows": [
+              [
+                "1"
+              ],
+              [
+                "2"
+              ],
+              [
+                "11"
+              ],
+              [
+                "21"
+              ],
+              [
+                "35"
+              ],
+              [
+                "48"
+              ],
+              [
+                "59"
+              ],
+              [
+                "67"
+              ],
+              [
+                "100"
+              ]
+            ]
+          },
+          "fields": [
+            {
+              "key": "a",
+              "label": "1",
+              "placeholder": "1",
+              "width": "lg",
+              "input": "text",
+              "options": null,
+              "inTable": true,
+              "check": {
+                "kind": "number_set",
+                "values": [
+                  1
+                ]
+              },
+              "answerText": null
+            },
+            {
+              "key": "b",
+              "label": "2",
+              "placeholder": "1, 2",
+              "width": "lg",
+              "input": "text",
+              "options": null,
+              "inTable": true,
+              "check": {
+                "kind": "number_set",
+                "values": [
+                  1,
+                  2
+                ]
+              },
+              "answerText": null
+            },
+            {
+              "key": "c",
+              "label": "11",
+              "placeholder": "?",
+              "width": "lg",
+              "input": "text",
+              "options": null,
+              "inTable": true,
+              "check": {
+                "kind": "number_set",
+                "values": [
+                  1,
+                  11
+                ]
+              },
+              "answerText": null
+            },
+            {
+              "key": "d",
+              "label": "21",
+              "placeholder": "?",
+              "width": "lg",
+              "input": "text",
+              "options": null,
+              "inTable": true,
+              "check": {
+                "kind": "number_set",
+                "values": [
+                  1,
+                  3,
+                  7,
+                  21
+                ]
+              },
+              "answerText": null
+            },
+            {
+              "key": "e",
+              "label": "35",
+              "placeholder": "?",
+              "width": "lg",
+              "input": "text",
+              "options": null,
+              "inTable": true,
+              "check": {
+                "kind": "number_set",
+                "values": [
+                  1,
+                  5,
+                  7,
+                  35
+                ]
+              },
+              "answerText": null
+            },
+            {
+              "key": "f",
+              "label": "48",
+              "placeholder": "?",
+              "width": "lg",
+              "input": "text",
+              "options": null,
+              "inTable": true,
+              "check": {
+                "kind": "number_set",
+                "values": [
+                  1,
+                  2,
+                  3,
+                  4,
+                  6,
+                  8,
+                  12,
+                  16,
+                  24,
+                  48
+                ]
+              },
+              "answerText": null
+            },
+            {
+              "key": "g",
+              "label": "59",
+              "placeholder": "?",
+              "width": "lg",
+              "input": "text",
+              "options": null,
+              "inTable": true,
+              "check": {
+                "kind": "number_set",
+                "values": [
+                  1,
+                  59
+                ]
+              },
+              "answerText": null
+            },
+            {
+              "key": "h",
+              "label": "67",
+              "placeholder": "?",
+              "width": "lg",
+              "input": "text",
+              "options": null,
+              "inTable": true,
+              "check": {
+                "kind": "number_set",
+                "values": [
+                  1,
+                  67
+                ]
+              },
+              "answerText": null
+            },
+            {
+              "key": "i",
+              "label": "100",
+              "placeholder": "?",
+              "width": "lg",
+              "input": "text",
+              "options": null,
+              "inTable": true,
+              "check": {
+                "kind": "number_set",
+                "values": [
+                  1,
+                  2,
+                  4,
+                  5,
+                  10,
+                  20,
+                  25,
+                  50,
+                  100
+                ]
+              },
+              "answerText": null
+            }
+          ],
+          "hint": "Work in pairs: 1 × 48, 2 × 24, 3 × 16, 4 × 12, 6 × 8. Stop when the pair starts repeating.",
+          "explanation": "1: 1\n2: 1, 2\n11: 1, 11\n21: 1, 3, 7, 21\n35: 1, 5, 7, 35\n48: 1, 2, 3, 4, 6, 8, 12, 16, 24, 48\n59: 1, 59\n67: 1, 67\n100: 1, 2, 4, 5, 10, 20, 25, 50, 100",
+          "needsHuman": false
+        },
+        {
+          "id": "ws5-q1",
+          "label": "1a–d",
+          "prompt": "Use your completed table to answer these.",
+          "sub": null,
+          "layout": "row",
+          "media": null,
+          "table": null,
+          "fields": [
+            {
+              "key": "a",
+              "label": "a) Factor of every number",
+              "placeholder": "?",
+              "width": "sm",
+              "input": "text",
+              "options": null,
+              "inTable": false,
+              "check": {
+                "kind": "exact_number",
+                "value": 1
+              },
+              "answerText": null
+            },
+            {
+              "key": "b",
+              "label": "b) How many factors has 59?",
+              "placeholder": "?",
+              "width": "sm",
+              "input": "text",
+              "options": null,
+              "inTable": false,
+              "check": {
+                "kind": "exact_number",
+                "value": 2
+              },
+              "answerText": null
+            },
+            {
+              "key": "c",
+              "label": "c) Common factors of 35 and 67",
+              "placeholder": "?",
+              "width": "sm",
+              "input": "text",
+              "options": null,
+              "inTable": false,
+              "check": {
+                "kind": "number_set",
+                "values": [
+                  1
+                ]
+              },
+              "answerText": null
+            },
+            {
+              "key": "d",
+              "label": "d) Numbers with only two factors",
+              "placeholder": "e.g. 2, 11, ...",
+              "width": "md",
+              "input": "text",
+              "options": null,
+              "inTable": false,
+              "check": {
+                "kind": "number_set",
+                "values": [
+                  2,
+                  11,
+                  59,
+                  67
+                ]
+              },
+              "answerText": null
+            }
+          ],
+          "hint": "For part d, \"only two factors\" is the definition of a prime number.",
+          "explanation": "a) 1 divides into every whole number.\nb) 59 has exactly 2 factors, so it is prime.\nc) 35 and 67 share only the factor 1 — they are co-prime.\nd) 2, 11, 59 and 67 each have exactly two factors. Note that 1 is not included, because it has only one factor.",
+          "needsHuman": false
+        },
+        {
+          "id": "ws5-q2",
+          "label": "2",
+          "prompt": "Tap all the prime numbers from 1 to 100.",
+          "sub": null,
+          "layout": "grid",
+          "media": null,
+          "table": null,
+          "fields": [
+            {
+              "key": "a",
+              "label": "Answer",
+              "placeholder": "",
+              "width": "md",
+              "input": "grid",
+              "options": null,
+              "inTable": false,
+              "check": {
+                "kind": "number_grid",
+                "values": [
+                  2,
+                  3,
+                  5,
+                  7,
+                  11,
+                  13,
+                  17,
+                  19,
+                  23,
+                  29,
+                  31,
+                  37,
+                  41,
+                  43,
+                  47,
+                  53,
+                  59,
+                  61,
+                  67,
+                  71,
+                  73,
+                  79,
+                  83,
+                  89,
+                  97
+                ]
+              },
+              "answerText": null
+            }
+          ],
+          "hint": "Cross out multiples of 2, 3, 5 and 7 and whatever survives above 1 is prime. This is called the Sieve of Eratosthenes.",
+          "explanation": "There are 25 primes below 100: 2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53, 59, 61, 67, 71, 73, 79, 83, 89, 97. After 2 and 5, every prime ends in 1, 3, 7 or 9.",
+          "needsHuman": false
+        },
+        {
+          "id": "ws5-q3",
+          "label": "2b–4",
+          "prompt": "Answer these questions about primes.",
+          "sub": null,
+          "layout": "row",
+          "media": null,
+          "table": null,
+          "fields": [
+            {
+              "key": "a",
+              "label": "Only even prime number",
+              "placeholder": "?",
+              "width": "sm",
+              "input": "text",
+              "options": null,
+              "inTable": false,
+              "check": {
+                "kind": "exact_number",
+                "value": 2
+              },
+              "answerText": null
+            },
+            {
+              "key": "b",
+              "label": "Greatest prime less than 50",
+              "placeholder": "?",
+              "width": "sm",
+              "input": "text",
+              "options": null,
+              "inTable": false,
+              "check": {
+                "kind": "exact_number",
+                "value": 47
+              },
+              "answerText": null
+            },
+            {
+              "key": "c",
+              "label": "Greatest prime less than 100",
+              "placeholder": "?",
+              "width": "sm",
+              "input": "text",
+              "options": null,
+              "inTable": false,
+              "check": {
+                "kind": "exact_number",
+                "value": 97
+              },
+              "answerText": null
+            },
+            {
+              "key": "d",
+              "label": "Why is 1 not a prime number?",
+              "placeholder": "Explain in your own words",
+              "width": "lg",
+              "input": "text",
+              "options": null,
+              "inTable": false,
+              "check": {
+                "kind": "keywords",
+                "allOf": [
+                  [
+                    "two",
+                    "2",
+                    "one",
+                    "only one"
+                  ],
+                  [
+                    "factor",
+                    "divisor"
+                  ]
+                ],
+                "modelAnswer": "A prime number must have exactly two factors, 1 and itself. 1 has only one factor, so it is not prime."
+              },
+              "answerText": "Because a prime number must have exactly two factors (1 and itself), and 1 has only one factor."
+            }
+          ],
+          "hint": "For the last one, count the factors of 1 very carefully.",
+          "explanation": "2 is the only even prime — every other even number has 2 as an extra factor.\nThe greatest prime below 50 is 47; below 100 it is 97.\n1 is not prime because a prime must have exactly two different factors (1 and itself). 1 has only one factor, so it fails the test. It is not composite either — 1 is in a category of its own.",
+          "needsHuman": false
+        },
+        {
+          "id": "ws5-q4",
+          "label": "5",
+          "prompt": "Every even number except 2 is the sum of two prime numbers. Prove it for each of these.",
+          "sub": "Write each answer as two primes, for example 5 + 7.",
+          "layout": "row",
+          "media": null,
+          "table": null,
+          "fields": [
+            {
+              "key": "a",
+              "label": "12 =",
+              "placeholder": "e.g. 5 + 7",
+              "width": "md",
+              "input": "text",
+              "options": null,
+              "inTable": false,
+              "check": {
+                "kind": "sum_of_primes",
+                "target": 12
+              },
+              "answerText": null
+            },
+            {
+              "key": "b",
+              "label": "18 =",
+              "placeholder": "? + ?",
+              "width": "md",
+              "input": "text",
+              "options": null,
+              "inTable": false,
+              "check": {
+                "kind": "sum_of_primes",
+                "target": 18
+              },
+              "answerText": null
+            },
+            {
+              "key": "c",
+              "label": "24 =",
+              "placeholder": "? + ?",
+              "width": "md",
+              "input": "text",
+              "options": null,
+              "inTable": false,
+              "check": {
+                "kind": "sum_of_primes",
+                "target": 24
+              },
+              "answerText": null
+            },
+            {
+              "key": "d",
+              "label": "32 =",
+              "placeholder": "? + ?",
+              "width": "md",
+              "input": "text",
+              "options": null,
+              "inTable": false,
+              "check": {
+                "kind": "sum_of_primes",
+                "target": 32
+              },
+              "answerText": null
+            },
+            {
+              "key": "e",
+              "label": "40 =",
+              "placeholder": "? + ?",
+              "width": "md",
+              "input": "text",
+              "options": null,
+              "inTable": false,
+              "check": {
+                "kind": "sum_of_primes",
+                "target": 40
+              },
+              "answerText": null
+            }
+          ],
+          "hint": "Start by trying 3, then 5, then 7 as the first prime, and check whether what is left over is also prime.",
+          "explanation": "12 = 5 + 7\n18 = 5 + 13 (also 7 + 11)\n24 = 5 + 19 (also 7 + 17, 11 + 13)\n32 = 3 + 29 (also 13 + 19)\n40 = 3 + 37 (also 11 + 29, 17 + 23)\nThis is Goldbach's conjecture — nobody has ever found an exception, and nobody has ever proved it either.",
+          "needsHuman": false
+        },
+        {
+          "id": "ws5-q5",
+          "label": "6",
+          "prompt": "13 is prime and so is 31. List all the other two-digit primes that are still prime when their digits are reversed.",
+          "sub": null,
+          "layout": "stack",
+          "media": null,
+          "table": null,
+          "fields": [
+            {
+              "key": "a",
+              "label": "Your list",
+              "placeholder": "e.g. 11, 17, ...",
+              "width": "lg",
+              "input": "text",
+              "options": null,
+              "inTable": false,
+              "check": {
+                "kind": "number_set",
+                "values": [
+                  11,
+                  17,
+                  37,
+                  71,
+                  73,
+                  79,
+                  97
+                ]
+              },
+              "answerText": null
+            }
+          ],
+          "hint": "Reversing a number that ends in an even digit or 5 will never give a prime, so only look at primes made of the digits 1, 3, 7 and 9.",
+          "explanation": "11, 17, 37, 71, 73, 79 and 97. (11 reverses to itself; 17 ↔ 71, 37 ↔ 73, 79 ↔ 97.) Together with 13 and 31 these are all of them.",
+          "needsHuman": false
+        },
+        {
+          "id": "ws5-q6",
+          "label": "7",
+          "prompt": "Fill the circles with prime numbers and the squares with composite numbers so that every line makes 80.",
+          "sub": null,
+          "layout": "row",
+          "media": null,
+          "table": null,
+          "fields": [
+            {
+              "key": "a",
+              "label": "8 × ▢ = 80  (composite)",
+              "placeholder": "?",
+              "width": "sm",
+              "input": "text",
+              "options": null,
+              "inTable": false,
+              "check": {
+                "kind": "exact_number",
+                "value": 10
+              },
+              "answerText": null
+            },
+            {
+              "key": "b",
+              "label": "16 × ◯ = 80  (prime)",
+              "placeholder": "?",
+              "width": "sm",
+              "input": "text",
+              "options": null,
+              "inTable": false,
+              "check": {
+                "kind": "exact_number",
+                "value": 5
+              },
+              "answerText": null
+            },
+            {
+              "key": "c",
+              "label": "2 × 2 × ▢ = 80  (composite)",
+              "placeholder": "?",
+              "width": "sm",
+              "input": "text",
+              "options": null,
+              "inTable": false,
+              "check": {
+                "kind": "exact_number",
+                "value": 20
+              },
+              "answerText": null
+            },
+            {
+              "key": "d",
+              "label": "10 × ◯ × ◯ × ◯ = 80  (three primes)",
+              "placeholder": "e.g. 2, 2, 2",
+              "width": "md",
+              "input": "text",
+              "options": null,
+              "inTable": false,
+              "check": {
+                "kind": "sequence",
+                "values": [
+                  2,
+                  2,
+                  2
+                ]
+              },
+              "answerText": null
+            }
+          ],
+          "hint": "Divide 80 by the number you can already see. Then check whether the result belongs in a circle (prime) or a square (composite).",
+          "explanation": "8 × 10 = 80 — 10 is composite ✓\n16 × 5 = 80 — 5 is prime ✓\n2 × 2 × 20 = 80 — 20 is composite ✓\n10 × 2 × 2 × 2 = 80 — all three are prime ✓\nThe prime factorisation of 80 is 2 × 2 × 2 × 2 × 5, which is where every one of these comes from.",
+          "needsHuman": false
+        },
+        {
+          "id": "ws5-q7",
+          "label": "8",
+          "prompt": "Which of these numbers are divisible by 4, and which by 8?",
+          "sub": "Cards: 6844, 2505, 2368, 2080, 677",
+          "layout": "stack",
+          "media": null,
+          "table": null,
+          "fields": [
+            {
+              "key": "a",
+              "label": "Divisible by 4",
+              "placeholder": "",
+              "width": "md",
+              "input": "multi",
+              "options": [
+                "6844",
+                "2505",
+                "2368",
+                "2080",
+                "677"
+              ],
+              "inTable": false,
+              "check": {
+                "kind": "multi_choice",
+                "values": [
+                  "6844",
+                  "2368",
+                  "2080"
+                ]
+              },
+              "answerText": null
+            },
+            {
+              "key": "b",
+              "label": "Divisible by 8",
+              "placeholder": "",
+              "width": "md",
+              "input": "multi",
+              "options": [
+                "6844",
+                "2505",
+                "2368",
+                "2080",
+                "677"
+              ],
+              "inTable": false,
+              "check": {
+                "kind": "multi_choice",
+                "values": [
+                  "2368",
+                  "2080"
+                ]
+              },
+              "answerText": null
+            }
+          ],
+          "hint": "Divisible by 4: look at the last two digits. Divisible by 8: look at the last three digits.",
+          "explanation": "6844 → 44 ÷ 4 = 11 ✓ but 844 ÷ 8 = 105.5 ✗, so 4 only.\n2368 → 68 ÷ 4 ✓ and 368 ÷ 8 = 46 ✓, so both.\n2080 → 80 ÷ 4 ✓ and 080 ÷ 8 = 10 ✓, so both.\n2505 and 677 are odd, so neither.\nAnything divisible by 8 is automatically divisible by 4, but not the other way round.",
+          "needsHuman": false
+        },
+        {
+          "id": "ws5-q8",
+          "label": "9",
+          "prompt": "Use a digit from 1 to 9 to complete each number.",
+          "sub": "There is often more than one right answer — any digit that works is accepted.",
+          "layout": "row",
+          "media": null,
+          "table": null,
+          "fields": [
+            {
+              "key": "a",
+              "label": "83▢ ÷ 4",
+              "placeholder": "?",
+              "width": "sm",
+              "input": "text",
+              "options": null,
+              "inTable": false,
+              "check": {
+                "kind": "digit_completes_divisibility",
+                "prefix": "83",
+                "by": 4
+              },
+              "answerText": null
+            },
+            {
+              "key": "b",
+              "label": "788▢ ÷ 4",
+              "placeholder": "?",
+              "width": "sm",
+              "input": "text",
+              "options": null,
+              "inTable": false,
+              "check": {
+                "kind": "digit_completes_divisibility",
+                "prefix": "788",
+                "by": 4
+              },
+              "answerText": null
+            },
+            {
+              "key": "c",
+              "label": "909▢ ÷ 4",
+              "placeholder": "?",
+              "width": "sm",
+              "input": "text",
+              "options": null,
+              "inTable": false,
+              "check": {
+                "kind": "digit_completes_divisibility",
+                "prefix": "909",
+                "by": 4
+              },
+              "answerText": null
+            },
+            {
+              "key": "d",
+              "label": "10▢ ÷ 4",
+              "placeholder": "?",
+              "width": "sm",
+              "input": "text",
+              "options": null,
+              "inTable": false,
+              "check": {
+                "kind": "digit_completes_divisibility",
+                "prefix": "10",
+                "by": 4
+              },
+              "answerText": null
+            },
+            {
+              "key": "e",
+              "label": "516▢ ÷ 8",
+              "placeholder": "?",
+              "width": "sm",
+              "input": "text",
+              "options": null,
+              "inTable": false,
+              "check": {
+                "kind": "digit_completes_divisibility",
+                "prefix": "516",
+                "by": 8
+              },
+              "answerText": null
+            },
+            {
+              "key": "f",
+              "label": "234▢ ÷ 8",
+              "placeholder": "?",
+              "width": "sm",
+              "input": "text",
+              "options": null,
+              "inTable": false,
+              "check": {
+                "kind": "digit_completes_divisibility",
+                "prefix": "234",
+                "by": 8
+              },
+              "answerText": null
+            },
+            {
+              "key": "g",
+              "label": "448▢ ÷ 8",
+              "placeholder": "?",
+              "width": "sm",
+              "input": "text",
+              "options": null,
+              "inTable": false,
+              "check": {
+                "kind": "digit_completes_divisibility",
+                "prefix": "448",
+                "by": 8
+              },
+              "answerText": null
+            },
+            {
+              "key": "h",
+              "label": "617▢ ÷ 8",
+              "placeholder": "?",
+              "width": "sm",
+              "input": "text",
+              "options": null,
+              "inTable": false,
+              "check": {
+                "kind": "digit_completes_divisibility",
+                "prefix": "617",
+                "by": 8
+              },
+              "answerText": null
+            }
+          ],
+          "hint": "For divisibility by 4, only the last two digits matter. For 8, only the last three.",
+          "explanation": "Divisible by 4: 832, 7884 (or 7888), 9092 (or 9096), 104 (or 108).\nDivisible by 8: 5168, 2344, 4488, 6176.\nQuick test: halve the number twice and see if you still have a whole number — that checks for 4.",
+          "needsHuman": false
+        }
+      ]
+    },
+    {
+      "id": "ws6",
+      "no": 6,
+      "title": "Adding and subtracting to solve problems",
+      "objective": "Column addition and subtraction with 4- and 5-digit numbers, missing digits, and estimation.",
+      "page": "11–12",
+      "date": "13 / 2 / 26",
+      "skill": "column-arithmetic-problem-solving",
+      "strategy": {
+        "title": "Check a subtraction by adding",
+        "body": "If 9288 − 7432 = 1856, then 1856 + 7432 must give you 9288 back. This catches almost every borrowing slip, and it takes ten seconds."
+      },
+      "reviewNote": null,
+      "questions": [
+        {
+          "id": "ws6-q0",
+          "label": "1",
+          "prompt": "Add and subtract 9288 with each number in the spider diagram.",
+          "sub": null,
+          "layout": "table",
+          "media": {
+            "kind": "spider",
+            "centre": 9288,
+            "around": [
+              7020,
+              3299,
+              4001,
+              1883,
+              2430,
+              7432
+            ]
+          },
+          "table": {
+            "head": [
+              "Number",
+              "9288 + n",
+              "9288 − n"
+            ],
+            "rows": [
+              [
+                "7020"
+              ],
+              [
+                "3299"
+              ],
+              [
+                "1883"
+              ],
+              [
+                "7432"
+              ],
+              [
+                "2430"
+              ],
+              [
+                "4001"
+              ]
+            ]
+          },
+          "fields": [
+            {
+              "key": "a",
+              "label": "9288 + 7020",
+              "placeholder": "?",
+              "width": "sm",
+              "input": "text",
+              "options": null,
+              "inTable": true,
+              "check": {
+                "kind": "exact_number",
+                "value": 16308
+              },
+              "answerText": null
+            },
+            {
+              "key": "b",
+              "label": "9288 − 7020",
+              "placeholder": "?",
+              "width": "sm",
+              "input": "text",
+              "options": null,
+              "inTable": true,
+              "check": {
+                "kind": "exact_number",
+                "value": 2268
+              },
+              "answerText": null
+            },
+            {
+              "key": "c",
+              "label": "9288 + 3299",
+              "placeholder": "?",
+              "width": "sm",
+              "input": "text",
+              "options": null,
+              "inTable": true,
+              "check": {
+                "kind": "exact_number",
+                "value": 12587
+              },
+              "answerText": null
+            },
+            {
+              "key": "d",
+              "label": "9288 − 3299",
+              "placeholder": "?",
+              "width": "sm",
+              "input": "text",
+              "options": null,
+              "inTable": true,
+              "check": {
+                "kind": "exact_number",
+                "value": 5989
+              },
+              "answerText": null
+            },
+            {
+              "key": "e",
+              "label": "9288 + 1883",
+              "placeholder": "?",
+              "width": "sm",
+              "input": "text",
+              "options": null,
+              "inTable": true,
+              "check": {
+                "kind": "exact_number",
+                "value": 11171
+              },
+              "answerText": null
+            },
+            {
+              "key": "f",
+              "label": "9288 − 1883",
+              "placeholder": "?",
+              "width": "sm",
+              "input": "text",
+              "options": null,
+              "inTable": true,
+              "check": {
+                "kind": "exact_number",
+                "value": 7405
+              },
+              "answerText": null
+            },
+            {
+              "key": "g",
+              "label": "9288 + 7432",
+              "placeholder": "?",
+              "width": "sm",
+              "input": "text",
+              "options": null,
+              "inTable": true,
+              "check": {
+                "kind": "exact_number",
+                "value": 16720
+              },
+              "answerText": null
+            },
+            {
+              "key": "h",
+              "label": "9288 − 7432",
+              "placeholder": "?",
+              "width": "sm",
+              "input": "text",
+              "options": null,
+              "inTable": true,
+              "check": {
+                "kind": "exact_number",
+                "value": 1856
+              },
+              "answerText": null
+            },
+            {
+              "key": "i",
+              "label": "9288 + 2430",
+              "placeholder": "?",
+              "width": "sm",
+              "input": "text",
+              "options": null,
+              "inTable": true,
+              "check": {
+                "kind": "exact_number",
+                "value": 11718
+              },
+              "answerText": null
+            },
+            {
+              "key": "j",
+              "label": "9288 − 2430",
+              "placeholder": "?",
+              "width": "sm",
+              "input": "text",
+              "options": null,
+              "inTable": true,
+              "check": {
+                "kind": "exact_number",
+                "value": 6858
+              },
+              "answerText": null
+            },
+            {
+              "key": "k",
+              "label": "9288 + 4001",
+              "placeholder": "?",
+              "width": "sm",
+              "input": "text",
+              "options": null,
+              "inTable": true,
+              "check": {
+                "kind": "exact_number",
+                "value": 13289
+              },
+              "answerText": null
+            },
+            {
+              "key": "l",
+              "label": "9288 − 4001",
+              "placeholder": "?",
+              "width": "sm",
+              "input": "text",
+              "options": null,
+              "inTable": true,
+              "check": {
+                "kind": "exact_number",
+                "value": 5287
+              },
+              "answerText": null
+            }
+          ],
+          "hint": "Line up the columns carefully — ones under ones, tens under tens. Estimate first: 9288 + 7020 is roughly 9000 + 7000 = 16000, so an answer near 16,308 looks right.",
+          "explanation": "9288 + 7020 = 16308 · 9288 − 7020 = 2268\n9288 + 3299 = 12587 · 9288 − 3299 = 5989\n9288 + 1883 = 11171 · 9288 − 1883 = 7405\n9288 + 7432 = 16720 · 9288 − 7432 = 1856\n9288 + 2430 = 11718 · 9288 − 2430 = 6858\n9288 + 4001 = 13289 · 9288 − 4001 = 5287",
+          "needsHuman": false
+        },
+        {
+          "id": "ws6-q1",
+          "label": "1a",
+          "prompt": "Add 4562 to the largest 4-digit number.",
+          "sub": null,
+          "layout": "stack",
+          "media": null,
+          "table": null,
+          "fields": [
+            {
+              "key": "a",
+              "label": "Answer",
+              "placeholder": "?",
+              "width": "md",
+              "input": "text",
+              "options": null,
+              "inTable": false,
+              "check": {
+                "kind": "exact_number",
+                "value": 14561
+              },
+              "answerText": null
+            }
+          ],
+          "hint": "What is the biggest number you can write with only four digits?",
+          "explanation": "The largest 4-digit number is 9999. 9999 + 4562 = 14561. A quick way: 10000 + 4562 = 14562, then take off the 1 you added = 14561.",
+          "needsHuman": false
+        },
+        {
+          "id": "ws6-q2",
+          "label": "2a",
+          "prompt": "Find the missing digit.",
+          "sub": "6 2 3 7  +  4 5 4 ▢  =  1 0 7 8 4",
+          "layout": "stack",
+          "media": null,
+          "table": null,
+          "fields": [
+            {
+              "key": "a",
+              "label": "Missing digit",
+              "placeholder": "?",
+              "width": "sm",
+              "input": "text",
+              "options": null,
+              "inTable": false,
+              "check": {
+                "kind": "exact_number",
+                "value": 7
+              },
+              "answerText": null
+            }
+          ],
+          "hint": "Look only at the ones column: 7 + ▢ must end in 4.",
+          "explanation": "7 + 7 = 14, so the ones digit is 4 with 1 carried. The missing digit is 7, and the sum is 6237 + 4547 = 10784.",
+          "needsHuman": false
+        },
+        {
+          "id": "ws6-q3",
+          "label": "2b",
+          "prompt": "Find the missing digit.",
+          "sub": "6 5 1 8  −  2 7 ▢ 5  =  3 7 7 3",
+          "layout": "stack",
+          "media": null,
+          "table": null,
+          "fields": [
+            {
+              "key": "a",
+              "label": "Missing digit",
+              "placeholder": "?",
+              "width": "sm",
+              "input": "text",
+              "options": null,
+              "inTable": false,
+              "check": {
+                "kind": "exact_number",
+                "value": 4
+              },
+              "answerText": null
+            }
+          ],
+          "hint": "Add the answer back to the number being subtracted: 3773 + 27▢5 should give 6518.",
+          "explanation": "3773 + 2745 = 6518, so the missing digit is 4. Checking forwards: 6518 − 2745 = 3773 ✓",
+          "needsHuman": false
+        },
+        {
+          "id": "ws6-q4",
+          "label": "3",
+          "prompt": "Mrs. Patnik bought a computer for Rs. 32,555 and a refrigerator priced Rs. 8,324 less than the computer. How much did she pay for the refrigerator?",
+          "sub": null,
+          "layout": "stack",
+          "media": null,
+          "table": null,
+          "fields": [
+            {
+              "key": "a",
+              "label": "Price of refrigerator (Rs.)",
+              "placeholder": "?",
+              "width": "md",
+              "input": "text",
+              "options": null,
+              "inTable": false,
+              "check": {
+                "kind": "exact_number",
+                "value": 24231
+              },
+              "answerText": null
+            }
+          ],
+          "hint": "\"Less than the computer\" tells you which operation to use.",
+          "explanation": "32,555 − 8,324 = Rs. 24,231.",
+          "needsHuman": false
+        },
+        {
+          "id": "ws6-q5",
+          "label": "4",
+          "prompt": "In a beehive there are 8553 honeybees. On Monday 2356 went out in the morning and 4310 went out in the afternoon. How many bees went out looking for flowers on Monday? How many bees did not leave the beehive?",
+          "sub": null,
+          "layout": "row",
+          "media": null,
+          "table": null,
+          "fields": [
+            {
+              "key": "a",
+              "label": "Bees that went out",
+              "placeholder": "?",
+              "width": "sm",
+              "input": "text",
+              "options": null,
+              "inTable": false,
+              "check": {
+                "kind": "exact_number",
+                "value": 6666
+              },
+              "answerText": null
+            },
+            {
+              "key": "b",
+              "label": "Bees that stayed",
+              "placeholder": "?",
+              "width": "sm",
+              "input": "text",
+              "options": null,
+              "inTable": false,
+              "check": {
+                "kind": "exact_number",
+                "value": 1887
+              },
+              "answerText": null
+            }
+          ],
+          "hint": "Add the two trips first, then subtract that total from the whole hive.",
+          "explanation": "2356 + 4310 = 6666 bees went out. 8553 − 6666 = 1887 bees stayed in the hive.",
+          "needsHuman": false
+        },
+        {
+          "id": "ws6-q6",
+          "label": "5",
+          "prompt": "A large library had lent out 1785 books. It has 7816 books left. How many books does the library have in all?",
+          "sub": null,
+          "layout": "stack",
+          "media": null,
+          "table": null,
+          "fields": [
+            {
+              "key": "a",
+              "label": "Total books",
+              "placeholder": "?",
+              "width": "md",
+              "input": "text",
+              "options": null,
+              "inTable": false,
+              "check": {
+                "kind": "exact_number",
+                "value": 9601
+              },
+              "answerText": null
+            }
+          ],
+          "hint": "The books on the shelves plus the books that are out on loan make the whole collection.",
+          "explanation": "7816 + 1785 = 9601 books altogether.",
+          "needsHuman": false
+        },
+        {
+          "id": "ws6-q7",
+          "label": "6a",
+          "prompt": "Use estimation. There are about 452 planes taking off and 127 are delayed more than 15 minutes. About how many take off within 15 minutes of schedule?",
+          "sub": null,
+          "layout": "stack",
+          "media": null,
+          "table": null,
+          "fields": [
+            {
+              "key": "a",
+              "label": "Choose the closest answer",
+              "placeholder": "",
+              "width": "md",
+              "input": "choice",
+              "options": [
+                "450",
+                "130",
+                "330"
+              ],
+              "inTable": false,
+              "check": {
+                "kind": "choice",
+                "value": "330"
+              },
+              "answerText": null
+            }
+          ],
+          "hint": "Round to numbers you can subtract in your head: about 450 minus about 130.",
+          "explanation": "450 − 130 = 320, so the closest option is 330. (The exact answer is 452 − 127 = 325.)",
+          "needsHuman": false
+        },
+        {
+          "id": "ws6-q8",
+          "label": "6b",
+          "prompt": "A city has 45,960 electric cars and 96,113 petrol cars. About how many more petrol cars are there?",
+          "sub": null,
+          "layout": "stack",
+          "media": null,
+          "table": null,
+          "fields": [
+            {
+              "key": "a",
+              "label": "Choose the closest answer",
+              "placeholder": "",
+              "width": "md",
+              "input": "choice",
+              "options": [
+                "5000",
+                "50,000",
+                "5100"
+              ],
+              "inTable": false,
+              "check": {
+                "kind": "choice",
+                "value": "50,000"
+              },
+              "answerText": null
+            }
+          ],
+          "hint": "Round both to the nearest ten thousand first: about 96,000 − 46,000.",
+          "explanation": "96,000 − 46,000 = 50,000. The exact difference is 96,113 − 45,960 = 50,153, so 50,000 is the sensible estimate. 5,000 and 5,100 are ten times too small.",
+          "needsHuman": false
+        },
+        {
+          "id": "ws6-q9",
+          "label": "7",
+          "prompt": "Annie and Mo each arrange the five digit cards 9, 4, 5, 3, 8 to make a 3-digit and a 2-digit number, then multiply.",
+          "sub": "Annie made 458 × 39. Mo's answer ends in a zero — what could his calculation be?",
+          "layout": "stack",
+          "media": null,
+          "table": null,
+          "fields": [
+            {
+              "key": "a",
+              "label": "Annie's answer: 458 × 39",
+              "placeholder": "?",
+              "width": "md",
+              "input": "text",
+              "options": null,
+              "inTable": false,
+              "check": {
+                "kind": "exact_number",
+                "value": 17862
+              },
+              "answerText": null
+            },
+            {
+              "key": "b",
+              "label": "Mo's calculation",
+              "placeholder": "e.g. 945 x 38",
+              "width": "md",
+              "input": "text",
+              "options": null,
+              "inTable": false,
+              "check": {
+                "kind": "digit_cards_product",
+                "digits": "34589",
+                "endsWith": 0,
+                "example": "945 x 38"
+              },
+              "answerText": null
+            }
+          ],
+          "hint": "For a product to end in 0 it needs a factor of 10, which means a 5 and an even number. Where should the 5 go?",
+          "explanation": "Annie: 458 × 39 = 17,862.\nFor Mo, put the 5 at the end of one number and an even digit at the end of the other — for example 945 × 38 = 35,910, or 495 × 38 = 18,810. Any arrangement using each card once whose product ends in 0 is accepted.",
+          "needsHuman": false
+        }
+      ]
+    }
+  ]
+}</script>
+<script>/* ============================================================
+   SmartIGCSE — checks.js
+   The complete vocabulary of answer checks.
+
+   Content packs contain DATA ONLY. They never contain code.
+   A pack may only reference a "kind" that exists in this file,
+   which is what makes machine-generated content safe to run and
+   possible to validate before a child ever sees it.
+
+   Works unchanged in Node and in the browser.
+   ============================================================ */
+
+/* ---------- primitives ---------- */
+const dash = s => String(s == null ? '' : s).replace(/[\u2212\u2013\u2014]/g, '-').trim();
+
+function toNum(s) {
+  if (typeof s === 'number') return s;
+  const t = dash(s).replace(/[^0-9.\-]/g, '');
+  if (t === '' || t === '-') return NaN;
+  return Number(t);
+}
+function toList(s) {
+  if (Array.isArray(s)) return s.map(toNum).filter(n => !Number.isNaN(n));
+  return dash(s).split(/[,;]+|\s+/).filter(Boolean).map(toNum).filter(n => !Number.isNaN(n));
+}
+const isPrime = n => {
+  n = Math.abs(n);
+  if (!Number.isInteger(n) || n < 2) return false;
+  for (let i = 2; i * i <= n; i++) if (n % i === 0) return false;
+  return true;
+};
+const isSquare = n => n >= 0 && Number.isInteger(Math.sqrt(n));
+
+const sameOrdered = (a, b) => a.length === b.length && a.every((v, i) => v === b[i]);
+const sameSet = (a, b) => sameOrdered([...a].sort((x, y) => x - y), [...b].sort((x, y) => x - y));
+const normText = s => dash(s).toLowerCase().replace(/[.,;:!?'"()]/g, '').replace(/\s+/g, ' ').trim();
+const normExpr = s => dash(s).toLowerCase()
+  .replace(/\s|[×*·]/g, '')
+  .replace(/position|term|pattern/g, 'n')
+  .replace(/([0-9n])x([0-9n])/g, '$1$2');   // "2 x position" -> "2n"
+
+/* ============================================================
+   THE CHECK VOCABULARY
+   Each entry: run(check, raw) -> boolean
+               show(check)     -> string shown when the child is wrong
+   ============================================================ */
+const CHECKS = {
+
+  /* --- numeric --- */
+  exact_number: {
+    run: (c, v) => toNum(v) === c.value,
+    show: c => String(c.value)
+  },
+  any_of_numbers: {                       // several answers are equally right
+    run: (c, v) => c.values.includes(toNum(v)),
+    show: c => c.values.join(' or ')
+  },
+  number_in_range: {
+    run: (c, v) => { const n = toNum(v); return !Number.isNaN(n) && n >= c.min && n <= c.max; },
+    show: c => `any value from ${c.min} to ${c.max}`
+  },
+
+  /* --- collections --- */
+  sequence: {                              // order matters
+    run: (c, v) => sameOrdered(toList(v), c.values),
+    show: c => c.values.join(', ')
+  },
+  sequence_any_of: {                       // several valid endings, e.g. stop at 6 or go on to 11
+    run: (c, v) => { const l = toList(v).join(','); return c.options.some(o => o.join(',') === l); },
+    show: c => c.options[0].join(', ')
+  },
+  number_set: {                            // order does not matter (factor lists)
+    run: (c, v) => sameSet(toList(v), c.values),
+    show: c => c.values.join(', ')
+  },
+  number_grid: {                           // tap-a-grid, e.g. circle the primes
+    run: (c, v) => Array.isArray(v) && sameSet(v, c.values),
+    show: c => c.values.join(', ')
+  },
+
+  /* --- choice --- */
+  choice: {
+    run: (c, v) => v === c.value,
+    show: c => c.value
+  },
+  multi_choice: {
+    run: (c, v) => Array.isArray(v) && v.length === c.values.length && c.values.every(x => v.includes(x)),
+    show: c => c.values.join(', ')
+  },
+
+  /* --- language --- */
+  text_exact: {
+    run: (c, v) => { const n = normText(v); return n !== '' && c.accept.some(a => normText(a) === n); },
+    show: c => c.accept[0]
+  },
+  keywords: {                              // "explain why" answers: each group needs one synonym present
+    run: (c, v) => { const n = normText(v); return n !== '' && c.allOf.every(g => g.some(w => n.includes(normText(w)))); },
+    show: c => c.modelAnswer
+  },
+  expression: {                            // algebraic rules: "2n+5", "2 x position + 5"
+    run: (c, v) => c.accept.some(a => normExpr(a) === normExpr(v)),
+    show: c => c.accept[0]
+  },
+
+  /* --- open-ended maths: many right answers, one rule --- */
+  sum_of_primes: {                         // Goldbach style: 12 = 5 + 7
+    run: (c, v) => { const p = toList(v); return p.length === 2 && p.every(isPrime) && p[0] + p[1] === c.target; },
+    show: c => {
+      for (let a = 2; a <= c.target / 2; a++) if (isPrime(a) && isPrime(c.target - a)) return `${a} + ${c.target - a}`;
+      return 'no pair exists';
+    }
+  },
+  squares_sum_to_square: {                 // "three square numbers that make a square number"
+    run: (c, v) => {
+      const l = toList(v);
+      return l.length === c.count && l.every(isSquare) && isSquare(l.reduce((a, b) => a + b, 0));
+    },
+    show: c => c.example || 'for example 4, 9, 36'
+  },
+  digit_completes_divisibility: {          // 83_ must divide by 4
+    run: (c, v) => {
+      const d = toNum(v);
+      return Number.isInteger(d) && d >= 0 && d <= 9 && Number(String(c.prefix) + d) % c.by === 0;
+    },
+    show: c => {
+      const out = [];
+      for (let d = 0; d <= 9; d++) if (Number(String(c.prefix) + d) % c.by === 0) out.push(d);
+      return out.length ? out.join(' or ') : 'no digit works';
+    }
+  },
+  digit_cards_product: {                   // use each card once; product must end in 0
+    run: (c, v) => {
+      const parts = dash(v).toLowerCase().replace(/[×*]/g, 'x').split('x')
+        .map(p => p.replace(/[^0-9]/g, '')).filter(Boolean);
+      if (parts.length !== 2) return false;
+      const used = (parts[0] + parts[1]).split('').sort().join('');
+      if (used !== [...String(c.digits)].sort().join('')) return false;
+      const product = Number(parts[0]) * Number(parts[1]);
+      if (c.endsWith !== undefined && product % 10 !== c.endsWith) return false;
+      if (c.equals !== undefined && product !== c.equals) return false;
+      return true;
+    },
+    show: c => c.example || 'use each card once'
+  }
+};
+
+/* ---------- public API ---------- */
+function checkAnswer(check, raw) {
+  const impl = CHECKS[check && check.kind];
+  if (!impl) return false;
+  try { return impl.run(check, raw === undefined || raw === null ? '' : raw); }
+  catch { return false; }
+}
+function answerText(field) {
+  if (field.answerText) return field.answerText;
+  const impl = CHECKS[field.check && field.check.kind];
+  return impl ? impl.show(field.check) : '';
+}
+const KNOWN_CHECK_KINDS = Object.keys(CHECKS);
+</script>
+<script>/* ============================================================
+   SmartIGCSE — player-app.js
+   Renders ANY pack that passes engine/validate.mjs.
+   Contains no content and no subject knowledge whatsoever.
+   ============================================================ */
+const PACK = JSON.parse(document.getElementById('pack').textContent);
+const STORE_KEY = 'smartigcse:' + PACK.packId;
+
+let STATE = { answers:{}, results:{}, hints:{}, i18n:{}, lang:'en' };
+const hasStorage = typeof window!=='undefined' && window.storage && typeof window.storage.get==='function';
+
+async function loadState(){
+  if(!hasStorage) return;
+  try{ const r=await window.storage.get(STORE_KEY);
+       if(r&&r.value) STATE=Object.assign(STATE, JSON.parse(r.value)); }catch(e){}
+}
+let saveTimer=null;
+function saveState(){
+  if(!hasStorage) return;
+  clearTimeout(saveTimer);
+  saveTimer=setTimeout(async()=>{ try{ await window.storage.set(STORE_KEY, JSON.stringify(STATE)); }catch(e){} },400);
+}
+function toast(m){ const t=document.getElementById('toast'); t.textContent=m; t.classList.add('show');
+  clearTimeout(t._h); t._h=setTimeout(()=>t.classList.remove('show'),2400); }
+
+const esc = s => String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const nl2 = s => esc(s).replace(/\n/g,'<br>');
+
+const ICON={
+  check:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>',
+  bulb:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18h6"/><path d="M10 22h4"/><path d="M12 2a7 7 0 0 0-4 12.7V18h8v-3.3A7 7 0 0 0 12 2z"/></svg>',
+  info:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>',
+  undo:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7v6h6"/><path d="M3.5 13a9 9 0 1 0 2.1-5.6L3 10"/></svg>',
+  globe:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15 15 0 0 1 0 20 15 15 0 0 1 0-20z"/></svg>'
+};
+
+/* ============================================================
+   DECLARATIVE MEDIA — the pack supplies parameters, never markup
+   ============================================================ */
+const MEDIA_RENDERERS = {
+  thermometer(m){
+    const ticks=[]; for(let t=m.min;t<=m.max;t+=m.step) ticks.push(t);
+    const span=m.max-m.min, fill=((m.reading-m.min)/span)*470;
+    return `<svg viewBox="0 0 520 90" role="img" aria-label="Thermometer reading ${m.reading} degrees">
+      <text x="250" y="16" text-anchor="middle" font-family="Inter,sans-serif" font-size="12" fill="#4A5B70">Temperature °C</text>
+      <circle cx="24" cy="46" r="13" fill="#C42F2F"/>
+      <rect x="30" y="38" width="470" height="17" rx="8" fill="#fff" stroke="#7B8A9C" stroke-width="1.5"/>
+      <rect x="30" y="41" width="${Math.max(0,fill)}" height="11" rx="5" fill="#C42F2F"/>
+      ${ticks.map((t,i)=>{const x=40+i*(450/(ticks.length-1));
+        return `<line x1="${x}" y1="30" x2="${x}" y2="38" stroke="#14243A" stroke-width="1.5"/>
+        <text x="${x}" y="76" text-anchor="middle" font-family="IBM Plex Mono,monospace" font-size="11" fill="#14243A">${t}</text>`;}).join('')}
+    </svg>`;
+  },
+  number_line(m){
+    const ticks=[]; for(let t=m.min;t<=m.max;t+=m.step) ticks.push(t);
+    const gap=520/(ticks.length-1);
+    return `<svg viewBox="0 0 580 60" role="img" aria-label="Number line from ${m.min} to ${m.max}">
+      <line x1="20" y1="26" x2="560" y2="26" stroke="#14243A" stroke-width="2"/>
+      <path d="M20 26 l10 -5 v10 z M560 26 l-10 -5 v10 z" fill="#14243A"/>
+      ${ticks.map((t,i)=>{const x=30+i*gap;
+        return `<line x1="${x}" y1="18" x2="${x}" y2="34" stroke="#14243A" stroke-width="1.5"/>
+        <text x="${x}" y="52" text-anchor="middle" font-family="IBM Plex Mono,monospace" font-size="11" fill="#14243A">${t}</text>`;}).join('')}
+    </svg>`;
+  },
+  spider(m){
+    const pos=[[90,30],[330,30],[20,110],[400,110],[90,190],[330,190]];
+    return `<svg viewBox="0 0 500 230" role="img" aria-label="${m.centre} in the centre with ${m.around.length} numbers around it">
+      ${m.around.map((v,i)=>`<line x1="${pos[i][0]+50}" y1="${pos[i][1]+16}" x2="215" y2="115" stroke="#C7D8E6" stroke-width="2"/>`).join('')}
+      <circle cx="215" cy="115" r="46" fill="#14243A"/>
+      <text x="215" y="121" text-anchor="middle" font-family="IBM Plex Mono,monospace" font-size="19" font-weight="600" fill="#fff">${m.centre}</text>
+      ${m.around.map((v,i)=>`<rect x="${pos[i][0]}" y="${pos[i][1]}" width="100" height="32" rx="16" fill="#E7EFF9" stroke="#1D5FA8" stroke-width="1.5"/>
+      <text x="${pos[i][0]+50}" y="${pos[i][1]+21}" text-anchor="middle" font-family="IBM Plex Mono,monospace" font-size="15" fill="#164B85">${v}</text>`).join('')}
+    </svg>`;
+  },
+  square_pattern(m){
+    const s=15,gap=5; let out=`<svg viewBox="0 0 620 150" role="img" aria-label="Growing patterns made from squares">`;
+    m.stages.forEach(([top,bottom],i)=>{
+      const ox=20+i*200;
+      out+=`<text x="${ox}" y="18" font-family="Inter,sans-serif" font-size="13" font-weight="600" fill="#14243A">Pattern ${i+1}</text>`;
+      for(let c=0;c<top;c++) out+=`<rect x="${ox+c*(s+gap)}" y="40" width="${s}" height="${s}" fill="#14243A" rx="2"/>`;
+      for(let c=0;c<bottom;c++) out+=`<rect x="${ox+10+c*(s+gap)}" y="${40+s+5}" width="${s}" height="${s}" fill="#14243A" rx="2"/>`;
+    });
+    return out+'</svg>';
+  },
+  matchstick(m){
+    const yT=20,yB=66,roof=6; let out=`<svg viewBox="0 0 560 86" role="img" aria-label="Matchstick pattern in ${m.stages} stages">`;
+    for(let stage=1;stage<=m.stages;stage++){
+      const ox=15+(stage-1)*138, edges=new Map();
+      const add=(x1,y1,x2,y2)=>{const k=[x1,y1,x2,y2].map(Math.round).join(','),r=[x2,y2,x1,y1].map(Math.round).join(',');
+        if(!edges.has(k)&&!edges.has(r)) edges.set(k,[x1,y1,x2,y2]);};
+      if(m.shape==='triangle'){ const w=13;
+        for(let k=0;k<stage;k++){ const j=Math.floor(k/2);
+          const B=i=>[ox+i*2*w,yB], T=i=>[ox+w+i*2*w,yT];
+          if(k%2===0){const[bx,by]=B(j),[tx,ty]=T(j),[b2x,b2y]=B(j+1);
+            add(bx,by,b2x,b2y); add(bx,by,tx,ty); add(tx,ty,b2x,b2y);}
+          else {const[tx,ty]=T(j),[b2x,b2y]=B(j+1),[t2x,t2y]=T(j+1);
+            add(tx,ty,b2x,b2y); add(b2x,b2y,t2x,t2y); add(tx,ty,t2x,t2y);} } }
+      else if(m.shape==='square'){ const w=28;
+        for(let k=0;k<stage;k++){const x=ox+k*w;
+          add(x,yT,x+w,yT); add(x,yB,x+w,yB); add(x,yT,x,yB); add(x+w,yT,x+w,yB);} }
+      else { const w=26;
+        for(let k=0;k<stage;k++){const x=ox+k*w,yE=yT+roof+8,yA=yT-4;
+          add(x,yB,x+w,yB); add(x,yE,x,yB); add(x+w,yE,x+w,yB); add(x,yE,x+w/2,yA); add(x+w/2,yA,x+w,yE);} }
+      edges.forEach(([x1,y1,x2,y2])=>{ out+=`<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="#14243A" stroke-width="3" stroke-linecap="round"/>`; });
+    }
+    return out+'</svg>';
+  },
+  photo_crop(m){
+    return `<p class="redrawn">Original figure could not be rebuilt automatically${m.note?': '+esc(m.note):''}. Sent for review.</p>`;
+  }
+};
+function renderMedia(m){
+  const r=MEDIA_RENDERERS[m.kind];
+  if(!r) return `<p class="redrawn">Unsupported figure type "${esc(m.kind)}".</p>`;
+  return `<div class="diagram">${r(m)}</div>${m.redrawn?'<p class="redrawn">Diagram redrawn for clarity.</p>':''}`;
+}
+
+/* ============================================================
+   STATE HELPERS
+   ============================================================ */
+let view='contents';
+const sheetById = id => PACK.sheets.find(s=>s.id===id);
+const getAns=(q,k)=>{const a=STATE.answers[q.id]; return a?a[k]:undefined;};
+function setAns(q,k,v){ (STATE.answers[q.id]=STATE.answers[q.id]||{})[k]=v; delete STATE.results[q.id]; saveState(); }
+const isBlank=v=>v===undefined||v===null||(Array.isArray(v)?!v.length:String(v).trim()==='');
+const allQuestions=()=>PACK.sheets.flatMap(s=>s.questions.map(q=>({s,q})));
+
+/* ============================================================
+   RENDER
+   ============================================================ */
+function buildTabs(){
+  const items=[{id:'contents',label:'Contents',sub:PACK.sheets.length+' worksheets'}]
+    .concat(PACK.sheets.map(s=>({id:s.id,label:'Worksheet '+s.no,sub:s.title})))
+    .concat([{id:'report',label:'Progress',sub:'what to practise'}]);
+  document.getElementById('tabs').innerHTML=items.map(it=>
+    `<button class="tab" role="tab" data-view="${it.id}" aria-selected="${it.id===view}">
+      ${esc(it.label)}<small>${esc(it.sub)}</small></button>`).join('');
+}
+function renderMain(){
+  const m=document.getElementById('main');
+  m.innerHTML = view==='contents'?renderContents() : view==='report'?renderReport() : renderSheet(sheetById(view));
+  updateMeter();
+}
+
+function renderContents(){
+  const stat=id=>{const s=sheetById(id); if(!s) return null;
+    let c=0; s.questions.forEach(q=>{ if(STATE.results[q.id]==='correct') c++; });
+    return c+' / '+s.questions.length+' correct';};
+  return `<div class="sheet-head">
+      <p class="eyebrow">${esc(PACK.curriculum.board)} · ${esc(PACK.curriculum.stage)}</p>
+      <h2>${esc(PACK.source.book)}</h2>
+      <p class="obj">${esc(PACK.curriculum.subject)} — ${esc(PACK.curriculum.strand||'')}. Converted from ${PACK.source.photoCount} photographed pages.</p>
+      <div class="sheet-meta"><span>${esc(PACK.source.school||'')}</span><span>pack ${esc(PACK.packId)}</span><span>extraction confidence: ${esc(PACK.source.confidence||'unknown')}</span></div>
+    </div>
+    ${PACK.source.reviewNotes?`<div class="trick">${ICON.info}<div><h3>Note from conversion</h3><p>${esc(PACK.source.reviewNotes)}</p></div></div>`:''}
+    <div class="tbl-scroll"><table class="idx">
+      <thead><tr><th>WS</th><th>Topic</th><th>Objective</th><th>Page</th><th>Status</th></tr></thead>
+      <tbody>${(PACK.contents||[]).map(c=>{const st=c.sheetId?stat(c.sheetId):null;
+        return `<tr class="${st?'ready':''}"><td>${c.no}</td><td>${esc(c.topic)}</td><td>${esc(c.objective)}</td><td>${c.page}</td>
+        <td class="status ${st?'on':'off'}">${st||'in the printed book'}</td></tr>`;}).join('')}</tbody>
+    </table></div>`;
+}
+
+function renderSheet(sheet){
+  let h=`<div class="sheet-head">
+      <p class="eyebrow">Worksheet ${sheet.no}</p>
+      <h2>${esc(sheet.title)}</h2>
+      <p class="obj">${esc(sheet.objective)}</p>
+      <div class="sheet-meta"><span>${esc(PACK.curriculum.strand||PACK.curriculum.subject)}</span><span>Book page ${esc(sheet.page)}</span><span>skill: ${esc(sheet.skill||'—')}</span></div>
+    </div>`;
+  if(sheet.reviewNote) h+=`<div class="trick">${ICON.info}<div><h3>About the diagrams</h3><p>${esc(sheet.reviewNote)}</p></div></div>`;
+  if(sheet.strategy) h+=`<div class="trick">${ICON.bulb}<div><h3>${esc(sheet.strategy.title)}</h3><p>${esc(sheet.strategy.body)}</p></div></div>`;
+  sheet.questions.forEach(q=>{h+=renderQuestion(sheet,q);});
+  let c=0; sheet.questions.forEach(q=>{if(STATE.results[q.id]==='correct')c++;});
+  h+=`<div class="sheet-foot">
+      <div class="score">Worksheet ${sheet.no}: <strong>${c}</strong> of ${sheet.questions.length} questions correct</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn btn-primary" data-act="checkall">${ICON.check} Check whole worksheet</button>
+        <button class="btn btn-ghost" data-act="clearall">${ICON.undo} Clear my answers</button>
+      </div></div>`;
+  return h;
+}
+
+function renderQuestion(sheet,q){
+  const res=STATE.results[q.id], hint=STATE.hints[q.id];
+  const tr=STATE.i18n[q.id+':'+STATE.lang];
+  let h=`<section class="q ${res==='correct'?'is-right':res==='wrong'?'is-wrong':''}" data-qid="${q.id}" id="qq-${q.id}">
+    <div class="q-head"><span class="q-no">${esc(q.label)}</span>
+      <p class="q-prompt">${esc(q.prompt)}${q.sub?`<span class="sub">${esc(q.sub)}</span>`:''}</p>
+      ${res?tick(res==='correct'):''}</div>`;
+  if(q.needsHuman) h+=`<div class="panel hint"><h4>Needs a check</h4><p>${esc(q.reviewReason||'This question could not be read confidently from the photograph.')}</p></div>`;
+  if(q.media) h+=renderMedia(q.media);
+  if(q.layout==='grid') h+=renderGrid(q);
+  else if(q.layout==='table') h+=renderTable(q);
+  else h+=`<div class="fields ${q.layout==='row'?'row':''}">${q.fields.map(f=>renderField(q,f)).join('')}</div>`;
+
+  h+=`<div class="q-actions">
+      <button class="btn btn-primary" data-act="check">${ICON.check} Check answer</button>
+      <button class="btn btn-hint" data-act="hint">${ICON.bulb} ${hint?'Hide hint':'Give me a hint'}</button>
+      ${res?`<button class="btn btn-ghost" data-act="retry">${ICON.undo} Try again</button>`:''}
+      ${STATE.lang!=='en'?`<button class="btn btn-ghost" data-act="translate">${ICON.globe} Explain in ${esc(LANGS[STATE.lang])}</button>`:''}
+    </div>`;
+  if(hint) h+=`<div class="panel hint"><h4>Hint</h4><p>${nl2(q.hint)}</p></div>`;
+  if(res==='correct') h+=`<div class="panel solved"><h4>Correct</h4><p>${nl2(q.explanation)}</p></div>`;
+  if(res==='wrong') h+=`<div class="panel explain"><h4>How it works</h4><p>${nl2(q.explanation)}</p></div>`;
+  if(tr) h+=`<div class="panel explain" lang="${STATE.lang}"><h4>For the parent — ${esc(LANGS[STATE.lang])}</h4><p>${nl2(tr)}</p></div>`;
+  return h+`</section>`;
+}
+const tick=ok=>`<span class="tickbox ${ok?'ok':''}" aria-hidden="true"><svg viewBox="0 0 40 40">
+  ${ok?'<path d="M7 21 L16 30 L33 9" style="--len:60"/>':'<path d="M10 10 L30 30 M30 10 L10 30" style="--len:58"/>'}</svg></span>`;
+
+function renderField(q,f){
+  const val=getAns(q,f.key), res=STATE.results[q.id];
+  const ok=res?checkAnswer(f.check,val===undefined?'':val):null;
+  const mark=ok===false?`<span class="mark no">answer: ${esc(answerText(f))}</span>`:'';
+  const state=ok===true?'correct':ok===false?'incorrect':'';
+  const id=`f-${q.id}-${f.key}`;
+  if(f.input==='choice'||f.input==='multi'){
+    const sel=f.input==='choice'?(val||''):(Array.isArray(val)?val:[]);
+    return `<div class="field ${state}"><label id="${id}-l">${esc(f.label)}</label>
+      <div class="choices" role="group" aria-labelledby="${id}-l">${f.options.map(o=>{
+        const on=f.input==='choice'?sel===o:sel.includes(o); let ex='';
+        if(res){ const isAns=f.check.kind==='choice'?f.check.value===o:(f.check.values||[]).includes(o);
+          if(isAns) ex=' correct'; else if(on) ex=' incorrect'; }
+        return `<button type="button" class="choice${ex}" aria-pressed="${on}" data-fk="${f.key}" data-opt="${esc(o)}" data-multi="${f.input==='multi'}">${esc(o)}</button>`;
+      }).join('')}</div>${mark}</div>`;
+  }
+  return `<div class="field ${f.width?'w-'+f.width:''} ${state}">
+    <label for="${id}">${esc(f.label)}</label>
+    <input type="text" id="${id}" data-fk="${f.key}" autocomplete="off" spellcheck="false"
+      value="${val===undefined?'':esc(val)}" placeholder="${esc(f.placeholder||'')}">${mark}</div>`;
+}
+
+function renderTable(q){
+  const cols=q.table.head.length, ins=q.fields.filter(f=>f.inTable);
+  let fi=0,rows='';
+  q.table.rows.forEach(r=>{
+    let cells=r.map(c=>`<td>${esc(c)}</td>`).join('');
+    for(let c=r.length;c<cols;c++){ const f=ins[fi++];
+      cells+=`<td>${f?tableInput(q,f):''}</td>`; }
+    rows+=`<tr>${cells}</tr>`;
+  });
+  return `<div class="tbl-scroll"><table class="tbl"><thead><tr>${q.table.head.map(h=>`<th>${esc(h)}</th>`).join('')}</tr></thead><tbody>${rows}</tbody></table></div>`;
+}
+function tableInput(q,f){
+  const val=getAns(q,f.key), res=STATE.results[q.id];
+  const ok=res?checkAnswer(f.check,val===undefined?'':val):null;
+  return `<div class="field ${ok===true?'correct':ok===false?'incorrect':''}" style="gap:2px">
+    <input type="text" data-fk="${f.key}" autocomplete="off" spellcheck="false" aria-label="${esc(f.label)}"
+      value="${val===undefined?'':esc(val)}" placeholder="${esc(f.placeholder||'')}">
+    ${ok===false?`<span class="mark no">${esc(answerText(f))}</span>`:''}</div>`;
+}
+function renderGrid(q){
+  const f=q.fields.find(x=>x.input==='grid');
+  const raw=getAns(q,f.key), sel=Array.isArray(raw)?raw:[], res=STATE.results[q.id];
+  const target=f.check.values;
+  let cells='';
+  for(let n=1;n<=100;n++){
+    const on=sel.includes(n); let ex='';
+    if(res){ if(on&&target.includes(n)) ex=' hit'; else if(on) ex=' miss'; else if(target.includes(n)) ex=' missed-prime'; }
+    cells+=`<button type="button" class="cellbtn${ex}" aria-pressed="${on}" data-cell="${n}" data-fk="${f.key}">${n}</button>`;
+  }
+  let lg=`<div class="grid-legend"><span><span class="swatch" style="background:var(--pen);border-color:var(--pen)"></span>your pick</span>`;
+  if(res) lg+=`<span><span class="swatch" style="background:var(--green-wash);border-color:var(--green)"></span>found</span>
+    <span><span class="swatch" style="background:var(--red-wash);border-color:var(--red)"></span>wrong</span>
+    <span><span class="swatch" style="border-color:var(--amber);border-style:dashed"></span>missed</span>`;
+  lg+=`<span class="count">selected: ${sel.length} of ${target.length}</span></div>`;
+  return `<div class="grid100" role="group" aria-label="Numbers 1 to 100">${cells}</div>${lg}`;
+}
+
+/* ============================================================
+   DIAGNOSTIC REPORT — grouped by skill, not by worksheet
+   ============================================================ */
+function renderReport(){
+  const bySkill={};
+  PACK.sheets.forEach(s=>{
+    const k=s.skill||'unclassified';
+    bySkill[k]=bySkill[k]||{skill:k,title:s.title,attempted:0,correct:0,total:0,weak:[]};
+    s.questions.forEach(q=>{
+      bySkill[k].total++;
+      const r=STATE.results[q.id];
+      if(r){ bySkill[k].attempted++;
+        if(r==='correct') bySkill[k].correct++;
+        else bySkill[k].weak.push({sheet:s,q}); }
+    });
+  });
+  const rows=Object.values(bySkill);
+  const attempted=rows.reduce((a,r)=>a+r.attempted,0);
+  if(!attempted) return `<div class="sheet-head"><p class="eyebrow">Progress</p><h2>Nothing to report yet</h2>
+    <p class="obj">Answer a few questions and this page will show which skills are solid and which ones need another go — grouped by skill, not by worksheet, because that is what a re-teach plan needs.</p></div>`;
+
+  return `<div class="sheet-head"><p class="eyebrow">Progress</p><h2>What to practise next</h2>
+    <p class="obj">${attempted} question${attempted>1?'s':''} attempted. Skills below 70% are worth revisiting before the next worksheet.</p></div>
+    ${rows.filter(r=>r.attempted).sort((a,b)=>(a.correct/a.attempted)-(b.correct/b.attempted)).map(r=>{
+      const pc=Math.round(r.correct/r.attempted*100);
+      const band=pc>=85?'var(--green)':pc>=70?'var(--pen)':'var(--red)';
+      return `<div class="q">
+        <div class="q-head"><span class="q-no" style="background:${band};color:#fff">${pc}%</span>
+        <p class="q-prompt">${esc(r.title)}<span class="sub">skill: ${esc(r.skill)} · ${r.correct} of ${r.attempted} attempted correct · ${r.total-r.attempted} not yet tried</span></p></div>
+        ${r.weak.length?`<div class="panel explain"><h4>Go back to</h4>
+          ${r.weak.map(w=>`<p><strong>WS${w.sheet.no} Q${esc(w.q.label)}</strong> — ${esc(w.q.prompt.slice(0,90))}${w.q.prompt.length>90?'…':''}</p>`).join('')}
+        </div>`:`<div class="panel solved"><h4>Solid</h4><p>Every attempted question in this skill was correct.</p></div>`}
+      </div>`;}).join('')}`;
+}
+
+/* ============================================================
+   MARKING
+   ============================================================ */
+function grade(q){
+  const a=STATE.answers[q.id]||{};
+  if(!q.fields.some(f=>!isBlank(a[f.key]))) return null;
+  const ok=q.fields.every(f=>checkAnswer(f.check,a[f.key]===undefined?'':a[f.key]));
+  STATE.results[q.id]=ok?'correct':'wrong';
+  return ok;
+}
+function checkQ(sheet,q){
+  const r=grade(q);
+  if(r===null){ toast('Write an answer first, then check'); return; }
+  saveState(); rerender(sheet,q); toast(r?'Correct':'Not quite — read the explanation');
+}
+function rerender(sheet,q){
+  const old=document.getElementById('qq-'+q.id); if(!old){ renderMain(); return; }
+  const t=document.createElement('div'); t.innerHTML=renderQuestion(sheet,q);
+  old.replaceWith(t.firstElementChild); updateMeter(); updateFoot(sheet);
+}
+function updateFoot(sheet){
+  const el=document.querySelector('.sheet-foot .score'); if(!el) return;
+  let c=0; sheet.questions.forEach(q=>{if(STATE.results[q.id]==='correct')c++;});
+  el.innerHTML=`Worksheet ${sheet.no}: <strong>${c}</strong> of ${sheet.questions.length} questions correct`;
+}
+function updateMeter(){
+  const all=allQuestions();
+  const c=all.filter(({q})=>STATE.results[q.id]==='correct').length;
+  document.getElementById('meterLabel').textContent=`${c} / ${all.length}`;
+  document.getElementById('meterFill').style.width=(all.length?c/all.length*100:0)+'%';
+}
+
+/* ============================================================
+   PARENT LANGUAGE LAYER
+   ============================================================ */
+const LANGS={en:'English',ta:'Tamil',hi:'Hindi',te:'Telugu',kn:'Kannada',ml:'Malayalam',mr:'Marathi',bn:'Bengali'};
+async function translateQuestion(q){
+  const key=q.id+':'+STATE.lang;
+  if(STATE.i18n[key]) return;
+  toast('Translating…');
+  const prompt=`You are helping an Indian parent who does not speak English fluently support their child with school maths.
+Rewrite the following in ${LANGS[STATE.lang]}, in simple everyday language a parent can read aloud.
+Keep all numbers and mathematical symbols in Western digits. Do not add anything new. Return only the translation.
+
+QUESTION: ${q.prompt}${q.sub?' '+q.sub:''}
+HOW TO EXPLAIN IT: ${q.explanation}`;
+  try{
+    const res=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({model:'claude-sonnet-4-6',max_tokens:1000,messages:[{role:'user',content:prompt}]})
+    });
+    if(!res.ok) throw new Error('http '+res.status);
+    const data=await res.json();
+    const text=(data.content||[]).filter(b=>b.type==='text').map(b=>b.text).join('\n').trim();
+    if(!text) throw new Error('empty');
+    STATE.i18n[key]=text; saveState();
+  }catch(e){
+    STATE.i18n[key]='Translation is not available in this preview. In the app this call runs on your server, so it works offline of the browser and the result is cached against the question so it is only paid for once.';
+  }
+}
+
+/* ============================================================
+   EVENTS
+   ============================================================ */
+document.getElementById('tabs').addEventListener('click',e=>{
+  const b=e.target.closest('.tab'); if(!b) return;
+  view=b.dataset.view; buildTabs(); renderMain(); window.scrollTo({top:0,behavior:'smooth'});
+});
+document.getElementById('lang').addEventListener('change',e=>{
+  STATE.lang=e.target.value; saveState(); renderMain();
+  if(STATE.lang!=='en') toast('Open any question and press "Explain in '+LANGS[STATE.lang]+'"');
+});
+
+const MAIN=document.getElementById('main');
+const qOf=el=>{const s=el.closest('.q'); if(!s||!s.dataset.qid) return null;
+  const id=s.dataset.qid; const sheet=PACK.sheets.find(x=>x.questions.some(q=>q.id===id));
+  return sheet?{sheet,q:sheet.questions.find(q=>q.id===id)}:null;};
+
+MAIN.addEventListener('input',e=>{
+  const i=e.target.closest('input[type="text"]'); if(!i) return;
+  const c=qOf(i); if(c) setAns(c.q,i.dataset.fk,i.value);
+});
+MAIN.addEventListener('keydown',e=>{
+  if(e.key!=='Enter') return;
+  const i=e.target.closest('input[type="text"]'); if(!i) return;
+  e.preventDefault(); const c=qOf(i); if(c) checkQ(c.sheet,c.q);
+});
+MAIN.addEventListener('click',async e=>{
+  const cell=e.target.closest('.cellbtn');
+  if(cell){ const c=qOf(cell); if(!c) return;
+    const n=Number(cell.dataset.cell), prev=getAns(c.q,cell.dataset.fk);
+    const cur=Array.isArray(prev)?[...prev]:[], ix=cur.indexOf(n);
+    if(ix>-1) cur.splice(ix,1); else cur.push(n);
+    setAns(c.q,cell.dataset.fk,cur);
+    cell.setAttribute('aria-pressed',ix===-1); cell.classList.remove('hit','miss','missed-prime');
+    const ct=cell.closest('.q').querySelector('.grid-legend .count');
+    const f=c.q.fields.find(x=>x.input==='grid');
+    if(ct) ct.textContent=`selected: ${cur.length} of ${f.check.values.length}`;
+    return; }
+
+  const ch=e.target.closest('.choice');
+  if(ch){ const c=qOf(ch); if(!c) return;
+    if(ch.dataset.multi==='true'){
+      const prev=getAns(c.q,ch.dataset.fk), cur=Array.isArray(prev)?[...prev]:[];
+      const ix=cur.indexOf(ch.dataset.opt);
+      if(ix>-1) cur.splice(ix,1); else cur.push(ch.dataset.opt);
+      setAns(c.q,ch.dataset.fk,cur); ch.setAttribute('aria-pressed',ix===-1);
+    } else {
+      setAns(c.q,ch.dataset.fk,ch.dataset.opt);
+      ch.parentElement.querySelectorAll('.choice').forEach(b=>b.setAttribute('aria-pressed',b===ch));
+    }
+    return; }
+
+  const btn=e.target.closest('[data-act]'); if(!btn) return;
+  const act=btn.dataset.act, ctx=qOf(btn);
+  if(act==='check'&&ctx) checkQ(ctx.sheet,ctx.q);
+  else if(act==='hint'&&ctx){ STATE.hints[ctx.q.id]=!STATE.hints[ctx.q.id]; saveState(); rerender(ctx.sheet,ctx.q); }
+  else if(act==='retry'&&ctx){ delete STATE.results[ctx.q.id]; saveState(); rerender(ctx.sheet,ctx.q); }
+  else if(act==='translate'&&ctx){ await translateQuestion(ctx.q); rerender(ctx.sheet,ctx.q); }
+  else if(act==='checkall'){ const sheet=sheetById(view); let n=0;
+    sheet.questions.forEach(q=>{ if(grade(q)!==null) n++; });
+    saveState(); renderMain(); toast(n?`Marked ${n} question${n>1?'s':''}`:'Type some answers first'); }
+  else if(act==='clearall'){ const sheet=sheetById(view);
+    sheet.questions.forEach(q=>{ delete STATE.answers[q.id]; delete STATE.results[q.id]; delete STATE.hints[q.id]; });
+    saveState(); renderMain(); toast('Worksheet cleared'); }
+});
+
+/* ---- boot ---- */
+(async function(){
+  await loadState();
+  const sel=document.getElementById('lang');
+  sel.innerHTML=Object.entries(LANGS).map(([k,v])=>`<option value="${k}" ${k===STATE.lang?'selected':''}>${v}</option>`).join('');
+  document.getElementById('packName').textContent=PACK.source.book;
+  document.getElementById('packSub').textContent=
+    `${PACK.curriculum.subject} · ${PACK.curriculum.stage} · converted from ${PACK.source.photoCount} photos`;
+  buildTabs(); renderMain();
+})();
+</script>
+</body>
+</html>

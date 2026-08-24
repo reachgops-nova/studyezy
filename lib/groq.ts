@@ -38,7 +38,7 @@ export function isGroqConfigured(): boolean {
   return Boolean(process.env.GROQ_API_KEY);
 }
 
-interface GroqChatResult {
+export interface GroqChatResult {
   text: string;
   inputTokens: number;
   outputTokens: number;
@@ -333,6 +333,64 @@ export async function transcribeReferencePageGroq(image: UploadedPageImage): Pro
   const text = data.choices?.[0]?.message?.content?.trim();
   if (!text) throw new Error("Groq returned no transcript content");
   return text;
+}
+
+/**
+ * Converts ONE photographed page into a "content pack" fragment (JSON text,
+ * parsed by the caller) using content/prompts/extract-worksheet.md's system
+ * prompt - the declarative-check alternative to plain-prose concept content
+ * (see content/HANDOFF.md, PLATFORM_PLAN.md's 2026-08-24 entry). Scoped to
+ * one page per call, not a whole book: Qwen3.6-27B's Groq tier has an 8000
+ * TPM cap (hit live during the sourceImageTranscript backfill), and the
+ * original kit's own convert.mjs budgets 32000 output tokens per call for a
+ * whole book - completely incompatible with that ceiling. temperature 0,
+ * matching the prompt's own "temperature 0, transcribe only" instruction -
+ * this generates graded content, not a chat answer, so determinism matters
+ * more than variety.
+ */
+export async function extractPackFragmentGroq(
+  image: UploadedPageImage,
+  system: string,
+  userText: string
+): Promise<GroqChatResult> {
+  const res = await fetch(GROQ_API_URL, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${process.env.GROQ_API_KEY}`,
+    },
+    body: JSON.stringify({
+      model: QWEN_MODEL,
+      max_tokens: 4000,
+      temperature: 0,
+      reasoning_effort: "none",
+      messages: [
+        { role: "system", content: system },
+        {
+          role: "user",
+          content: [
+            { type: "image_url", image_url: { url: `data:${image.mediaType};base64,${image.base64}` } },
+            { type: "text", text: userText },
+          ],
+        },
+      ],
+    }),
+  });
+
+  if (!res.ok) {
+    throw new Error(`Groq vision request failed: ${res.status} ${await res.text()}`);
+  }
+
+  const data = (await res.json()) as {
+    choices?: { message?: { content?: string } }[];
+    usage?: { prompt_tokens?: number; completion_tokens?: number };
+  };
+  const inputTokens = data.usage?.prompt_tokens ?? 0;
+  const outputTokens = data.usage?.completion_tokens ?? 0;
+  if (data.usage) logAiCost("content-pack", QWEN_MODEL, inputTokens, outputTokens);
+  const text = data.choices?.[0]?.message?.content?.trim();
+  if (!text) throw new Error("Groq returned no content-pack content");
+  return { text, inputTokens, outputTokens };
 }
 
 /**

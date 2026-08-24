@@ -1,9 +1,18 @@
 import Link from "next/link";
 import Logo, { LogoMark } from "./Logo";
 import AccountMenu from "./AccountMenu";
-import { BookIcon, ChartIcon, ClipboardIcon, FolderPlusIcon, ShieldIcon, ArchiveIcon, TagIcon, ScaleIcon } from "./NavIcons";
+import { BookIcon, ChartIcon, ClipboardIcon, FolderPlusIcon, ShieldIcon, ArchiveIcon, TagIcon, ScaleIcon, LayersIcon } from "./NavIcons";
 
-type NavKey = "select" | "dashboard" | "plan" | "manage" | "admin" | "admin-resources" | "admin-pricing" | "admin-compare";
+type NavKey =
+  | "select"
+  | "dashboard"
+  | "plan"
+  | "manage"
+  | "admin"
+  | "admin-resources"
+  | "admin-pricing"
+  | "admin-compare"
+  | "admin-content-packs";
 
 // Desktop (lg+): fixed left sidebar for primary nav + a slim top bar holding
 // just the account menu ("topside configurations"), main content to the
@@ -27,7 +36,8 @@ export default function AppShell({
     active === "admin" ||
     active === "admin-resources" ||
     active === "admin-pricing" ||
-    active === "admin-compare"
+    active === "admin-compare" ||
+    active === "admin-content-packs"
       ? active
       : undefined;
 
@@ -70,6 +80,13 @@ export default function AppShell({
                 </SidebarLink>
                 <SidebarLink href="/admin/model-compare" isActive={active === "admin-compare"} icon={<ScaleIcon />}>
                   Model comparison
+                </SidebarLink>
+                <SidebarLink
+                  href="/admin/content-packs"
+                  isActive={active === "admin-content-packs"}
+                  icon={<LayersIcon />}
+                >
+                  Content packs
                 </SidebarLink>
               </>
             )}

@@ -99,6 +99,16 @@ export function ScaleIcon({ className = base }: IconProps) {
   );
 }
 
+export function LayersIcon({ className = base }: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" className={className} fill="none" stroke="currentColor" strokeWidth="1.75" aria-hidden>
+      <path d="m12 3 9 5-9 5-9-5 9-5Z" strokeLinejoin="round" />
+      <path d="m3 13 9 5 9-5" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="m3 18 9 5 9-5" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
 export function LogoutIcon({ className = base }: IconProps) {
   return (
     <svg viewBox="0 0 24 24" className={className} fill="none" stroke="currentColor" strokeWidth="1.75" aria-hidden>

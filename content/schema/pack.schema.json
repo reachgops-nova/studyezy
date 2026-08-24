@@ -1,0 +1,147 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://smartigcse.app/schema/pack.schema.json",
+  "title": "SmartIGCSE content pack",
+  "description": "One uploaded book or worksheet set, converted to markable questions. Data only - packs never contain executable code.",
+  "type": "object",
+  "required": ["packVersion", "packId", "source", "curriculum", "language", "sheets"],
+  "properties": {
+    "packVersion": { "const": "1.0" },
+    "packId": { "type": "string", "pattern": "^[a-z0-9-]+$" },
+    "language": { "type": "string", "description": "BCP-47 code of the printed book" },
+    "source": {
+      "type": "object",
+      "required": ["book", "capturedAs", "confidence"],
+      "properties": {
+        "school": { "type": "string" },
+        "book": { "type": "string" },
+        "capturedAs": { "enum": ["parent photo upload", "pdf", "publisher feed", "manual"] },
+        "photoCount": { "type": "integer", "minimum": 0 },
+        "extractedOn": { "type": "string", "format": "date" },
+        "confidence": { "enum": ["high", "mixed", "low"] },
+        "reviewNotes": { "type": "string" }
+      }
+    },
+    "curriculum": {
+      "type": "object",
+      "required": ["board", "stage", "subject"],
+      "properties": {
+        "board": { "type": "string" },
+        "stage": { "type": "string" },
+        "subject": { "type": "string" },
+        "strand": { "type": "string" }
+      }
+    },
+    "contents": {
+      "type": "array",
+      "description": "The book's own index, including sheets not yet converted.",
+      "items": {
+        "type": "object",
+        "required": ["no", "topic", "objective"],
+        "properties": {
+          "no": { "type": "integer" },
+          "topic": { "type": "string" },
+          "objective": { "type": "string" },
+          "page": { "type": ["integer", "string"] },
+          "sheetId": { "type": ["string", "null"] }
+        }
+      }
+    },
+    "sheets": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/definitions/sheet" }
+    }
+  },
+  "definitions": {
+    "sheet": {
+      "type": "object",
+      "required": ["id", "no", "title", "objective", "questions"],
+      "properties": {
+        "id": { "type": "string" },
+        "no": { "type": ["integer", "string"] },
+        "title": { "type": "string" },
+        "objective": { "type": "string" },
+        "page": { "type": ["string", "integer"] },
+        "date": { "type": "string" },
+        "skill": {
+          "type": "string",
+          "description": "Slug the assessment engine groups on. Reuse existing slugs wherever they fit rather than minting new ones."
+        },
+        "strategy": {
+          "type": ["object", "null"],
+          "description": "One transferable trick for the whole sheet, not a restatement of the objective.",
+          "required": ["title", "body"],
+          "properties": { "title": { "type": "string" }, "body": { "type": "string" } }
+        },
+        "reviewNote": { "type": ["string", "null"] },
+        "questions": { "type": "array", "minItems": 1, "items": { "$ref": "#/definitions/question" } }
+      }
+    },
+    "question": {
+      "type": "object",
+      "required": ["id", "label", "prompt", "fields", "hint", "explanation"],
+      "properties": {
+        "id": { "type": "string" },
+        "label": { "type": "string", "description": "The book's own numbering, e.g. 1a" },
+        "prompt": { "type": "string", "minLength": 8 },
+        "sub": { "type": ["string", "null"] },
+        "difficulty": { "type": "integer", "minimum": 1, "maximum": 5 },
+        "layout": { "enum": ["stack", "row", "table", "grid"] },
+        "media": { "anyOf": [{ "$ref": "#/definitions/media" }, { "type": "null" }] },
+        "table": {
+          "type": ["object", "null"],
+          "required": ["head", "rows"],
+          "description": "Rows list only the printed cells. Every remaining cell is filled by the next field with inTable:true, in order.",
+          "properties": {
+            "head": { "type": "array", "items": { "type": "string" } },
+            "rows": { "type": "array", "items": { "type": "array", "items": { "type": "string" } } }
+          }
+        },
+        "fields": { "type": "array", "minItems": 1, "items": { "$ref": "#/definitions/field" } },
+        "hint": { "type": "string", "description": "A nudge. Must not contain the answer verbatim." },
+        "explanation": { "type": "string", "minLength": 20, "description": "Worked reasoning a non-specialist parent can read aloud." },
+        "misconception": { "type": "string", "description": "The likeliest wrong answer and why. Drives the diagnostic report." },
+        "needsHuman": { "type": "boolean", "default": false },
+        "reviewReason": { "type": "string" }
+      }
+    },
+    "field": {
+      "type": "object",
+      "required": ["key", "label", "input", "check"],
+      "properties": {
+        "key": { "type": "string" },
+        "label": { "type": "string" },
+        "placeholder": { "type": "string" },
+        "width": { "enum": ["sm", "md", "lg"] },
+        "input": { "enum": ["text", "choice", "multi", "grid"] },
+        "options": { "type": ["array", "null"], "items": { "type": "string" } },
+        "inTable": { "type": "boolean", "default": false },
+        "answerText": { "type": ["string", "null"], "description": "Overrides the check's own description when the child is wrong." },
+        "check": { "$ref": "#/definitions/check" }
+      }
+    },
+    "check": {
+      "type": "object",
+      "required": ["kind"],
+      "properties": {
+        "kind": {
+          "description": "Must exist in engine/checks.js. Adding a kind means adding an implementation, a validator rule and a player case.",
+          "enum": ["exact_number", "any_of_numbers", "number_in_range", "sequence", "sequence_any_of",
+                   "number_set", "number_grid", "choice", "multi_choice", "text_exact", "keywords",
+                   "expression", "sum_of_primes", "squares_sum_to_square",
+                   "digit_completes_divisibility", "digit_cards_product"]
+        }
+      }
+    },
+    "media": {
+      "type": "object",
+      "required": ["kind"],
+      "description": "Parameters only. The player owns all drawing code.",
+      "properties": {
+        "kind": { "enum": ["number_line", "thermometer", "spider", "square_pattern", "matchstick", "photo_crop"] },
+        "redrawn": { "type": "boolean", "description": "True when the photograph was unusable and the figure was rebuilt from stated numbers." }
+      }
+    }
+  }
+}

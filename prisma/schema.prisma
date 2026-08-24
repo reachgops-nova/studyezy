@@ -144,8 +144,38 @@ model Unit {
   examSubmissions ExamSubmission[]
   resources       UnitResource[]
   questionPapers  QuestionPaper[]
+  contentPacks    ContentPack[]
 
   @@unique([subjectId, number])
+}
+
+// A "markable" content pack (content/schema/pack.schema.json) - the
+// declarative-check alternative to Concept's prose fields, built to answer
+// a real gap: prose can be read aloud but never marked right/wrong. Admin-
+// only research surface for now (see content/HANDOFF.md and PLATFORM_PLAN.md's
+// 2026-08-24 entry) - not wired into the live student-facing teaching flow
+// yet. `data` is the full pack JSON (validated against pack.schema.json
+// before being saved); the other fields are denormalized summary counts so
+// the admin list view doesn't need to parse `data` for every row.
+model ContentPack {
+  id              String   @id @default(cuid())
+  packId          String   @unique
+  unitId          String
+  unit            Unit     @relation(fields: [unitId], references: [id], onDelete: Cascade)
+  data            Json
+  sheetsCount     Int      @default(0)
+  questionsCount  Int      @default(0)
+  needsHumanCount Int      @default(0)
+  errorsCount     Int      @default(0)
+  warningsCount   Int      @default(0)
+  status          String   @default("draft") // "draft" | "clean" | "needs_review" | "failed"
+  sourceImageKeys String[]
+  model           String
+  inputTokens     Int      @default(0)
+  outputTokens    Int      @default(0)
+  createdAt       DateTime @default(now())
+
+  @@index([unitId])
 }
 
 // Up to 3 self-test papers per unit, one per difficulty (2026-08-20 decision:

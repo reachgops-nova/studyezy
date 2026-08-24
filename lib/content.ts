@@ -102,3 +102,22 @@ export async function getUploadedPageImages(key: string): Promise<string[]> {
   });
   return pages.map((p) => `/api/uploads/${p.storageKey}`);
 }
+
+/**
+ * Same query as getUploadedPageImages, but keeps the raw storageKey rather
+ * than the served /api/uploads/ path - used by the content-pack conversion
+ * admin UI, which needs to send storageKeys (not full URLs) to the convert
+ * API route.
+ */
+export async function getUploadedPageStorageKeys(
+  key: string
+): Promise<{ storageKey: string; originalFilename: string }[]> {
+  const unit = await db.unit.findUnique({ where: { unitKey: key } });
+  if (!unit) return [];
+
+  const pages = await db.uploadedPage.findMany({
+    where: { unitId: unit.id, purpose: "textbook_source" },
+    orderBy: { createdAt: "asc" },
+  });
+  return pages.map((p) => ({ storageKey: p.storageKey, originalFilename: p.originalFilename }));
+}
