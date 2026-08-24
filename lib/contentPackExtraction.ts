@@ -9,6 +9,16 @@ import { validatePack } from "../content/engine/validate.mjs";
 const PROMPT_PATH = path.join(process.cwd(), "content", "prompts", "extract-worksheet.md");
 const MAX_REPAIR_ATTEMPTS = 3;
 
+// Real, empirically-hit constraint (not assumed): a single call here reserves
+// close to Groq's entire 8000 TPM budget on its own (system prompt + one
+// image + a several-thousand-token completion), so calling back-to-back with
+// zero delay - which the first attempt at this feature did - hits a 429
+// almost immediately. Same fix shape as the sourceImageTranscript backfill's
+// external pacing, just applied internally here since a conversion run makes
+// several calls (one per page, plus any repairs) within one request.
+const CALL_SPACING_MS = 25_000;
+const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
 export interface PackMeta {
   book: string;
   subject: string;
@@ -109,6 +119,7 @@ export async function convertPagesToPack(
   let totalInput = 0;
   let totalOutput = 0;
   let modelUsed = "";
+  let isFirstCall = true;
 
   for (let i = 0; i < images.length; i++) {
     const image = images[i];
@@ -122,6 +133,9 @@ export async function convertPagesToPack(
     let lastErrors: string[] = [];
 
     for (let attempt = 1; attempt <= MAX_REPAIR_ATTEMPTS; attempt++) {
+      if (!isFirstCall) await sleep(CALL_SPACING_MS);
+      isFirstCall = false;
+
       const result = await callVisionModel(image, system, userText);
       totalInput += result.inputTokens;
       totalOutput += result.outputTokens;

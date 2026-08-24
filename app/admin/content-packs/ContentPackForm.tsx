@@ -152,7 +152,7 @@ export default function ContentPackForm({ unitOptions }: { unitOptions: UnitOpti
             className="rounded-full bg-gradient-to-br from-orange-400 to-orange-600 px-5 py-2.5 text-sm font-medium text-white transition active:scale-95 disabled:opacity-50"
           >
             {loading
-              ? `Converting ${selectedKeys.length} page${selectedKeys.length === 1 ? "" : "s"} (~40s per page)...`
+              ? `Converting ${selectedKeys.length} page${selectedKeys.length === 1 ? "" : "s"} (~30-90s per page, paced to stay under Groq's rate limit)...`
               : `Convert ${selectedKeys.length} page${selectedKeys.length === 1 ? "" : "s"}`}
           </button>
         </div>

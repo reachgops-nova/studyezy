@@ -341,12 +341,16 @@ export async function transcribeReferencePageGroq(image: UploadedPageImage): Pro
  * prompt - the declarative-check alternative to plain-prose concept content
  * (see content/HANDOFF.md, PLATFORM_PLAN.md's 2026-08-24 entry). Scoped to
  * one page per call, not a whole book: Qwen3.6-27B's Groq tier has an 8000
- * TPM cap (hit live during the sourceImageTranscript backfill), and the
- * original kit's own convert.mjs budgets 32000 output tokens per call for a
- * whole book - completely incompatible with that ceiling. temperature 0,
- * matching the prompt's own "temperature 0, transcribe only" instruction -
- * this generates graded content, not a chat answer, so determinism matters
- * more than variety.
+ * TPM cap (hit live during the sourceImageTranscript backfill AND again here
+ * - a single call's reserved budget, system prompt + one image + max_tokens,
+ * came within ~200 tokens of the entire cap on its own), and the original
+ * kit's own convert.mjs budgets 32000 output tokens per call for a whole
+ * book - completely incompatible with that ceiling. max_tokens kept modest
+ * (not the 4000 first tried) for headroom, and lib/contentPackExtraction.ts
+ * paces successive calls ~25s apart rather than firing them back-to-back.
+ * temperature 0, matching the prompt's own "temperature 0, transcribe only"
+ * instruction - this generates graded content, not a chat answer, so
+ * determinism matters more than variety.
  */
 export async function extractPackFragmentGroq(
   image: UploadedPageImage,
@@ -361,7 +365,7 @@ export async function extractPackFragmentGroq(
     },
     body: JSON.stringify({
       model: QWEN_MODEL,
-      max_tokens: 4000,
+      max_tokens: 3000,
       temperature: 0,
       reasoning_effort: "none",
       messages: [
