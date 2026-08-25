@@ -29,6 +29,11 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ pac
     return NextResponse.json({ error: "Test template is missing its pack block." }, { status: 500 });
   }
 
-  const html = template.replace(PACK_BLOCK_RE, `$1${JSON.stringify(pack.data)}$2`);
+  // Replacer function, not a template-string second argument - see the same
+  // fix in app/test/[unitId]/[difficulty]/render/route.ts for why: String.replace
+  // treats "$1"/"$2" in a STRING replacement as backreferences, and real
+  // pack content can legitimately contain "$"-prefixed sequences.
+  const packJson = JSON.stringify(pack.data);
+  const html = template.replace(PACK_BLOCK_RE, (_m, open: string, close: string) => `${open}${packJson}${close}`);
   return new NextResponse(html, { headers: { "Content-Type": "text/html; charset=utf-8" } });
 }

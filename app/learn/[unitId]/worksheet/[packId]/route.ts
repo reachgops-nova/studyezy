@@ -30,7 +30,15 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ uni
     return NextResponse.json({ error: "Worksheet template is missing its pack block." }, { status: 500 });
   }
 
-  const withPack = template.replace(PACK_BLOCK_RE, `$1${JSON.stringify(pack.data)}$2`);
+  // Replacer function, not a template-string second argument: String.replace
+  // treats "$1"/"$2"/etc in a STRING replacement as backreferences, and real
+  // pack content legitimately contains "$"-prefixed sequences (e.g. "$2.50"
+  // in a money word problem) - a string replacement silently swapped "$2"
+  // for capture group 2's own value (the literal "</script>" tag),
+  // corrupting the page. A function receives the match as plain arguments
+  // and its return value is used verbatim, immune to this.
+  const packJson = JSON.stringify(pack.data);
+  const withPack = template.replace(PACK_BLOCK_RE, (_m, open: string, close: string) => `${open}${packJson}${close}`);
 
   // STATE.results[q.id] is the string 'correct'|'wrong' (checked directly
   // against content/engine/player-app.js's own checkQ/grade functions, not
