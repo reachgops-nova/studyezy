@@ -1,12 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getActiveProfileId } from "@/lib/auth";
-import { db } from "@/lib/db";
 import { checkRateLimit } from "@/lib/rateLimit";
-import { nextReviewDate, scorePercent } from "@/lib/mastery";
+import { recordUnitAttempt } from "@/lib/recordMastery";
 
 const UNIT_KEY_PATTERN = /^[a-z0-9]+-\d+-[a-z0-9]+-\d+$/i;
-
-const VALID_DIFFICULTIES = ["easy", "moderate", "tough"];
 
 interface AttemptBody {
   unitKey: string;
@@ -49,67 +46,18 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Missing or invalid fields." }, { status: 400 });
   }
 
-  const unit = await db.unit.findUnique({
-    where: { unitKey },
-    include: { concepts: true },
-  });
-  if (!unit) {
+  try {
+    const result = await recordUnitAttempt({
+      profileId,
+      unitKey,
+      attemptType: attemptType === "diagnostic" ? "diagnostic" : "progression_test",
+      difficulty,
+      correct,
+      total,
+      perConcept,
+    });
+    return NextResponse.json(result);
+  } catch {
     return NextResponse.json({ error: "Unit not found." }, { status: 404 });
   }
-
-  const scorePct = scorePercent(correct, total);
-  const { band, date } = nextReviewDate(scorePct);
-  const takenAt = new Date();
-
-  await db.testAttempt.create({
-    data: {
-      studentProfileId: profileId,
-      unitId: unit.id,
-      attemptType: attemptType === "diagnostic" ? "diagnostic" : "progression_test",
-      difficulty: typeof difficulty === "string" && VALID_DIFFICULTIES.includes(difficulty) ? difficulty : "moderate",
-      scorePct,
-      band,
-      perConcept,
-      nextReviewDate: date,
-      takenAt,
-    },
-  });
-
-  const conceptByKey = new Map(unit.concepts.map((c) => [c.conceptKey, c]));
-  for (const [conceptKey, stat] of Object.entries(perConcept)) {
-    const concept = conceptByKey.get(conceptKey);
-    if (!concept || stat.total <= 0) continue;
-
-    const conceptPct = scorePercent(stat.correct, stat.total);
-    const { band: conceptBand, date: conceptNextReview } = nextReviewDate(conceptPct);
-
-    await db.conceptMastery.upsert({
-      where: { studentProfileId_conceptId: { studentProfileId: profileId, conceptId: concept.id } },
-      create: {
-        studentProfileId: profileId,
-        conceptId: concept.id,
-        lastScorePct: conceptPct,
-        band: conceptBand,
-        attempts: 1,
-        lastAttemptAt: takenAt,
-        nextReviewDue: conceptNextReview,
-      },
-      update: {
-        lastScorePct: conceptPct,
-        band: conceptBand,
-        attempts: { increment: 1 },
-        lastAttemptAt: takenAt,
-        nextReviewDue: conceptNextReview,
-      },
-    });
-  }
-
-  return NextResponse.json({
-    unitKey,
-    scorePct,
-    band,
-    nextReviewDate: date.toISOString(),
-    perConcept,
-    takenAt: takenAt.toISOString(),
-  });
 }

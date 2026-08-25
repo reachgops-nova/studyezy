@@ -1,17 +1,20 @@
 import { notFound, redirect } from "next/navigation";
-import Link from "next/link";
 import { getActiveProfile } from "@/lib/auth";
 import { getCurrentUser } from "@/lib/session";
 import { getUnit } from "@/lib/content";
 import { getQuestionPaperByKey } from "@/lib/queries/questionPapers";
 import { QUESTION_PAPER_DIFFICULTIES, type QuestionPaperDifficulty } from "@/lib/types";
-import { LogoMark } from "@/components/Logo";
-import TestRunner from "@/components/TestRunner";
 
 function isDifficulty(value: string): value is QuestionPaperDifficulty {
   return (QUESTION_PAPER_DIFFICULTIES as string[]).includes(value);
 }
 
+// This page no longer renders anything itself - it's just the family-facing
+// entry point that keeps the login/profile redirects and the "does this
+// tier even exist" guard, then hands off to the pack-rendered test at
+// [difficulty]/render (content/test-template.html - the same design system
+// as reading/worksheets, see PLATFORM_PLAN.md's 2026-08-25 entry). Replaces
+// the old <TestRunner> rendering path.
 export default async function TestDifficultyPage({
   params,
 }: {
@@ -37,23 +40,5 @@ export default async function TestDifficultyPage({
     redirect(`/test/${unitId}`);
   }
 
-  return (
-    <main className="mx-auto grid w-full max-w-3xl gap-6">
-      <header>
-        <Link
-          href={`/test/${unitId}`}
-          className="inline-flex items-center gap-2 text-sm text-slate-500 hover:text-slate-700"
-        >
-          <LogoMark className="h-6 w-6" />
-          &larr; Choose a different level
-        </Link>
-        <h1 className="mt-2 text-2xl font-bold">
-          Progression Test ({difficulty}) - Unit {unit.unit}: {unit.unit_title}
-        </h1>
-        {paper.note && <p className="mt-1 text-sm text-slate-500">{paper.note}</p>}
-      </header>
-
-      <TestRunner unit={unit} unitKey={unitId} questions={paper.questions} difficulty={difficulty} />
-    </main>
-  );
+  redirect(`/test/${unitId}/${difficulty}/render`);
 }

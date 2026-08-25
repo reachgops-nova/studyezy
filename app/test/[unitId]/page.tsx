@@ -9,6 +9,7 @@ import { getQualifyingWorksheetAttempt } from "@/lib/worksheetGate";
 import { recommendedDifficulty } from "@/lib/adaptiveDifficulty";
 import { LogoMark } from "@/components/Logo";
 import type { QuestionPaperDifficulty } from "@/lib/types";
+import { startTerminalTest } from "@/app/test/actions";
 
 const DIFFICULTY_LABELS: Record<QuestionPaperDifficulty, string> = {
   easy: "Easy",
@@ -46,6 +47,7 @@ export default async function TestPage({ params }: { params: Promise<{ unitId: s
   const unitRow = await db.unit.findUnique({ where: { unitKey: unitId } });
   let locked = false;
   let recommended: QuestionPaperDifficulty = "easy";
+  let completedUnitsInSubject = 0;
   if (unitRow) {
     const priorAttempts = await db.testAttempt.count({ where: { studentProfileId: profile.id, unitId: unitRow.id } });
     if (priorAttempts === 0) {
@@ -53,6 +55,16 @@ export default async function TestPage({ params }: { params: Promise<{ unitId: s
       locked = !qualifying;
     }
     recommended = await recommendedDifficulty(profile.id, unitRow);
+
+    // Only worth offering a cumulative terminal test once there's more than
+    // one unit to cumulate - with a single tested unit it would just
+    // duplicate the progression test above (see lib/terminalTest.ts).
+    const testedUnits = await db.testAttempt.findMany({
+      where: { studentProfileId: profile.id, unit: { subjectId: unitRow.subjectId } },
+      select: { unitId: true },
+      distinct: ["unitId"],
+    });
+    completedUnitsInSubject = testedUnits.length;
   }
 
   if (locked) {
@@ -134,6 +146,24 @@ export default async function TestPage({ params }: { params: Promise<{ unitId: s
           </div>
         ))}
       </div>
+
+      {unitRow && completedUnitsInSubject >= 2 && (
+        <div className="rounded-2xl border border-brand-navy/30 bg-brand-navy/5 p-4 shadow-soft">
+          <h2 className="font-semibold text-slate-800">Terminal test</h2>
+          <p className="mt-1 text-xs text-slate-500">
+            A cumulative test across all {completedUnitsInSubject} units you&apos;ve covered so far in this subject -
+            a real check of everything, not just this unit.
+          </p>
+          <form action={startTerminalTest.bind(null, unitRow.subjectId)} className="mt-3">
+            <button
+              type="submit"
+              className="inline-block rounded-xl border border-brand-navy bg-brand-navy px-4 py-2 text-center text-sm font-medium text-white"
+            >
+              Start terminal test
+            </button>
+          </form>
+        </div>
+      )}
     </main>
   );
 }

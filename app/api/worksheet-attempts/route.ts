@@ -37,7 +37,10 @@ export async function POST(req: NextRequest) {
   }
 
   const pack = await db.contentPack.findUnique({ where: { packId } });
-  if (!pack) {
+  // unitId is nullable on ContentPack now that a terminal-test pack can span
+  // several units (see lib/terminalTest.ts) - a worksheet pack always has one,
+  // this just makes that assumption explicit instead of trusting the type.
+  if (!pack || !pack.unitId) {
     return NextResponse.json({ error: "Pack not found." }, { status: 404 });
   }
 

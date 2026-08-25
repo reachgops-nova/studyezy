@@ -141,6 +141,20 @@ export const CHECKS = {
       return true;
     },
     show: c => c.example || 'use each card once'
+  },
+
+  /* --- graded by a person/AI, not a fixed rule ---
+     Added 2026-08-25 for pack-based progression tests (see
+     lib/questionPaperToPack.ts): free-text answers judged against a real
+     mark scheme by the app's existing AI grading
+     (gradeShortAnswer/gradeShortAnswerGroq), never by this file. run()
+     always returns false - it exists only so `ai_graded` is a recognised
+     kind (validators/players must never silently accept it as
+     self-markable), and callers must special-case it rather than call
+     checkAnswer(). */
+  ai_graded: {
+    run: () => false,
+    show: c => (c.markScheme && Array.isArray(c.markScheme.criteria)) ? c.markScheme.criteria.join('; ') : ''
   }
 };
 

@@ -162,8 +162,12 @@ model Unit {
 model ContentPack {
   id              String   @id @default(cuid())
   packId          String   @unique
-  unitId          String
-  unit            Unit     @relation(fields: [unitId], references: [id], onDelete: Cascade)
+  // Nullable: a "terminal_test" pack spans every unit a student has tested
+  // on, not one - it uses subjectId below instead. worksheet/progression_test
+  // packs always have a real unitId.
+  unitId          String?
+  unit            Unit?    @relation(fields: [unitId], references: [id], onDelete: Cascade)
+  subjectId       String?
   data            Json
   sheetsCount     Int      @default(0)
   questionsCount  Int      @default(0)
@@ -177,8 +181,19 @@ model ContentPack {
   outputTokens    Int      @default(0)
   createdAt       DateTime @default(now())
 
+  // "worksheet" (default, admin-converted real pages) | "progression_test"
+  // (deterministically converted from an existing QuestionPaper, see
+  // lib/questionPaperToPack.ts) | "terminal_test" (assembled across every
+  // unit a student has tested on, see lib/terminalTest.ts). difficulty only
+  // applies to progression_test packs - mirrors QuestionPaper's own tiers,
+  // and together with purpose+unitId makes a converted test pack cacheable
+  // instead of re-converted on every request.
+  purpose    String  @default("worksheet")
+  difficulty String?
+
   worksheetAttempts WorksheetAttempt[]
 
+  @@unique([unitId, purpose, difficulty])
   @@index([unitId])
 }
 

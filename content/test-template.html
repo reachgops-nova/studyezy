@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>StudyEzy — progression test</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bitter:ital,wght@0,500;0,700;1,500&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  /* Same design tokens as content/player-template.html - the pack design
+     system, reused here so reading/worksheet/test all feel like one product. */
+  --paper:#F2F5F8;
+  --paper-card:#FFFFFF;
+  --grid-line:#DCE7F0;
+  --grid-line-strong:#C7D8E6;
+  --ink:#14243A;
+  --ink-soft:#4A5B70;
+  --ink-faint:#7B8A9C;
+  --pen:#1D5FA8;
+  --pen-dark:#164B85;
+  --pen-wash:#E7EFF9;
+  --red:#C42F2F;
+  --red-wash:#FCEDED;
+  --green:#14713F;
+  --green-wash:#E8F5EE;
+  --amber:#8A5A00;
+  --amber-wash:#FBF2DF;
+  --rule:#D3DEE8;
+
+  --r-sm:6px; --r-md:10px; --r-lg:16px;
+  --tap:44px;
+  --shadow:0 1px 2px rgba(20,36,58,.06), 0 8px 24px -12px rgba(20,36,58,.18);
+
+  --font-display:'Bitter', Georgia, 'Times New Roman', serif;
+  --font-body:'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-mono:'IBM Plex Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+}
+
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{
+  margin:0;
+  font-family:var(--font-body);
+  color:var(--ink);
+  background-color:var(--paper);
+  background-image:
+    linear-gradient(var(--grid-line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
+  background-size:24px 24px;
+  line-height:1.55;
+  font-size:16px;
+}
+@media (prefers-reduced-motion: reduce){
+  *{animation-duration:.001ms !important; transition-duration:.001ms !important}
+}
+
+.masthead{background:var(--ink);color:#fff;border-bottom:3px solid var(--pen)}
+.masthead-in{max-width:900px;margin:0 auto;padding:18px 20px 16px;display:flex;align-items:flex-start;gap:14px;flex-wrap:wrap}
+.crest{width:38px;height:38px;flex:0 0 38px;border-radius:50%;background:var(--pen);display:grid;place-items:center;margin-top:2px}
+.crest svg{width:22px;height:22px}
+.masthead h1{font-family:var(--font-display);font-weight:700;font-size:1.25rem;margin:0;letter-spacing:-.01em;line-height:1.25}
+.masthead p{margin:3px 0 0;color:#B9C8DA;font-size:.82rem}
+.masthead .spacer{flex:1 1 auto}
+.meter{min-width:190px;padding-top:2px}
+.meter-top{display:flex;justify-content:space-between;font-size:.72rem;color:#B9C8DA;text-transform:uppercase;letter-spacing:.09em;font-weight:600;margin-bottom:6px}
+.meter-track{height:8px;border-radius:99px;background:#2B3F5C;overflow:hidden}
+.meter-fill{height:100%;width:0;background:linear-gradient(90deg,var(--pen),#4E9BE8);border-radius:99px;transition:width .5s cubic-bezier(.2,.8,.2,1)}
+
+main{max-width:900px;margin:0 auto;padding:22px 16px 90px}
+
+.sheet-head{background:var(--paper-card);border:1px solid var(--rule);border-radius:var(--r-lg);padding:20px 22px;box-shadow:var(--shadow);margin-bottom:20px;border-left:5px solid var(--pen)}
+.eyebrow{font-family:var(--font-mono);font-size:.74rem;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--pen);margin:0 0 6px}
+.sheet-head h2{font-family:var(--font-display);font-size:1.42rem;margin:0 0 8px;line-height:1.25}
+.sheet-head .obj{margin:0;color:var(--ink-soft);font-size:.94rem}
+.sheet-meta{display:flex;gap:16px;flex-wrap:wrap;margin-top:12px;padding-top:12px;border-top:1px dashed var(--rule);font-size:.8rem;color:var(--ink-faint);font-family:var(--font-mono)}
+
+.q{background:var(--paper-card);border:1px solid var(--rule);border-radius:var(--r-lg);padding:18px 20px;margin-bottom:16px;box-shadow:var(--shadow);position:relative;transition:border-color .2s}
+.q.is-right{border-color:#A9D8BF}
+.q.is-wrong{border-color:#EFB6B6}
+.q.is-partial{border-color:#EBD9AE}
+.q-head{display:flex;gap:12px;align-items:flex-start;margin-bottom:12px}
+.q-no{flex:0 0 auto;min-width:30px;height:30px;padding:0 7px;border-radius:8px;background:var(--pen-wash);color:var(--pen-dark);font-family:var(--font-mono);font-weight:600;font-size:.85rem;display:grid;place-items:center;margin-top:1px}
+.q-prompt{margin:0;font-size:1rem;line-height:1.5}
+
+.fields{display:flex;flex-direction:column;gap:12px;margin:14px 0 0}
+.field{display:flex;flex-direction:column;gap:5px;min-width:0}
+.field > label{font-size:.8rem;font-weight:600;color:var(--ink-soft);letter-spacing:.01em}
+input[type="text"],textarea{
+  font-family:var(--font-mono);font-size:1rem;color:var(--pen-dark);
+  min-height:var(--tap);padding:8px 12px;border:1.5px solid var(--grid-line-strong);
+  border-radius:var(--r-sm);background:#FCFDFE;width:100%;
+  transition:border-color .15s, box-shadow .15s;
+}
+textarea{min-height:88px;resize:vertical;line-height:1.5}
+input[type="text"]::placeholder,textarea::placeholder{color:#AEBCCB;font-style:italic}
+input[type="text"]:focus,textarea:focus{outline:none;border-color:var(--pen);box-shadow:0 0 0 3px var(--pen-wash)}
+
+.choices{display:flex;flex-wrap:wrap;gap:8px}
+.choice{min-height:var(--tap);padding:9px 16px;border-radius:var(--r-md);cursor:pointer;border:1.5px solid var(--grid-line-strong);background:#FCFDFE;color:var(--ink);font-family:var(--font-mono);font-size:.95rem;font-weight:500;transition:all .15s}
+.choice:hover{border-color:var(--pen);color:var(--pen-dark)}
+.choice:focus-visible{outline:3px solid var(--pen);outline-offset:2px}
+.choice[aria-pressed="true"]{background:var(--pen);border-color:var(--pen);color:#fff}
+.choice.correct{background:var(--green-wash);border-color:var(--green);color:var(--green)}
+.choice.incorrect{background:var(--red-wash);border-color:var(--red);color:var(--red)}
+
+.q-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:16px;align-items:center}
+.btn{min-height:var(--tap);padding:10px 18px;border-radius:var(--r-md);cursor:pointer;font-family:var(--font-body);font-size:.9rem;font-weight:600;border:1.5px solid transparent;display:inline-flex;align-items:center;gap:7px;transition:all .15s}
+.btn:focus-visible{outline:3px solid var(--pen);outline-offset:2px}
+.btn:disabled{opacity:.5;cursor:default}
+.btn-primary{background:var(--pen);color:#fff;border-color:var(--pen)}
+.btn-primary:hover{background:var(--pen-dark);border-color:var(--pen-dark)}
+
+.tickbox{width:34px;height:34px;flex:0 0 34px;margin-left:auto}
+.tickbox svg{width:34px;height:34px}
+.tickbox path{stroke:var(--red);stroke-width:3.2;fill:none;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:var(--len,60);stroke-dashoffset:var(--len,60);animation:draw .45s cubic-bezier(.5,0,.3,1) forwards}
+.tickbox.ok path{stroke:var(--green)}
+.tickbox.partial path{stroke:var(--amber)}
+@keyframes draw{to{stroke-dashoffset:0}}
+
+.panel{margin-top:14px;border-radius:var(--r-md);padding:14px 16px;font-size:.92rem;border:1px solid;animation:rise .28s ease-out}
+@keyframes rise{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:none}}
+.panel h4{margin:0 0 6px;font-family:var(--font-display);font-size:.9rem;text-transform:uppercase;letter-spacing:.08em}
+.panel p{margin:0 0 8px}
+.panel p:last-child{margin-bottom:0}
+.panel.explain{background:var(--pen-wash);border-color:#BFD6EF;color:#12365E}
+.panel.explain h4{color:var(--pen-dark)}
+
+.sheet-foot{background:var(--paper-card);border:1px solid var(--rule);border-radius:var(--r-lg);padding:18px 20px;margin-top:22px;box-shadow:var(--shadow);display:flex;gap:12px;flex-wrap:wrap;align-items:center;justify-content:space-between}
+.score{font-family:var(--font-mono);font-size:.9rem;color:var(--ink-soft)}
+.score strong{color:var(--ink);font-size:1.15rem}
+
+.result-band{background:var(--paper-card);border:1px solid var(--rule);border-radius:var(--r-lg);padding:20px 22px;box-shadow:var(--shadow);margin-bottom:20px;border-left:5px solid var(--green)}
+.result-band.brush-up{border-left-color:var(--amber)}
+.result-band.reteach{border-left-color:var(--red)}
+.result-band h2{font-family:var(--font-display);font-size:1.6rem;margin:0 0 6px}
+.result-band p{margin:0;color:var(--ink-soft)}
+.next-steps{background:var(--paper-card);border:1px solid var(--rule);border-radius:var(--r-lg);padding:18px 20px;box-shadow:var(--shadow);margin-top:20px}
+.next-steps h3{font-family:var(--font-display);font-size:1rem;margin:0 0 8px}
+.next-steps ul{margin:0;padding-left:20px}
+.next-steps li{margin-bottom:6px}
+
+.reasoning{background:var(--paper-card);border:1px solid var(--rule);border-radius:var(--r-lg);padding:18px 20px;box-shadow:var(--shadow);margin-top:20px;border-left:5px solid var(--pen)}
+.reasoning h3{font-family:var(--font-display);font-size:1rem;margin:0 0 4px}
+.reasoning .sub{margin:0 0 12px;font-size:.85rem;color:var(--ink-soft)}
+.reasoning .prompt{margin:0 0 10px;font-size:.94rem;font-weight:500}
+.reasoning .note{background:var(--pen-wash);border-radius:var(--r-md);padding:12px 14px;margin-bottom:12px}
+.reasoning .note .tag{display:block;font-family:var(--font-mono);font-size:.7rem;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--pen-dark);margin-bottom:4px}
+.reasoning .progress{margin-top:10px;font-family:var(--font-mono);font-size:.78rem;color:var(--ink-faint)}
+.reasoning .err{color:var(--red);font-size:.85rem;margin:0 0 8px}
+.btn-ghost{background:#FCFDFE;color:var(--ink-soft);border-color:var(--grid-line-strong)}
+.btn-ghost:hover{border-color:var(--ink-faint);color:var(--ink)}
+
+.toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%) translateY(80px);background:var(--ink);color:#fff;padding:12px 20px;border-radius:99px;font-size:.88rem;font-weight:500;box-shadow:0 10px 30px -8px rgba(20,36,58,.5);z-index:60;transition:transform .3s cubic-bezier(.2,.8,.2,1);pointer-events:none}
+.toast.show{transform:translateX(-50%) translateY(0)}
+
+@media (max-width:768px){
+  .masthead-in{padding:14px 16px}
+  .masthead h1{font-size:1.08rem}
+  .meter{min-width:100%;order:3}
+  main{padding:16px 12px 80px}
+  .q{padding:16px 14px}
+  .sheet-head{padding:16px 16px}
+  .sheet-head h2{font-size:1.2rem}
+}
+</style>
+</head>
+<body>
+<header class="masthead">
+  <div class="masthead-in">
+    <div class="crest" aria-hidden="true">
+      <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
+      </svg>
+    </div>
+    <div><h1 id="packName">Loading…</h1><p id="packSub"></p></div>
+    <div class="spacer"></div>
+    <div class="meter">
+      <div class="meter-top"><span>Answered</span><span id="meterLabel">0 / 0</span></div>
+      <div class="meter-track"><div class="meter-fill" id="meterFill"></div></div>
+    </div>
+  </div>
+</header>
+<main id="main"></main>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script id="pack" type="application/json">{"packVersion":"1.0","packId":"placeholder","sheets":[]}</script>
+
+<script>
+const PACK = JSON.parse(document.getElementById('pack').textContent);
+const answers = {};
+let submitted = false;
+
+const esc = s => String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+function toast(m){ const t=document.getElementById('toast'); t.textContent=m; t.classList.add('show');
+  clearTimeout(t._h); t._h=setTimeout(()=>t.classList.remove('show'),2400); }
+
+function allQuestions(){ return PACK.sheets.flatMap(s => s.questions); }
+
+function updateMeter(){
+  const qs = allQuestions();
+  const answered = qs.filter(q => (answers[q.id] || '').trim().length > 0).length;
+  document.getElementById('meterLabel').textContent = answered + ' / ' + qs.length;
+  document.getElementById('meterFill').style.width = (qs.length ? (answered / qs.length) * 100 : 0) + '%';
+}
+
+function renderField(q, f){
+  if (f.input === 'choice'){
+    return '<div class="field"><label>' + esc(f.label||'Your answer') + '</label><div class="choices" data-qid="' + q.id + '">' +
+      (f.options||[]).map(opt => '<button type="button" class="choice" data-opt="' + esc(opt) + '" aria-pressed="false">' + esc(opt) + '</button>').join('') +
+      '</div></div>';
+  }
+  const long = f.check && f.check.kind === 'ai_graded';
+  return '<div class="field"><label>' + esc(f.label||'Your answer') + '</label>' +
+    (long
+      ? '<textarea data-qid="' + q.id + '" placeholder="Write your answer..."></textarea>'
+      : '<input type="text" data-qid="' + q.id + '" placeholder="' + esc(f.placeholder||'') + '">') +
+    '</div>';
+}
+
+function renderQuestions(){
+  // A progression test's pack has one sheet; a terminal test's pack has one
+  // sheet PER completed unit (lib/terminalTest.ts) - every sheet is rendered
+  // in sequence on one page so a "submit once" test still covers everything.
+  // Numbered continuously across all sheets (not reset per sheet) so a
+  // question's number here matches its number in renderResults(), which
+  // counts off the same flat allQuestions() list.
+  let qNo = 0;
+  const html =
+    PACK.sheets.map(sheet => (
+      '<div class="sheet-head"><p class="eyebrow">' + esc((PACK.curriculum && PACK.curriculum.subject) || '') + '</p>' +
+      '<h2>' + esc(sheet.title) + '</h2><p class="obj">' + esc(sheet.objective||'') + '</p></div>' +
+      sheet.questions.map(q => (
+        '<section class="q" data-qid="' + q.id + '">' +
+        '<div class="q-head"><span class="q-no">' + (++qNo) + '</span><p class="q-prompt">' + esc(q.prompt) + '</p></div>' +
+        '<div class="fields">' + q.fields.map(f => renderField(q,f)).join('') + '</div>' +
+        '</section>'
+      )).join('')
+    )).join('') +
+    '<div class="sheet-foot"><span class="score">Answer every question, then submit once.</span>' +
+    '<button class="btn btn-primary" id="submitBtn" type="button">Submit test</button></div>';
+  document.getElementById('main').innerHTML = html;
+
+  document.querySelectorAll('input[type="text"],textarea').forEach(el => {
+    el.addEventListener('input', () => { answers[el.dataset.qid] = el.value; updateMeter(); });
+  });
+  document.querySelectorAll('.choices').forEach(group => {
+    group.addEventListener('click', e => {
+      const btn = e.target.closest('.choice'); if (!btn) return;
+      group.querySelectorAll('.choice').forEach(b => b.setAttribute('aria-pressed', b === btn));
+      answers[group.dataset.qid] = btn.dataset.opt;
+      updateMeter();
+    });
+  });
+  document.getElementById('submitBtn').addEventListener('click', submitTest);
+  updateMeter();
+}
+
+async function submitTest(){
+  if (submitted) return;
+  const qs = allQuestions();
+  const answered = qs.filter(q => (answers[q.id] || '').trim().length > 0).length;
+  if (answered === 0){ toast('Answer at least one question first.'); return; }
+  submitted = true;
+  const btn = document.getElementById('submitBtn');
+  btn.disabled = true; btn.textContent = 'Checking...';
+
+  try {
+    const res = await fetch('/api/pack-test-attempts', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ packId: PACK.packId, answers })
+    });
+    const data = await res.json();
+    if (!res.ok){ toast(data.error || 'Could not submit right now.'); submitted = false; btn.disabled = false; btn.textContent = 'Submit test'; return; }
+    renderResults(data);
+  } catch (e) {
+    toast('Could not submit right now - check your connection.');
+    submitted = false; btn.disabled = false; btn.textContent = 'Submit test';
+  }
+}
+
+function bandClass(band){ return band === 'mastered' ? '' : band === 'needs_brush_up' ? 'brush-up' : 'reteach'; }
+function bandLabel(band){
+  return band === 'mastered' ? "You've got this one - light check-in in 2 weeks."
+    : band === 'needs_brush_up' ? "Good basics - let's revisit the tricky bits in a few days."
+    : "Let's go over this concept again before retesting.";
+}
+
+function renderResults(data){
+  const qs = allQuestions();
+  const byId = {}; qs.forEach(q => byId[q.id] = q);
+  const feedbackById = {}; (data.perQuestion||[]).forEach(f => feedbackById[f.id] = f);
+
+  const weak = Object.entries(data.perConcept || {})
+    .map(([id, s]) => ({ id, pct: s.total ? Math.round((s.correct/s.total)*100) : 0 }))
+    .filter(c => c.pct < 85)
+    .sort((a,b) => a.pct - b.pct);
+
+  const html =
+    '<div class="result-band ' + bandClass(data.band) + '"><h2>Score: ' + data.scorePct + '%</h2><p>' + bandLabel(data.band) + '</p></div>' +
+    qs.map((q,i) => {
+      const f = feedbackById[q.id] || {};
+      const cls = f.correct === true ? 'is-right' : f.correct === false ? 'is-wrong' : f.marksAwarded !== undefined ? 'is-partial' : '';
+      const panel = f.feedback
+        ? '<div class="panel explain"><h4>Feedback</h4><p>' + esc(f.feedback) +
+          (f.marksAwarded !== undefined ? ' (' + f.marksAwarded + '/' + f.fullMarks + ' marks)' : '') + '</p></div>'
+        : (f.explanation ? '<div class="panel explain"><h4>Explanation</h4><p>' + esc(f.explanation) + '</p></div>' : '');
+      return '<section class="q ' + cls + '"><div class="q-head"><span class="q-no">' + (i+1) + '</span>' +
+        '<p class="q-prompt">' + esc(q.prompt) + '</p></div>' +
+        '<p style="font-family:var(--font-mono);font-size:.9rem;color:var(--ink-soft)">Your answer: ' + esc(answers[q.id]||'(blank)') + '</p>' +
+        panel + '</section>';
+    }).join('') +
+    (weak.length
+      ? '<div class="next-steps"><h3>What to work on next</h3><ul>' +
+        weak.map(w => '<li>' + esc((data.conceptNames && data.conceptNames[w.id]) || w.id) + ' (' + w.pct + '%)</li>').join('') + '</ul></div>'
+      : '<div class="next-steps"><h3>What to work on next</h3><p>Solid across every concept tested here - nice work.</p></div>');
+
+  document.getElementById('main').innerHTML = html;
+  document.getElementById('meterLabel').textContent = data.scorePct + '%';
+  document.getElementById('meterFill').style.width = data.scorePct + '%';
+  initReasoning(data.reasoningItems || []);
+}
+
+// Vanilla-JS re-home of components/ReasoningInterview.tsx - same
+// up-to-a-couple-of-questions, not-scored follow-up, posting to the same
+// /api/reasoning endpoint, since this results screen no longer has React
+// available to it (see app/api/pack-test-attempts/route.ts for how
+// reasoningItems is selected server-side).
+const REASONING_LABELS = {
+  correct_reasoning: 'Solid thinking',
+  conceptual_gap: 'Worth reviewing together',
+  careless_slip: 'Just a slip',
+  misread_question: 'Misread the question'
+};
+
+function initReasoning(items){
+  if (!items.length) return;
+  let index = 0;
+  const results = items.map(() => null);
+  const box = document.createElement('div');
+  box.className = 'reasoning';
+  document.getElementById('main').appendChild(box);
+
+  function renderStep(){
+    const item = items[index];
+    const result = results[index];
+    if (!result){
+      box.innerHTML =
+        '<h3>Let’s talk through your thinking</h3>' +
+        '<p class="sub">Not scored - this just helps us understand how you think, not whether you were right.</p>' +
+        '<p class="prompt">' + esc(item.prompt) + '</p>' +
+        '<textarea id="reasoningInput" placeholder="Explain how you thought about it..."></textarea>' +
+        '<p class="err" id="reasoningErr" style="display:none"></p>' +
+        '<div class="q-actions">' +
+        '<button class="btn btn-primary" id="reasoningSubmit" type="button">Share my thinking</button>' +
+        '<button class="btn btn-ghost" id="reasoningSkip" type="button">Skip</button>' +
+        '</div>' +
+        '<p class="progress">' + (index + 1) + ' of ' + items.length + '</p>';
+      document.getElementById('reasoningSubmit').addEventListener('click', submitReasoning);
+      document.getElementById('reasoningSkip').addEventListener('click', nextReasoning);
+    } else {
+      box.innerHTML =
+        '<h3>Let’s talk through your thinking</h3>' +
+        '<div class="note"><span class="tag">' + esc(REASONING_LABELS[result.classification] || 'Noted') + '</span>' + esc(result.note) + '</div>' +
+        '<button class="btn btn-primary" id="reasoningNext" type="button">' + (index + 1 >= items.length ? 'Done' : 'Next') + '</button>' +
+        '<p class="progress">' + (index + 1) + ' of ' + items.length + '</p>';
+      document.getElementById('reasoningNext').addEventListener('click', nextReasoning);
+    }
+  }
+
+  async function submitReasoning(){
+    const ta = document.getElementById('reasoningInput');
+    const explanation = ta.value.trim();
+    const errEl = document.getElementById('reasoningErr');
+    if (!explanation) return;
+    const btn = document.getElementById('reasoningSubmit');
+    btn.disabled = true; btn.textContent = 'Thinking...';
+    errEl.style.display = 'none';
+    try {
+      const res = await fetch('/api/reasoning', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          unitKey: items[index].unitKey,
+          conceptId: items[index].conceptId,
+          question: items[index].question,
+          studentAnswer: items[index].studentAnswer,
+          explanation
+        })
+      });
+      const data = await res.json();
+      if (!res.ok){
+        errEl.textContent = data.error || 'Could not process that - try again.'; errEl.style.display = '';
+        btn.disabled = false; btn.textContent = 'Share my thinking';
+        return;
+      }
+      results[index] = data;
+      renderStep();
+    } catch (e) {
+      errEl.textContent = 'Could not process that - check your connection.'; errEl.style.display = '';
+      btn.disabled = false; btn.textContent = 'Share my thinking';
+    }
+  }
+
+  function nextReasoning(){
+    if (index + 1 >= items.length){ box.remove(); return; }
+    index++;
+    renderStep();
+  }
+
+  renderStep();
+}
+
+(function(){
+  if (PACK.sheets.length > 1){
+    document.getElementById('packName').textContent = 'Terminal Test' + ((PACK.source && PACK.source.book) ? ' - ' + PACK.source.book : '');
+    document.getElementById('packSub').textContent = PACK.sheets.length + ' units covered - ' + allQuestions().length + ' questions';
+  } else {
+    document.getElementById('packName').textContent = PACK.sheets[0] ? PACK.sheets[0].title : 'Test';
+    document.getElementById('packSub').textContent = (PACK.curriculum && PACK.curriculum.subject) || '';
+  }
+  renderQuestions();
+})();
+</script>
+</body>
+</html>
