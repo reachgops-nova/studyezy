@@ -365,7 +365,21 @@ export async function extractPackFragmentGroq(
     },
     body: JSON.stringify({
       model: QWEN_MODEL,
-      max_tokens: 3000,
+      // Was 3000 - real bug found live 2026-08-25 converting a Math page:
+      // a content-dense page's completion hit this cap exactly (three
+      // times in a row, across all MAX_REPAIR_ATTEMPTS retries), silently
+      // truncating the JSON mid-object so it never parsed - the page's
+      // content was dropped from the pack rather than erroring loudly.
+      //
+      // Groq counts REQUESTED max_tokens (not actual usage) against the
+      // 8000 TPM cap up front, and prompt/image size isn't fixed - a first
+      // attempt at 4500 was itself rejected outright (413) on a denser page
+      // whose prompt alone ran ~3733 tokens (3733+4500=8233 > 8000), one
+      // real page here landed as low as 2974 and as high as 3733. 3600
+      // keeps every observed case (up to ~3733) under the cap with margin
+      // (3733+3600=7333) while still giving real headroom over the
+      // original 3000 that truncated.
+      max_tokens: 3600,
       temperature: 0,
       reasoning_effort: "none",
       messages: [
