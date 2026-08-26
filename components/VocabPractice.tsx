@@ -51,7 +51,7 @@ export default function VocabPractice({
           type="button"
           onClick={load}
           disabled={loading}
-          className="text-xs font-medium text-brand-navy hover:underline disabled:opacity-50"
+          className="text-xs font-medium text-brand-ink hover:underline disabled:opacity-50"
         >
           🔄 New words
         </button>
@@ -111,7 +111,7 @@ export default function VocabPractice({
           <button
             type="button"
             onClick={onContinue}
-            className="rounded-full bg-gradient-to-br from-orange-400 to-orange-600 px-5 py-2.5 text-sm font-medium text-white transition active:scale-95"
+            className="rounded-full bg-gradient-to-br from-brand-gold-bright to-brand-gold px-5 py-2.5 text-sm font-medium text-white transition active:scale-95"
           >
             {continueLabel}
           </button>

@@ -90,7 +90,7 @@ export default async function TestPage({ params }: { params: Promise<{ unitId: s
             </p>
             <Link
               href={`/learn/${unitId}`}
-              className="mt-4 inline-block rounded-xl bg-gradient-to-br from-orange-400 to-orange-600 px-5 py-2.5 text-sm font-medium text-white"
+              className="mt-4 inline-block rounded-xl bg-gradient-to-br from-brand-gold-bright to-brand-gold px-5 py-2.5 text-sm font-medium text-white"
             >
               Go practise the worksheet
             </Link>
@@ -123,12 +123,12 @@ export default async function TestPage({ params }: { params: Promise<{ unitId: s
             key={s.difficulty}
             className={`rounded-2xl border p-4 shadow-soft ${
               s.available ? "border-slate-200/70 bg-white" : "border-slate-200/70 bg-slate-50"
-            } ${s.difficulty === recommended ? "ring-2 ring-brand-navy" : ""}`}
+            } ${s.difficulty === recommended ? "ring-2 ring-brand-ink" : ""}`}
           >
             <div className="flex items-center justify-between gap-2">
               <h2 className="font-semibold text-slate-800">{DIFFICULTY_LABELS[s.difficulty]}</h2>
               {s.difficulty === recommended && (
-                <span className="rounded-full bg-brand-navy px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-white">
+                <span className="rounded-full bg-brand-ink px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-white">
                   Suggested
                 </span>
               )}
@@ -161,7 +161,7 @@ export default async function TestPage({ params }: { params: Promise<{ unitId: s
       </div>
 
       {unitRow && completedUnitsInSubject >= 2 && (
-        <div className="rounded-2xl border border-brand-navy/30 bg-brand-navy/5 p-4 shadow-soft">
+        <div className="rounded-2xl border border-brand-ink/30 bg-brand-ink/5 p-4 shadow-soft">
           <h2 className="font-semibold text-slate-800">Terminal test</h2>
           <p className="mt-1 text-xs text-slate-500">
             A cumulative test across all {completedUnitsInSubject} units you&apos;ve covered so far in this subject -
@@ -170,7 +170,7 @@ export default async function TestPage({ params }: { params: Promise<{ unitId: s
           <form action={startTerminalTest.bind(null, unitRow.subjectId)} className="mt-3">
             <button
               type="submit"
-              className="inline-block rounded-xl border border-brand-navy bg-brand-navy px-4 py-2 text-center text-sm font-medium text-white"
+              className="inline-block rounded-xl border border-brand-ink bg-brand-ink px-4 py-2 text-center text-sm font-medium text-white"
             >
               Start terminal test
             </button>

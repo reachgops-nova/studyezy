@@ -45,11 +45,15 @@ export async function POST(req: NextRequest) {
   const resourceType = resourceTypeRaw;
 
   const unitRow = await db.unit.findUnique({ where: { unitKey } });
-  if (!unitRow || !unitRow.available) {
+  const isAdmin = user.role === "admin";
+
+  // Non-admins can only contribute to units already live for families - but
+  // an admin curating a not-yet-published unit's reference pages (exactly
+  // the authoring workflow this route now needs to support) must be able to
+  // upload before the unit's `available` flag flips on.
+  if (!unitRow || (!unitRow.available && !isAdmin)) {
     return NextResponse.json({ error: "Unit not found." }, { status: 404 });
   }
-
-  const isAdmin = user.role === "admin";
 
   if (!isAdmin && isFreezable(resourceType)) {
     const existingApproved = await db.unitResource.findFirst({

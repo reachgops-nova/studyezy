@@ -74,7 +74,7 @@ export default function UnitSwitcher({ groups }: { groups: SwitcherGroup[] }) {
                   role="menuitem"
                   onClick={() => setOpen(false)}
                   className={`block rounded-xl px-3 py-2 text-sm font-medium transition ${
-                    u.unitKey === currentUnitKey ? "bg-brand-navy text-white" : "text-slate-700 hover:bg-slate-100"
+                    u.unitKey === currentUnitKey ? "bg-brand-ink text-white" : "text-slate-700 hover:bg-slate-100"
                   }`}
                 >
                   {u.label}

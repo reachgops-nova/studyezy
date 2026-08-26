@@ -40,7 +40,7 @@ export default function Logo({
   return (
     <span className="inline-flex items-center gap-2">
       <LogoMark className={className} />
-      <span className={`font-display font-bold tracking-tight text-brand-navy ${textClassName}`}>
+      <span className={`font-display font-bold tracking-tight text-brand-ink ${textClassName}`}>
         StudyEzy
       </span>
     </span>

@@ -10,6 +10,7 @@ import type {
   VoiceQASample,
 } from "./types";
 import { logAiCost } from "./aiCost";
+import { buildConceptContextBlock } from "./conceptContext";
 
 let client: Anthropic | null = null;
 
@@ -53,24 +54,15 @@ export async function askConceptQuestion(
   concept: Concept,
   question: string,
   language: string = "English",
-  subject: string = "English"
+  subject: string = "English",
+  allConcepts: Concept[] = []
 ): Promise<string> {
   const trimmed = question.trim().slice(0, MAX_QUESTION_LENGTH);
   if (!trimmed) {
     throw new Error("Question cannot be empty.");
   }
 
-  const contextBlock = [
-    `Concept: ${concept.concept_name}`,
-    concept.definition ? `Definition: ${concept.definition}` : null,
-    concept.key_points?.length ? `Key points:\n${concept.key_points.map((p) => `- ${p}`).join("\n")}` : null,
-    concept.examples?.length ? `Examples:\n${concept.examples.map((e) => `- ${e}`).join("\n")}` : null,
-    concept.media?.source_image_transcript
-      ? `The picture shown above this chat is the actual reference page for this concept. Here is exactly what's printed on it, so you can answer questions about its specific content:\n${concept.media.source_image_transcript}`
-      : null,
-  ]
-    .filter(Boolean)
-    .join("\n\n");
+  const contextBlock = buildConceptContextBlock(concept, allConcepts);
 
   // Only added when a non-English language was actually chosen (see
   // AvatarChat.tsx's language selector) - a parent who isn't fluent in
@@ -125,7 +117,12 @@ export async function askConceptQuestion(
       "bulleted lists (no '1.' '2.' '-' markers) - if you're covering more than one point, use spoken " +
       "connectors instead, like 'First, ... Also, ... Finally, ...'. If you need to refer to a letter " +
       "pattern or suffix by itself (like -ly or -er), spell it as separated letters (e.g. 'the letters L, Y') " +
-      "so it's not misread as a word." +
+      "so it's not misread as a word. One more exception: when your answer uses a specific vocabulary word " +
+      "or concept term the student should remember (like 'third person' or 'chronological order'), wrap just " +
+      "that term in ==double equals== the first time it appears (e.g. ==third person==) so it can be " +
+      "highlighted for the student - at most 2-4 terms per answer, only the term itself and not the words " +
+      "around it, and skip this entirely if the answer doesn't really have standout vocabulary. This marker " +
+      "is stripped before the text is shown or read aloud, same as the illustration token." +
       languageInstruction +
       illustrationInstruction,
     messages: [

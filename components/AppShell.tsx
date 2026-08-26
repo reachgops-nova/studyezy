@@ -100,7 +100,7 @@ export default async function AppShell({
           </nav>
         </div>
 
-        <div className="mt-auto flex items-center gap-2 rounded-2xl border border-slate-200/70 bg-white p-3 shadow-soft">
+        <div className="mt-auto flex items-center gap-2 rounded-2xl border border-slate-200/70 bg-white p-3">
           <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-slate-100 text-base" aria-hidden>
             {profile.avatarEmoji}
           </span>
@@ -111,8 +111,12 @@ export default async function AppShell({
       <div className="min-w-0 flex-1">
         {/* Mobile/tablet: the compact top-nav bar, plus the unit switcher on
             its own row - jumping straight to a different unit from a test/
-            exam page shouldn't require going back to /select first. */}
-        <header className="mb-6 border-b border-slate-200 pb-4 lg:hidden">
+            exam page shouldn't require going back to /select first. No
+            border-bottom here on purpose - the unit switcher's own bordered
+            pill already separates this block from page content below;
+            stacking a full-width rule on top of that read as two competing
+            boundaries rather than one. */}
+        <header className="mb-5 lg:hidden">
           <div className="flex items-center justify-between gap-2">
             <Link href="/select" className="shrink-0" aria-label="StudyEzy home">
               <LogoMark className="h-8 w-8" />
@@ -165,7 +169,7 @@ function SidebarLink({
     <Link
       href={href}
       className={`flex items-center gap-2.5 rounded-xl px-3 py-2 text-sm font-medium transition ${
-        isActive ? "bg-brand-navy text-white" : "text-slate-600 hover:bg-slate-100"
+        isActive ? "bg-brand-ink text-white" : "text-slate-600 hover:bg-slate-100"
       }`}
     >
       <span className={isActive ? "text-white" : "text-slate-400"}>{icon}</span>
@@ -189,7 +193,7 @@ function NavPill({
     <Link
       href={href}
       className={`flex items-center gap-1.5 rounded-full px-2.5 py-1.5 font-medium transition sm:px-3 ${
-        isActive ? "bg-brand-navy text-white" : "text-slate-600 hover:bg-slate-100"
+        isActive ? "bg-brand-ink text-white" : "text-slate-600 hover:bg-slate-100"
       }`}
     >
       <span className={isActive ? "text-white" : "text-slate-400"}>{icon}</span>

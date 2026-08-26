@@ -125,7 +125,11 @@ export interface CurriculumUnit {
   unit_status: "in_progress" | "complete";
   concepts: Concept[];
   remaining_unit_outline: OutlineConcept[];
-  unit_mastery_checklist: UnitMasteryChecklist;
+  // Nullable - only Unit 1 was seeded with one; not every unit has this yet
+  // (real crash found live 2026-08-26 rolling out Unit 2: the type claimed
+  // this was always present, UnitOverview.tsx read .items unguarded, and any
+  // unit without one 500'd the whole learn page).
+  unit_mastery_checklist: UnitMasteryChecklist | null;
 }
 
 // --- mastery / progress tracking ---

@@ -142,7 +142,7 @@ export default function UnitView({
                 href={`/learn/${unitKey}/worksheet/${contentPack.packId}`}
                 target="_blank"
                 rel="noreferrer"
-                className="rounded-full bg-gradient-to-br from-orange-400 to-orange-600 px-4 py-2 text-xs font-medium text-white transition active:scale-95"
+                className="rounded-full bg-gradient-to-br from-brand-gold-bright to-brand-gold px-4 py-2 text-xs font-medium text-white transition active:scale-95"
               >
                 Practise this unit&apos;s workbook
               </a>
@@ -178,7 +178,7 @@ export default function UnitView({
             key={c.concept_id}
             onClick={() => setSelectedId(c.concept_id)}
             className={`rounded-xl px-3 py-2 text-left text-sm ${
-              c.concept_id === selectedId ? "bg-brand-navy text-white" : "hover:bg-slate-100"
+              c.concept_id === selectedId ? "bg-brand-ink text-white" : "hover:bg-slate-100"
             }`}
           >
             {c.concept_id} {c.concept_name}

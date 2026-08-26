@@ -44,8 +44,8 @@ export default function Avatar({ speaking }: { speaking: boolean }) {
       </svg>
       {speaking && (
         <span className="absolute -right-1 -top-1 flex h-4 w-4">
-          <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-orange-400 opacity-75" />
-          <span className="relative inline-flex h-4 w-4 rounded-full bg-orange-500" />
+          <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-brand-gold-bright opacity-75" />
+          <span className="relative inline-flex h-4 w-4 rounded-full bg-brand-gold" />
         </span>
       )}
     </div>

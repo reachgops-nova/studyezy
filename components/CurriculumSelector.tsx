@@ -93,7 +93,7 @@ export default function CurriculumSelector({
               <div
                 key={u.id}
                 className={`flex items-center justify-between rounded-xl border px-4 py-3 ${
-                  u.available ? "border-orange-200 bg-orange-50" : "border-slate-200 bg-slate-50 text-slate-400"
+                  u.available ? "border-brand-gold/40 bg-brand-gold-bright/10" : "border-slate-200 bg-slate-50 text-slate-400"
                 }`}
               >
                 <span>
@@ -102,7 +102,7 @@ export default function CurriculumSelector({
                 {u.available ? (
                   <Link
                     href={`/learn/${curriculumId}-${stageId}-${subjectId}-${u.id}`}
-                    className="rounded-md bg-brand-navy px-3 py-1.5 text-sm font-medium text-white hover:bg-brand-navy-dark"
+                    className="rounded-md bg-brand-ink px-3 py-1.5 text-sm font-medium text-white hover:bg-brand-ink-dark"
                   >
                     Start
                   </Link>
@@ -147,8 +147,8 @@ function PillButton({
         disabled
           ? "cursor-not-allowed border-slate-200 text-slate-400"
           : active
-          ? "border-brand-navy bg-brand-navy text-white"
-          : "border-slate-300 bg-white hover:border-brand-navy-light"
+          ? "border-brand-ink bg-brand-ink text-white"
+          : "border-slate-300 bg-white hover:border-brand-ink-light"
       }`}
     >
       {children}

@@ -2,6 +2,7 @@ import "server-only";
 import type { Concept, MarkScheme, VocabItem } from "./types";
 import type { GradeResult, ReasoningClassification, ReasoningResult, UploadedPageImage } from "./claude";
 import { logAiCost } from "./aiCost";
+import { buildConceptContextBlock } from "./conceptContext";
 
 // Groq hosts open-weight models (Llama etc.) behind a fast, OpenAI-compatible
 // endpoint - used as a genuinely-dynamic middle tier between full Claude
@@ -145,19 +146,10 @@ export async function askConceptQuestionGroq(
   question: string,
   language: string = "English",
   subject: string = "English",
+  allConcepts: Concept[] = [],
   modelOverride?: string
 ): Promise<string> {
-  const contextBlock = [
-    `Concept: ${concept.concept_name}`,
-    concept.definition ? `Definition: ${concept.definition}` : null,
-    concept.key_points?.length ? `Key points:\n${concept.key_points.map((p) => `- ${p}`).join("\n")}` : null,
-    concept.examples?.length ? `Examples:\n${concept.examples.map((e) => `- ${e}`).join("\n")}` : null,
-    concept.media?.source_image_transcript
-      ? `The picture shown above this chat is the actual reference page for this concept. Here is exactly what's printed on it, so you can answer questions about its specific content:\n${concept.media.source_image_transcript}`
-      : null,
-  ]
-    .filter(Boolean)
-    .join("\n\n");
+  const contextBlock = buildConceptContextBlock(concept, allConcepts);
 
   const languageInstruction =
     language !== "English"
@@ -199,7 +191,12 @@ export async function askConceptQuestionGroq(
       "bulleted lists (no '1.' '2.' '-' markers) - if you're covering more than one point, use spoken " +
       "connectors instead, like 'First, ... Also, ... Finally, ...'. If you need to refer to a letter " +
       "pattern or suffix by itself (like -ly or -er), spell it as separated letters (e.g. 'the letters L, Y') " +
-      "so it's not misread as a word." +
+      "so it's not misread as a word. One more exception: when your answer uses a specific vocabulary word " +
+      "or concept term the student should remember (like 'third person' or 'chronological order'), wrap just " +
+      "that term in ==double equals== the first time it appears (e.g. ==third person==) so it can be " +
+      "highlighted for the student - at most 2-4 terms per answer, only the term itself and not the words " +
+      "around it, and skip this entirely if the answer doesn't really have standout vocabulary. This marker " +
+      "is stripped before the text is shown or read aloud, same as the illustration token." +
       languageInstruction +
       illustrationInstruction,
     `${contextBlock}\n\nStudent's question: ${question.trim().slice(0, 500)}`,
@@ -263,6 +260,11 @@ export async function askConceptQuestionGroqWithUsage(
       "connectors instead, like 'First, ... Also, ... Finally, ...'. If you need to refer to a letter " +
       "pattern or suffix by itself (like -ly or -er), spell it as separated letters (e.g. 'the letters L, Y') " +
       "so it's not misread as a word." +
+      // Deliberately NOT given the ==term== highlight-marker instruction the
+      // two student-facing functions above get - this function's output is
+      // shown as-is in the admin model-compare table (ModelCompareForm.tsx),
+      // never through AvatarChat's parser, so a literal "==term==" would
+      // just look broken there instead of rendering as a highlight.
       languageInstruction,
     `${contextBlock}\n\nStudent's question: ${question.trim().slice(0, 500)}`,
     600,

@@ -9,45 +9,46 @@ const config: Config = {
   theme: {
     extend: {
       fontFamily: {
-        // Fredoka for headings/brand (rounded, friendly - matches the
-        // kangaroo mascot's warmth) and Nunito for body copy (still warm,
-        // but reads easily at length) - both loaded via next/font in
-        // app/layout.tsx, exposed here as CSS variables so every Tailwind
-        // class (font-display / default font-sans) resolves to the same
-        // self-hosted files instead of a generic system stack.
+        // Bricolage Grotesque for headings/brand - a contemporary display
+        // face with real character (distinct terminals, not another
+        // rounded-bubble kids'-app font) - paired with Manrope for body
+        // copy, a warm-neutral grotesque that stays legible at chat-message
+        // length. Both self-hosted via next/font in app/layout.tsx.
         sans: ["var(--font-body)", "ui-sans-serif", "system-ui", "sans-serif"],
         display: ["var(--font-display)", "var(--font-body)", "ui-sans-serif", "sans-serif"],
       },
       boxShadow: {
-        // One soft, warm shadow token used on every card app-wide instead of
-        // ad hoc shadow values - low elevation, navy-tinted rather than pure
-        // black so it reads as "soft" rather than "heavy."
-        soft: "0 1px 2px rgba(30,42,74,0.04), 0 8px 24px -8px rgba(30,42,74,0.12)",
-        "soft-lg": "0 2px 4px rgba(30,42,74,0.05), 0 16px 40px -12px rgba(30,42,74,0.16)",
+        // One quiet shadow token used on every card app-wide - lower
+        // elevation and lower opacity than the old set, ink-tinted rather
+        // than pure black, on purpose: the old shadow read as "heavy" at
+        // the density this app actually uses cards.
+        soft: "0 1px 2px rgba(22,36,31,0.03), 0 6px 16px -8px rgba(22,36,31,0.10)",
+        "soft-lg": "0 2px 4px rgba(22,36,31,0.04), 0 12px 28px -10px rgba(22,36,31,0.14)",
       },
       colors: {
-        // Practice (calm, navy) vs test (warm, orange) stay visually
-        // distinct on purpose - a kid should always know which mode they're
-        // in - but both now read as part of the same navy/orange/cream
-        // brand instead of practice defaulting to generic blue.
+        // Practice (calm, ink) vs test (warm, rust) stay visually distinct
+        // on purpose - a kid should always know which mode they're in.
         practice: {
-          bg: "#f3f5fa",
-          border: "#dbe1ee",
-          accent: "#1e2a4a",
+          bg: "#eef2ef",
+          border: "#d7e2dc",
+          accent: "#1f3a32",
         },
         test: {
-          bg: "#fff7ed",
-          border: "#fed7aa",
-          accent: "#c2410c",
+          bg: "#fbeee6",
+          border: "#eec7ac",
+          accent: "#a1441f",
         },
-        // Brand palette: navy for primary actions/wordmark, warm cream for
-        // page backgrounds, paired with the existing orange-500/600 mascot
-        // accent (unchanged).
+        // Brand palette: deep forest-ink for primary actions/wordmark
+        // (replaces the old bright navy), a cool sage-white page ground
+        // (replaces the peachy cream + gradient), and one deliberate gold
+        // accent standing in for the old orange - fewer competing hues.
         brand: {
-          navy: "#1e2a4a",
-          "navy-dark": "#152036",
-          "navy-light": "#334368",
-          cream: "#faf6ee",
+          ink: "#16241f",
+          "ink-dark": "#0e1712",
+          "ink-light": "#3c5049",
+          paper: "#f4f6f1",
+          gold: "#9c6f1f",
+          "gold-bright": "#c99a2e",
         },
       },
     },

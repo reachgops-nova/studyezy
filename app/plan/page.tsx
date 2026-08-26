@@ -52,7 +52,7 @@ export default async function PlanPage() {
               </div>
               <Link
                 href={`/learn/${item.unitKey}`}
-                className="shrink-0 rounded-full bg-gradient-to-br from-orange-400 to-orange-600 px-5 py-2.5 text-sm font-medium text-white transition active:scale-95 hover:brightness-110"
+                className="shrink-0 rounded-full bg-gradient-to-br from-brand-gold-bright to-brand-gold px-5 py-2.5 text-sm font-medium text-white transition active:scale-95 hover:brightness-110"
               >
                 Practice this
               </Link>

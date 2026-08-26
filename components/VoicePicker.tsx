@@ -110,7 +110,7 @@ export default function VoicePicker({ onClose }: { onClose: () => void }) {
                 <span
                   aria-hidden
                   className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs ${
-                    previewing === v.name ? "bg-orange-500 text-white" : "bg-slate-100 text-slate-500"
+                    previewing === v.name ? "bg-brand-gold text-white" : "bg-slate-100 text-slate-500"
                   }`}
                 >
                   ▶
@@ -124,7 +124,7 @@ export default function VoicePicker({ onClose }: { onClose: () => void }) {
                 onClick={() => choose(v)}
                 className={`shrink-0 rounded-full px-3 py-1 text-xs font-medium ${
                   selected === v.name
-                    ? "bg-brand-navy text-white"
+                    ? "bg-brand-ink text-white"
                     : "border border-slate-300 text-slate-600 hover:bg-slate-50"
                 }`}
               >

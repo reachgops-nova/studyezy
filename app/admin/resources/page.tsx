@@ -84,7 +84,7 @@ export default async function AdminResourcesPage({
                   <form action={approveResource}>
                     <input type="hidden" name="id" value={f.id} />
                     <input type="hidden" name="unitKey" value={f.unitKey} />
-                    <button type="submit" className="rounded-md bg-brand-navy px-2.5 py-1 text-xs font-medium text-white">
+                    <button type="submit" className="rounded-md bg-brand-ink px-2.5 py-1 text-xs font-medium text-white">
                       Approve
                     </button>
                   </form>
@@ -126,7 +126,7 @@ export default async function AdminResourcesPage({
             ))}
           </select>
         </label>
-        <button type="submit" className="rounded-full bg-gradient-to-br from-orange-400 to-orange-600 px-5 py-2.5 text-sm font-medium text-white transition active:scale-95">
+        <button type="submit" className="rounded-full bg-gradient-to-br from-brand-gold-bright to-brand-gold px-5 py-2.5 text-sm font-medium text-white transition active:scale-95">
           View
         </button>
       </form>
@@ -202,7 +202,7 @@ export default async function AdminResourcesPage({
                             <input type="hidden" name="unitKey" value={unitRow.unitKey} />
                             <button
                               type="submit"
-                              className="rounded-md bg-brand-navy px-2.5 py-1 text-xs font-medium text-white"
+                              className="rounded-md bg-brand-ink px-2.5 py-1 text-xs font-medium text-white"
                             >
                               Approve
                             </button>

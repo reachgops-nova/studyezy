@@ -166,7 +166,7 @@ export default function ModelCompareForm({ unitOptions }: { unitOptions: UnitOpt
             type="button"
             onClick={handleCompare}
             disabled={loading || !question.trim()}
-            className="w-full rounded-full bg-gradient-to-br from-orange-400 to-orange-600 px-5 py-2.5 text-sm font-medium text-white transition active:scale-95 disabled:opacity-50"
+            className="w-full rounded-full bg-gradient-to-br from-brand-gold-bright to-brand-gold px-5 py-2.5 text-sm font-medium text-white transition active:scale-95 disabled:opacity-50"
           >
             {loading ? "Asking both models..." : "Compare"}
           </button>

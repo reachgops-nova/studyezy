@@ -36,7 +36,7 @@ export default async function SelectPage({
           </p>
         )}
         {assignedStageRef && (
-          <p className="mt-1 text-sm text-brand-navy">
+          <p className="mt-1 text-sm text-brand-ink">
             Starting on {profile.displayName}&apos;s assigned book - change it anytime from{" "}
             <a href="/profiles" className="underline">
               profiles

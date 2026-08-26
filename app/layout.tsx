@@ -1,19 +1,21 @@
 import type { Metadata } from "next";
-import { Fredoka, Nunito } from "next/font/google";
+import { Bricolage_Grotesque, Manrope } from "next/font/google";
 import "./globals.css";
 
 // Self-hosted via next/font (built at compile time, no runtime CDN request)
-// - Fredoka for headings/brand (rounded, friendly, matches the kangaroo
-// mascot's warmth), Nunito for body copy (still warm but reads easily at
-// length). Replaces the generic Tailwind default sans stack app-wide.
-const fredoka = Fredoka({
+// - Bricolage Grotesque for headings/brand (a display face with real
+// character - distinct terminals and ink traps - instead of the previous
+// bubble-rounded, toy-app feel), Manrope for body copy (warm-neutral
+// grotesque, reads well at chat-message length). Replaces the generic
+// Tailwind default sans stack app-wide.
+const bricolage = Bricolage_Grotesque({
   subsets: ["latin"],
   weight: ["500", "600", "700"],
   variable: "--font-display",
   display: "swap",
 });
 
-const nunito = Nunito({
+const manrope = Manrope({
   subsets: ["latin"],
   weight: ["400", "500", "600", "700", "800"],
   variable: "--font-body",
@@ -27,7 +29,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={`${fredoka.variable} ${nunito.variable}`}>
+    <html lang="en" className={`${bricolage.variable} ${manrope.variable}`}>
       <body className="min-h-screen font-sans">
         {/* No max-width here on purpose - the sidebar app shell (AppShell)
             and the narrower single-column pages (auth, landing, focused

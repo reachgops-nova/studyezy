@@ -80,7 +80,7 @@ export default function Booklet({
               onClick={() => goTo(i)}
               aria-label={`Go to page ${i + 1}`}
               className={`shrink-0 overflow-hidden rounded-lg border-2 ${
-                i === safeIndex ? "border-brand-navy" : "border-transparent opacity-70"
+                i === safeIndex ? "border-brand-ink" : "border-transparent opacity-70"
               }`}
             >
               {/* eslint-disable-next-line @next/next/no-img-element */}

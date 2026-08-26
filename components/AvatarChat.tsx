@@ -25,6 +25,7 @@ interface ChatMessage {
   sender: "avatar" | "kid";
   text: string;
   illustrationKey?: string;
+  keyRanges?: [number, number][];
 }
 
 // Matches a [[illustration:some_key]] token the AI tutor can emit when a
@@ -132,6 +133,33 @@ function normalizeAck(text: string): string {
   return text.trim().toLowerCase().replace(/[?!.]+$/g, "").trim();
 }
 
+// Real bug reported live 2026-08-27: a kid replied to a checkpoint pause
+// with something like "yes that's fine, let's move on" - clearly an
+// acknowledgment, but not an EXACT match for any CONTINUE_ACK_PHRASES entry,
+// so it silently fell through to a real AI call (as if it were a content
+// question) and the lesson never advanced. Exact-match alone is too brittle
+// for how kids actually phrase a natural reply.
+//
+// Widened, but deliberately narrow: only for SHORT replies (<=8 words) that
+// don't look like a real question (no "?", doesn't start with a WH/aux
+// word) - a genuine question a kid asks, even a short one like "what
+// happens next?", still routes to the real answer pipeline. This preserves
+// the original exact-match fix's intent (a longer message that merely
+// CONTAINS an ack phrase, like "I don't understand why the story says X,
+// can you explain?", must still get a real answer, not be treated as a bare
+// ack) while catching short natural acknowledgments the exact set misses.
+const QUESTION_STARTERS =
+  /^(what|why|how|when|where|who|which|can|could|do|does|did|is|are|was|were|will|would|should)\b/;
+
+function looksLikeQuestion(raw: string, normalized: string): boolean {
+  return raw.includes("?") || QUESTION_STARTERS.test(normalized);
+}
+
+function containsWholePhrase(text: string, phrase: string): boolean {
+  const escaped = phrase.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  return new RegExp(`(^|\\s)${escaped}($|\\s)`).test(text);
+}
+
 // AI answers are prompted to avoid markdown (see lib/claude.ts/lib/groq.ts),
 // but models don't always comply perfectly - left unstripped, this both
 // displays literal asterisks in the chat bubble and gets read aloud
@@ -153,10 +181,48 @@ function stripMarkdown(text: string): string {
     .trim();
 }
 
+// Key-point highlighting (2026-08-27): the AI (see lib/claude.ts/lib/groq.ts)
+// and hand-authored concept content both mark the 2-4 most important terms
+// per message with ==double equals==, e.g. "written in the ==third
+// person==". Parsed into the same clean, marker-free string stripMarkdown
+// already produces (so speech/read-along-highlight character offsets stay
+// untouched - see the comment above stripMarkdown), plus a list of
+// [start,end] ranges INTO that final string for the terms to render as a
+// persistent highlight. Building the ranges by growing `out` incrementally
+// (not from indexOf/replace on the original string) is what keeps the
+// offsets correct even when the message contains several highlighted terms.
+function parseFormattedText(raw: string): { text: string; keyRanges: [number, number][] } {
+  const cleaned = stripMarkdown(raw);
+  const keyRanges: [number, number][] = [];
+  const re = /==(.+?)==/g;
+  let out = "";
+  let lastIndex = 0;
+  let match: RegExpExecArray | null;
+  while ((match = re.exec(cleaned)) !== null) {
+    out += cleaned.slice(lastIndex, match.index);
+    const start = out.length;
+    out += match[1];
+    keyRanges.push([start, out.length]);
+    lastIndex = re.lastIndex;
+  }
+  out += cleaned.slice(lastIndex);
+  return { text: out, keyRanges };
+}
+
 function matchCheckpointIntent(text: string): "continue" | "repeat" | null {
   const t = normalizeAck(text);
   if (REPEAT_ACK_PHRASES.has(t)) return "repeat";
   if (CONTINUE_ACK_PHRASES.has(t)) return "continue";
+
+  const wordCount = t.split(/\s+/).filter(Boolean).length;
+  if (wordCount === 0 || wordCount > 8 || looksLikeQuestion(text, t)) return null;
+
+  for (const phrase of REPEAT_ACK_PHRASES) {
+    if (containsWholePhrase(t, phrase)) return "repeat";
+  }
+  for (const phrase of CONTINUE_ACK_PHRASES) {
+    if (containsWholePhrase(t, phrase)) return "continue";
+  }
   return null;
 }
 
@@ -246,14 +312,61 @@ function getWordRange(text: string, charIndex: number, charLength?: number): [nu
   return [start, end];
 }
 
-function HighlightedText({ text, range }: { text: string; range: [number, number] | null }) {
-  if (!range || range[0] >= text.length) return <>{text}</>;
-  const [start, end] = range;
+// Composes two independent kinds of highlight over the same text: the
+// persistent key-point marks from parseFormattedText's keyRanges (a kid
+// should still see these after speech finishes and while re-reading later),
+// and the transient "currently being spoken" word tracked by `range` during
+// read-along. Both operate on the same character-offset space (see
+// parseFormattedText's comment), so they compose correctly even when the
+// live-speaking word falls inside a highlighted key phrase.
+function HighlightedText({
+  text,
+  range,
+  keyRanges,
+}: {
+  text: string;
+  range: [number, number] | null;
+  keyRanges?: [number, number][];
+}) {
+  if ((!keyRanges || keyRanges.length === 0) && !range) return <>{text}</>;
+
+  const points = new Set<number>([0, text.length]);
+  (keyRanges ?? []).forEach(([s, e]) => {
+    points.add(s);
+    points.add(e);
+  });
+  if (range) {
+    points.add(range[0]);
+    points.add(range[1]);
+  }
+  const bounds = Array.from(points)
+    .filter((p) => p >= 0 && p <= text.length)
+    .sort((a, b) => a - b);
+
   return (
     <>
-      {text.slice(0, start)}
-      <mark className="rounded bg-yellow-300 px-0.5 text-slate-900">{text.slice(start, end)}</mark>
-      {text.slice(end)}
+      {bounds.slice(0, -1).map((start, i) => {
+        const end = bounds[i + 1];
+        if (start === end) return null;
+        const chunk = text.slice(start, end);
+        const isLive = !!range && start >= range[0] && start < range[1];
+        const isKey = (keyRanges ?? []).some(([s, e]) => start >= s && start < e);
+        if (isLive) {
+          return (
+            <mark key={start} className="rounded bg-yellow-300 px-0.5 text-slate-900">
+              {chunk}
+            </mark>
+          );
+        }
+        if (isKey) {
+          return (
+            <mark key={start} className="rounded bg-brand-gold-bright/30 px-0.5 font-medium text-brand-ink-dark">
+              {chunk}
+            </mark>
+          );
+        }
+        return <span key={start}>{chunk}</span>;
+      })}
     </>
   );
 }
@@ -493,8 +606,9 @@ export default function AvatarChat({
         return;
       }
       const id = nextId();
-      setMessages((prev) => [...prev, { id, sender: "avatar", text: msgs[i] }]);
-      speakText(msgs[i], id, () => {
+      const { text: cleanText, keyRanges } = parseFormattedText(msgs[i]);
+      setMessages((prev) => [...prev, { id, sender: "avatar", text: cleanText, keyRanges }]);
+      speakText(cleanText, id, () => {
         if (playTokenRef.current !== token) return;
         speakStep(i + 1);
       });
@@ -676,9 +790,9 @@ export default function AvatarChat({
 
       const data = (await res.json()) as { answer: string; followUps?: string[] };
       const { text: withoutToken, illustrationKey } = extractIllustrationToken(data.answer);
-      const cleanAnswer = stripMarkdown(withoutToken);
+      const { text: cleanAnswer, keyRanges } = parseFormattedText(withoutToken);
       const answerId = nextId();
-      setMessages((prev) => [...prev, { id: answerId, sender: "avatar", text: cleanAnswer, illustrationKey }]);
+      setMessages((prev) => [...prev, { id: answerId, sender: "avatar", text: cleanAnswer, illustrationKey, keyRanges }]);
       speakText(cleanAnswer, answerId, () => {}, languageInfo?.ttsCode);
       // Only replace the suggestions if fresh ones actually came back -
       // keep showing the last known-good list rather than going blank if
@@ -763,7 +877,11 @@ export default function AvatarChat({
               <div key={m.id} className="message-enter flex items-start gap-2">
                 <Avatar speaking={m.id === speakingMessageId} />
                 <div className="rounded-2xl rounded-tl-sm bg-white px-4 py-2 text-sm leading-relaxed text-slate-800 shadow-sm">
-                  <HighlightedText text={m.text} range={m.id === speakingMessageId ? highlightRange : null} />
+                  <HighlightedText
+                    text={m.text}
+                    range={m.id === speakingMessageId ? highlightRange : null}
+                    keyRanges={m.keyRanges}
+                  />
                   {m.illustrationKey && (
                     <div className="mt-2 aspect-[5/3] w-64 max-w-full overflow-hidden rounded-xl">
                       <Illustration illustrationKey={m.illustrationKey} />
@@ -773,7 +891,7 @@ export default function AvatarChat({
               </div>
             ) : (
               <div key={m.id} className="message-enter flex justify-end">
-                <div className="rounded-2xl rounded-tr-sm bg-brand-navy px-4 py-2 text-sm leading-relaxed text-white shadow-sm">
+                <div className="rounded-2xl rounded-tr-sm bg-brand-ink px-4 py-2 text-sm leading-relaxed text-white shadow-sm">
                   {m.text}
                 </div>
               </div>
@@ -832,7 +950,7 @@ export default function AvatarChat({
                       type="button"
                       onClick={() => sendMessage(q)}
                       disabled={loading}
-                      className="rounded-full border border-brand-navy-light bg-white px-3 py-1.5 text-xs text-brand-navy hover:bg-brand-cream disabled:opacity-50"
+                      className="rounded-full border border-brand-ink-light bg-white px-3 py-1.5 text-xs text-brand-ink hover:bg-brand-paper disabled:opacity-50"
                     >
                       {q}
                     </button>
@@ -854,7 +972,7 @@ export default function AvatarChat({
                     type="button"
                     onClick={() => sendMessage(q)}
                     disabled={loading}
-                    className="rounded-full border border-brand-navy-light bg-white px-3 py-1.5 text-xs text-brand-navy hover:bg-brand-cream disabled:opacity-50"
+                    className="rounded-full border border-brand-ink-light bg-white px-3 py-1.5 text-xs text-brand-ink hover:bg-brand-paper disabled:opacity-50"
                   >
                     {q}
                   </button>
@@ -937,7 +1055,7 @@ export default function AvatarChat({
               <button
                 type="button"
                 onClick={() => setShowVoicePicker((prev) => !prev)}
-                className="text-xs font-medium text-brand-navy hover:underline"
+                className="text-xs font-medium text-brand-ink hover:underline"
               >
                 🔊 Choose voice
               </button>
@@ -946,13 +1064,13 @@ export default function AvatarChat({
               <button
                 type="button"
                 onClick={togglePauseSpeech}
-                className="flex items-center gap-1 text-xs font-medium text-orange-600 hover:underline"
+                className="flex items-center gap-1 text-xs font-medium text-brand-gold hover:underline"
               >
                 {speechPaused ? (
                   <>▶ resume reading</>
                 ) : (
                   <>
-                    <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-orange-500" /> reading... (tap to
+                    <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-brand-gold" /> reading... (tap to
                     pause)
                   </>
                 )}

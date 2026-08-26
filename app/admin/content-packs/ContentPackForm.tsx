@@ -149,7 +149,7 @@ export default function ContentPackForm({ unitOptions }: { unitOptions: UnitOpti
             type="button"
             onClick={handleConvert}
             disabled={loading || selectedKeys.length === 0}
-            className="rounded-full bg-gradient-to-br from-orange-400 to-orange-600 px-5 py-2.5 text-sm font-medium text-white transition active:scale-95 disabled:opacity-50"
+            className="rounded-full bg-gradient-to-br from-brand-gold-bright to-brand-gold px-5 py-2.5 text-sm font-medium text-white transition active:scale-95 disabled:opacity-50"
           >
             {loading
               ? `Converting ${selectedKeys.length} page${selectedKeys.length === 1 ? "" : "s"} (~65s+ per page, paced to stay under Groq's rate limit - this will take a few minutes)...`
@@ -170,7 +170,7 @@ export default function ContentPackForm({ unitOptions }: { unitOptions: UnitOpti
               href={`/admin/content-packs/${result.packId}/preview`}
               target="_blank"
               rel="noreferrer"
-              className="text-sm font-medium text-brand-navy underline"
+              className="text-sm font-medium text-brand-ink underline"
             >
               Preview as a kid would see it →
             </a>
@@ -241,7 +241,7 @@ export default function ContentPackForm({ unitOptions }: { unitOptions: UnitOpti
                   href={`/admin/content-packs/${p.packId}/preview`}
                   target="_blank"
                   rel="noreferrer"
-                  className="shrink-0 text-sm font-medium text-brand-navy underline"
+                  className="shrink-0 text-sm font-medium text-brand-ink underline"
                 >
                   Preview
                 </a>

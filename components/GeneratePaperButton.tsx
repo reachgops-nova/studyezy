@@ -72,7 +72,7 @@ export default function GeneratePaperButton({
             type="button"
             onClick={handleClick}
             disabled={busy}
-            className="rounded-full bg-gradient-to-br from-orange-400 to-orange-600 px-5 py-2.5 text-sm font-medium text-white transition active:scale-95 disabled:opacity-50"
+            className="rounded-full bg-gradient-to-br from-brand-gold-bright to-brand-gold px-5 py-2.5 text-sm font-medium text-white transition active:scale-95 disabled:opacity-50"
           >
             {busy ? "Generating..." : "Generate"}
           </button>

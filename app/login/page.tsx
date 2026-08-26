@@ -45,14 +45,14 @@ export default async function LoginPage({
           />
         </label>
 
-        <button type="submit" className="rounded-full bg-gradient-to-br from-orange-400 to-orange-600 px-5 py-3 text-base font-medium text-white transition active:scale-95">
+        <button type="submit" className="rounded-full bg-gradient-to-br from-brand-gold-bright to-brand-gold px-5 py-3 text-base font-medium text-white transition active:scale-95">
           Sign in
         </button>
       </form>
 
       <p className="text-sm text-slate-500">
         New here?{" "}
-        <Link href="/register" className="font-medium text-brand-navy hover:underline">
+        <Link href="/register" className="font-medium text-brand-ink hover:underline">
           Create an account
         </Link>
       </p>

@@ -8,26 +8,25 @@
 
 body {
   @apply text-slate-900;
-  background-color: #faf6ee;
-  background-image:
-    radial-gradient(ellipse 900px 500px at 8% -10%, rgba(253, 186, 116, 0.16), transparent 60%),
-    radial-gradient(ellipse 700px 500px at 100% 0%, rgba(30, 42, 74, 0.06), transparent 55%);
-  background-repeat: no-repeat;
-  background-attachment: fixed;
+  /* Flat, quiet ground - the old radial-gradient wash (orange top-left,
+     navy top-right) was one more competing visual element on every screen.
+     One considered neutral instead, no gradient. */
+  background-color: #f4f6f1;
 }
 
-/* Fredoka on every heading app-wide (font-sans/Nunito stays the body
-   default) - one rule instead of adding font-display to ~60 heading
-   classNames individually. */
+/* Bricolage Grotesque on every heading app-wide (font-sans/Manrope stays
+   the body default) - one rule instead of adding font-display to ~60
+   heading classNames individually. */
 h1,
 h2,
 h3 {
   font-family: var(--font-display), var(--font-body), ui-sans-serif, sans-serif;
+  letter-spacing: -0.01em;
 }
 
 ::selection {
-  background: #fdba74;
-  color: #1e2a4a;
+  background: #c99a2e;
+  color: #f4f6f1;
 }
 
 @keyframes message-enter {

@@ -95,17 +95,19 @@ export default function UnitOverview({
 
   return (
     <div className="grid gap-6">
-      <div className="rounded-2xl border border-slate-200/70 bg-white p-5 shadow-soft">
-        <h2 className="text-lg font-semibold">What we&apos;re covering</h2>
-        <p className="mt-1 text-sm text-slate-500">
-          By the end of this unit, you&apos;ll be able to:
-        </p>
-        <ul className="mt-3 list-disc space-y-1 pl-5 text-sm text-slate-700">
-          {unit.unit_mastery_checklist.items.map((item, i) => (
-            <li key={i}>{item}</li>
-          ))}
-        </ul>
-      </div>
+      {unit.unit_mastery_checklist?.items && unit.unit_mastery_checklist.items.length > 0 && (
+        <div className="rounded-2xl border border-slate-200/70 bg-white p-5 shadow-soft">
+          <h2 className="text-lg font-semibold">What we&apos;re covering</h2>
+          <p className="mt-1 text-sm text-slate-500">
+            By the end of this unit, you&apos;ll be able to:
+          </p>
+          <ul className="mt-3 list-disc space-y-1 pl-5 text-sm text-slate-700">
+            {unit.unit_mastery_checklist.items.map((item, i) => (
+              <li key={i}>{item}</li>
+            ))}
+          </ul>
+        </div>
+      )}
 
       <div className="rounded-2xl border border-slate-200/70 bg-white p-5 shadow-soft">
         <div className="flex items-center justify-between">
@@ -124,7 +126,7 @@ export default function UnitOverview({
               <button
                 type="button"
                 onClick={() => onSkipToTeaching(c.concept_id)}
-                className="flex w-full items-center justify-between rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-left text-sm text-slate-700 transition hover:border-brand-navy-light hover:bg-white"
+                className="flex w-full items-center justify-between rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-left text-sm text-slate-700 transition hover:border-brand-ink-light hover:bg-white"
               >
                 <span>
                   {c.concept_id} {c.concept_name}
@@ -205,7 +207,7 @@ export default function UnitOverview({
             type="button"
             onClick={handleExtract}
             disabled={extracting || pageImages.length === 0}
-            className="mt-3 rounded-full bg-gradient-to-br from-orange-400 to-orange-600 px-5 py-2.5 text-sm font-medium text-white transition active:scale-95 disabled:opacity-50"
+            className="mt-3 rounded-full bg-gradient-to-br from-brand-gold-bright to-brand-gold px-5 py-2.5 text-sm font-medium text-white transition active:scale-95 disabled:opacity-50"
           >
             {extracting ? "Reading the pages..." : "Extract lesson content from these pages"}
           </button>

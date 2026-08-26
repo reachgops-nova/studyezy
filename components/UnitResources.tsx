@@ -34,7 +34,7 @@ export default function UnitResources({ unitKey, groups }: { unitKey: string; gr
                       href={f.path}
                       target="_blank"
                       rel="noreferrer"
-                      className="text-sm text-brand-navy hover:underline"
+                      className="text-sm text-brand-ink hover:underline"
                     >
                       ✓ {f.originalFilename}
                     </a>

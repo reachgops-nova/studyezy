@@ -44,7 +44,7 @@ export default async function LearnPage({ params }: { params: Promise<{ unitId: 
             {unit.subject} - {unit.curriculum}, here&apos;s the price for this subject:
           </p>
           {plan ? (
-            <p className="mt-4 text-3xl font-bold text-brand-navy">
+            <p className="mt-4 text-3xl font-bold text-brand-ink">
               ₹{plan.pricePerSubjectInr}
               <span className="text-base font-medium text-slate-400"> / month</span>
             </p>

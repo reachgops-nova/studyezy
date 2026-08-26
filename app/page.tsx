@@ -28,7 +28,7 @@ function LandingPage() {
           </Link>
           <Link
             href="/register"
-            className="whitespace-nowrap rounded-full bg-gradient-to-br from-orange-400 to-orange-600 px-3.5 py-2 text-sm font-medium text-white transition active:scale-95 hover:brightness-110 sm:px-5 sm:py-2.5"
+            className="whitespace-nowrap rounded-full bg-gradient-to-br from-brand-gold-bright to-brand-gold px-3.5 py-2 text-sm font-medium text-white transition active:scale-95 hover:brightness-110 sm:px-5 sm:py-2.5"
           >
             Get started free
           </Link>
@@ -47,7 +47,7 @@ function LandingPage() {
         <div className="flex flex-wrap items-center justify-center gap-3">
           <Link
             href="/register"
-            className="rounded-full bg-gradient-to-br from-orange-400 to-orange-600 px-7 py-3.5 text-base font-medium text-white transition hover:brightness-110 active:scale-95"
+            className="rounded-full bg-gradient-to-br from-brand-gold-bright to-brand-gold px-7 py-3.5 text-base font-medium text-white transition hover:brightness-110 active:scale-95"
           >
             Get started free
           </Link>
@@ -119,7 +119,7 @@ function LandingPage() {
         </p>
         <Link
           href="/register"
-          className="mt-6 inline-block rounded-full bg-gradient-to-br from-orange-400 to-orange-600 px-7 py-3.5 text-base font-medium text-white transition hover:brightness-110 active:scale-95"
+          className="mt-6 inline-block rounded-full bg-gradient-to-br from-brand-gold-bright to-brand-gold px-7 py-3.5 text-base font-medium text-white transition hover:brightness-110 active:scale-95"
         >
           Get started free
         </Link>
@@ -147,7 +147,7 @@ function DifferentiatorCard({ title, body }: { title: string; body: string }) {
 function StepCard({ number, body }: { number: number; body: string }) {
   return (
     <div className="grid gap-2">
-      <span className="flex h-8 w-8 items-center justify-center rounded-full bg-brand-navy text-sm font-bold text-white">
+      <span className="flex h-8 w-8 items-center justify-center rounded-full bg-brand-ink text-sm font-bold text-white">
         {number}
       </span>
       <p className="text-sm text-slate-600">{body}</p>
