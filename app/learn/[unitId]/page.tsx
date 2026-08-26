@@ -69,11 +69,23 @@ export default async function LearnPage({ params }: { params: Promise<{ unitId: 
   const moderatePaper = await getQuestionPaperByKey(unitId, "moderate");
   const diagnosticQuestions = moderatePaper?.questions ?? [];
 
-  // Most recent content-pack "unit document" for this unit, if any real
-  // pages have been converted - see lib/contentPackExtraction.ts and
-  // PLATFORM_PLAN.md's 2026-08-24 entry. Not every unit has one yet.
+  // Most recent WORKBOOK content-pack for this unit, if any real pages have
+  // been converted - see lib/contentPackExtraction.ts and PLATFORM_PLAN.md's
+  // 2026-08-24 entry. Not every unit has one yet.
+  //
+  // purpose: "worksheet" is required here, not optional - real bug found
+  // live 2026-08-26: ContentPack didn't have a `purpose` column when this
+  // query was first written (every pack was a workbook then), so it just
+  // took the newest pack for the unit. Once progression_test/terminal_test
+  // packs started being created for the same unit (2026-08-25's pack
+  // unification), this started picking whichever pack was created most
+  // recently - which could be a progression-test pack - and rendering it
+  // through the worksheet player. That player can only self-mark
+  // client-side checks; a progression test's short-answer fields are
+  // `ai_graded` (server-only AI grading), whose `run()` always returns
+  // false - so a completely correct answer showed as wrong every time.
   const latestPack = await db.contentPack.findFirst({
-    where: { unit: { unitKey: unitId } },
+    where: { unit: { unitKey: unitId }, purpose: "worksheet" },
     orderBy: { createdAt: "desc" },
     select: { packId: true, status: true, questionsCount: true },
   });
