@@ -17,8 +17,10 @@ function isDifficulty(value: string): value is QuestionPaperDifficulty {
 // the old <TestRunner> rendering path.
 export default async function TestDifficultyPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ unitId: string; difficulty: string }>;
+  searchParams: Promise<{ mode?: string }>;
 }) {
   const user = await getCurrentUser();
   if (!user) redirect("/login");
@@ -40,5 +42,12 @@ export default async function TestDifficultyPage({
     redirect(`/test/${unitId}`);
   }
 
-  redirect(`/test/${unitId}/${difficulty}/render`);
+  // "Practice exam" (PLATFORM_PLAN.md's 2026-08-26 entry) reuses this exact
+  // real progression-test pack/render path - the only difference is the
+  // ?mode=practice flag, forwarded through so the client-side template and
+  // /api/pack-test-attempts both know not to touch TestAttempt/ConceptMastery
+  // for this attempt.
+  const { mode } = await searchParams;
+  const suffix = mode === "practice" ? "?mode=practice" : "";
+  redirect(`/test/${unitId}/${difficulty}/render${suffix}`);
 }

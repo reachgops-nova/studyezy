@@ -133,12 +133,21 @@ export default async function TestPage({ params }: { params: Promise<{ unitId: s
             {s.available ? (
               <>
                 <p className="mt-3 text-xs text-slate-400">{s.questionCount} questions</p>
-                <Link
-                  href={`/test/${unitId}/${s.difficulty}`}
-                  className="mt-3 inline-block rounded-xl border border-test-border bg-test-bg px-4 py-2 text-center text-sm font-medium text-test-accent"
-                >
-                  Start
-                </Link>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  <Link
+                    href={`/test/${unitId}/${s.difficulty}`}
+                    className="inline-block rounded-xl border border-test-border bg-test-bg px-4 py-2 text-center text-sm font-medium text-test-accent"
+                  >
+                    Start
+                  </Link>
+                  <Link
+                    href={`/test/${unitId}/${s.difficulty}?mode=practice`}
+                    className="inline-block rounded-xl border border-slate-300 bg-white px-4 py-2 text-center text-sm font-medium text-slate-600"
+                    title="Same real questions, but it won't affect your progress - a dry run before the real test."
+                  >
+                    Practice exam
+                  </Link>
+                </div>
               </>
             ) : (
               <p className="mt-3 text-xs text-slate-400">Not ready yet - ask an admin to generate this tier.</p>

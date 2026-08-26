@@ -127,6 +127,8 @@ input[type="text"]:focus,textarea:focus{outline:none;border-color:var(--pen);box
 .panel.explain{background:var(--pen-wash);border-color:#BFD6EF;color:#12365E}
 .panel.explain h4{color:var(--pen-dark)}
 
+.practice-badge{display:inline-block;background:var(--amber-wash);color:var(--amber);border:1px solid #EBD9AE;border-radius:99px;padding:3px 12px;font-family:var(--font-mono);font-size:.72rem;font-weight:600;letter-spacing:.06em;text-transform:uppercase;margin-bottom:4px}
+
 .sheet-foot{background:var(--paper-card);border:1px solid var(--rule);border-radius:var(--r-lg);padding:18px 20px;margin-top:22px;box-shadow:var(--shadow);display:flex;gap:12px;flex-wrap:wrap;align-items:center;justify-content:space-between}
 .score{font-family:var(--font-mono);font-size:.9rem;color:var(--ink-soft)}
 .score strong{color:var(--ink);font-size:1.15rem}
@@ -174,7 +176,7 @@ input[type="text"]:focus,textarea:focus{outline:none;border-color:var(--pen);box
         <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
       </svg>
     </div>
-    <div><h1 id="packName">Loading…</h1><p id="packSub"></p></div>
+    <div><span class="practice-badge" id="practiceBadge" style="display:none">Practice - won't affect your progress</span><h1 id="packName">Loading…</h1><p id="packSub"></p></div>
     <div class="spacer"></div>
     <div class="meter">
       <div class="meter-top"><span>Answered</span><span id="meterLabel">0 / 0</span></div>
@@ -189,6 +191,12 @@ input[type="text"]:focus,textarea:focus{outline:none;border-color:var(--pen);box
 
 <script>
 const PACK = JSON.parse(document.getElementById('pack').textContent);
+// Practice exam (PLATFORM_PLAN.md's 2026-08-26 entry) reuses this exact
+// template/pack - the only difference is this flag, read from the URL the
+// family-facing entry page (app/test/[unitId]/[difficulty]/page.tsx)
+// forwarded through. Sent along on submit so the server knows not to touch
+// TestAttempt/ConceptMastery for this attempt.
+const IS_PRACTICE = new URLSearchParams(location.search).get('mode') === 'practice';
 const answers = {};
 let submitted = false;
 
@@ -271,7 +279,7 @@ async function submitTest(){
     const res = await fetch('/api/pack-test-attempts', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ packId: PACK.packId, answers })
+      body: JSON.stringify({ packId: PACK.packId, answers, practice: IS_PRACTICE })
     });
     const data = await res.json();
     if (!res.ok){ toast(data.error || 'Could not submit right now.'); submitted = false; btn.disabled = false; btn.textContent = 'Submit test'; return; }
@@ -299,8 +307,11 @@ function renderResults(data){
     .filter(c => c.pct < 85)
     .sort((a,b) => a.pct - b.pct);
 
+  const bandNote = IS_PRACTICE
+    ? "This was a practice run - it hasn't changed your progress. Take the real test when you're ready."
+    : bandLabel(data.band);
   const html =
-    '<div class="result-band ' + bandClass(data.band) + '"><h2>Score: ' + data.scorePct + '%</h2><p>' + bandLabel(data.band) + '</p></div>' +
+    '<div class="result-band ' + bandClass(data.band) + '"><h2>' + (IS_PRACTICE ? 'Practice score' : 'Score') + ': ' + data.scorePct + '%</h2><p>' + bandNote + '</p></div>' +
     qs.map((q,i) => {
       const f = feedbackById[q.id] || {};
       const cls = f.correct === true ? 'is-right' : f.correct === false ? 'is-wrong' : f.marksAwarded !== undefined ? 'is-partial' : '';
@@ -321,7 +332,7 @@ function renderResults(data){
   document.getElementById('main').innerHTML = html;
   document.getElementById('meterLabel').textContent = data.scorePct + '%';
   document.getElementById('meterFill').style.width = data.scorePct + '%';
-  initReasoning(data.reasoningItems || []);
+  if (!IS_PRACTICE) initReasoning(data.reasoningItems || []);
 }
 
 // Vanilla-JS re-home of components/ReasoningInterview.tsx - same
@@ -415,6 +426,7 @@ function initReasoning(items){
 }
 
 (function(){
+  if (IS_PRACTICE) document.getElementById('practiceBadge').style.display = '';
   if (PACK.sheets.length > 1){
     document.getElementById('packName').textContent = 'Terminal Test' + ((PACK.source && PACK.source.book) ? ' - ' + PACK.source.book : '');
     document.getElementById('packSub').textContent = PACK.sheets.length + ' units covered - ' + allQuestions().length + ' questions';

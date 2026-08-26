@@ -98,11 +98,17 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Invalid request body." }, { status: 400 });
   }
 
-  const { packId, answers } = (body ?? {}) as Record<string, unknown>;
+  const { packId, answers, practice } = (body ?? {}) as Record<string, unknown>;
   if (typeof packId !== "string" || typeof answers !== "object" || answers === null) {
     return NextResponse.json({ error: "Missing or invalid fields." }, { status: 400 });
   }
   const rawAnswers = answers as Record<string, string>;
+  // Practice exam (PLATFORM_PLAN.md's 2026-08-26 entry): same real pack, same
+  // real grading below, but deliberately never writes TestAttempt/
+  // ConceptMastery - a dry run of the exam experience shouldn't move retest
+  // scheduling or feed the adaptive-difficulty/Prep Planner queries that read
+  // those tables. Everything else in this route is identical either way.
+  const isPractice = practice === true;
 
   const pack = await db.contentPack.findUnique({ where: { packId } });
   if (!pack || (pack.purpose !== "progression_test" && pack.purpose !== "terminal_test")) {
@@ -173,7 +179,7 @@ export async function POST(req: NextRequest) {
         perConcept[conceptKey].correct += fraction;
         perConcept[conceptKey].total += 1;
 
-        if (reasoningItems.length < MAX_REASONING_ITEMS) {
+        if (!isPractice && reasoningItems.length < MAX_REASONING_ITEMS) {
           const concept = unit.concepts.find((c) => c.conceptKey === conceptKey);
           const prompt = concept?.reasoningInterviewPrompts?.[0];
           if (prompt) {
@@ -191,22 +197,24 @@ export async function POST(req: NextRequest) {
       combinedPerConcept[key].total += stat.total;
     }
 
-    try {
-      lastResult = await recordUnitAttempt({
-        profileId,
-        unitKey,
-        attemptType: "content_pack_test",
-        difficulty: pack.difficulty ?? undefined,
-        correct: correctSum,
-        total: sheet.questions.length,
-        perConcept,
-      });
-    } catch (err) {
-      console.error(`recordUnitAttempt failed for pack test sheet (unit ${unitKey})`, err);
+    if (!isPractice) {
+      try {
+        lastResult = await recordUnitAttempt({
+          profileId,
+          unitKey,
+          attemptType: "content_pack_test",
+          difficulty: pack.difficulty ?? undefined,
+          correct: correctSum,
+          total: sheet.questions.length,
+          perConcept,
+        });
+      } catch (err) {
+        console.error(`recordUnitAttempt failed for pack test sheet (unit ${unitKey})`, err);
+      }
     }
   }
 
-  if (!lastResult) {
+  if (!isPractice && !lastResult) {
     return NextResponse.json({ error: "Couldn't save this result - please try again." }, { status: 502 });
   }
 
@@ -214,6 +222,7 @@ export async function POST(req: NextRequest) {
   // a multi-unit terminal test), not just whichever sheet's recordUnitAttempt
   // call happened to run last - each sheet's own scorePct/band is still
   // recorded correctly per-unit above, this is purely the display summary.
+  // Pure functions either way - practice mode just never persists them.
   const combinedScorePct = scorePercent(combinedCorrect, combinedTotal);
   const { band: combinedBand, date: combinedNextReview } = nextReviewDate(combinedScorePct);
 
@@ -221,7 +230,7 @@ export async function POST(req: NextRequest) {
     scorePct: combinedScorePct,
     band: combinedBand,
     nextReviewDate: combinedNextReview.toISOString(),
-    takenAt: lastResult.takenAt,
+    takenAt: lastResult?.takenAt ?? new Date().toISOString(),
     perConcept: combinedPerConcept,
     perQuestion: allPerQuestion,
     conceptNames: allConceptNames,

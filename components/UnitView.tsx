@@ -132,8 +132,9 @@ export default function UnitView({
                 {unit.unit_title} - the real textbook, right here
               </h2>
               <p className="text-xs text-slate-500">
-                The actual unit pages, matching what&apos;s taught in class - read through it, then practise the
-                worksheet below.
+                The actual unit pages, matching what&apos;s taught in class - read through it, then try the workbook
+                below. Each attempt draws a fresh set of questions from this unit, so it&apos;s worth doing more than
+                once.
               </p>
             </div>
             <div className="flex shrink-0 items-center gap-2">
@@ -143,7 +144,7 @@ export default function UnitView({
                 rel="noreferrer"
                 className="rounded-full bg-gradient-to-br from-orange-400 to-orange-600 px-4 py-2 text-xs font-medium text-white transition active:scale-95"
               >
-                Practise this unit&apos;s worksheet
+                Practise this unit&apos;s workbook
               </a>
               <button
                 type="button"

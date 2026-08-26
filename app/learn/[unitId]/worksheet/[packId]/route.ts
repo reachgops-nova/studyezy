@@ -7,6 +7,63 @@ import { db } from "@/lib/db";
 const TEMPLATE_PATH = path.join(process.cwd(), "content", "player-template.html");
 const PACK_BLOCK_RE = /(<script id="pack" type="application\/json">)[\s\S]*?(<\/script>)/;
 
+// Workbook practice should feel different each time a kid retries it, not
+// the same fixed set - see PLATFORM_PLAN.md's 2026-08-26 entry ("draw from a
+// pre-built question bank" was the confirmed direction over regenerating via
+// AI per attempt). The admin conversion pipeline already accumulates every
+// converted question from every uploaded page into one pack (batch/append
+// mode) - that pack IS the bank. This route just pools every question across
+// every sheet and randomly samples a fresh subset on each page load/attempt,
+// rather than always showing the full bank. Once a unit's bank has more
+// converted questions than this, retries start looking genuinely different;
+// below it, every question shows every time (nothing to sample from).
+const QUESTIONS_PER_WORKBOOK_ATTEMPT = 6;
+
+interface BankQuestion {
+  id: string;
+  [key: string]: unknown;
+}
+interface BankSheet {
+  id: string;
+  title?: string;
+  objective?: string;
+  skill?: string;
+  questions: BankQuestion[];
+  [key: string]: unknown;
+}
+interface BankPackData {
+  sheets: BankSheet[];
+  [key: string]: unknown;
+}
+
+function sampleWorkbookAttempt(data: BankPackData): BankPackData {
+  const pool = data.sheets.flatMap((s) => s.questions);
+  if (pool.length <= QUESTIONS_PER_WORKBOOK_ATTEMPT) return data;
+
+  // Fisher-Yates shuffle, then take the first N - simple, unbiased, no
+  // external dependency.
+  const shuffled = [...pool];
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+  }
+  const sampled = shuffled.slice(0, QUESTIONS_PER_WORKBOOK_ATTEMPT);
+
+  const firstSheet = data.sheets[0];
+  return {
+    ...data,
+    sheets: [
+      {
+        id: "practice-attempt",
+        title: firstSheet?.title ?? "Practice",
+        objective: firstSheet?.objective ?? "A fresh set of practice questions from this unit's question bank.",
+        skill: firstSheet?.skill,
+        questions: sampled,
+      },
+    ],
+  };
+}
+
 // Family-facing counterpart to app/admin/content-packs/[packId]/preview/route.ts:
 // same content/player-template.html substitution, gated by a signed-in
 // family session (matching every other /learn/[unitId] API, not
@@ -37,7 +94,8 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ uni
   // for capture group 2's own value (the literal "</script>" tag),
   // corrupting the page. A function receives the match as plain arguments
   // and its return value is used verbatim, immune to this.
-  const packJson = JSON.stringify(pack.data);
+  const attemptPack = sampleWorkbookAttempt(pack.data as unknown as BankPackData);
+  const packJson = JSON.stringify(attemptPack);
   const withPack = template.replace(PACK_BLOCK_RE, (_m, open: string, close: string) => `${open}${packJson}${close}`);
 
   // STATE.results[q.id] is the string 'correct'|'wrong' (checked directly
