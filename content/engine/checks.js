@@ -33,7 +33,13 @@ export const isSquare = n => n >= 0 && Number.isInteger(Math.sqrt(n));
 
 const sameOrdered = (a, b) => a.length === b.length && a.every((v, i) => v === b[i]);
 const sameSet = (a, b) => sameOrdered([...a].sort((x, y) => x - y), [...b].sort((x, y) => x - y));
-const normText = s => dash(s).toLowerCase().replace(/[.,;:!?'"()]/g, '').replace(/\s+/g, ' ').trim();
+// Strips hyphens and ALL whitespace (not just collapsing runs of it) before
+// comparing - real bug found live 2026-08-26 (see the same fix in
+// content/player-template.html): an extracted answer like "Two-thirds" only
+// matched a kid typing the hyphen exactly; typing the far more natural "two
+// thirds" (no hyphen, how anyone actually says it) was marked wrong even
+// though it was the same answer.
+const normText = s => dash(s).toLowerCase().replace(/[.,;:!?'"()-]/g, '').replace(/\s+/g, '').trim();
 const normExpr = s => dash(s).toLowerCase()
   .replace(/\s|[×*·]/g, '')
   .replace(/position|term|pattern/g, 'n')
