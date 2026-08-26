@@ -1,7 +1,9 @@
 import Link from "next/link";
 import Logo, { LogoMark } from "./Logo";
 import AccountMenu from "./AccountMenu";
+import UnitSwitcher from "./UnitSwitcher";
 import { BookIcon, ChartIcon, ClipboardIcon, FolderPlusIcon, ShieldIcon, ArchiveIcon, TagIcon, ScaleIcon, LayersIcon } from "./NavIcons";
+import { getSwitcherGroups } from "@/lib/catalog";
 
 type NavKey =
   | "select"
@@ -20,7 +22,7 @@ type NavKey =
 // pills + account menu) - a persistent left rail doesn't suit a
 // mostly-phone, kid-facing app at narrow widths, per the "sidebar on large
 // screens, top/bottom nav on small" pattern.
-export default function AppShell({
+export default async function AppShell({
   profile,
   active,
   isAdmin,
@@ -31,6 +33,7 @@ export default function AppShell({
   isAdmin?: boolean;
   children: React.ReactNode;
 }) {
+  const switcherGroups = await getSwitcherGroups();
   const accountActive =
     active === "manage" ||
     active === "admin" ||
@@ -49,7 +52,11 @@ export default function AppShell({
           <Logo textClassName="text-base" className="h-8" />
         </Link>
 
-        <nav className="mt-8 grid gap-1">
+        <div className="mt-6">
+          <UnitSwitcher groups={switcherGroups} />
+        </div>
+
+        <nav className="mt-4 grid gap-1">
           <SidebarLink href="/select" isActive={active === "select"} icon={<BookIcon />}>
             Learn
           </SidebarLink>
@@ -102,28 +109,37 @@ export default function AppShell({
       </aside>
 
       <div className="min-w-0 flex-1">
-        {/* Mobile/tablet: the compact top-nav bar */}
-        <header className="mb-6 flex items-center justify-between gap-2 border-b border-slate-200 pb-4 lg:hidden">
-          <Link href="/select" className="shrink-0" aria-label="StudyEzy home">
-            <LogoMark className="h-8 w-8" />
-          </Link>
-          <nav className="flex min-w-0 items-center gap-1 text-sm">
-            <NavPill href="/select" isActive={active === "select"} icon={<BookIcon />}>
-              Learn
-            </NavPill>
-            <NavPill href="/dashboard" isActive={active === "dashboard"} icon={<ChartIcon />}>
-              Dashboard
-            </NavPill>
-            <NavPill href="/plan" isActive={active === "plan"} icon={<ClipboardIcon />}>
-              Prep Plan
-            </NavPill>
-          </nav>
-          <div className="shrink-0">
-            <AccountMenu profile={profile} isAdmin={isAdmin} active={accountActive} />
+        {/* Mobile/tablet: the compact top-nav bar, plus the unit switcher on
+            its own row - jumping straight to a different unit from a test/
+            exam page shouldn't require going back to /select first. */}
+        <header className="mb-6 border-b border-slate-200 pb-4 lg:hidden">
+          <div className="flex items-center justify-between gap-2">
+            <Link href="/select" className="shrink-0" aria-label="StudyEzy home">
+              <LogoMark className="h-8 w-8" />
+            </Link>
+            <nav className="flex min-w-0 items-center gap-1 text-sm">
+              <NavPill href="/select" isActive={active === "select"} icon={<BookIcon />}>
+                Learn
+              </NavPill>
+              <NavPill href="/dashboard" isActive={active === "dashboard"} icon={<ChartIcon />}>
+                Dashboard
+              </NavPill>
+              <NavPill href="/plan" isActive={active === "plan"} icon={<ClipboardIcon />}>
+                Prep Plan
+              </NavPill>
+            </nav>
+            <div className="shrink-0">
+              <AccountMenu profile={profile} isAdmin={isAdmin} active={accountActive} />
+            </div>
+          </div>
+          <div className="mt-3">
+            <UnitSwitcher groups={switcherGroups} />
           </div>
         </header>
 
-        {/* Desktop: slim top bar - just the account/config menu */}
+        {/* Desktop: slim top bar - just the account/config menu (the unit
+            switcher lives in the sticky sidebar instead, which stays
+            visible on scroll, so it doesn't need repeating here). */}
         <div className="mb-6 hidden justify-end lg:flex">
           <AccountMenu profile={profile} isAdmin={isAdmin} active={accountActive} />
         </div>

@@ -8,6 +8,7 @@ import { db } from "@/lib/db";
 import { getQualifyingWorksheetAttempt } from "@/lib/worksheetGate";
 import { recommendedDifficulty } from "@/lib/adaptiveDifficulty";
 import { LogoMark } from "@/components/Logo";
+import AppShell from "@/components/AppShell";
 import type { QuestionPaperDifficulty } from "@/lib/types";
 import { startTerminalTest } from "@/app/test/actions";
 
@@ -69,35 +70,38 @@ export default async function TestPage({ params }: { params: Promise<{ unitId: s
 
   if (locked) {
     return (
-      <main className="mx-auto grid w-full max-w-2xl gap-6">
-        <header>
-          <Link
-            href={`/learn/${unitId}`}
-            className="inline-flex items-center gap-2 text-sm text-slate-500 hover:text-slate-700"
-          >
-            <LogoMark className="h-6 w-6" />
-            &larr; Back to unit
-          </Link>
-          <h1 className="mt-2 text-2xl font-bold">
-            Progression Test - Unit {unit.unit}: {unit.unit_title}
-          </h1>
-        </header>
-        <div className="rounded-2xl border border-slate-200/70 bg-white p-6 text-center shadow-soft">
-          <p className="text-sm text-slate-600">
-            This is a new unit - practise the worksheet first (70% or better) to unlock the test.
-          </p>
-          <Link
-            href={`/learn/${unitId}`}
-            className="mt-4 inline-block rounded-xl bg-gradient-to-br from-orange-400 to-orange-600 px-5 py-2.5 text-sm font-medium text-white"
-          >
-            Go practise the worksheet
-          </Link>
-        </div>
-      </main>
+      <AppShell profile={profile} isAdmin={user.role === "admin"}>
+        <main className="mx-auto grid w-full max-w-2xl gap-6">
+          <header>
+            <Link
+              href={`/learn/${unitId}`}
+              className="inline-flex items-center gap-2 text-sm text-slate-500 hover:text-slate-700"
+            >
+              <LogoMark className="h-6 w-6" />
+              &larr; Back to unit
+            </Link>
+            <h1 className="mt-2 text-2xl font-bold">
+              Progression Test - Unit {unit.unit}: {unit.unit_title}
+            </h1>
+          </header>
+          <div className="rounded-2xl border border-slate-200/70 bg-white p-6 text-center shadow-soft">
+            <p className="text-sm text-slate-600">
+              This is a new unit - practise the worksheet first (70% or better) to unlock the test.
+            </p>
+            <Link
+              href={`/learn/${unitId}`}
+              className="mt-4 inline-block rounded-xl bg-gradient-to-br from-orange-400 to-orange-600 px-5 py-2.5 text-sm font-medium text-white"
+            >
+              Go practise the worksheet
+            </Link>
+          </div>
+        </main>
+      </AppShell>
     );
   }
 
   return (
+    <AppShell profile={profile} isAdmin={user.role === "admin"}>
     <main className="mx-auto grid w-full max-w-2xl gap-6">
       <header>
         <Link
@@ -174,5 +178,6 @@ export default async function TestPage({ params }: { params: Promise<{ unitId: s
         </div>
       )}
     </main>
+    </AppShell>
   );
 }

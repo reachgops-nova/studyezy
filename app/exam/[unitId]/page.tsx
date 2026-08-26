@@ -5,6 +5,7 @@ import { getUnit } from "@/lib/content";
 import { LogoMark } from "@/components/Logo";
 import Link from "next/link";
 import ExamCapture from "@/components/ExamCapture";
+import AppShell from "@/components/AppShell";
 
 export default async function ExamPage({ params }: { params: Promise<{ unitId: string }> }) {
   const user = await getCurrentUser();
@@ -20,25 +21,27 @@ export default async function ExamPage({ params }: { params: Promise<{ unitId: s
   if (!unit) notFound();
 
   return (
-    <main className="mx-auto grid w-full max-w-3xl gap-6">
-      <header>
-        <Link
-          href={`/learn/${unitId}`}
-          className="inline-flex items-center gap-2 text-sm text-slate-500 hover:text-slate-700"
-        >
-          <LogoMark className="h-6 w-6" />
-          &larr; Back to unit
-        </Link>
-        <h1 className="mt-2 text-2xl font-bold">
-          Written exam practice - Unit {unit.unit}: {unit.unit_title}
-        </h1>
-        <p className="mt-1 text-sm text-slate-600">
-          Write a practice paper on real paper, like at school. Photograph each page, and get feedback on
-          how you wrote it - not just whether it was right.
-        </p>
-      </header>
+    <AppShell profile={profile} isAdmin={user.role === "admin"}>
+      <main className="mx-auto grid w-full max-w-3xl gap-6">
+        <header>
+          <Link
+            href={`/learn/${unitId}`}
+            className="inline-flex items-center gap-2 text-sm text-slate-500 hover:text-slate-700"
+          >
+            <LogoMark className="h-6 w-6" />
+            &larr; Back to unit
+          </Link>
+          <h1 className="mt-2 text-2xl font-bold">
+            Written exam practice - Unit {unit.unit}: {unit.unit_title}
+          </h1>
+          <p className="mt-1 text-sm text-slate-600">
+            Write a practice paper on real paper, like at school. Photograph each page, and get feedback on
+            how you wrote it - not just whether it was right.
+          </p>
+        </header>
 
-      <ExamCapture unitKey={unitId} />
-    </main>
+        <ExamCapture unitKey={unitId} />
+      </main>
+    </AppShell>
   );
 }
