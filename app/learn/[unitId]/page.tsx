@@ -10,6 +10,7 @@ import { isTrialActive, getPricingPlanForKid } from "@/lib/pricing";
 import { db } from "@/lib/db";
 import { LogoMark } from "@/components/Logo";
 import UnitView, { type UnitContentPack } from "@/components/UnitView";
+import AppShell from "@/components/AppShell";
 
 export default async function LearnPage({ params }: { params: Promise<{ unitId: string }> }) {
   const user = await getCurrentUser();
@@ -92,11 +93,18 @@ export default async function LearnPage({ params }: { params: Promise<{ unitId: 
   const contentPack: UnitContentPack | null = latestPack ?? null;
 
   return (
-    // Wider than the old max-w-3xl (768px) - on an actual desktop/laptop
-    // screen that left most of the viewport empty around a phone-width
-    // column (reported with a screenshot: lots of unused space either
-    // side). max-w-6xl matches AppShell's own container width so this page
-    // is visually consistent with the rest of the app, not just wider.
+    // Real bug found live 2026-08-26: this page was never actually wrapped
+    // in AppShell despite a stray comment implying it was (grep for
+    // "AppShell" matched that comment, not a real usage) - the single
+    // most-used page in the app (the lesson/chat view) had no persistent
+    // navigation at all, which is exactly why the unit switcher never
+    // showed up here even after it shipped elsewhere.
+    <AppShell profile={profile} isAdmin={user.role === "admin"}>
+    {/* Wider than the old max-w-3xl (768px) - on an actual desktop/laptop
+        screen that left most of the viewport empty around a phone-width
+        column (reported with a screenshot: lots of unused space either
+        side). max-w-6xl matches AppShell's own container width so this page
+        is visually consistent with the rest of the app, not just wider. */}
     <main className="mx-auto grid w-full max-w-6xl gap-6">
       <header className="flex items-center justify-between">
         <div>
@@ -136,5 +144,6 @@ export default async function LearnPage({ params }: { params: Promise<{ unitId: 
         contentPack={contentPack}
       />
     </main>
+    </AppShell>
   );
 }
