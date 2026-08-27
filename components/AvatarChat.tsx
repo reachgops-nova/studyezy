@@ -374,13 +374,23 @@ function HighlightedText({
 export default function AvatarChat({
   unitKey,
   concept,
+  onAdvanceConcept,
 }: {
   unitKey: string;
   concept: Concept;
+  // Real gap found live 2026-08-27: after finishing a concept's checkpoints
+  // and micro-check questions, the avatar asked "Ready to move on?" but
+  // nothing in this component ever acted on a "yes" - there was no
+  // mechanism anywhere to advance to the next concept in the unit, so the
+  // conversation just dead-ended there no matter what the kid said. Passed
+  // in by UnitView.tsx (undefined on the unit's last concept, where there's
+  // nothing to advance to).
+  onAdvanceConcept?: () => void;
 }) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [readyForInput, setReadyForInput] = useState(false);
   const [awaitingContinue, setAwaitingContinue] = useState(false);
+  const [awaitingConceptAdvance, setAwaitingConceptAdvance] = useState(false);
   const [checkpointIndex, setCheckpointIndex] = useState(0);
   const [inMicroCheck, setInMicroCheck] = useState(false);
   const [microCheckIndex, setMicroCheckIndex] = useState(0);
@@ -544,12 +554,15 @@ export default function AvatarChat({
       askMicroCheck(0, token);
       return;
     }
-    const checkIn = "Want to try answering a quick question, or ask me anything about this?";
+    const checkIn = onAdvanceConcept
+      ? "Want to try answering a quick question, ask me anything about this, or move on to the next part?"
+      : "Want to try answering a quick question, or ask me anything about this?";
     const id = nextId();
     setMessages((prev) => [...prev, { id, sender: "avatar", text: checkIn }]);
     speakText(checkIn, id, () => {});
     setReadyForInput(true);
     setAwaitingContinue(false);
+    setAwaitingConceptAdvance(Boolean(onAdvanceConcept));
   }
 
   function askMicroCheck(index: number, token: number) {
@@ -559,12 +572,19 @@ export default function AvatarChat({
 
     if (index >= count) {
       setInMicroCheck(false);
-      const checkIn = "Ready to move on, or want to ask me anything else about this first?";
+      // Real gap found live 2026-08-27: this message asked "ready to move
+      // on?" but nothing acted on a "yes" - see onAdvanceConcept's comment.
+      // Wording now matches what actually happens: only offers "move on" as
+      // an option when there's somewhere to move on TO (a next concept).
+      const checkIn = onAdvanceConcept
+        ? "Ready to move on to the next part, or want to ask me anything else about this first?"
+        : "Nice work - that's everything in this unit! Want to ask me anything else about this first?";
       const id = nextId();
       setMessages((prev) => [...prev, { id, sender: "avatar", text: checkIn }]);
       speakText(checkIn, id, () => {});
       setReadyForInput(true);
       setAwaitingContinue(false);
+      setAwaitingConceptAdvance(Boolean(onAdvanceConcept));
       return;
     }
 
@@ -629,6 +649,7 @@ export default function AvatarChat({
     setMessages([]);
     setReadyForInput(false);
     setAwaitingContinue(false);
+    setAwaitingConceptAdvance(false);
     setCheckpointIndex(0);
     setInMicroCheck(false);
     setMicroCheckIndex(0);
@@ -685,6 +706,12 @@ export default function AvatarChat({
     speakText(ack, ackId, () => playCheckpoint(checkpointIndex, token));
   }
 
+  function handleAdvanceConcept() {
+    window.speechSynthesis?.cancel();
+    setAwaitingConceptAdvance(false);
+    onAdvanceConcept?.();
+  }
+
   // Distinct from "say that again" (a verbatim repeat) - this asks for a
   // genuinely different explanation, so it goes through the same
   // grounded-answer pipeline as free-form questions (Claude -> Groq -> local
@@ -729,6 +756,14 @@ export default function AvatarChat({
         handleRepeatCheckpoint();
         return;
       }
+    }
+
+    // Same idea, but for "ready to move on?" at the very end of a concept -
+    // only "continue"-shaped replies act (a "repeat" here has no special
+    // meaning, so it falls through to a real answer like any other message).
+    if (awaitingConceptAdvance && matchCheckpointIntent(trimmed) === "continue") {
+      handleAdvanceConcept();
+      return;
     }
 
     // Micro-check answers aren't graded - just logged, with a genuinely
@@ -957,6 +992,31 @@ export default function AvatarChat({
                   ))}
                 </div>
               )}
+            </div>
+          ) : awaitingConceptAdvance ? (
+            <div className="mb-3 flex flex-wrap gap-2">
+              {onAdvanceConcept && (
+                <button
+                  type="button"
+                  onClick={handleAdvanceConcept}
+                  disabled={loading}
+                  className="rounded-full bg-green-600 px-4 py-1.5 text-xs font-medium text-white hover:bg-green-700 disabled:opacity-50"
+                >
+                  ➡️ Next part
+                </button>
+              )}
+              {dynamicFollowUps.length > 0 &&
+                dynamicFollowUps.map((q, i) => (
+                  <button
+                    key={i}
+                    type="button"
+                    onClick={() => sendMessage(q)}
+                    disabled={loading}
+                    className="rounded-full border border-brand-ink-light bg-white px-3 py-1.5 text-xs text-brand-ink hover:bg-brand-paper disabled:opacity-50"
+                  >
+                    {q}
+                  </button>
+                ))}
             </div>
           ) : inMicroCheck ? (
             <p className="mb-3 text-xs text-slate-400">

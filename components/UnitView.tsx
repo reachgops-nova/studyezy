@@ -56,6 +56,8 @@ export default function UnitView({
   // starting every session" - not just one entry point).
   const [afterWarmup, setAfterWarmup] = useState<() => void>(() => () => {});
   const selected = unit.concepts.find((c) => c.concept_id === selectedId);
+  const selectedIndex = unit.concepts.findIndex((c) => c.concept_id === selectedId);
+  const nextConcept = selectedIndex >= 0 ? unit.concepts[selectedIndex + 1] : undefined;
 
   if (stage === "overview") {
     return (
@@ -202,7 +204,12 @@ export default function UnitView({
               From: {selected.story_reference.title}
             </p>
           )}
-          <AvatarChat key={selected.concept_id} unitKey={unitKey} concept={selected} />
+          <AvatarChat
+            key={selected.concept_id}
+            unitKey={unitKey}
+            concept={selected}
+            onAdvanceConcept={nextConcept ? () => setSelectedId(nextConcept.concept_id) : undefined}
+          />
         </div>
       )}
       </div>
