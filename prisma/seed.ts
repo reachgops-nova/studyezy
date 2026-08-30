@@ -130,7 +130,11 @@ const CURRICULUM_CONCEPT_MAP: Record<string, string> = {
 };
 
 
-type SeedQuestion = Record<string, unknown> & { question: string; concept_tested: string };
+interface SeedQuestion {
+  question: string;
+  concept_tested: string;
+  [key: string]: unknown;
+}
 
 /**
  * "Concept 1.3" -> "1.3". studyezy-p1-workbook-tests.json writes the prefixed
@@ -177,15 +181,15 @@ async function mergeQuestionPaper(unitId: string, difficulty: string, incoming: 
   const existing = await db.questionPaper.findUnique({
     where: { unitId_difficulty: { unitId, difficulty } },
   });
-  const current = (existing?.questions as SeedQuestion[] | undefined) ?? [];
+  const current = (existing?.questions as unknown as SeedQuestion[] | null) ?? [];
   const seen = new Set(current.map((q) => q.question));
   const merged = [...current, ...incoming.filter((q) => !seen.has(q.question))];
   const covers = [...new Set(merged.map((q) => q.concept_tested))].sort();
 
   await db.questionPaper.upsert({
     where: { unitId_difficulty: { unitId, difficulty } },
-    create: { unitId, difficulty, coversConcepts: covers, note: note ?? null, questions: merged },
-    update: { coversConcepts: covers, questions: merged, note: existing?.note ?? note ?? null },
+    create: { unitId, difficulty, coversConcepts: covers, note: note ?? null, questions: merged as unknown as object },
+    update: { coversConcepts: covers, questions: merged as unknown as object, note: existing?.note ?? note ?? null },
   });
 }
 
@@ -214,7 +218,7 @@ async function seedProgressionTests() {
 
   // 1. curriculum-english-stage5.json - easy/moderate/tough for Units 1 and 2.
   const curriculum = await readJson("curriculum-english-stage5.json");
-  for (const unit of curriculum?.units ?? []) {
+  for (const unit of (curriculum?.units ?? []) as any[]) {
     const unitId = await unitIdFor(unit.unitNumber);
     if (!unitId) continue;
     for (const [tier, body] of Object.entries<any>(unit.progressionTest?.difficultyTiers ?? {})) {
