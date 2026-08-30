@@ -3,8 +3,8 @@
 import { useEffect, useRef, useState } from "react";
 
 // Page-by-page reader for a unit's uploaded textbook pages - replaces the
-// earlier flat photo grid (2026-08-21: "display as a booklet"). Pages are
-// already in book order (lib/content.ts's getUploadedPageImages orders by
+// earlier flat photo grid (2026-08-21: "display as a booklet"). Pages arrive
+// already in book order (lib/content.ts's getUnitBookletImages orders by
 // upload time, which matches page order since pages are uploaded in
 // sequence), so this just needs to turn one page at a time instead of
 // dumping all of them into a grid.
