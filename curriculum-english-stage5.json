@@ -1,0 +1,666 @@
+{
+  "curriculum": "Cambridge Primary English",
+  "stage": 5,
+  "subject": "English",
+  "units": [
+    {
+      "unitId": "cambridge-stage5-english-unit1",
+      "unitNumber": 1,
+      "title": "Fiction: Stories from different cultures",
+      "description": "Explore fables from around the world, understanding implicit meanings, sentence structures, proofreading, and idiomatic phrases.",
+      "learningObjectives": [
+        "I can find explicit information in a text.",
+        "I can use implicit information to form opinions about characters.",
+        "I can build complex (multi-clause) sentences to add detail and interest.",
+        "I can recognise some idioms and explain their meanings.",
+        "I can proofread my writing for accuracy of punctuation and spelling."
+      ],
+      "concepts": [
+        {
+          "conceptId": "concept-1-1",
+          "title": "Features of a Fable",
+          "textbookReference": "Pages 5-6: 'Why Cockerels Crow'",
+          "definition": "A fable is a short, fictional story that teaches a moral lesson (a rule about right and wrong) on how to treat others. In fables, characters are often animals who behave and speak like humans.",
+          "keyPoints": [
+            "Fables are usually brief and get straight to the point.",
+            "Characters are often animals with distinct human attributes or traits (e.g., greedy, hard-working, selfish).",
+            "The setting can be anywhere in the world.",
+            "There is almost always a clear moral or lesson at the very end of the story."
+          ],
+          "examples": [
+            {
+              "text": "In the Malawian fable 'Why Cockerels Crow', Cockerel has a red spiky comb that looks like flames. Hyena believes it is real fire. This sets up a humorous conflict about deception and trust.",
+              "moral": "Do not take advantage of a friend's helpfulness, and do not let greed blind you to the truth."
+            }
+          ],
+          "interactiveWidgets": {
+            "type": "CharacterTraitMatcher",
+            "instructions": "Match the character from 'Why Cockerels Crow' to their personality trait!",
+            "pairs": [
+              {
+                "character": "Cockerel",
+                "trait": "Helpful and polite, doing chores for his friend."
+              },
+              {
+                "character": "Hyena",
+                "trait": "Lazy and fearful, easily tricked by the 'fire' on Cockerel's head."
+              }
+            ]
+          },
+          "voice_qa_samples": [
+            {
+              "question": "What is a moral in a fable?",
+              "answer": "A moral is a lesson or a rule of life taught by the story. For example, it might teach us that honesty is important, or that greed leads to trouble."
+            },
+            {
+              "question": "Why are animals used as characters in fables?",
+              "answer": "Animals are used because they represent simple human qualities—like being sneaky, wise, or hard-working—making the lesson easy and fun for children to understand."
+            }
+          ],
+          "reasoning_interview_prompts": [
+            {
+              "prompt": "If Cockerel is so helpful, why do you think Hyena got so scared of him at the end?",
+              "expectedAnalysis": "The student should recognize that Hyena's own fear of fire and misunderstanding of Cockerel's physical comb made him easily scared when he tried to touch it."
+            }
+          ]
+        },
+        {
+          "conceptId": "concept-1-2",
+          "title": "Implicit Meaning (Clue Detective)",
+          "textbookReference": "Page 5: 'Jo winked and grinned'",
+          "definition": "Implicit meaning is a 'hidden meaning' in a text. Writers do not always tell readers directly what a character is like or what is happening. Instead, they show us clues, and we must 'read between the lines' like a detective to figure out the truth.",
+          "keyPoints": [
+            "Explicit meaning is stated directly in the text (e.g., 'Jo was mischievous').",
+            "Implicit meaning is shown through actions, facial expressions, and speech (e.g., 'Jo winked and grinned as she placed the gum on the chair').",
+            "We use our background knowledge + text clues to make inferences."
+          ],
+          "examples": [
+            {
+              "text": "Jo winked at Charlie and grinned as she placed the chewing gum on the teacher's chair.",
+              "explicitClue": "Winked and grinned",
+              "implicitMeaning": "Jo is playing a cheeky, mischievous joke on the teacher, and Charlie is in on the secret."
+            }
+          ],
+          "interactiveWidgets": {
+            "type": "ClueDetectiveHighlight",
+            "sentence": "Jo winked at Charlie and grinned as she placed the chewing gum on the teacher's chair.",
+            "interactiveWords": [
+              "winked",
+              "grinned"
+            ],
+            "popups": {
+              "winked": "😉 A wink is a secret signal. It shows Jo and Charlie share a mischievous plan!",
+              "grinned": "😏 A grin shows delight in a trick. This tells us she finds her prank funny!"
+            }
+          },
+          "voice_qa_samples": [
+            {
+              "question": "What is the difference between explicit and implicit?",
+              "answer": "Explicit is when the book tells you directly, like: 'It was a cold day.' Implicit is when the book gives clues, like: 'The children shivered and wrapped their woolen coats tightly around themselves.' Both tell you it's cold, but one makes you find the clue!"
+            }
+          ],
+          "reasoning_interview_prompts": [
+            {
+              "prompt": "How does winking show us someone has a secret?",
+              "expectedAnalysis": "A wink is a deliberate facial action directed at someone else, which suggests a private understanding or agreement not shared with everyone in the room."
+            }
+          ]
+        },
+        {
+          "conceptId": "concept-1-3",
+          "title": "Predicting",
+          "textbookReference": "Page 8: 'Predicting Outcomes'",
+          "definition": "Predicting is a reading strategy where you guess what might happen next in a story based on clues the writer has already given you, combined with what you already know about how stories work.",
+          "keyPoints": [
+            "Good predictions are not wild guesses—they are backed by evidence from the text.",
+            "Look at a character's traits to predict how they will behave.",
+            "Use the sentence frames: 'I predict that... because...' or 'Since... happened, I think...'"
+          ],
+          "examples": [
+            {
+              "text": "Hyena's fire went out, and he was terrified that Cockerel's spiky comb would burn him. He crept into Cockerel's house carrying a stick...",
+              "prediction": "Since Hyena is scared of the fire and carrying a stick, I predict he will try to poke the comb from a safe distance to see if it is hot."
+            }
+          ],
+          "interactiveWidgets": {
+            "type": "PredictiveBrancher",
+            "scenario": "Hyena arrives at Cockerel's house in the dark. Cockerel is fast asleep. Hyena tip-toes up...",
+            "choices": [
+              {
+                "text": "Hyena will run away screaming.",
+                "feedback": "Hyena is cowardly, but he really wants the fire! Why would he walk all the way there just to run away before trying?"
+              },
+              {
+                "text": "Hyena will touch Cockerel's red comb with a small stick.",
+                "feedback": "Spot on! In the story, Hyena uses a small stick to touch the red spiky comb to steal some fire without getting burned!"
+              }
+            ]
+          },
+          "voice_qa_samples": [
+            {
+              "question": "How do I make a good prediction?",
+              "answer": "Stop and ask yourself: What has this character done before? What are they trying to achieve? Combining those clues will lead to a very logical prediction!"
+            }
+          ],
+          "reasoning_interview_prompts": [
+            {
+              "prompt": "Why is a prediction better when you can explain 'why' with evidence?",
+              "expectedAnalysis": "An evidence-based prediction shows comprehension of the plot and character motivations rather than random guessing."
+            }
+          ]
+        },
+        {
+          "conceptId": "concept-1-4",
+          "title": "Fact vs. Opinion",
+          "textbookReference": "Page 9-10: 'Do you remember?'",
+          "definition": "A fact is something that can be tested and proven to be true with evidence (e.g., 'The sun rises in the east'). An opinion is a belief, feeling, or thought that cannot be proven, as different people may feel differently (e.g., 'Math is the most fun subject').",
+          "keyPoints": [
+            "Facts are objective and stay the same for everyone.",
+            "Opinions are subjective and can change from person to person.",
+            "Words like 'best', 'wonderful', 'bad', or 'should' often signal opinions."
+          ],
+          "examples": [
+            {
+              "statement": "Cockerel did all of Cockerel's chores for him.",
+              "type": "Fact",
+              "explanation": "This can be verified directly by observing the actions in the fable."
+            },
+            {
+              "statement": "Hyena is kinder than Cockerel.",
+              "type": "Opinion",
+              "explanation": "People have different ideas of what makes a character 'kind'."
+            }
+          ],
+          "interactiveWidgets": {
+            "type": "FactOpinionSorter",
+            "statements": [
+              {
+                "text": "Oceans cover more than two-thirds of our planet.",
+                "correct": "Fact",
+                "hint": "This can be measured by scientists."
+              },
+              {
+                "text": "The ocean is beautiful and relaxing.",
+                "correct": "Opinion",
+                "hint": "Someone who is afraid of deep water might disagree!"
+              },
+              {
+                "text": "Cockerel has a red spiky comb on his head.",
+                "correct": "Fact",
+                "hint": "This is a physical description visible to everyone."
+              },
+              {
+                "text": "Hyena made a very silly mistake.",
+                "correct": "Opinion",
+                "hint": "The word 'silly' shows a personal judgment."
+              }
+            ]
+          },
+          "voice_qa_samples": [
+            {
+              "question": "Can an opinion become a fact?",
+              "answer": "No. Even if millions of people agree on an opinion (like 'Ice cream is delicious'), it remains an opinion because it's still based on personal taste, not a scientific test."
+            }
+          ],
+          "reasoning_interview_prompts": [
+            {
+              "prompt": "If I say 'This book has 25 pages,' is that a fact or opinion?",
+              "expectedAnalysis": "It is a fact, because we can physically count the pages and prove the statement right or wrong."
+            }
+          ]
+        },
+        {
+          "conceptId": "concept-1-5",
+          "title": "Sentence Types & Connectives",
+          "textbookReference": "Page 14-15: 'The First Sunrise'",
+          "definition": "Sentences come in different structures to make writing interesting. We can build Simple, Compound, and Complex sentences using words called connectives (or conjunctions) to join our ideas together.",
+          "keyPoints": [
+            "Simple Sentence: Has only one independent clause (subject + verb) expressing a single complete thought (e.g., 'The magpies sang their song.').",
+            "Compound Sentence: Joins two independent clauses of equal weight using connectives like 'and', 'but', 'so', 'or' (e.g., 'The magpies loved the warmth, but the wombats missed their burrows.').",
+            "Complex Sentence: Joins a main independent clause with a dependent clause (which doesn't make sense on its own) using connectives like 'because', 'although', 'when', 'since' (e.g., 'Because the magpies had never been able to jump before, they hopped about in joy.')."
+          ],
+          "examples": [
+            {
+              "type": "Simple",
+              "text": "The train sped down the hill."
+            },
+            {
+              "type": "Compound",
+              "text": "The train sped down the hill, and it went out of control."
+            },
+            {
+              "type": "Complex",
+              "text": "When the brakes failed, the train sped out of control down the hill."
+            }
+          ],
+          "interactiveWidgets": {
+            "type": "SentenceTrainBuilder",
+            "carriages": [
+              {
+                "id": "c1",
+                "text": "The magpies loved the warmth",
+                "type": "main"
+              },
+              {
+                "id": "c2",
+                "text": "the wombats missed their burrows",
+                "type": "main"
+              }
+            ],
+            "couplers": [
+              "and",
+              "but",
+              "because"
+            ],
+            "correctCoupler": "but",
+            "successMessage": "Choo Choo! You coupled two main clauses with 'but' to make a Compound Sentence!"
+          },
+          "voice_qa_samples": [
+            {
+              "question": "Why do we need complex sentences?",
+              "answer": "If we only write simple sentences, our writing sounds choppy and babyish. Complex sentences help show how actions depend on each other, like cause and effect!"
+            }
+          ],
+          "reasoning_interview_prompts": [
+            {
+              "prompt": "What makes 'Because the magpies had never hopped' a dependent clause?",
+              "expectedAnalysis": "It has 'Because' at the start, which leaves us waiting for the rest of the thought. It cannot stand alone as a sentence."
+            }
+          ]
+        },
+        {
+          "conceptId": "concept-1-6",
+          "title": "Idiomatic Phrases",
+          "textbookReference": "Page 17-18: 'The Elephant who lost his Patience'",
+          "definition": "An idiom (or idiomatic phrase) is an expression where the words together have a special, figurative meaning that is completely different from the literal, word-for-word meaning.",
+          "keyPoints": [
+            "Literal means exactly what the words say.",
+            "Figurative means the words paint a picture of a different idea.",
+            "Idioms are culture-specific and have to be learned as whole phrases."
+          ],
+          "examples": [
+            {
+              "idiom": "A heart of gold",
+              "literalIdea": "A heart physically made of metal",
+              "idiomaticMeaning": "Being extremely kind, generous, and caring."
+            },
+            {
+              "idiom": "Give the cold shoulder",
+              "literalIdea": "Pressing a cold shoulder against someone",
+              "idiomaticMeaning": "To ignore someone or act unfriendly toward them."
+            },
+            {
+              "idiom": "In hot water",
+              "literalIdea": "Sitting in boiling water",
+              "idiomaticMeaning": "To be in serious trouble for doing something wrong."
+            },
+            {
+              "idiom": "Hit the sack",
+              "literalIdea": "Physically punching a bag",
+              "idiomaticMeaning": "To go to bed because you are tired."
+            }
+          ],
+          "interactiveWidgets": {
+            "type": "IdiomConnector",
+            "items": [
+              {
+                "idiom": "A piece of cake",
+                "meaning": "Very easy to do"
+              },
+              {
+                "idiom": "Out of hand",
+                "meaning": "Getting out of control"
+              },
+              {
+                "idiom": "Cut corners",
+                "meaning": "Do things quickly and poorly to save time/money"
+              }
+            ]
+          },
+          "voice_qa_samples": [
+            {
+              "question": "Why do people use idioms if they are confusing?",
+              "answer": "People use them because they add color and humor to our speech. They are like verbal shortcuts that paint a strong mental picture!"
+            }
+          ],
+          "reasoning_interview_prompts": [
+            {
+              "prompt": "If Ezy says 'This test is a piece of cake,' does he want you to eat it?",
+              "expectedAnalysis": "No, because 'a piece of cake' is an idiom meaning something is incredibly easy."
+            }
+          ]
+        }
+      ],
+      "progressionTest": {
+        "difficultyTiers": {
+          "easy": {
+            "instructions": "Answer these simple questions to show you know fables and sentence types!",
+            "questions": [
+              {
+                "id": "q1",
+                "type": "multiple-choice",
+                "question": "What is the main purpose of a fable?",
+                "choices": [
+                  "To give scientific facts about wild animals.",
+                  "To teach a moral lesson on how to treat others.",
+                  "To list recipes using vegetables."
+                ],
+                "answer": "To teach a moral lesson on how to treat others."
+              },
+              {
+                "id": "q2",
+                "type": "multiple-choice",
+                "question": "Which of these is a fact, not an opinion?",
+                "choices": [
+                  "Fables are the most exciting stories ever written.",
+                  "Cockerel is a very handsome bird.",
+                  "Cockerel has a red comb on top of his head."
+                ],
+                "answer": "Cockerel has a red comb on top of his head."
+              }
+            ]
+          },
+          "moderate": {
+            "instructions": "Show your understanding of implicit meaning and compound sentences!",
+            "questions": [
+              {
+                "id": "q1",
+                "type": "multiple-choice",
+                "question": "Read this sentence: 'Sarah lowered her voice and looked around before whispered the news.' What is the implicit meaning?",
+                "choices": [
+                  "Sarah is outside on a windy day.",
+                  "Sarah is sharing a secret and does not want others to hear.",
+                  "Sarah has lost her voice."
+                ],
+                "answer": "Sarah is sharing a secret and does not want others to hear."
+              },
+              {
+                "id": "q2",
+                "type": "short-answer",
+                "question": "Combine these two simple sentences into a Compound Sentence using a connective: 'The rain fell heavily. The children played happily inside.'",
+                "gradingRubric": "Must use 'but', 'yet', 'and', or 'so' with a comma before it to join the independent clauses correctly. E.g., 'The rain fell heavily, but the children played happily inside.'",
+                "modelAnswer": "The rain fell heavily, but the children played happily inside."
+              }
+            ]
+          },
+          "tough": {
+            "instructions": "Demonstrate advanced mastery of complex clauses and idioms!",
+            "questions": [
+              {
+                "id": "q1",
+                "type": "short-answer",
+                "question": "Write a Complex Sentence explaining why Hyena crept into Cockerel's house. Use the subordinating connective 'because'.",
+                "gradingRubric": "Must contain one independent clause and one dependent clause starting with or containing 'because'. E.g., 'Because Hyena wanted to steal fire, he crept into Cockerel's house.'",
+                "modelAnswer": "Hyena crept into Cockerel's house because he wanted to steal some of Cockerel's fire."
+              },
+              {
+                "id": "q2",
+                "type": "short-answer",
+                "question": "Explain both the literal and figurative meanings of the idiom 'in hot water'.",
+                "gradingRubric": "Must explicitly separate literal (physically inside hot/boiling water) and figurative (being in trouble or facing difficulty).",
+                "modelAnswer": "Literally, it means being physically inside hot water. Figuratively, it is an idiom that means you are in deep trouble or facing a difficult situation."
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "unitId": "cambridge-stage5-english-unit2",
+      "unitNumber": 2,
+      "title": "Non-fiction: Biography",
+      "description": "Learn the structural features of biographies, timeline creation, chronological time-adverbs, and prefix/suffix spelling rules.",
+      "learningObjectives": [
+        "I can identify and describe the core features of a biography.",
+        "I can write events in chronological (time) order.",
+        "I can use adverbs and adverbial phrases of time to link paragraphs.",
+        "I can apply spelling rules for prefixes (dis-, im-, in-, ir-, il-) and suffixes (-ly, -ful, -ness)."
+      ],
+      "concepts": [
+        {
+          "conceptId": "concept-2-1",
+          "title": "What is a Biography?",
+          "textbookReference": "Page 26: 'Poorna Malavath biography'",
+          "definition": "A biography is a true, non-fiction record of the real events in a person's life, written from the viewpoint of an author (someone else, not the person themselves).",
+          "keyPoints": [
+            "Written in the third person (using pronouns like: he, she, they, him, her).",
+            "Starts with an opening statement explaining who the person is and why they are famous.",
+            "Describes life events in Chronological Order (the order in which they actually happened in time).",
+            "Contains exact dates, places, and factual achievements.",
+            "Includes quotes (direct speech) from the person or people who knew them."
+          ],
+          "examples": [
+            {
+              "subject": "Poorna Malavath",
+              "achievement": "Youngest girl to climb Mount Everest.",
+              "excerpt": "Poorna Malavath was born on 10 June 2000 in a village in Telangana, India. Her family was very poor... but she grew up to climb to the peak of Mount Everest, the highest mountain in the world, on 25 May 2014 aged 13 years and 11 months."
+            }
+          ],
+          "interactiveWidgets": {
+            "type": "BiographyFeatureScanner",
+            "instructions": "Tap on the highlighted areas of Poorna's biography excerpt to see which biography feature is being used!",
+            "highlights": {
+              "on 10 June 2000": "📅 Date and Fact: Sets the historical timeline.",
+              "she grew up to climb": "👤 Third Person Pronoun: 'she' indicates someone else is telling her story.",
+              " తెలంగాణ / Telangana": "📍 Place Name: Connects her life to a geographical coordinate."
+            }
+          },
+          "voice_qa_samples": [
+            {
+              "question": "What is the difference between an autobiography and a biography?",
+              "answer": "An AUTObiography is written by the person themselves (using 'I' and 'me'), while a biography is written by someone else (using 'he', 'she', and 'they')."
+            }
+          ],
+          "reasoning_interview_prompts": [
+            {
+              "prompt": "Why is it important for a biography to have dates and places?",
+              "expectedAnalysis": "Dates and places provide historical truth and allow the reader to track the chronological sequence of the subject's accomplishments."
+            }
+          ]
+        },
+        {
+          "conceptId": "concept-2-2",
+          "title": "Chronological Order & Time Adverbs (Life Mountain)",
+          "textbookReference": "Pages 29-30: 'Usain Bolt timeline'",
+          "definition": "Chronological order means arranging events in the exact sequence they happened in time, from first to last. We use time connectives and adverbial phrases of time to guide the reader smoothly through this sequence.",
+          "keyPoints": [
+            "Adverbs of time tell us WHEN something happened (e.g., first, now, soon, afterwards, eventually, finally).",
+            "Adverbial phrases of time tell us how long or in what period of time (e.g., in the end, across a period of time, throughout her childhood, later on).",
+            "When starting a sentence with an adverbial phrase of time, we must add a comma after it."
+          ],
+          "examples": [
+            {
+              "timeline": "Usain Bolt's Career",
+              "steps": [
+                "First, Bolt won races locally in Jamaica.",
+                "Afterwards, he suffered a number of injuries, but he recovered and won again.",
+                "Eventually, he became the fastest man on Earth at the Olympic Games."
+              ]
+            }
+          ],
+          "interactiveWidgets": {
+            "type": "LifeMountainTimeline",
+            "instructions": "Drag Poorna Malavath's life milestones onto the checkpoint flags up the mountain in correct time order!",
+            "steps": [
+              {
+                "order": 1,
+                "text": "Born in Telangana village in 2000"
+              },
+              {
+                "order": 2,
+                "text": "Attended a residential sports school"
+              },
+              {
+                "order": 3,
+                "text": "Selected for Operation Everest in 2013"
+              },
+              {
+                "order": 4,
+                "text": "Trained in Darjeeling for eight months"
+              },
+              {
+                "order": 5,
+                "text": "Reached the Everest Summit on 25 May 2014"
+              }
+            ]
+          },
+          "voice_qa_samples": [
+            {
+              "question": "How do time adverbs help my writing?",
+              "answer": "Without them, your biography reads like a disjointed list of sentences. Adverbs like 'Eventually' or 'Afterwards' create beautiful bridges between paragraphs so the story flows like a river!"
+            }
+          ],
+          "reasoning_interview_prompts": [
+            {
+              "prompt": "If a sentence starts with 'Later on...' why do we need a comma?",
+              "expectedAnalysis": "We use a comma after an introductory adverbial phrase of time to separate it from the main clause, prompting the reader to take a slight pause."
+            }
+          ]
+        },
+        {
+          "conceptId": "concept-2-3",
+          "title": "Prefixes & Suffixes",
+          "textbookReference": "Pages 38-39: 'Prefixes and suffixes'",
+          "definition": "Prefixes are letters added to the BEGINNING of a root word to change its meaning (often making it the opposite). Suffixes are letters added to the END of a word to change its grammatical form (e.g., turning an adjective into an adverb or noun).",
+          "keyPoints": [
+            "The prefix 'dis-' turns agree to disagree.",
+            "Negative prefixes: before roots beginning with 'l', use 'il-' (illegal); before 'm' or 'p', use 'im-' (impossible, immature); before 'r', use 'ir-' (irresponsible).",
+            "Suffix Rule 1: Double the final letter when adding a suffix to 1-syllable verbs ending in a vowel+consonant (e.g., swim -> swimming, stop -> stopped).",
+            "Suffix Rule 2: Double the final letter in multi-syllable verbs ONLY if the final syllable is emphasized (e.g., kidnap -> kidnapped, prefer -> preferred, but enter -> entered)."
+          ],
+          "examples": [
+            {
+              "root": "patient",
+              "prefix": "im-",
+              "result": "impatient",
+              "meaning": "not patient"
+            },
+            {
+              "root": "regular",
+              "prefix": "ir-",
+              "result": "irregular",
+              "meaning": "not regular"
+            },
+            {
+              "root": "hope",
+              "suffix": "-ful + -ness",
+              "result": "hopefulness",
+              "meaning": "the state of being full of hope"
+            }
+          ],
+          "interactiveWidgets": {
+            "type": "PrefixSuffixMachine",
+            "words": [
+              {
+                "root": "legal",
+                "prefix": "il-",
+                "correct": "illegal"
+              },
+              {
+                "root": "responsible",
+                "prefix": "ir-",
+                "correct": "irresponsible"
+              },
+              {
+                "root": "possible",
+                "prefix": "im-",
+                "correct": "impossible"
+              },
+              {
+                "root": "regret",
+                "suffix": "-ed",
+                "correct": "regretted",
+                "rule": "Emphasized final syllable 'gret' doubles the 't'."
+              }
+            ]
+          },
+          "voice_qa_samples": [
+            {
+              "question": "Why does spelling change when adding suffixes?",
+              "answer": "English spelling rules are designed to preserve the sound of vowels. For example, if we didn't double the 'p' in 'stopping', it would be pronounced 'stoping' with a long 'o' sound like 'stone'!"
+            }
+          ],
+          "reasoning_interview_prompts": [
+            {
+              "prompt": "Why is it 'entered' with one 'r' but 'preferred' with two 'r's?",
+              "expectedAnalysis": "In 'enter', the stress is on the first syllable 'EN-ter'. In 'prefer', the stress is on the second syllable 'pre-FER', so the final consonant doubles."
+            }
+          ]
+        }
+      ],
+      "progressionTest": {
+        "difficultyTiers": {
+          "easy": {
+            "instructions": "Let's check the basics of biographies and prefix matching!",
+            "questions": [
+              {
+                "id": "q1",
+                "type": "multiple-choice",
+                "question": "Biographies are always written in which person?",
+                "choices": [
+                  "First Person (using 'I' and 'we')",
+                  "Third Person (using 'he', 'she', and 'they')",
+                  "Second Person (using 'you' and 'your')"
+                ],
+                "answer": "Third Person (using 'he', 'she', and 'they')"
+              },
+              {
+                "id": "q2",
+                "type": "multiple-choice",
+                "question": "What is the opposite of 'possible'?",
+                "choices": [
+                  "unpossible",
+                  "impossible",
+                  "dispossible"
+                ],
+                "answer": "impossible"
+              }
+            ]
+          },
+          "moderate": {
+            "instructions": "Demonstrate chronological and suffix spelling skills!",
+            "questions": [
+              {
+                "id": "q1",
+                "type": "multiple-choice",
+                "question": "Which of these time adverbs shows that something occurred at the very end of a sequence?",
+                "choices": [
+                  "Initially",
+                  "Afterwards",
+                  "Eventually"
+                ],
+                "answer": "Eventually"
+              },
+              {
+                "id": "q2",
+                "type": "short-answer",
+                "question": "Spell the word you get when you add the suffix '-ing' to the verb 'stop'.",
+                "gradingRubric": "Must double the final 'p'. E.g., 'stopping'.",
+                "modelAnswer": "stopping"
+              }
+            ]
+          },
+          "tough": {
+            "instructions": "Prove advanced command of biography structures and syllable stress rules!",
+            "questions": [
+              {
+                "id": "q1",
+                "type": "short-answer",
+                "question": "Why is the word 'travel' spelled as 'travelling' in UK English, even though the stress is on the first syllable?",
+                "gradingRubric": "Must identify that 'travel' is an exception to the stress rule in UK English (where final 'l' always doubles before a suffix).",
+                "modelAnswer": "In UK English, final 'l' is always doubled when adding a suffix (like -ing or -ed) to verbs ending in a single vowel + l, regardless of syllable stress."
+              },
+              {
+                "id": "q2",
+                "type": "short-answer",
+                "question": "Write a 3-step chronological timeline of Usain Bolt's life using at least two different introductory adverbial phrases of time.",
+                "gradingRubric": "Must list 3 distinct logical chronological steps, each introduced with correct time adverbs / phrases followed by a comma (e.g., 'First, ...', 'Later on, ...', 'In the end, ...').",
+                "modelAnswer": "First, Usain Bolt was born in Jamaica in 1986. Afterwards, throughout his school years, he won many local running races. In the end, he broke the world record at the Olympic Games."
+              }
+            ]
+          }
+        }
+      }
+    }
+  ]
+}
