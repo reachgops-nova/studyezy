@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Avatar from "../Avatar";
+import { JoWinkCartoon } from "./studyezy-cartoon-assets-v2";
 import {
   WIDGET_GOLD,
   WIDGET_GOLD_BRIGHT,
@@ -101,68 +102,19 @@ function ClueDetective({ spec, onEzy }: { spec: ClueDetectiveSpec; onEzy: (t: st
 
   return (
     <div className="grid gap-3 sm:grid-cols-[auto_minmax(0,1fr)] sm:items-center">
-      <svg viewBox="0 0 400 400" className="mx-auto h-48 w-48" role="img" aria-label="Jo's face">
-        <rect x="10" y="10" width="380" height="380" rx="24" fill={WIDGET_PAPER} stroke={WIDGET_INK} strokeWidth="4" />
-        <circle cx="200" cy="180" r="90" fill="#FFE0BD" stroke={WIDGET_INK} strokeWidth="4" />
-        <path d="M 110,180 C 110,90 290,90 290,180 C 290,130 110,130 110,180 Z" fill="#4A3728" stroke={WIDGET_INK} strokeWidth="4" />
-
-        {/* left eye is always open */}
-        <circle cx="165" cy="170" r="12" fill="#fff" stroke={WIDGET_INK} strokeWidth="3" />
-        <circle cx="165" cy="170" r="5" fill={WIDGET_INK} />
-
-        {/* right eye: open circle scales to nothing as the wink arc draws in */}
-        <g
-          className="transition-transform duration-300"
-          style={{
-            transformBox: "fill-box",
-            transformOrigin: "center",
-            transform: winking ? "scaleY(0)" : "scaleY(1)",
-          }}
-        >
-          <circle cx="235" cy="170" r="12" fill="#fff" stroke={WIDGET_INK} strokeWidth="3" />
-          <circle cx="235" cy="170" r="5" fill={WIDGET_INK} />
-        </g>
-        <path
-          d="M 220,170 Q 235,182 250,170"
-          fill="none"
-          stroke={WIDGET_INK}
-          strokeWidth="6"
-          strokeLinecap="round"
-          className="transition-opacity duration-300"
-          style={{ opacity: winking ? 1 : 0 }}
-        />
-
-        {/* mouth: neutral line crossfades into the grin */}
-        <path
-          d="M 175,220 Q 200,230 225,220"
-          fill="none"
-          stroke={WIDGET_INK}
-          strokeWidth="4"
-          strokeLinecap="round"
-          className="transition-opacity duration-300"
-          style={{ opacity: grinning ? 0 : 1 }}
-        />
-        <path
-          d="M 165,210 Q 200,250 235,210 Z"
-          fill="#FF8A8A"
-          stroke={WIDGET_INK}
-          strokeWidth="4"
-          className="transition-all duration-300"
-          style={{
-            transformBox: "fill-box",
-            transformOrigin: "center",
-            opacity: grinning ? 1 : 0,
-            transform: grinning ? "scale(1)" : "scale(0.6)",
-          }}
-        />
-
-        {/* a little sparkle once both clues are found */}
+      <div className="relative mx-auto h-48 w-48">
+        <JoWinkCartoon isWinking={winking} isGrinning={grinning} />
+        {/* the imported asset has no completion flourish of its own -
+            kept as a small overlay so finding both clues still feels
+            rewarded, same as before this swap. */}
         {winking && grinning && (
-          <g className="animate-pulse">
-            <path d="M 305,110 l 8,18 18,8 -18,8 -8,18 -8,-18 -18,-8 18,-8 Z" fill={WIDGET_GOLD_BRIGHT} />
-          </g>
+          <svg viewBox="0 0 200 200" className="pointer-events-none absolute inset-0 h-full w-full" aria-hidden="true">
+            <g className="animate-pulse">
+              <path d="M 155,35 l 8,18 18,8 -18,8 -8,18 -8,-18 -18,-8 18,-8 Z" fill={WIDGET_GOLD_BRIGHT} />
+            </g>
+          </svg>
         )}
-      </svg>
+      </div>
 
       <p className="text-base leading-loose text-slate-800">
         {tokens.map((tok, i) => {
