@@ -235,7 +235,13 @@ export default function UnitView({
       </nav>
 
       {bookVisible && (
-        <aside className="rounded-2xl border border-slate-200/70 bg-white p-4 shadow-soft xl:sticky xl:top-4 xl:self-start">
+        // md:col-start-2 / xl:col-auto: between md and xl the desk is a TWO
+        // column grid holding THREE children, and grid auto-placement put the
+        // chat back in column 1 - under the nav, 200px wide (found live at
+        // 820px, 2026-08-30). Pinning the book and the chat to column 2 stacks
+        // them correctly there; at xl the third column exists so placement goes
+        // back to automatic.
+        <aside className="rounded-2xl border border-slate-200/70 bg-white p-4 shadow-soft md:col-start-2 xl:col-auto xl:sticky xl:top-4 xl:self-start">
           <div className="flex items-center justify-between gap-2">
             <div>
               <h2 className="text-sm font-semibold text-slate-800">Your textbook</h2>
@@ -261,7 +267,7 @@ export default function UnitView({
       )}
 
       {selected && (
-        <div className="grid grid-cols-1 content-start gap-2">
+        <div className="grid grid-cols-1 content-start gap-2 md:col-start-2 xl:col-auto">
           {selected.story_reference && (
             <p className="text-xs uppercase tracking-wide text-slate-400">
               From: {selected.story_reference.title}
