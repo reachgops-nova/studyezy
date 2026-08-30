@@ -100,7 +100,7 @@ export default function UnitView({
 
   if (stage === "warmup") {
     return (
-      <div className="grid gap-4">
+      <div className="grid grid-cols-1 gap-4">
         {pageImages.length > 0 && (
           <div className="rounded-2xl border border-slate-200/70 bg-white p-5 shadow-soft">
             <h2 className="text-lg font-semibold">Here&apos;s what we&apos;re learning from</h2>
@@ -141,7 +141,7 @@ export default function UnitView({
   }
 
   return (
-    <div className="grid gap-6">
+    <div className="grid grid-cols-1 gap-6">
       {contentPack && contentPack.status === "clean" && contentPack.questionsCount > 0 && (
         <div className="rounded-2xl border border-slate-200/70 bg-white shadow-soft">
           <div className="flex items-center justify-between gap-3 p-4">
@@ -190,11 +190,11 @@ export default function UnitView({
       <div
         className={
           bookVisible
-            ? "grid gap-5 md:grid-cols-[200px_minmax(0,1fr)] xl:grid-cols-[200px_minmax(0,0.42fr)_minmax(0,0.58fr)]"
-            : "grid gap-5 md:grid-cols-[200px_minmax(0,1fr)]"
+            ? "grid grid-cols-1 gap-5 md:grid-cols-[200px_minmax(0,1fr)] xl:grid-cols-[200px_minmax(0,0.42fr)_minmax(0,0.58fr)]"
+            : "grid grid-cols-1 gap-5 md:grid-cols-[200px_minmax(0,1fr)]"
         }
       >
-      <nav className="grid content-start gap-1">
+      <nav className="grid grid-cols-1 content-start gap-1">
         <button
           onClick={() => setStage("overview")}
           className="mb-2 rounded-xl px-3 py-2 text-left text-xs font-medium uppercase tracking-wide text-slate-400 hover:text-slate-600"
@@ -260,7 +260,7 @@ export default function UnitView({
       )}
 
       {selected && (
-        <div className="grid content-start gap-2">
+        <div className="grid grid-cols-1 content-start gap-2">
           {selected.story_reference && (
             <p className="text-xs uppercase tracking-wide text-slate-400">
               From: {selected.story_reference.title}

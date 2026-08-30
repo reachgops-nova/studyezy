@@ -107,9 +107,19 @@ export default async function LearnPage({ params }: { params: Promise<{ unitId: 
         column (reported with a screenshot: lots of unused space either
         side). max-w-6xl matches AppShell's own container width so this page
         is visually consistent with the rest of the app, not just wider. */}
-    <main className="mx-auto grid w-full max-w-6xl gap-6">
-      <header className="flex items-center justify-between">
-        <div>
+    {/* grid-cols-1 (= minmax(0,1fr)) rather than a bare `grid`: a
+        single-column grid's implicit track is `auto`, which is sized to
+        max-content and lets a wide child drag the whole container past the
+        viewport. That is what put this page into a horizontal scroll on a
+        phone (2026-08-30); the track now clamps and children wrap instead. */}
+    <main className="mx-auto grid w-full max-w-6xl grid-cols-1 gap-6">
+      {/* flex-wrap + min-w-0: the action links were `shrink-0` beside an
+          unconstrained title block, so the header's min-content was wider
+          than a phone viewport and put the whole lesson page into a
+          horizontal scroll (measured 452px of content in a 375px viewport,
+          2026-08-30). They now drop onto their own line instead. */}
+      <header className="flex flex-wrap items-center justify-between gap-3">
+        <div className="min-w-0">
           <Link href="/select" className="inline-flex items-center gap-2 text-sm text-slate-500 hover:text-slate-700">
             <LogoMark className="h-6 w-6" />
             &larr; Change unit
@@ -121,7 +131,7 @@ export default async function LearnPage({ params }: { params: Promise<{ unitId: 
             {unit.subject} - {unit.curriculum}
           </p>
         </div>
-        <div className="flex shrink-0 flex-col gap-2 sm:flex-row">
+        <div className="flex flex-col gap-2 sm:flex-row">
           <Link
             href={`/exam/${unitId}`}
             className="rounded-xl border border-slate-300 bg-white px-4 py-2 text-center text-sm font-medium text-slate-700 hover:bg-slate-50"

@@ -881,7 +881,7 @@ export default function AvatarChat({
   const quickReplies = dynamicFollowUps.length > 0 ? dynamicFollowUps : starterReplies;
 
   return (
-    <div className="grid gap-4">
+    <div className="grid grid-cols-1 gap-4">
       {((concept.media?.source_image_path && !hideSourceImage) || concept.media?.illustration_key) && (
         // max-w-xl + aspect-ratio (matching the illustrations' own 300x180
         // viewBox) gives the artwork real presence instead of a small
@@ -1076,7 +1076,12 @@ export default function AvatarChat({
                   ? "Type or use the mic..."
                   : "Type your question..."
               }
-              className="flex-1 rounded-xl border border-slate-300 px-3 py-2 text-sm disabled:bg-slate-50"
+              // min-w-0: a flex item defaults to min-width:auto, so this input
+              // refused to shrink below its intrinsic width and pushed the whole
+              // lesson page into a horizontal scroll on a phone (measured 436px of
+              // content in a 375px viewport, 2026-08-30). flex-1 alone does not fix
+              // that - the row is the widest thing on the page without this.
+              className="min-w-0 flex-1 rounded-xl border border-slate-300 px-3 py-2 text-sm disabled:bg-slate-50"
             />
             <button
               type="button"
