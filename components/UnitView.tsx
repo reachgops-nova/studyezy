@@ -36,6 +36,12 @@ export default function UnitView({
   const [selectedId, setSelectedId] = useState(unit.concepts[0]?.concept_id);
   const [pageImages, setPageImages] = useState(initialPageImages);
   const [docExpanded, setDocExpanded] = useState(true);
+  // The textbook pane sitting beside the lesson chat. Open by default: the
+  // whole point (2026-08-30) is that a kid mid-conversation can look back at
+  // the story or the instructions without leaving the lesson, which they
+  // previously could not do at all - the booklet only existed on the unit
+  // overview and warm-up screens.
+  const [bookOpen, setBookOpen] = useState(true);
   const loggedLessonStart = useRef(false);
 
   // Honest engagement signal (not a comprehension check - see
@@ -58,6 +64,16 @@ export default function UnitView({
   const selected = unit.concepts.find((c) => c.concept_id === selectedId);
   const selectedIndex = unit.concepts.findIndex((c) => c.concept_id === selectedId);
   const nextConcept = selectedIndex >= 0 ? unit.concepts[selectedIndex + 1] : undefined;
+
+  // Which booklet page belongs to the concept being taught right now.
+  // Concept.sourceImagePath is the exact same served path the booklet lists,
+  // so an indexOf is a real match, not a heuristic - verified against every
+  // concept in English Units 1 and 2. -1 simply means this concept uses an
+  // illustration rather than a scanned page, and the booklet is left alone.
+  const conceptImagePath = selected?.media?.source_image_path;
+  const conceptPageIndex = conceptImagePath ? pageImages.indexOf(conceptImagePath) : -1;
+  const hasBook = pageImages.length > 0;
+  const bookVisible = hasBook && bookOpen;
 
   if (stage === "overview") {
     return (
@@ -167,8 +183,18 @@ export default function UnitView({
         </div>
       )}
 
-      <div className="grid gap-6 md:grid-cols-[220px_1fr]">
-      <nav className="grid gap-1">
+      {/* The lesson "desk": concept list, the real textbook, and the chat.
+          Three columns from xl up (where there is genuinely room for all
+          three); below that the textbook stacks above the chat in the same
+          column rather than squeezing the conversation into a sliver. */}
+      <div
+        className={
+          bookVisible
+            ? "grid gap-5 md:grid-cols-[200px_minmax(0,1fr)] xl:grid-cols-[200px_minmax(0,0.42fr)_minmax(0,0.58fr)]"
+            : "grid gap-5 md:grid-cols-[200px_minmax(0,1fr)]"
+        }
+      >
+      <nav className="grid content-start gap-1">
         <button
           onClick={() => setStage("overview")}
           className="mb-2 rounded-xl px-3 py-2 text-left text-xs font-medium uppercase tracking-wide text-slate-400 hover:text-slate-600"
@@ -195,10 +221,46 @@ export default function UnitView({
             {c.concept_id} {c.concept_name} <span className="text-[10px] uppercase">soon</span>
           </div>
         ))}
+        {hasBook && (
+          <button
+            type="button"
+            onClick={() => setBookOpen((v) => !v)}
+            aria-expanded={bookVisible}
+            className="mt-3 rounded-xl border border-slate-200 px-3 py-2 text-left text-sm font-medium text-slate-600 hover:bg-slate-50"
+          >
+            {bookVisible ? "Hide textbook" : "Open textbook"}
+          </button>
+        )}
       </nav>
 
+      {bookVisible && (
+        <aside className="rounded-2xl border border-slate-200/70 bg-white p-4 shadow-soft xl:sticky xl:top-4 xl:self-start">
+          <div className="flex items-center justify-between gap-2">
+            <div>
+              <h2 className="text-sm font-semibold text-slate-800">Your textbook</h2>
+              <p className="text-xs text-slate-500">
+                Flip back or forward any time - this is the real book.
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => setBookOpen(false)}
+              className="shrink-0 rounded-full border border-slate-200 px-2.5 py-1 text-xs font-medium text-slate-500 hover:bg-slate-50"
+            >
+              Hide
+            </button>
+          </div>
+          <Booklet
+            images={pageImages}
+            alt={(i) => `Textbook page ${i + 1} for ${unit.unit_title}`}
+            syncToIndex={conceptPageIndex >= 0 ? conceptPageIndex : undefined}
+            className="mt-3"
+          />
+        </aside>
+      )}
+
       {selected && (
-        <div className="grid gap-2">
+        <div className="grid content-start gap-2">
           {selected.story_reference && (
             <p className="text-xs uppercase tracking-wide text-slate-400">
               From: {selected.story_reference.title}
@@ -209,6 +271,10 @@ export default function UnitView({
             unitKey={unitKey}
             concept={selected}
             onAdvanceConcept={nextConcept ? () => setSelectedId(nextConcept.concept_id) : undefined}
+            // The booklet beside this chat is already showing this exact
+            // page, at full size - repeating it as a small cropped thumbnail
+            // inside the conversation is pure duplication.
+            hideSourceImage={bookVisible && conceptPageIndex >= 0}
           />
         </div>
       )}

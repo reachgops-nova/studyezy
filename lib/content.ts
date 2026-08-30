@@ -104,6 +104,48 @@ export async function getUploadedPageImages(key: string): Promise<string[]> {
 }
 
 /**
+ * Every readable textbook page image for a unit, from BOTH places a page can
+ * have been stored, in reading order.
+ *
+ * There are two, for real historical reasons: the original parent-facing
+ * "upload the pages" flow writes UploadedPage rows, while the later admin
+ * curation flow (app/api/resources/upload) writes UnitResource rows with
+ * resourceType "textbook". English Unit 1's 22 pages went in through the
+ * first; Unit 2's 6 pages went in through the second. getUploadedPageImages
+ * only ever saw the first, which is why Unit 2 - the newest unit - had no
+ * booklet at all even though its pages were sitting right there (found
+ * 2026-08-30 while putting the booklet beside the lesson chat).
+ *
+ * Only image/* is included: UnitResource also legitimately holds PDFs, and
+ * components/Booklet.tsx renders <img>, which cannot display one.
+ */
+export async function getUnitBookletImages(key: string): Promise<string[]> {
+  const unit = await db.unit.findUnique({ where: { unitKey: key } });
+  if (!unit) return [];
+
+  const [pages, resources] = await Promise.all([
+    db.uploadedPage.findMany({
+      where: { unitId: unit.id, purpose: "textbook_source" },
+      orderBy: { createdAt: "asc" },
+    }),
+    db.unitResource.findMany({
+      // Approved only - the booklet is the family-facing reader, and a
+      // pending upload has not been vetted by an admin yet.
+      where: { unitId: unit.id, resourceType: "textbook", status: "approved" },
+      orderBy: { createdAt: "asc" },
+    }),
+  ]);
+
+  const paths = [...pages, ...resources]
+    .filter((row) => row.mimeType.startsWith("image/"))
+    .map((row) => `/api/uploads/${row.storageKey}`);
+
+  // A page could in principle exist in both tables; dedupe by served path so
+  // it is never shown twice. Set preserves insertion order.
+  return Array.from(new Set(paths));
+}
+
+/**
  * Same query as getUploadedPageImages, but keeps the raw storageKey rather
  * than the served /api/uploads/ path - used by the content-pack conversion
  * admin UI, which needs to send storageKeys (not full URLs) to the convert

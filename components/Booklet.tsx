@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 // Page-by-page reader for a unit's uploaded textbook pages - replaces the
 // earlier flat photo grid (2026-08-21: "display as a booklet"). Pages are
@@ -12,23 +12,44 @@ export default function Booklet({
   images,
   alt,
   className,
+  syncToIndex,
 }: {
   images: string[];
   alt: (index: number) => string;
   className?: string;
+  /**
+   * Page to jump to when the surrounding lesson moves to a new concept
+   * (UnitView passes the index of the concept's own reference page). Only
+   * applied when the VALUE CHANGES, never on every render - so a kid who
+   * has manually flipped back a few pages to hunt for a clue keeps their
+   * place until the lesson genuinely moves on to a different concept.
+   */
+  syncToIndex?: number;
 }) {
-  const [index, setIndex] = useState(0);
+  const [index, setIndex] = useState(syncToIndex !== undefined && syncToIndex >= 0 ? syncToIndex : 0);
   const [zoomed, setZoomed] = useState(false);
+  const lastSynced = useRef(syncToIndex);
+
+  useEffect(() => {
+    if (syncToIndex === undefined || syncToIndex < 0) return;
+    if (lastSynced.current === syncToIndex) return;
+    lastSynced.current = syncToIndex;
+    setIndex(syncToIndex);
+  }, [syncToIndex]);
 
   if (images.length === 0) return null;
-  const safeIndex = Math.min(index, images.length - 1);
+  const safeIndex = Math.max(0, Math.min(index, images.length - 1));
   const goTo = (i: number) => setIndex(Math.max(0, Math.min(images.length - 1, i)));
 
   return (
     <div className={className}>
       <div className="relative mx-auto max-w-md">
         <div
-          className="aspect-square w-full cursor-zoom-in overflow-hidden rounded-xl border border-slate-200 bg-slate-50"
+          // aspect-[3/4] matches the real proportions of a scanned textbook page.
+          // aspect-square letterboxed a portrait page into a square box, which
+          // shrank the printed text to the point kids could not read it without
+          // opening the zoom modal every single time (2026-08-30).
+          className="aspect-[3/4] w-full cursor-zoom-in overflow-hidden rounded-xl border border-slate-200 bg-slate-50"
           onClick={() => setZoomed(true)}
         >
           {/* eslint-disable-next-line @next/next/no-img-element */}

@@ -375,9 +375,17 @@ export default function AvatarChat({
   unitKey,
   concept,
   onAdvanceConcept,
+  hideSourceImage = false,
 }: {
   unitKey: string;
   concept: Concept;
+  /**
+   * Set by UnitView when the lesson's textbook pane is open AND already
+   * showing this concept's own page - in that case the small copy in here is
+   * duplication. Never hides a built-in illustration, only a real scanned
+   * page the booklet is displaying at full size.
+   */
+  hideSourceImage?: boolean;
   // Real gap found live 2026-08-27: after finishing a concept's checkpoints
   // and micro-check questions, the avatar asked "Ready to move on?" but
   // nothing in this component ever acted on a "yes" - there was no
@@ -874,21 +882,31 @@ export default function AvatarChat({
 
   return (
     <div className="grid gap-4">
-      {(concept.media?.source_image_path || concept.media?.illustration_key) && (
+      {((concept.media?.source_image_path && !hideSourceImage) || concept.media?.illustration_key) && (
         // max-w-xl + aspect-ratio (matching the illustrations' own 300x180
         // viewBox) gives the artwork real presence instead of a small
         // thumbnail, while still capping it well short of the full-width
         // lesson column - an uncapped width was the earlier "empty space"
         // regression (2026-08-21) when this card had little content to fill
-        // it with. A photo (object-cover) still respects the same box.
+        // it with.
         <div className="max-w-xl rounded-2xl border border-slate-200/70 bg-white p-4 shadow-soft">
-          <div className="aspect-[5/3] w-full overflow-hidden rounded-xl">
-            {concept.media?.source_image_path ? (
+          {/* A scanned page is portrait, so it gets a portrait box and
+              object-contain. It used to share the illustrations' landscape
+              aspect-[5/3] with object-cover, which sliced the top and bottom
+              off every real textbook page - the actual source of the
+              "cropped pages" complaint (2026-08-30). Built-in illustrations
+              really are 300x180 artwork and keep the landscape box. */}
+          <div
+            className={`w-full overflow-hidden rounded-xl ${
+              concept.media?.source_image_path && !hideSourceImage ? "aspect-[3/4]" : "aspect-[5/3]"
+            }`}
+          >
+            {concept.media?.source_image_path && !hideSourceImage ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img
                 src={concept.media.source_image_path}
                 alt={concept.media.illustration_caption ?? concept.concept_name}
-                className="h-full w-full object-cover"
+                className="h-full w-full bg-slate-50 object-contain"
               />
             ) : (
               <Illustration illustrationKey={concept.media!.illustration_key!} />

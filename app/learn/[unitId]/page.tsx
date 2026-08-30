@@ -2,7 +2,7 @@ import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
 import { getActiveProfile } from "@/lib/auth";
 import { getCurrentUser } from "@/lib/session";
-import { getUnit, getUploadedPageImages } from "@/lib/content";
+import { getUnit, getUnitBookletImages } from "@/lib/content";
 import { getUnitResourceGroupsByKey } from "@/lib/queries/unitResources";
 import { getQuestionPaperByKey } from "@/lib/queries/questionPapers";
 import { FREEZABLE_TYPES } from "@/lib/unitResources";
@@ -60,7 +60,9 @@ export default async function LearnPage({ params }: { params: Promise<{ unitId: 
     );
   }
 
-  const pageImages = await getUploadedPageImages(unitId);
+  // Unions both page-storage tables - see getUnitBookletImages. Using the
+  // UploadedPage-only query here meant Unit 2 rendered no booklet at all.
+  const pageImages = await getUnitBookletImages(unitId);
   const resourceGroups = (await getUnitResourceGroupsByKey(unitId)).filter((g) =>
     (FREEZABLE_TYPES as string[]).includes(g.type)
   );
