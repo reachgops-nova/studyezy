@@ -13,6 +13,11 @@ import {
   type LifeMountainSpec,
   type PrefixMachineSpec,
   type SentenceTrainSpec,
+  type TraitMatcherSpec,
+  type PredictiveBrancherSpec,
+  type FactOpinionSpec,
+  type IdiomConnectorSpec,
+  type BiographyScannerSpec,
 } from "@/lib/interactiveWidgets";
 
 /**
@@ -457,6 +462,268 @@ function PrefixMachine({ spec, onEzy }: { spec: PrefixMachineSpec; onEzy: (t: st
   );
 }
 
+// ------------------------------------------------------ W5 Trait Matcher
+
+function TraitMatcher({ spec, onEzy }: { spec: TraitMatcherSpec; onEzy: (t: string) => void }) {
+  const [picked, setPicked] = useState<string | null>(null);
+  const [solved, setSolved] = useState<Record<string, boolean>>({});
+  // Traits are shuffled once per mount so the answer is not just "same row".
+  const [traits] = useState(() => [...spec.pairs].reverse().map((p) => p.trait));
+
+  const chooseTrait = (trait: string) => {
+    if (!picked) {
+      onEzy("Tap a character on the left first, then the trait their actions show.");
+      return;
+    }
+    const pair = spec.pairs.find((p) => p.character === picked);
+    if (pair && pair.trait === trait) {
+      setSolved((v) => ({ ...v, [picked]: true }));
+      onEzy(`Yes - the fable never says "${picked} is ${trait.split(" ")[0].toLowerCase()}". It shows you through what he does.`);
+    } else {
+      onEzy("Not that one. Think about what this character actually DOES in the story, not what you'd expect.");
+    }
+    setPicked(null);
+  };
+
+  return (
+    <div className="grid gap-3 sm:grid-cols-2">
+      <div className="grid content-start gap-2">
+        {spec.pairs.map((p) => (
+          <button
+            key={p.character}
+            type="button"
+            disabled={solved[p.character]}
+            onClick={() => setPicked(p.character)}
+            className={`rounded-xl border-2 px-3 py-2 text-sm font-semibold transition active:scale-95 ${
+              solved[p.character]
+                ? "border-brand-gold bg-brand-gold-bright/25 text-brand-ink-dark"
+                : picked === p.character
+                ? "border-brand-gold bg-brand-gold-bright/15 text-brand-ink"
+                : "border-slate-200 bg-white text-brand-ink hover:border-brand-gold/50"
+            }`}
+          >
+            {p.character}
+            {solved[p.character] && " ✓"}
+          </button>
+        ))}
+      </div>
+      <div className="grid content-start gap-2">
+        {traits.map((t) => {
+          const done = spec.pairs.some((p) => p.trait === t && solved[p.character]);
+          return (
+            <button
+              key={t}
+              type="button"
+              disabled={done}
+              onClick={() => chooseTrait(t)}
+              className={`rounded-xl border-2 px-3 py-2 text-left text-xs transition active:scale-95 ${
+                done
+                  ? "border-brand-gold bg-brand-gold-bright/25 text-brand-ink-dark"
+                  : "border-slate-200 bg-white text-slate-700 hover:border-brand-gold/50"
+              }`}
+            >
+              {t}
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+// -------------------------------------------------- W6 Predictive Brancher
+
+function PredictiveBrancher({ spec, onEzy }: { spec: PredictiveBrancherSpec; onEzy: (t: string) => void }) {
+  const [chosen, setChosen] = useState<string | null>(null);
+  const pick = (c: PredictiveBrancherSpec["choices"][number]) => {
+    setChosen(c.text);
+    onEzy(c.feedback);
+  };
+
+  return (
+    <div>
+      <div className="rounded-xl bg-practice-bg p-3">
+        <p className="text-sm italic leading-relaxed text-brand-ink">{spec.scenario}</p>
+      </div>
+      <div className="mt-3 grid gap-2">
+        {spec.choices.map((c) => {
+          const isChosen = chosen === c.text;
+          return (
+            <button
+              key={c.text}
+              type="button"
+              onClick={() => pick(c)}
+              className={`rounded-xl border-2 px-3 py-2 text-left text-sm transition active:scale-95 ${
+                isChosen
+                  ? c.correct
+                    ? "border-brand-gold bg-brand-gold-bright/25 text-brand-ink-dark"
+                    : "border-test-border bg-test-bg text-test-accent"
+                  : "border-slate-200 bg-white text-brand-ink hover:border-brand-gold/50"
+              }`}
+            >
+              {c.text}
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+// ------------------------------------------------- W7 Fact / Opinion Sorter
+
+function FactOpinionSorter({ spec, onEzy }: { spec: FactOpinionSpec; onEzy: (t: string) => void }) {
+  const [answers, setAnswers] = useState<Record<number, "Fact" | "Opinion">>({});
+  const answer = (i: number, choice: "Fact" | "Opinion") => {
+    const st = spec.statements[i];
+    setAnswers((a) => ({ ...a, [i]: choice }));
+    onEzy(choice === st.answer ? `Correct - that's a ${st.answer.toLowerCase()}. ${st.hint}` : `Not quite. ${st.hint}`);
+  };
+
+  return (
+    <div className="grid gap-2">
+      {spec.statements.map((st, i) => {
+        const given = answers[i];
+        const right = given === st.answer;
+        return (
+          <div
+            key={st.text}
+            className={`rounded-xl border-2 p-2.5 transition ${
+              given ? (right ? "border-brand-gold bg-brand-gold-bright/15" : "border-test-border bg-test-bg") : "border-slate-200 bg-white"
+            }`}
+          >
+            <p className="text-sm text-brand-ink">{st.text}</p>
+            <div className="mt-2 flex gap-2">
+              {(["Fact", "Opinion"] as const).map((opt) => (
+                <button
+                  key={opt}
+                  type="button"
+                  onClick={() => answer(i, opt)}
+                  className={`rounded-full border px-3 py-1 text-xs font-medium transition active:scale-95 ${
+                    given === opt
+                      ? right
+                        ? "border-brand-gold bg-brand-gold-bright/40 text-brand-ink-dark"
+                        : "border-test-border bg-white text-test-accent"
+                      : "border-slate-300 bg-white text-slate-600 hover:border-brand-gold/50"
+                  }`}
+                >
+                  {opt}
+                </button>
+              ))}
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+// ------------------------------------------------------ W8 Idiom Connector
+
+function IdiomConnector({ spec, onEzy }: { spec: IdiomConnectorSpec; onEzy: (t: string) => void }) {
+  const [picked, setPicked] = useState<string | null>(null);
+  const [solved, setSolved] = useState<Record<string, boolean>>({});
+  const [meanings] = useState(() => [...spec.items].reverse().map((i) => i.meaning));
+
+  const chooseMeaning = (meaning: string) => {
+    if (!picked) {
+      onEzy("Pick an idiom on the left first, then tap what you think it really means.");
+      return;
+    }
+    const item = spec.items.find((i) => i.idiom === picked);
+    if (item && item.meaning === meaning) {
+      setSolved((v) => ({ ...v, [picked]: true }));
+      onEzy(`"${item.idiom}" has nothing to do with its literal words - it means "${item.meaning.toLowerCase()}".`);
+    } else {
+      onEzy("Not that one. Remember: an idiom's real meaning is usually nothing like the picture the words paint.");
+    }
+    setPicked(null);
+  };
+
+  return (
+    <div className="grid gap-3 sm:grid-cols-2">
+      <div className="grid content-start gap-2">
+        {spec.items.map((i) => (
+          <button
+            key={i.idiom}
+            type="button"
+            disabled={solved[i.idiom]}
+            onClick={() => setPicked(i.idiom)}
+            className={`rounded-xl border-2 px-3 py-2 text-sm font-semibold transition active:scale-95 ${
+              solved[i.idiom]
+                ? "border-brand-gold bg-brand-gold-bright/25 text-brand-ink-dark"
+                : picked === i.idiom
+                ? "border-brand-gold bg-brand-gold-bright/15 text-brand-ink"
+                : "border-slate-200 bg-white text-brand-ink hover:border-brand-gold/50"
+            }`}
+          >
+            {i.idiom}
+            {solved[i.idiom] && " ✓"}
+          </button>
+        ))}
+      </div>
+      <div className="grid content-start gap-2">
+        {meanings.map((m) => {
+          const done = spec.items.some((i) => i.meaning === m && solved[i.idiom]);
+          return (
+            <button
+              key={m}
+              type="button"
+              disabled={done}
+              onClick={() => chooseMeaning(m)}
+              className={`rounded-xl border-2 px-3 py-2 text-left text-xs transition active:scale-95 ${
+                done ? "border-brand-gold bg-brand-gold-bright/25 text-brand-ink-dark" : "border-slate-200 bg-white text-slate-700 hover:border-brand-gold/50"
+              }`}
+            >
+              {m}
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+// -------------------------------------------------- W9 Biography Scanner
+
+function BiographyScanner({ spec, onEzy }: { spec: BiographyScannerSpec; onEzy: (t: string) => void }) {
+  const [found, setFound] = useState<Record<string, boolean>>({});
+  const total = spec.passage.filter((r) => r.feature).length;
+  const foundCount = Object.keys(found).length;
+
+  return (
+    <div>
+      <p className="text-base leading-loose text-slate-800">
+        {spec.passage.map((run, i) =>
+          run.feature ? (
+            <button
+              key={i}
+              type="button"
+              onClick={() => {
+                setFound((f) => ({ ...f, [run.text]: true }));
+                onEzy(run.feature!);
+              }}
+              className={`rounded-lg border-b-4 px-1 py-0.5 font-semibold transition active:scale-95 ${
+                found[run.text]
+                  ? "border-brand-gold bg-brand-gold-bright/30 text-brand-ink-dark"
+                  : "animate-pulse border-brand-gold/40 bg-brand-gold-bright/15 text-brand-gold hover:bg-brand-gold-bright/25"
+              }`}
+            >
+              {run.text}
+            </button>
+          ) : (
+            <span key={i}>{run.text}</span>
+          )
+        )}
+      </p>
+      <p className="mt-3 text-xs text-slate-500">
+        {foundCount} of {total} biography features found
+        {foundCount === total ? " - that's every one." : "."}
+      </p>
+    </div>
+  );
+}
+
 // ------------------------------------------------------------- dispatcher
 
 export default function WidgetDispatcher({ conceptId }: { conceptId: string }) {
@@ -477,6 +744,16 @@ export default function WidgetDispatcher({ conceptId }: { conceptId: string }) {
         return "Start at the bottom of the mountain with the earliest event in her life, then work upwards.";
       case "prefix_machine":
         return w.spec.ezyRemedial;
+      case "trait_matcher":
+        return "Tap a character, then the trait their ACTIONS show - fables reveal character through behaviour, not description.";
+      case "predictive_brancher":
+        return "Use what you already know about this character. Which choice fits someone who wants the fire but is easily scared?";
+      case "fact_opinion":
+        return "Ask yourself: could somebody check this and prove it? If yes it's a fact. If it's what someone thinks, it's an opinion.";
+      case "idiom_connector":
+        return "Don't picture the words literally - a piece of cake has nothing to do with cake. Think about how people use the phrase.";
+      case "biography_scanner":
+        return "Look for dates, place names, and the word 'she' - those three are the biggest giveaways that this is a biography.";
     }
   };
 
@@ -490,6 +767,16 @@ export default function WidgetDispatcher({ conceptId }: { conceptId: string }) {
         return <LifeMountain spec={widget.spec} onEzy={setEzyText} />;
       case "prefix_machine":
         return <PrefixMachine spec={widget.spec} onEzy={setEzyText} />;
+      case "trait_matcher":
+        return <TraitMatcher spec={widget.spec} onEzy={setEzyText} />;
+      case "predictive_brancher":
+        return <PredictiveBrancher spec={widget.spec} onEzy={setEzyText} />;
+      case "fact_opinion":
+        return <FactOpinionSorter spec={widget.spec} onEzy={setEzyText} />;
+      case "idiom_connector":
+        return <IdiomConnector spec={widget.spec} onEzy={setEzyText} />;
+      case "biography_scanner":
+        return <BiographyScanner spec={widget.spec} onEzy={setEzyText} />;
     }
   })();
 

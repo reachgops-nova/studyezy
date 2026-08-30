@@ -10,7 +10,11 @@ const db = new PrismaClient();
 // about what's selectable changes for existing users.
 const ENGLISH_UNITS: { number: number; title: string; available: boolean }[] = [
   { number: 1, title: "Fiction: Stories from different cultures", available: true },
-  { number: 2, title: "Non-fiction: Biography", available: false },
+  // available:true - Unit 2 went live on 2026-08-27 (6 concepts, real
+  // textbook pages, its own progression tests). This flag is written on
+  // UPDATE as well as create, so leaving it false meant a routine
+  // `npm run db:seed` would silently unpublish a unit families are using.
+  { number: 2, title: "Non-fiction: Biography", available: true },
   { number: 3, title: "Poetry: Narrative poems", available: false },
   { number: 4, title: "Non-fiction: Information and explanation texts", available: false },
   { number: 5, title: "Fiction: Stories that have been developed into a film", available: false },
@@ -92,6 +96,152 @@ async function seedConceptsForUnit(unitRowId: string, json: UnitJson) {
     });
   }
 }
+
+// ---------------------------------------------------------------------------
+// Progression-test loading from the authored JSON datasets.
+//
+// Mirrors what scripts/load-progression-tests.py and
+// scripts/load-p1-workbook-tests.py did to production, so a freshly seeded
+// database ends up with the same papers rather than only Unit 1's original
+// moderate draft. Questions are MERGED and de-duplicated by question text -
+// the three hand-authored moderate questions and the loaded tiers all coexist,
+// exactly as they do live.
+// ---------------------------------------------------------------------------
+
+/**
+ * curriculum-english-stage5.json's test questions carry no concept_tested, so
+ * each is mapped here to a real live Concept.conceptKey. Keyed
+ * "<unit>|<tier>|<questionId>". Verified against the database - an unmatched
+ * key would be silently dropped by the mastery write rather than erroring.
+ */
+const CURRICULUM_CONCEPT_MAP: Record<string, string> = {
+  "1|easy|q1": "1.1",     // purpose of a fable
+  "1|easy|q2": "1.7",     // fact vs opinion
+  "1|moderate|q1": "1.2", // implicit meaning
+  "1|moderate|q2": "1.9", // compound sentence
+  "1|tough|q1": "1.9",    // complex sentence with 'because'
+  "1|tough|q2": "1.8",    // idiom 'in hot water'
+  "2|easy|q1": "2.1",     // third person
+  "2|easy|q2": "2.6",     // prefix im-
+  "2|moderate|q1": "2.2", // time adverbs
+  "2|moderate|q2": "2.6", // suffix -ing doubling
+  "2|tough|q1": "2.6",    // 'travelling' UK rule
+  "2|tough|q2": "2.2",    // 3-step chronological timeline
+};
+
+
+type SeedQuestion = Record<string, unknown> & { question: string; concept_tested: string };
+
+/**
+ * "Concept 1.3" -> "1.3". studyezy-p1-workbook-tests.json writes the prefixed
+ * form, and an unprefixed conceptKey is what app/api/attempts/route.ts resolves
+ * against Concept.conceptKey. A key that matches nothing is NOT an error - the
+ * mastery write silently skips it - so this normalization is load-bearing.
+ */
+function normalizeConceptKey(raw: unknown): string {
+  const m = String(raw ?? "").match(/(\d+\.\d+)/);
+  if (!m) throw new Error(`Cannot parse a concept key out of ${JSON.stringify(raw)}`);
+  return m[1];
+}
+
+function toSeedQuestion(q: Record<string, any>): SeedQuestion {
+  const concept = normalizeConceptKey(q.concept_tested);
+  if (q.type === "short_answer" || q.type === "short-answer") {
+    const rubric = q.rubric ?? {};
+    const criteria: string[] = [];
+    if (q.gradingRubric) criteria.push(q.gradingRubric);
+    if (rubric.criteria) criteria.push(rubric.criteria);
+    for (const [stage, text] of Object.entries(rubric.points ?? {})) {
+      criteria.push(`${stage[0].toUpperCase()}${stage.slice(1)}: ${text} (1 mark)`);
+    }
+    if (q.modelAnswer) criteria.push(`Example of a full-mark answer: ${q.modelAnswer}`);
+    return {
+      type: "short_answer",
+      question: q.question,
+      concept_tested: concept,
+      mark_scheme: {
+        full_marks: Math.max(1, Object.keys(rubric.points ?? {}).length || 2),
+        criteria,
+      },
+    };
+  }
+  const options: string[] = q.options ?? q.choices ?? [];
+  const idx = options.indexOf(q.answer);
+  if (idx < 0) throw new Error(`Answer not among options for: ${q.question.slice(0, 50)}`);
+  return { type: "multiple_choice", question: q.question, options, correct_answer: idx, concept_tested: concept };
+}
+
+/** Appends `incoming` to the unit's paper for this tier, skipping duplicates. */
+async function mergeQuestionPaper(unitId: string, difficulty: string, incoming: SeedQuestion[], note?: string) {
+  if (incoming.length === 0) return;
+  const existing = await db.questionPaper.findUnique({
+    where: { unitId_difficulty: { unitId, difficulty } },
+  });
+  const current = (existing?.questions as SeedQuestion[] | undefined) ?? [];
+  const seen = new Set(current.map((q) => q.question));
+  const merged = [...current, ...incoming.filter((q) => !seen.has(q.question))];
+  const covers = [...new Set(merged.map((q) => q.concept_tested))].sort();
+
+  await db.questionPaper.upsert({
+    where: { unitId_difficulty: { unitId, difficulty } },
+    create: { unitId, difficulty, coversConcepts: covers, note: note ?? null, questions: merged },
+    update: { coversConcepts: covers, questions: merged, note: existing?.note ?? note ?? null },
+  });
+}
+
+
+/**
+ * Loads every authored progression test into QuestionPaper rows, merging into
+ * whatever a unit already has (see mergeQuestionPaper). Reads the two datasets
+ * at the repo root; skips silently if either is absent so the seed still works
+ * in a checkout without them.
+ */
+async function seedProgressionTests() {
+  const root = process.cwd();
+  const readJson = async (name: string) => {
+    try {
+      return JSON.parse(await readFile(path.join(root, name), "utf8"));
+    } catch {
+      console.warn(`  (skipping ${name} - not found)`);
+      return null;
+    }
+  };
+
+  const unitIdFor = async (unitNumber: number) => {
+    const row = await db.unit.findUnique({ where: { unitKey: unitKey("cambridge", 5, "english", unitNumber) } });
+    return row?.id ?? null;
+  };
+
+  // 1. curriculum-english-stage5.json - easy/moderate/tough for Units 1 and 2.
+  const curriculum = await readJson("curriculum-english-stage5.json");
+  for (const unit of curriculum?.units ?? []) {
+    const unitId = await unitIdFor(unit.unitNumber);
+    if (!unitId) continue;
+    for (const [tier, body] of Object.entries<any>(unit.progressionTest?.difficultyTiers ?? {})) {
+      // This dataset omits concept_tested entirely, so the mapping lives here
+      // rather than in the file - each question is tagged by hand below.
+      const mapped = (body.questions ?? []).map((q: any, i: number) => ({
+        ...q,
+        concept_tested: CURRICULUM_CONCEPT_MAP[`${unit.unitNumber}|${tier}|${q.id ?? `q${i + 1}`}`],
+      }));
+      await mergeQuestionPaper(unitId, tier, mapped.map(toSeedQuestion), body.instructions);
+    }
+  }
+
+  // 2. studyezy-p1-workbook-tests.json - three extra Unit 1 questions grounded
+  //    in the real fable text. These DO carry concept_tested, in the prefixed
+  //    "Concept 1.1" form that normalizeConceptKey strips.
+  const workbook = await readJson("studyezy-p1-workbook-tests.json");
+  const unit1Id = await unitIdFor(1);
+  if (unit1Id && workbook) {
+    for (const [tier, body] of Object.entries<any>(workbook.progressive_evaluations?.unit_1_tests ?? {})) {
+      await mergeQuestionPaper(unit1Id, tier, (body.questions ?? []).map(toSeedQuestion));
+    }
+  }
+
+  console.log("  Progression tests loaded.");
+}
+
 
 async function main() {
   const curriculum = await db.curriculum.upsert({
@@ -198,6 +348,8 @@ async function main() {
       }
     }
   }
+
+  await seedProgressionTests();
 
   console.log("Seed complete.");
 }
