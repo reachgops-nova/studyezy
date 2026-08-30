@@ -1,0 +1,363 @@
+{
+  "theme": {
+    "primary": "gold",
+    "ink": "#1E293B",
+    "paper": "#F8FAFC",
+    "accent_orange": "#FF6F00",
+    "brand_cream": "#FFFDD0",
+    "font_family_header": "Bricolage Grotesque",
+    "font_family_body": "Manrope"
+  },
+  "widgets": [
+    {
+      "id": "W1",
+      "name": "ClueDetectiveHighlight",
+      "unit": 1,
+      "page": 5,
+      "concept_reference": "Implicit Meaning (Jo's Wink & Grin)",
+      "visual_style": "Cartoon Character SVG Canvas",
+      "story_context": "Jo winking and grinning while putting gum on the teacher's chair. Helps kids read between the lines.",
+      "svg_scaffold": {
+        "viewBox": "0 0 400 400",
+        "layers": [
+          {
+            "name": "background_card",
+            "type": "rect",
+            "props": {
+              "x": 10,
+              "y": 10,
+              "width": 380,
+              "height": 380,
+              "rx": 24,
+              "fill": "#FFFDD0",
+              "stroke": "#1E293B",
+              "strokeWidth": 4
+            }
+          },
+          {
+            "name": "jo_face_base",
+            "type": "circle",
+            "props": {
+              "cx": 200,
+              "cy": 180,
+              "r": 90,
+              "fill": "#FFE0BD",
+              "stroke": "#1E293B",
+              "strokeWidth": 4
+            }
+          },
+          {
+            "name": "jo_hair",
+            "type": "path",
+            "props": {
+              "d": "M 110,180 C 110,90 290,90 290,180 C 290,130 110,130 110,180 Z",
+              "fill": "#4A3728",
+              "stroke": "#1E293B",
+              "strokeWidth": 4
+            }
+          },
+          {
+            "name": "jo_left_eye_open",
+            "type": "circle",
+            "props": {
+              "cx": 165,
+              "cy": 170,
+              "r": 12,
+              "fill": "#FFFFFF",
+              "stroke": "#1E293B",
+              "strokeWidth": 3
+            },
+            "pupil": {
+              "cx": 165,
+              "cy": 170,
+              "r": 5,
+              "fill": "#1E293B"
+            }
+          },
+          {
+            "name": "jo_right_eye_open",
+            "type": "circle",
+            "id": "right-eye-open",
+            "props": {
+              "cx": 235,
+              "cy": 170,
+              "r": 12,
+              "fill": "#FFFFFF",
+              "stroke": "#1E293B",
+              "strokeWidth": 3
+            },
+            "pupil": {
+              "cx": 235,
+              "cy": 170,
+              "r": 5,
+              "fill": "#1E293B"
+            }
+          },
+          {
+            "name": "jo_right_eye_winked_path",
+            "type": "path",
+            "id": "right-eye-wink",
+            "props": {
+              "d": "M 220,170 Q 235,182 250,170",
+              "fill": "none",
+              "stroke": "#1E293B",
+              "strokeWidth": 6,
+              "strokeLinecap": "round",
+              "className": "hidden"
+            }
+          },
+          {
+            "name": "jo_mouth_neutral",
+            "type": "path",
+            "id": "mouth-neutral",
+            "props": {
+              "d": "M 175,220 Q 200,230 225,220",
+              "fill": "none",
+              "stroke": "#1E293B",
+              "strokeWidth": 4,
+              "strokeLinecap": "round"
+            }
+          },
+          {
+            "name": "jo_mouth_grin",
+            "type": "path",
+            "id": "mouth-grin",
+            "props": {
+              "d": "M 165,210 Q 200,250 235,210 C 245,210 240,200 235,210 Z",
+              "fill": "#FF8A8A",
+              "stroke": "#1E293B",
+              "strokeWidth": 4,
+              "className": "hidden"
+            }
+          }
+        ]
+      },
+      "interactions": {
+        "step_1": {
+          "instruction_en": "Tap the word 'WINKED' to see what Jo does with her eyes!",
+          "instruction_hi": "\u091c\u094b \u0915\u0940 \u0906\u0901\u0916\u094b\u0902 \u0915\u0940 \u0939\u0930\u0915\u0924 \u0926\u0947\u0916\u0928\u0947 \u0915\u0947 \u0932\u093f\u090f 'WINKED' \u0936\u092c\u094d\u0926 \u0915\u094b \u091b\u0941\u090f\u0902!",
+          "trigger_target": "winked-btn",
+          "action": "Toggle right-eye-open (hide) and right-eye-wink (show) with a spring bounce. Play eye-blink sound effect.",
+          "ezy_feedback_en": "A wink means she shares a sneaky secret! Look, she is closing one eye!",
+          "ezy_feedback_hi": "\u0906\u0901\u0916 \u092e\u093e\u0930\u0928\u093e (wink) \u092f\u093e\u0928\u0940 \u0935\u0939 \u0915\u094b\u0908 \u0917\u0941\u092a\u094d\u0924 \u0936\u0930\u093e\u0930\u0924 \u0938\u093e\u091d\u093e \u0915\u0930 \u0930\u0939\u0940 \u0939\u0948! \u0926\u0947\u0916\u094b, \u0909\u0938\u0928\u0947 \u090f\u0915 \u0906\u0901\u0916 \u092c\u0902\u0926 \u0915\u0940!"
+        },
+        "step_2": {
+          "instruction_en": "Now tap 'GRINNED' to see her facial expression!",
+          "instruction_hi": "\u0905\u092c \u091c\u094b \u0915\u0947 \u091a\u0947\u0939\u0930\u0947 \u0915\u0947 \u092d\u093e\u0935 \u0926\u0947\u0916\u0928\u0947 \u0915\u0947 \u0932\u093f\u090f 'GRINNED' \u0936\u092c\u094d\u0926 \u0915\u094b \u091b\u0941\u090f\u0902!",
+          "trigger_target": "grinned-btn",
+          "action": "Toggle mouth-neutral (hide) and mouth-grin (show) with a scale-up animation. Show star burst particles near her eyes.",
+          "ezy_feedback_en": "That cheeky grin means she's up to mischief! She's not just smiling, she is proud of her trick!",
+          "ezy_feedback_hi": "\u0935\u0939 \u0936\u0930\u093e\u0930\u0924\u0940 \u092e\u0941\u0938\u094d\u0915\u093e\u0928 (grin) \u0926\u0930\u094d\u0936\u093e\u0924\u0940 \u0939\u0948 \u0915\u093f \u0935\u0939 \u0915\u094b\u0908 \u091a\u093e\u0932 \u091a\u0932 \u0930\u0939\u0940 \u0939\u0948! \u0935\u0939 \u0917\u0930\u094d\u0935 \u0938\u0947 \u092e\u0941\u0938\u094d\u0915\u0941\u0930\u093e \u0930\u0939\u0940 \u0939\u0948!"
+        }
+      }
+    },
+    {
+      "id": "W2",
+      "name": "SentenceTrainBuilder",
+      "unit": 1,
+      "page": 15,
+      "concept_reference": "Sentence Types & Connectors",
+      "visual_style": "Train Track drag-and-drop",
+      "svg_scaffold": {
+        "viewBox": "0 0 600 250",
+        "elements": [
+          {
+            "id": "carriage_left",
+            "label": "The magpies loved the warmth",
+            "type": "rect",
+            "x": 30,
+            "y": 80,
+            "w": 200,
+            "h": 70,
+            "fill": "#E2E8F0",
+            "rx": 12
+          },
+          {
+            "id": "carriage_right",
+            "label": "the wombats missed their burrows",
+            "type": "rect",
+            "x": 370,
+            "y": 80,
+            "w": 200,
+            "h": 70,
+            "fill": "#E2E8F0",
+            "rx": 12
+          },
+          {
+            "id": "coupler_slot",
+            "type": "rect",
+            "x": 250,
+            "y": 100,
+            "w": 100,
+            "h": 40,
+            "fill": "dashed",
+            "stroke": "#FF6F00"
+          }
+        ],
+        "couplers": [
+          {
+            "id": "and",
+            "label": "and",
+            "type": "compound",
+            "is_correct": false
+          },
+          {
+            "id": "but",
+            "label": "but",
+            "type": "compound",
+            "is_correct": true
+          },
+          {
+            "id": "because",
+            "label": "because",
+            "type": "complex",
+            "is_correct": false
+          }
+        ]
+      },
+      "interactions": {
+        "drag_action": "Drag the correct coupler block to connect Carriage 1 and Carriage 2 on the track.",
+        "on_success": "Snap carriages together, light up couplers in gold, emit steam cloud puff from left engine, play whistle sound.",
+        "ezy_guidance_en": "Woohoo! 'But' shows a contrast! The magpies liked the heat, BUT the wombats hated it and missed their cold underground homes.",
+        "ezy_guidance_hi": "\u092c\u0939\u0941\u0924 \u092c\u095d\u093f\u092f\u093e! 'But' \u0926\u094b \u0935\u093f\u092a\u0930\u0940\u0924 \u0935\u093f\u091a\u093e\u0930\u094b\u0902 \u0915\u094b \u091c\u094b\u095c\u0924\u093e \u0939\u0948\u0964 \u092e\u0948\u0917\u092a\u093e\u0908 \u0915\u094b \u0917\u0930\u094d\u092e\u0940 \u092a\u0938\u0902\u0926 \u0925\u0940, \u0932\u0947\u0915\u0928 (BUT) \u0935\u094b\u092e\u094d\u092c\u0948\u091f\u094d\u0938 \u0915\u094b \u0905\u092a\u0928\u0940 \u0920\u0902\u0921\u0940 \u0917\u0941\u092b\u093e \u0915\u0940 \u092f\u093e\u0926 \u0938\u0924\u093e \u0930\u0939\u0940 \u0925\u0940\u0964"
+      }
+    },
+    {
+      "id": "W3",
+      "name": "LifeMountainTimeline",
+      "unit": 2,
+      "page": 26,
+      "concept_reference": "Chronological order (Poorna Malavath)",
+      "visual_style": "Everest Climbing Path",
+      "svg_scaffold": {
+        "viewBox": "0 0 500 500",
+        "layers": [
+          {
+            "name": "everest_mountain",
+            "type": "polygon",
+            "points": "50,450 250,50 450,450",
+            "fill": "#94A3B8",
+            "stroke": "#1E293B",
+            "strokeWidth": 4
+          },
+          {
+            "name": "summit_flag",
+            "type": "path",
+            "d": "M 250,50 L 250,20 L 280,35 Z",
+            "fill": "#FF6F00"
+          },
+          {
+            "name": "checkpoints",
+            "points": [
+              {
+                "y": 400,
+                "x": 200,
+                "stage": 1,
+                "desc": "Born in Pakala village, Telangana (2000)"
+              },
+              {
+                "y": 300,
+                "x": 225,
+                "stage": 2,
+                "desc": "Selected for mountaineering school (2013)"
+              },
+              {
+                "y": 180,
+                "x": 235,
+                "stage": 3,
+                "desc": "Trained in Darjeeling for 8 months"
+              },
+              {
+                "y": 70,
+                "x": 250,
+                "stage": 4,
+                "desc": "Summitted Mt Everest (May 2014)"
+              }
+            ]
+          }
+        ]
+      },
+      "interactions": {
+        "mechanism": "Drag chronological time-adverb blocks ('First', 'Then', 'Afterwards', 'Eventually') into correct mountain altitude slots.",
+        "on_match": "Poorna's climber character scales up the mountain to that checkpoint. Summit turns golden when chronological order is complete.",
+        "ezy_coaching_en": "Amazing! Adverbs of time organize a biography. First she was born, then she trained, and eventually she reached the highest peak in the world!",
+        "ezy_coaching_hi": "\u0936\u093e\u0928\u0926\u093e\u0930! 'First' \u0914\u0930 'Eventually' \u091c\u0948\u0938\u0947 \u0936\u092c\u094d\u0926 \u091c\u0940\u0935\u0928\u0940 \u0915\u0940 \u0918\u091f\u0928\u093e\u0913\u0902 \u0915\u094b \u0915\u094d\u0930\u092e \u092e\u0947\u0902 \u0938\u091c\u093e\u0924\u0947 \u0939\u0948\u0902\u0964 \u092a\u0939\u0932\u0947 \u0935\u0939 \u092a\u0948\u0926\u093e \u0939\u0941\u0908, \u092b\u093f\u0930 \u0909\u0938\u0928\u0947 \u091f\u094d\u0930\u0947\u0928\u093f\u0902\u0917 \u0932\u0940, \u0914\u0930 \u0906\u0916\u093f\u0930\u0915\u093e\u0930 \u092e\u093e\u0909\u0902\u091f \u090f\u0935\u0930\u0947\u0938\u094d\u091f \u095e\u0924\u0939 \u0915\u093f\u092f\u093e!"
+      }
+    },
+    {
+      "id": "W4",
+      "name": "PrefixSuffixMachine",
+      "unit": 2,
+      "page": 38,
+      "concept_reference": "Prefix opposite-meanings (un, dis, im, il, ir)",
+      "visual_style": "Sliding Gear Connector",
+      "svg_scaffold": {
+        "viewBox": "0 0 450 200",
+        "elements": [
+          {
+            "id": "prefix_gear",
+            "type": "circle",
+            "cx": 100,
+            "cy": 100,
+            "r": 60,
+            "fill": "#E2E8F0"
+          },
+          {
+            "id": "root_gear",
+            "type": "circle",
+            "cx": 280,
+            "cy": 100,
+            "r": 80,
+            "fill": "#FFE6C7"
+          }
+        ],
+        "wheels": [
+          {
+            "prefix": "un-",
+            "fits_roots": [
+              "happy",
+              "equal",
+              "well"
+            ]
+          },
+          {
+            "prefix": "dis-",
+            "fits_roots": [
+              "agree",
+              "obey",
+              "approve"
+            ]
+          },
+          {
+            "prefix": "im-",
+            "fits_roots": [
+              "possible",
+              "patient",
+              "mature"
+            ]
+          },
+          {
+            "prefix": "il-",
+            "fits_roots": [
+              "legal",
+              "logical"
+            ]
+          },
+          {
+            "prefix": "ir-",
+            "fits_roots": [
+              "responsible",
+              "regular"
+            ]
+          }
+        ]
+      },
+      "interactions": {
+        "mechanism": "Spin the Prefix wheel and lock it against the target Root word wheel to create opposite meanings.",
+        "visual_feedback": "When wheels lock correctly, gears mesh, spin together, and the completed word turns green with a joyful chiming tone.",
+        "ezy_remedial_en": "Remember the spelling rule! Use 'dis-' for actions like disobey, but feelings like happy take the prefix 'un-' to become unhappy!",
+        "ezy_remedial_hi": "\u0938\u094d\u092a\u0947\u0932\u093f\u0902\u0917 \u0915\u093e \u0928\u093f\u092f\u092e \u092f\u093e\u0926 \u0930\u0916\u0947\u0902! \u0915\u093e\u092e \u0935\u093e\u0932\u0947 \u0936\u092c\u094d\u0926\u094b\u0902 (actions) \u0915\u0947 \u0932\u093f\u090f 'dis-' \u0915\u093e \u0909\u092a\u092f\u094b\u0917 \u0915\u0930\u0947\u0902, \u091c\u0948\u0938\u0947 'disagree'\u0964 \u0932\u0947\u0915\u093f\u0928 \u092d\u093e\u0935\u0928\u093e\u0913\u0902 (feelings) \u0915\u0947 \u0938\u093e\u0925 'un-' \u0932\u0917\u093e\u090f\u0902!"
+      }
+    }
+  ]
+}

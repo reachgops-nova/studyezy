@@ -1,0 +1,166 @@
+{
+  "spaced_repetition_cadence": {
+    "needs_reteach": {
+      "trigger": "Score < 60% or critical reasoning error",
+      "interval_days": 1,
+      "flow": "Trigger dedicated visual re-teach. Ezy models another cartoon concept. Provide a physical playground before testing again."
+    },
+    "careless_slip": {
+      "trigger": "Score 60-85% or minor spelling/typo",
+      "interval_days": 3,
+      "flow": "Inject a quick morning visual warm-up directly into the dashboard. Do not block next lesson."
+    },
+    "mastered": {
+      "trigger": "Score >= 85%",
+      "interval_days": "Escalates (7d -> 14d -> 30d)",
+      "flow": "Inject spaced diagnostic checks to ensure long-term retention."
+    }
+  },
+  "workbook_exercises": {
+    "unit_1": {
+      "fables": {
+        "title": "Fables Diagnostic Workbook (Page 6 & 12)",
+        "task": "Differentiate animal character traits based on text evidence.",
+        "passage_source": "Why Cockerels Crow (Page 6)",
+        "interactive_questions": [
+          {
+            "id": "WB1_1",
+            "question": "Which word from the text shows that Hyena worked hard for Cockerel?",
+            "options": [
+              "admired",
+              "chores",
+              "respectful",
+              "lazy"
+            ],
+            "answer": "chores",
+            "clue_board": {
+              "clue_1": "Look at Page 6, line 4: 'when he did his chores for him.'",
+              "clue_2": "Chores are daily household jobs. If Hyena plowed the fields and did Cockerel's chores, he was working very hard!"
+            }
+          },
+          {
+            "id": "WB1_2",
+            "question": "What is Cockerel's true personality trait when he lets Hyena do all the hard work?",
+            "options": [
+              "helpful",
+              "lazy",
+              "respectful",
+              "timid"
+            ],
+            "answer": "lazy",
+            "clue_board": {
+              "clue_1": "Cockerel sat in the shade and watched, with his feet up on an old table under the trees.",
+              "clue_2": "Someone who rests while others work under the hot sun is acting lazy!"
+            }
+          }
+        ]
+      },
+      "grammar": {
+        "title": "Complex Connective Trailing (Page 15)",
+        "task": "Differentiate Compound vs. Complex Sentences using because, after, unless, although, until.",
+        "interactive_questions": [
+          {
+            "id": "WB1_3",
+            "question": "Complete this sentence: '___ the sky broke apart, the colours flooded through.'",
+            "options": [
+              "But",
+              "When",
+              "Simple",
+              "And"
+            ],
+            "answer": "When",
+            "clue_board": {
+              "clue_1": "Look at Page 16, line 5: 'When the sky broke apart...'",
+              "clue_2": "This is a Complex sentence because it starts with a dependent clause using the time connective 'When'!"
+            }
+          }
+        ]
+      }
+    },
+    "unit_2": {
+      "biography": {
+        "title": "Poorna Malavath Timeline Matcher (Page 26)",
+        "task": "Map events onto a chronological mountaineering ladder.",
+        "interactive_questions": [
+          {
+            "id": "WB2_1",
+            "question": "Poorna was born on 10 June 2000. When did she train in Darjeeling for eight months?",
+            "options": [
+              "In 2013",
+              "In 2014",
+              "In 2000",
+              "In 2017"
+            ],
+            "answer": "In 2013",
+            "clue_board": {
+              "clue_1": "Look at Paragraph 3 on Page 26: 'In 2013, Malavath was sent to train in Darjeeling...'",
+              "clue_2": "Her training came after school selection, but before her historic Everest climb in May 2014."
+            }
+          }
+        ]
+      }
+    }
+  },
+  "progressive_evaluations": {
+    "unit_1_tests": {
+      "easy": {
+        "id": "T1_EASY",
+        "title": "Unit 1: Fables Comprehension (Tiered: Easy)",
+        "instructions": "Simple reading & vocabulary with Ezy's interactive hints enabled.",
+        "questions": [
+          {
+            "question": "In 'Why Cockerels Crow', why was Cockerel admired by everyone?",
+            "options": [
+              "He ploughed the fields for Hyena.",
+              "He had a bright red spiky comb on his head.",
+              "He could fly higher than the magpies.",
+              "He was very rich."
+            ],
+            "answer": "He had a bright red spiky comb on his head.",
+            "concept_tested": "Concept 1.1",
+            "hint": "Look at the very first line of page 6! What did Cockerel wear on top of his head like flames?"
+          }
+        ]
+      },
+      "moderate": {
+        "id": "T1_MODERATE",
+        "title": "Unit 1: Fables Analysis (Tiered: Moderate)",
+        "instructions": "Analyzing implicit meanings and sentence types. No direct hints during execution.",
+        "questions": [
+          {
+            "question": "Why did Hyena's wife ask her husband: 'What about our own family?'",
+            "options": [
+              "She wanted him to buy a new house.",
+              "She felt he was exhausted from doing chores only for Cockerel.",
+              "She wanted him to cook food for her.",
+              "She was angry at Cockerel's spiky comb."
+            ],
+            "answer": "She felt he was exhausted from doing chores only for Cockerel.",
+            "concept_tested": "Concept 1.2",
+            "model_answer_rubric": "Grounded in page 6. Score correct if student mentions Hyena's exhaustion, doing chores for Cockerel while leaving his own family work neglected."
+          }
+        ]
+      },
+      "tough": {
+        "id": "T1_TOUGH",
+        "title": "Unit 1: Fables Evaluation (Tiered: Tough)",
+        "instructions": "Synthesizing themes and writing/verbal explanations. Scored with verbal Reasoning log.",
+        "questions": [
+          {
+            "question": "Explain how Hyena's opinion of Cockerel changes from the beginning to the end of the fable. Use text evidence.",
+            "type": "short_answer",
+            "concept_tested": "Concept 1.3",
+            "rubric": {
+              "criteria": "Student must trace the transition from friendship/respect to feeling deceived.",
+              "points": {
+                "beginning": "Hyena was respectul, did all his chores, and thought Cockerel was sacred/dangerous [Page 6]",
+                "climax": "Hyena realized Cockerel's spiky comb couldn't make fire and that Cockerel lied [Page 9]",
+                "ending": "Hyena realized he was tricked and Cockerel escaped into the trees [Page 9]"
+              }
+            }
+          }
+        ]
+      }
+    }
+  }
+}

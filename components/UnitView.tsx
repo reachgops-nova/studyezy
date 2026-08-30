@@ -8,6 +8,7 @@ import UnitOverview from "./UnitOverview";
 import UnitDiagnostic from "./UnitDiagnostic";
 import VocabPractice from "./VocabPractice";
 import Booklet from "./Booklet";
+import WidgetDispatcher from "./interactive/WidgetDispatcher";
 
 type Stage = "overview" | "warmup" | "diagnostic" | "lesson";
 
@@ -266,6 +267,9 @@ export default function UnitView({
               From: {selected.story_reference.title}
             </p>
           )}
+          {/* Renders nothing for concepts that have no widget authored yet -
+              see lib/interactiveWidgets.ts. */}
+          <WidgetDispatcher conceptId={selected.concept_id} />
           <AvatarChat
             key={selected.concept_id}
             unitKey={unitKey}
