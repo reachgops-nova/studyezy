@@ -14,7 +14,7 @@ interface WidgetDispatcherProps {
 }
 
 /**
- * StudyEzy Visual Widget Dispatcher (Premium V4 Edition)
+ * StudyEzy Visual Widget Dispatcher
  * This is the master presentational bridge that renders gorgeous, animated cartoon-style 
  * playgrounds right inside the lesson view without cluttering global state.
  */
@@ -44,7 +44,7 @@ export const WidgetDispatcher: React.FC<WidgetDispatcherProps> = ({
             isCorrect={isCorrect}
             onSelect={(classification) => {
               if (onSelect) onSelect(classification);
-              const correct = (classification === 'fact' && statement.includes("rising") || statement.includes("rises") || statement.includes("gone out") || statement.includes("didn't have a care"));
+              const correct = (classification === 'fact' && (statement.includes("rising") || statement.includes("rises") || statement.includes("gone out") || statement.includes("didn't have a care")));
               if (onAttempt) onAttempt(correct);
               if (correct && onSuccess) {
                 setTimeout(onSuccess, 1800);
@@ -72,3 +72,6 @@ export const WidgetDispatcher: React.FC<WidgetDispatcherProps> = ({
       return null;
   }
 };
+
+// Default export added to resolve TS compiler errors in components importing this dynamically (e.g. UnitView.tsx)
+export default WidgetDispatcher;
