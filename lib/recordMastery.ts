@@ -1,12 +1,17 @@
 import "server-only";
 import { db } from "./db";
-import { nextReviewDate, scorePercent } from "./mastery";
+import { daysUntilNextReview, nextReviewDate, scorePercent } from "./mastery";
 import type { StoredUnitResult } from "./types";
 
 export interface RecordUnitAttemptParams {
   profileId: string;
   unitKey: string;
-  attemptType?: "progression_test" | "diagnostic" | "content_pack_test";
+  // "practice_widget": an in-lesson interactive widget completed (see
+  // app/api/widget-practice/route.ts) - a real signal, but a strictly
+  // weaker one than a formal test: retriable, sometimes hint-assisted, and
+  // never scored against a fixed unseen paper. Capped below so it can never
+  // alone push a concept to "mastered" - see the cap after nextReviewDate().
+  attemptType?: "progression_test" | "diagnostic" | "content_pack_test" | "practice_widget";
   difficulty?: string;
   correct: number;
   total: number;
@@ -36,7 +41,17 @@ export async function recordUnitAttempt(params: RecordUnitAttemptParams): Promis
   }
 
   const scorePct = scorePercent(correct, total);
-  const { band, date } = nextReviewDate(scorePct);
+  let { band, date } = nextReviewDate(scorePct);
+  if (attemptType === "practice_widget" && band === "mastered") {
+    // Widget taps are real evidence but not proof: every other widget lets a
+    // wrong tap just be tried again, so a clean run only shows "got there
+    // eventually with help available," not "would get this right cold on a
+    // real test." Capped to the same ceiling a borderline test score gets -
+    // only a real progression/content-pack test can certify "mastered."
+    band = "needs_brush_up";
+    date = new Date();
+    date.setDate(date.getDate() + daysUntilNextReview(band));
+  }
   const takenAt = new Date();
 
   await db.testAttempt.create({
@@ -59,7 +74,12 @@ export async function recordUnitAttempt(params: RecordUnitAttemptParams): Promis
     if (!concept || stat.total <= 0) continue;
 
     const conceptPct = scorePercent(stat.correct, stat.total);
-    const { band: conceptBand, date: conceptNextReview } = nextReviewDate(conceptPct);
+    let { band: conceptBand, date: conceptNextReview } = nextReviewDate(conceptPct);
+    if (attemptType === "practice_widget" && conceptBand === "mastered") {
+      conceptBand = "needs_brush_up";
+      conceptNextReview = new Date();
+      conceptNextReview.setDate(conceptNextReview.getDate() + daysUntilNextReview(conceptBand));
+    }
 
     await db.conceptMastery.upsert({
       where: { studentProfileId_conceptId: { studentProfileId: profileId, conceptId: concept.id } },

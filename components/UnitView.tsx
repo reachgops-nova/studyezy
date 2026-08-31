@@ -275,7 +275,7 @@ export default function UnitView({
           )}
           {/* Renders nothing for concepts that have no widget authored yet -
               see lib/interactiveWidgets.ts. */}
-          <WidgetDispatcher conceptId={selected.concept_id} />
+          <WidgetDispatcher conceptId={selected.concept_id} unitKey={unitKey} />
           <AvatarChat
             key={selected.concept_id}
             unitKey={unitKey}

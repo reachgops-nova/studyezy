@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Avatar from "../Avatar";
 import { JoWinkCartoon } from "./studyezy-cartoon-assets-v2";
 import { FactOpinionScale } from "./FactOpinionScale";
@@ -86,12 +86,15 @@ function WidgetShell({
 
 // ------------------------------------------------------- W1 Clue Detective
 
-function ClueDetective({ spec, onEzy }: { spec: ClueDetectiveSpec; onEzy: (t: string) => void }) {
+function ClueDetective({ spec, onEzy, onItemResult }: { spec: ClueDetectiveSpec; onEzy: (t: string) => void; onItemResult: (correct: boolean) => void }) {
   const [revealed, setRevealed] = useState<Record<string, boolean>>({});
   const winking = spec.clues.some((c) => c.reveals === "wink" && revealed[c.word]);
   const grinning = spec.clues.some((c) => c.reveals === "grin" && revealed[c.word]);
 
   const tap = (word: string, ezySays: string) => {
+    // Every clue word here is a real find, not a right/wrong judgment - the
+    // only "item result" is whether it's been discovered yet at all.
+    if (!revealed[word]) onItemResult(true);
     setRevealed((r) => ({ ...r, [word]: true }));
     onEzy(ezySays);
   };
@@ -145,15 +148,23 @@ function ClueDetective({ spec, onEzy }: { spec: ClueDetectiveSpec; onEzy: (t: st
 
 // ------------------------------------------------------ W2 Sentence Train
 
-function SentenceTrain({ spec, onEzy }: { spec: SentenceTrainSpec; onEzy: (t: string) => void }) {
+function SentenceTrain({ spec, onEzy, onItemResult }: { spec: SentenceTrainSpec; onEzy: (t: string) => void; onItemResult: (correct: boolean) => void }) {
   const [picked, setPicked] = useState<string | null>(null);
   const chosen = spec.couplers.find((c) => c.id === picked);
   const solved = chosen?.correct === true;
+  const reportedRef = useRef(false);
 
   const choose = (id: string) => {
     setPicked(id);
     const c = spec.couplers.find((x) => x.id === id);
     if (!c) return;
+    // Only the FIRST coupler tried counts as the attempt - trying again
+    // after a wrong pick is how the widget teaches, not a second chance at
+    // the score.
+    if (!reportedRef.current) {
+      reportedRef.current = true;
+      onItemResult(c.correct);
+    }
     onEzy(
       c.correct
         ? spec.ezyOnSuccess
@@ -244,12 +255,19 @@ function SentenceTrain({ spec, onEzy }: { spec: SentenceTrainSpec; onEzy: (t: st
 
 // ------------------------------------------------------ W3 Life Mountain
 
-function LifeMountain({ spec, onEzy }: { spec: LifeMountainSpec; onEzy: (t: string) => void }) {
+function LifeMountain({ spec, onEzy, onItemResult }: { spec: LifeMountainSpec; onEzy: (t: string) => void; onItemResult: (correct: boolean) => void }) {
   const [step, setStep] = useState(0); // how many checkpoints are correctly placed
   const done = step >= spec.checkpoints.length;
   const climber = spec.checkpoints[Math.max(0, step - 1)];
+  const attemptedStepsRef = useRef<Set<number>>(new Set());
 
   const tap = (index: number) => {
+    // Only the first tap made while a given checkpoint is "next" counts -
+    // wrong taps after that are the child working it out, not new attempts.
+    if (!attemptedStepsRef.current.has(step)) {
+      attemptedStepsRef.current.add(step);
+      onItemResult(index === step);
+    }
     if (index === step) {
       const next = step + 1;
       setStep(next);
@@ -328,15 +346,20 @@ function LifeMountain({ spec, onEzy }: { spec: LifeMountainSpec; onEzy: (t: stri
 
 // ----------------------------------------------------- W4 Prefix Machine
 
-function PrefixMachine({ spec, onEzy }: { spec: PrefixMachineSpec; onEzy: (t: string) => void }) {
+function PrefixMachine({ spec, onEzy, onItemResult }: { spec: PrefixMachineSpec; onEzy: (t: string) => void; onItemResult: (correct: boolean) => void }) {
   const [index, setIndex] = useState(0);
   const [locked, setLocked] = useState(false);
   const [wrong, setWrong] = useState<string | null>(null);
   const challenge = spec.challenges[index];
   const finished = index >= spec.challenges.length;
+  const attemptedRef = useRef<Set<number>>(new Set());
 
   const choose = (prefix: string) => {
     if (!challenge) return;
+    if (!attemptedRef.current.has(index)) {
+      attemptedRef.current.add(index);
+      onItemResult(prefix === challenge.prefix);
+    }
     if (prefix === challenge.prefix) {
       setLocked(true);
       setWrong(null);
@@ -417,11 +440,12 @@ function PrefixMachine({ spec, onEzy }: { spec: PrefixMachineSpec; onEzy: (t: st
 
 // ------------------------------------------------------ W5 Trait Matcher
 
-function TraitMatcher({ spec, onEzy }: { spec: TraitMatcherSpec; onEzy: (t: string) => void }) {
+function TraitMatcher({ spec, onEzy, onItemResult }: { spec: TraitMatcherSpec; onEzy: (t: string) => void; onItemResult: (correct: boolean) => void }) {
   const [picked, setPicked] = useState<string | null>(null);
   const [solved, setSolved] = useState<Record<string, boolean>>({});
   // Traits are shuffled once per mount so the answer is not just "same row".
   const [traits] = useState(() => [...spec.pairs].reverse().map((p) => p.trait));
+  const attemptedRef = useRef<Set<string>>(new Set());
 
   const chooseTrait = (trait: string) => {
     if (!picked) {
@@ -429,6 +453,10 @@ function TraitMatcher({ spec, onEzy }: { spec: TraitMatcherSpec; onEzy: (t: stri
       return;
     }
     const pair = spec.pairs.find((p) => p.character === picked);
+    if (!attemptedRef.current.has(picked)) {
+      attemptedRef.current.add(picked);
+      onItemResult(pair?.trait === trait);
+    }
     if (pair && pair.trait === trait) {
       setSolved((v) => ({ ...v, [picked]: true }));
       onEzy(`Yes - the fable never says "${picked} is ${trait.split(" ")[0].toLowerCase()}". It shows you through what he does.`);
@@ -486,9 +514,14 @@ function TraitMatcher({ spec, onEzy }: { spec: TraitMatcherSpec; onEzy: (t: stri
 
 // -------------------------------------------------- W6 Predictive Brancher
 
-function PredictiveBrancher({ spec, onEzy }: { spec: PredictiveBrancherSpec; onEzy: (t: string) => void }) {
+function PredictiveBrancher({ spec, onEzy, onItemResult }: { spec: PredictiveBrancherSpec; onEzy: (t: string) => void; onItemResult: (correct: boolean) => void }) {
   const [chosen, setChosen] = useState<string | null>(null);
+  const reportedRef = useRef(false);
   const pick = (c: PredictiveBrancherSpec["choices"][number]) => {
+    if (!reportedRef.current) {
+      reportedRef.current = true;
+      onItemResult(c.correct);
+    }
     setChosen(c.text);
     onEzy(c.feedback);
   };
@@ -525,17 +558,22 @@ function PredictiveBrancher({ spec, onEzy }: { spec: PredictiveBrancherSpec; onE
 
 // ------------------------------------------------- W7 Fact / Opinion Sorter
 
-function FactOpinionSorter({ spec, onEzy }: { spec: FactOpinionSpec; onEzy: (t: string) => void }) {
+function FactOpinionSorter({ spec, onEzy, onItemResult }: { spec: FactOpinionSpec; onEzy: (t: string) => void; onItemResult: (correct: boolean) => void }) {
   const [index, setIndex] = useState(0);
   const [selection, setSelection] = useState<"fact" | "opinion" | null>(null);
   const [isCorrect, setIsCorrect] = useState<boolean | null>(null);
   const finished = index >= spec.statements.length;
+  const attemptedRef = useRef<Set<number>>(new Set());
 
   const select = (choice: "fact" | "opinion") => {
     if (finished) return;
     const st = spec.statements[index];
     const label = choice === "fact" ? "Fact" : "Opinion";
     const right = label === st.answer;
+    if (!attemptedRef.current.has(index)) {
+      attemptedRef.current.add(index);
+      onItemResult(right);
+    }
     setSelection(choice);
     setIsCorrect(right);
     onEzy(right ? `Correct - that's a ${st.answer.toLowerCase()}. ${st.hint}` : `Not quite. ${st.hint}`);
@@ -578,10 +616,11 @@ function FactOpinionSorter({ spec, onEzy }: { spec: FactOpinionSpec; onEzy: (t: 
 
 // ------------------------------------------------------ W8 Idiom Connector
 
-function IdiomConnector({ spec, onEzy }: { spec: IdiomConnectorSpec; onEzy: (t: string) => void }) {
+function IdiomConnector({ spec, onEzy, onItemResult }: { spec: IdiomConnectorSpec; onEzy: (t: string) => void; onItemResult: (correct: boolean) => void }) {
   const [picked, setPicked] = useState<string | null>(null);
   const [solved, setSolved] = useState<Record<string, boolean>>({});
   const [meanings] = useState(() => [...spec.items].reverse().map((i) => i.meaning));
+  const attemptedRef = useRef<Set<string>>(new Set());
 
   const chooseMeaning = (meaning: string) => {
     if (!picked) {
@@ -589,6 +628,10 @@ function IdiomConnector({ spec, onEzy }: { spec: IdiomConnectorSpec; onEzy: (t: 
       return;
     }
     const item = spec.items.find((i) => i.idiom === picked);
+    if (!attemptedRef.current.has(picked)) {
+      attemptedRef.current.add(picked);
+      onItemResult(item?.meaning === meaning);
+    }
     if (item && item.meaning === meaning) {
       setSolved((v) => ({ ...v, [picked]: true }));
       onEzy(`"${item.idiom}" has nothing to do with its literal words - it means "${item.meaning.toLowerCase()}".`);
@@ -644,7 +687,7 @@ function IdiomConnector({ spec, onEzy }: { spec: IdiomConnectorSpec; onEzy: (t: 
 
 // -------------------------------------------------- W9 Biography Scanner
 
-function BiographyScanner({ spec, onEzy }: { spec: BiographyScannerSpec; onEzy: (t: string) => void }) {
+function BiographyScanner({ spec, onEzy, onItemResult }: { spec: BiographyScannerSpec; onEzy: (t: string) => void; onItemResult: (correct: boolean) => void }) {
   const [found, setFound] = useState<Record<string, boolean>>({});
   const total = spec.passage.filter((r) => r.feature).length;
   const foundCount = Object.keys(found).length;
@@ -658,6 +701,9 @@ function BiographyScanner({ spec, onEzy }: { spec: BiographyScannerSpec; onEzy: 
               key={i}
               type="button"
               onClick={() => {
+                // Same reveal-based scoring as the clue detective above -
+                // finding it at all is the "correct" event.
+                if (!found[run.text]) onItemResult(true);
                 setFound((f) => ({ ...f, [run.text]: true }));
                 onEzy(run.feature!);
               }}
@@ -684,9 +730,63 @@ function BiographyScanner({ spec, onEzy }: { spec: BiographyScannerSpec; onEzy: 
 
 // ------------------------------------------------------------- dispatcher
 
-export default function WidgetDispatcher({ conceptId }: { conceptId: string }) {
+/** Item counts per widget kind - must match how many times each widget's own onItemResult call site can fire. */
+function totalItemsFor(spec: InteractiveWidget["spec"]): number {
+  switch (spec.kind) {
+    case "clue_detective":
+      return spec.clues.length;
+    case "sentence_train":
+      return 1;
+    case "life_mountain":
+      return spec.checkpoints.length;
+    case "prefix_machine":
+      return spec.challenges.length;
+    case "trait_matcher":
+      return spec.pairs.length;
+    case "predictive_brancher":
+      return 1;
+    case "fact_opinion":
+      return spec.statements.length;
+    case "idiom_connector":
+      return spec.items.length;
+    case "biography_scanner":
+      return spec.passage.filter((r) => r.feature).length;
+  }
+}
+
+export default function WidgetDispatcher({ conceptId, unitKey }: { conceptId: string; unitKey: string }) {
   const widget = getWidgetForConcept(conceptId);
   const [ezyText, setEzyText] = useState<string | null>(null);
+
+  // Aggregates first-attempt correctness across the widget's items, then
+  // reports ONE practice_widget attempt when every item has a result -
+  // see app/api/widget-practice/route.ts and lib/recordMastery.ts (this
+  // attemptType is capped below "mastered": real, but weaker evidence than
+  // a formal test, since every widget here lets a wrong tap just be
+  // retried). Reset whenever the concept changes, since WidgetDispatcher
+  // itself doesn't remount across a concept switch the way its child
+  // widget component does.
+  const resultsRef = useRef<boolean[]>([]);
+  const submittedRef = useRef(false);
+  useEffect(() => {
+    resultsRef.current = [];
+    submittedRef.current = false;
+  }, [conceptId]);
+
+  const recordItemResult = (correct: boolean) => {
+    if (submittedRef.current || !widget) return;
+    resultsRef.current = [...resultsRef.current, correct];
+    const total = totalItemsFor(widget.spec);
+    if (resultsRef.current.length >= total) {
+      submittedRef.current = true;
+      const correctCount = resultsRef.current.filter(Boolean).length;
+      fetch("/api/widget-practice", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ unitKey, conceptKey: conceptId, correct: correctCount, total }),
+      }).catch(() => {});
+    }
+  };
 
   if (!widget) return null;
 
@@ -718,23 +818,23 @@ export default function WidgetDispatcher({ conceptId }: { conceptId: string }) {
   const body = (() => {
     switch (widget.spec.kind) {
       case "clue_detective":
-        return <ClueDetective spec={widget.spec} onEzy={setEzyText} />;
+        return <ClueDetective spec={widget.spec} onEzy={setEzyText} onItemResult={recordItemResult} />;
       case "sentence_train":
-        return <SentenceTrain spec={widget.spec} onEzy={setEzyText} />;
+        return <SentenceTrain spec={widget.spec} onEzy={setEzyText} onItemResult={recordItemResult} />;
       case "life_mountain":
-        return <LifeMountain spec={widget.spec} onEzy={setEzyText} />;
+        return <LifeMountain spec={widget.spec} onEzy={setEzyText} onItemResult={recordItemResult} />;
       case "prefix_machine":
-        return <PrefixMachine spec={widget.spec} onEzy={setEzyText} />;
+        return <PrefixMachine spec={widget.spec} onEzy={setEzyText} onItemResult={recordItemResult} />;
       case "trait_matcher":
-        return <TraitMatcher spec={widget.spec} onEzy={setEzyText} />;
+        return <TraitMatcher spec={widget.spec} onEzy={setEzyText} onItemResult={recordItemResult} />;
       case "predictive_brancher":
-        return <PredictiveBrancher spec={widget.spec} onEzy={setEzyText} />;
+        return <PredictiveBrancher spec={widget.spec} onEzy={setEzyText} onItemResult={recordItemResult} />;
       case "fact_opinion":
-        return <FactOpinionSorter spec={widget.spec} onEzy={setEzyText} />;
+        return <FactOpinionSorter spec={widget.spec} onEzy={setEzyText} onItemResult={recordItemResult} />;
       case "idiom_connector":
-        return <IdiomConnector spec={widget.spec} onEzy={setEzyText} />;
+        return <IdiomConnector spec={widget.spec} onEzy={setEzyText} onItemResult={recordItemResult} />;
       case "biography_scanner":
-        return <BiographyScanner spec={widget.spec} onEzy={setEzyText} />;
+        return <BiographyScanner spec={widget.spec} onEzy={setEzyText} onItemResult={recordItemResult} />;
     }
   })();
 
