@@ -94,11 +94,10 @@ export const FactOpinionScale: React.FC<FactOpinionScaleProps> = ({
               {/* Left Plate Bowl */}
               <path
                 d="M 20 120 Q 50 145 80 120 Z"
-                fill="#16241f"
-                fillOpacity={currentSelection === 'fact' ? 1 : 0.1}
+                fill={currentSelection === 'fact' ? '#16241f' : '#16241f/10'}
                 stroke="#16241f"
                 strokeWidth="2.5"
-                className="transition-all duration-300"
+                className="transition-colors duration-300"
               />
               {/* Fact Symbol Floating over Left Bowl: Document with Checkmark */}
               <g transform="translate(40, 90)">
@@ -141,11 +140,10 @@ export const FactOpinionScale: React.FC<FactOpinionScaleProps> = ({
               {/* Right Plate Bowl */}
               <path
                 d="M 220 120 Q 250 145 280 120 Z"
-                fill={currentSelection === 'opinion' ? '#9c6f1f' : '#16241f'}
-                fillOpacity={currentSelection === 'opinion' ? 1 : 0.1}
+                fill={currentSelection === 'opinion' ? '#9c6f1f' : '#16241f/10'}
                 stroke={currentSelection === 'opinion' ? '#9c6f1f' : '#16241f'}
                 strokeWidth="2.5"
-                className="transition-all duration-300"
+                className="transition-colors duration-300"
               />
               {/* Opinion Symbol Floating over Right Bowl: Thought Bubble */}
               <g transform="translate(238, 90)">
