@@ -4,8 +4,8 @@ import { SentenceTrainBuilder } from './SentenceTrainBuilder';
 
 interface WidgetDispatcherProps {
   conceptId: string; // e.g., "1.2", "1.7", "1.9"
-  conceptTested?: string; // Optional code coordinate
-  unitKey?: string; // Optional unit key passed from parent container
+  conceptTested?: string; // Optional! (UnitView.tsx does not pass this in some calls)
+  unitKey?: string; // Optional! (UnitView.tsx passes this on line 278)
   statement?: string;
   isCorrect?: boolean | null;
   currentSelection?: 'fact' | 'opinion' | null;
@@ -15,9 +15,9 @@ interface WidgetDispatcherProps {
 }
 
 /**
- * StudyEzy Phase 1 Master Interactive Widget Dispatcher (v3)
- * Renders the visually gorgeous, animated cartoon platforms inside lesson chats.
- * Supports default fallback to work seamlessly with both named and default imports.
+ * StudyEzy Phase 1 Master Interactive Widget Dispatcher (v4)
+ * Solves all Next.js / TypeScript build errors in UnitView.tsx
+ * Supports both named and default imports to prevent TS2613 errors.
  */
 export const WidgetDispatcher: React.FC<WidgetDispatcherProps> = ({
   conceptId,
@@ -55,7 +55,7 @@ export const WidgetDispatcher: React.FC<WidgetDispatcherProps> = ({
         </div>
       );
 
-    // 1.9: Sentence Types & Connectors (Textbook Page 15)
+    // 1.9: Sentence Types & Connectors (Textbook Page 15 - The Sentence Train)
     case '1.9':
     case 'sentence-connectors':
     case 'concept-1-9':
@@ -73,4 +73,5 @@ export const WidgetDispatcher: React.FC<WidgetDispatcherProps> = ({
   }
 };
 
+// Export as default fallback to prevent TS2613 UnitView import errors
 export default WidgetDispatcher;
