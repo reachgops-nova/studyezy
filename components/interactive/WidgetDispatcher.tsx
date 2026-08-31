@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Avatar from "../Avatar";
 import { JoWinkCartoon } from "./studyezy-cartoon-assets-v2";
+import { FactOpinionScale } from "./FactOpinionScale";
 import {
   WIDGET_GOLD,
   WIDGET_GOLD_BRIGHT,
@@ -525,47 +526,52 @@ function PredictiveBrancher({ spec, onEzy }: { spec: PredictiveBrancherSpec; onE
 // ------------------------------------------------- W7 Fact / Opinion Sorter
 
 function FactOpinionSorter({ spec, onEzy }: { spec: FactOpinionSpec; onEzy: (t: string) => void }) {
-  const [answers, setAnswers] = useState<Record<number, "Fact" | "Opinion">>({});
-  const answer = (i: number, choice: "Fact" | "Opinion") => {
-    const st = spec.statements[i];
-    setAnswers((a) => ({ ...a, [i]: choice }));
-    onEzy(choice === st.answer ? `Correct - that's a ${st.answer.toLowerCase()}. ${st.hint}` : `Not quite. ${st.hint}`);
+  const [index, setIndex] = useState(0);
+  const [selection, setSelection] = useState<"fact" | "opinion" | null>(null);
+  const [isCorrect, setIsCorrect] = useState<boolean | null>(null);
+  const finished = index >= spec.statements.length;
+
+  const select = (choice: "fact" | "opinion") => {
+    if (finished) return;
+    const st = spec.statements[index];
+    const label = choice === "fact" ? "Fact" : "Opinion";
+    const right = label === st.answer;
+    setSelection(choice);
+    setIsCorrect(right);
+    onEzy(right ? `Correct - that's a ${st.answer.toLowerCase()}. ${st.hint}` : `Not quite. ${st.hint}`);
+    if (right) {
+      // Same "hold the success state, then move on" pacing as the prefix
+      // machine below - long enough to see the scale settle and read Ezy's
+      // line before the next statement replaces it.
+      setTimeout(() => {
+        setSelection(null);
+        setIsCorrect(null);
+        setIndex((i) => i + 1);
+      }, 1300);
+    }
+    // A wrong tap leaves the statement in place - the child sees the scale
+    // tip the wrong way and can just try the other side, no reset needed.
   };
 
+  if (finished) {
+    return (
+      <p className="py-6 text-center text-sm font-medium text-brand-ink">
+        All {spec.statements.length} sorted. You can tell a fact from an opinion every time.
+      </p>
+    );
+  }
+
   return (
-    <div className="grid gap-2">
-      {spec.statements.map((st, i) => {
-        const given = answers[i];
-        const right = given === st.answer;
-        return (
-          <div
-            key={st.text}
-            className={`rounded-xl border-2 p-2.5 transition ${
-              given ? (right ? "border-brand-gold bg-brand-gold-bright/15" : "border-test-border bg-test-bg") : "border-slate-200 bg-white"
-            }`}
-          >
-            <p className="text-sm text-brand-ink">{st.text}</p>
-            <div className="mt-2 flex gap-2">
-              {(["Fact", "Opinion"] as const).map((opt) => (
-                <button
-                  key={opt}
-                  type="button"
-                  onClick={() => answer(i, opt)}
-                  className={`rounded-full border px-3 py-1 text-xs font-medium transition active:scale-95 ${
-                    given === opt
-                      ? right
-                        ? "border-brand-gold bg-brand-gold-bright/40 text-brand-ink-dark"
-                        : "border-test-border bg-white text-test-accent"
-                      : "border-slate-300 bg-white text-slate-600 hover:border-brand-gold/50"
-                  }`}
-                >
-                  {opt}
-                </button>
-              ))}
-            </div>
-          </div>
-        );
-      })}
+    <div>
+      <FactOpinionScale
+        statement={spec.statements[index].text}
+        onSelect={(c) => select(c)}
+        currentSelection={selection}
+        isCorrect={isCorrect}
+      />
+      <p className="mt-2 text-center text-xs text-slate-500">
+        Statement {index + 1} of {spec.statements.length}
+      </p>
     </div>
   );
 }
