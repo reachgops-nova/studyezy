@@ -1,294 +1,555 @@
-"use client";
+import React, { useState, useEffect, useRef } from 'react';
+import WidgetDispatcher from './interactive/WidgetDispatcher';
 
-import { useEffect, useRef, useState } from "react";
-import type { CurriculumUnit, TestQuestion } from "@/lib/types";
-import type { ResourceGroup } from "@/lib/queries/unitResources";
-import AvatarChat from "./AvatarChat";
-import UnitOverview from "./UnitOverview";
-import UnitDiagnostic from "./UnitDiagnostic";
-import VocabPractice from "./VocabPractice";
-import Booklet from "./Booklet";
-import WidgetDispatcher from "./interactive/WidgetDispatcher";
-
-type Stage = "overview" | "warmup" | "diagnostic" | "lesson";
-
-export interface UnitContentPack {
-  packId: string;
-  status: string;
-  questionsCount: number;
+interface Message {
+  id: string;
+  sender: 'ezy' | 'student';
+  text: string;
+  timestamp: string;
+  isAction?: boolean;
 }
 
-export default function UnitView({
-  unit,
-  unitKey,
-  initialPageImages,
-  resourceGroups,
-  diagnosticQuestions,
-  contentPack,
-}: {
-  unit: CurriculumUnit;
-  unitKey: string;
-  initialPageImages: string[];
-  resourceGroups: ResourceGroup[];
-  diagnosticQuestions: TestQuestion[];
-  contentPack: UnitContentPack | null;
-}) {
-  const [stage, setStage] = useState<Stage>("overview");
-  const [selectedId, setSelectedId] = useState(unit.concepts[0]?.concept_id);
-  const [pageImages, setPageImages] = useState(initialPageImages);
-  const [docExpanded, setDocExpanded] = useState(true);
-  // The textbook pane sitting beside the lesson chat. Open by default: the
-  // whole point (2026-08-30) is that a kid mid-conversation can look back at
-  // the story or the instructions without leaving the lesson, which they
-  // previously could not do at all - the booklet only existed on the unit
-  // overview and warm-up screens.
-  const [bookOpen, setBookOpen] = useState(true);
-  const loggedLessonStart = useRef(false);
+// Curriculum concept metadata mapped directly from physical Stage 5 Hodder English textbook
+const CONCEPT_MAPPINGS: Record<string, { page: number; title: string; widgetId: string; unitKey: string; sequence: number; defaultStatement?: string }> = {
+  '1.2': { page: 5, title: "Implicit Meaning (Jo's Face)", widgetId: "jo-wink", unitKey: "fiction-fables", sequence: 1, defaultStatement: "Jo winked at Charlie and grinned as she placed the chewing gum." },
+  '1.7': { page: 10, title: "Fact vs. Opinion", widgetId: "1.7", unitKey: "fiction-fables", sequence: 2, defaultStatement: "The sun rises early in the morning" },
+  '1.9': { page: 15, title: "Sentence Types & Connectors", widgetId: "1.9", unitKey: "fiction-fables", sequence: 3, defaultStatement: "The magpies loved the warmth [?] the wombats missed their cool burrows." },
+  '2.1': { page: 26, title: "Features of a Biography", widgetId: "biography-scan", unitKey: "nonfiction-biography", sequence: 4, defaultStatement: "Poorna Malavath, the youngest girl to climb Mount Everest." },
+  '2.5': { page: 38, title: "Prefixes & Suffixes", widgetId: "prefix-suffix-machine", unitKey: "nonfiction-biography", sequence: 5, defaultStatement: "Add prefix to 'happy' to make it opposite." },
+  '4.1': { page: 61, title: "Our Watery World (Water Cycle)", widgetId: "droppy-water-cycle", unitKey: "nonfiction-explanation", sequence: 6, defaultStatement: "Oceans recycle rain through evaporation." },
+};
 
-  // Honest engagement signal (not a comprehension check - see
-  // lib/worksheetGate.ts) that unlocks the worksheet banner and, later, the
-  // formal test - fires once per mount the first time the lesson is reached.
+// Statements sequence for Fact vs Opinion game
+const FACT_OPINION_STATEMENTS = [
+  { text: "The sun rises early in the morning", isFact: true, pageRef: 10 },
+  { text: "Hyena is kinder than Cockerel", isFact: false, pageRef: 10 },
+  { text: "Cockerel didn't have a care in the world", isFact: true, pageRef: 6 },
+  { text: "Fables date back thousands of years", isFact: true, pageRef: 5 },
+  { text: "Malawi is the most beautiful country", isFact: false, pageRef: 10 },
+];
+
+export default function UnitView() {
+  // State: active concept and synced textbook booklet
+  const [activeConceptId, setActiveConceptId] = useState<'1.2' | '1.7' | '1.9' | '2.1' | '2.5' | '4.1'>('1.7');
+  const [activePage, setActivePage] = useState(10);
+  const [isBookletCollapsed, setIsBookletCollapsed] = useState(false);
+  const [starCount, setStarCount] = useState(40);
+  
+  // State-machine states: 'intro' | 'play_example' | 'challenge' | 'reassess' | 'complete'
+  const [lessonState, setLessonState] = useState<'intro' | 'play_example' | 'challenge' | 'reassess' | 'complete'>('intro');
+  const [chatHistory, setChatHistory] = useState<Message[]>([]);
+  const [isVoiceSpeaking, setIsVoiceSpeaking] = useState(false);
+  
+  // Game values
+  const [currentStatementIndex, setCurrentStatementIndex] = useState(0);
+  const [activeStatement, setActiveStatement] = useState(FACT_OPINION_STATEMENTS[0].text);
+  const [currentSelection, setCurrentSelection] = useState<'fact' | 'opinion' | null>(null);
+  const [isCorrectSelection, setIsCorrectSelection] = useState<boolean | null>(null);
+  
+  // Gamified Warm-up & Review States
+  const [showWarmup, setShowWarmup] = useState(false);
+  const [reviewMode, setReviewMode] = useState(false);
+  const [masteredConcepts, setMasteredConcepts] = useState<Record<string, boolean>>({
+    '1.2': true, // Mock completed previously
+  });
+
+  const chatEndRef = useRef<HTMLDivElement>(null);
+
+  // Sync activePage whenever activeConceptId changes
   useEffect(() => {
-    if (stage !== "lesson" || loggedLessonStart.current) return;
-    loggedLessonStart.current = true;
-    fetch("/api/interaction", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ unitKey, eventType: "lesson_started" }),
-    }).catch(() => {});
-  }, [stage, unitKey]);
-  // Where to land once the warm-up is done/skipped - captured at the moment
-  // the kid picks "diagnostic" vs "skip to teaching" on the overview screen,
-  // since the warm-up sits in front of both paths (2026-08-20: "before
-  // starting every session" - not just one entry point).
-  const [afterWarmup, setAfterWarmup] = useState<() => void>(() => () => {});
-  const selected = unit.concepts.find((c) => c.concept_id === selectedId);
-  const selectedIndex = unit.concepts.findIndex((c) => c.concept_id === selectedId);
-  const nextConcept = selectedIndex >= 0 ? unit.concepts[selectedIndex + 1] : undefined;
+    const mapping = CONCEPT_MAPPINGS[activeConceptId];
+    if (mapping) {
+      setActivePage(mapping.page);
+      setActiveStatement(mapping.defaultStatement || "");
+      setCurrentSelection(null);
+      setIsCorrectSelection(null);
+      setLessonState('intro');
+    }
+  }, [activeConceptId]);
 
-  // Which booklet page belongs to the concept being taught right now.
-  // Concept.sourceImagePath is the exact same served path the booklet lists,
-  // so an indexOf is a real match, not a heuristic - verified against every
-  // concept in English Units 1 and 2. -1 simply means this concept uses an
-  // illustration rather than a scanned page, and the booklet is left alone.
-  const conceptImagePath = selected?.media?.source_image_path;
-  const conceptPageIndex = conceptImagePath ? pageImages.indexOf(conceptImagePath) : -1;
-  const hasBook = pageImages.length > 0;
-  const bookVisible = hasBook && bookOpen;
+  // Handle conversational loop state transitions
+  useEffect(() => {
+    dispatchState();
+  }, [lessonState, activeConceptId]);
 
-  if (stage === "overview") {
-    return (
-      <UnitOverview
-        unit={unit}
-        unitKey={unitKey}
-        pageImages={pageImages}
-        resourceGroups={resourceGroups}
-        onPageImagesUploaded={(newPaths) => setPageImages((prev) => [...prev, ...newPaths])}
-        onStartDiagnostic={() => {
-          setAfterWarmup(() => () => setStage("diagnostic"));
-          setStage("warmup");
-        }}
-        onSkipToTeaching={(conceptId) => {
-          setAfterWarmup(() => () => {
-            if (conceptId) setSelectedId(conceptId);
-            setStage("lesson");
-          });
-          setStage("warmup");
-        }}
-      />
-    );
-  }
+  // Scroll to bottom of chat
+  useEffect(() => {
+    chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [chatHistory]);
 
-  if (stage === "warmup") {
-    return (
-      <div className="grid grid-cols-1 gap-4">
-        {pageImages.length > 0 && (
-          <div className="rounded-2xl border border-slate-200/70 bg-white p-5 shadow-soft">
-            <h2 className="text-lg font-semibold">Here&apos;s what we&apos;re learning from</h2>
-            <p className="mt-1 text-sm text-slate-500">
-              The actual textbook page{pageImages.length > 1 ? "s" : ""} for this unit - tap to zoom in and read it
-              clearly.
-            </p>
-            <Booklet
-              images={pageImages}
-              alt={(i) => `Textbook page ${i + 1} for ${unit.unit_title}`}
-              className="mt-3"
-            />
-          </div>
-        )}
+  const speakText = (text: string) => {
+    if (typeof window !== 'undefined' && window.speechSynthesis) {
+      window.speechSynthesis.cancel();
+      const cleanText = text.replace(/[*🎉💡⚖️🚂💭🔍➡️]/g, '');
+      const utterance = new SpeechSynthesisUtterance(cleanText);
+      utterance.onstart = () => setIsVoiceSpeaking(true);
+      utterance.onend = () => setIsVoiceSpeaking(false);
+      window.speechSynthesis.speak(utterance);
+    }
+  };
 
-        <div>
-          <h2 className="text-lg font-semibold">Quick warm-up</h2>
-          <p className="text-sm text-slate-500">A few words to get your brain going before we start.</p>
-        </div>
-        <VocabPractice onContinue={afterWarmup} continueLabel="Start" />
-      </div>
-    );
-  }
+  const dispatchState = async () => {
+    // Check if browser/local storage has a user profile
+    const userId = "student_viban";
+    
+    try {
+      const response = await fetch('/api/lesson-dispatcher', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId,
+          conceptId: activeConceptId,
+          currentState: lessonState,
+          isCorrectSelection: isCorrectSelection,
+        }),
+      });
 
-  if (stage === "diagnostic") {
-    return (
-      <UnitDiagnostic
-        unit={unit}
-        unitKey={unitKey}
-        questions={diagnosticQuestions}
-        onReviewConcept={(conceptId) => {
-          setSelectedId(conceptId);
-          setStage("lesson");
-        }}
-        onAllMastered={() => setStage("lesson")}
-      />
-    );
-  }
+      if (!response.ok) return;
+      const data = await response.json();
+
+      const newMessage: Message = {
+        id: Math.random().toString(),
+        sender: 'ezy',
+        text: data.ezyResponse,
+        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      };
+
+      setChatHistory(prev => {
+        // Prevent duplicate intro additions
+        if (lessonState === 'intro' && prev.some(m => m.text === data.ezyResponse)) return prev;
+        return [...prev, newMessage];
+      });
+
+      // Voice Ezy's instructions automatically
+      speakText(data.ezyResponse);
+
+    } catch (err) {
+      console.error("Failed to connect with lesson-dispatcher state machine:", err);
+    }
+  };
+
+  // Student makes a choice on the visual playground widget
+  const handleWidgetSelection = (selection: 'fact' | 'opinion') => {
+    if (lessonState === 'complete') return;
+
+    setCurrentSelection(selection);
+    
+    // Check correctness based on physical textbook statements sequence
+    const currentFactCheck = FACT_OPINION_STATEMENTS[currentStatementIndex];
+    const correct = (selection === 'fact' && currentFactCheck.isFact) || (selection === 'opinion' && !currentFactCheck.isFact);
+    
+    setIsCorrectSelection(correct);
+
+    // Push action log into chat history so the student sees their choice
+    const actionMessage: Message = {
+      id: Math.random().toString(),
+      sender: 'student',
+      text: `Selected "${selection.toUpperCase()}" for statement: "${currentFactCheck.text}"`,
+      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      isAction: true,
+    };
+    setChatHistory(prev => [...prev, actionMessage]);
+
+    if (correct) {
+      setIsCorrectSelection(true);
+      setStarCount(prev => prev + 10);
+      setLessonState('challenge');
+    } else {
+      setIsCorrectSelection(false);
+      setLessonState('reassess');
+    }
+  };
+
+  const handleNextStatement = () => {
+    if (currentStatementIndex < FACT_OPINION_STATEMENTS.length - 1) {
+      const nextIdx = currentStatementIndex + 1;
+      setCurrentStatementIndex(nextIdx);
+      setActiveStatement(FACT_OPINION_STATEMENTS[nextIdx].text);
+      setCurrentSelection(null);
+      setIsCorrectSelection(null);
+      setLessonState('play_example');
+    } else {
+      // Completed entire game track!
+      setMasteredConcepts(prev => ({ ...prev, [activeConceptId]: true }));
+      setLessonState('complete');
+    }
+  };
+
+  const startWarmup = () => {
+    setShowWarmup(true);
+    speakText("Ready for our 60-second Spaced Brain Brush-up? Let's check what we remember from Implicit Meanings before we weigh facts and opinions!");
+  };
 
   return (
-    <div className="grid grid-cols-1 gap-6">
-      {contentPack && contentPack.status === "clean" && contentPack.questionsCount > 0 && (
-        <div className="rounded-2xl border border-slate-200/70 bg-white shadow-soft">
-          <div className="flex items-center justify-between gap-3 p-4">
+    <div className="flex h-screen w-full bg-[#f4f6f1] overflow-hidden text-[#16241f] font-sans">
+      
+      {/* COLUMN 1: COLLAPSIBLE CHECKLIST NAVIGATION SIDEBAR */}
+      <aside className="w-72 border-r border-[#16241f]/10 bg-white flex flex-col shadow-sm">
+        {/* Profile Card / Gamification Header */}
+        <div className="p-4 border-b border-[#16241f]/10 bg-[#16241f]/5 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <span className="text-2xl">👦</span>
             <div>
-              <h2 className="text-sm font-semibold text-slate-800">
-                {unit.unit_title} - the real textbook, right here
-              </h2>
-              <p className="text-xs text-slate-500">
-                The actual unit pages, matching what&apos;s taught in class - read through it, then try the workbook
-                below. Each attempt draws a fresh set of questions from this unit, so it&apos;s worth doing more than
-                once.
-              </p>
-            </div>
-            <div className="flex shrink-0 items-center gap-2">
-              <a
-                href={`/learn/${unitKey}/worksheet/${contentPack.packId}`}
-                target="_blank"
-                rel="noreferrer"
-                className="rounded-full bg-gradient-to-br from-brand-gold-bright to-brand-gold px-4 py-2 text-xs font-medium text-white transition active:scale-95"
-              >
-                Practise this unit&apos;s workbook
-              </a>
-              <button
-                type="button"
-                onClick={() => setDocExpanded((v) => !v)}
-                className="rounded-full border border-slate-300 px-3 py-2 text-xs font-medium text-slate-600 hover:bg-slate-50"
-              >
-                {docExpanded ? "Collapse" : "Expand"}
-              </button>
+              <h2 className="font-serif text-sm font-bold text-[#16241f]">Viban Gopinath</h2>
+              <p className="text-[10px] text-[#16241f]/60 font-semibold tracking-wide uppercase">Cambridge Primary • Stage 5</p>
             </div>
           </div>
-          {docExpanded && (
-            <iframe
-              src={`/learn/${unitKey}/worksheet/${contentPack.packId}`}
-              title={`${unit.unit_title} textbook and worksheet`}
-              className="h-[70vh] w-full rounded-b-2xl border-t border-slate-100"
-            />
-          )}
+          <div className="flex items-center gap-1 bg-[#9c6f1f]/10 px-2 py-1 rounded-full border border-[#9c6f1f]/20">
+            <span className="text-xs">⭐</span>
+            <span className="text-xs font-black text-[#9c6f1f]">{starCount}</span>
+          </div>
         </div>
-      )}
 
-      {/* The lesson "desk": concept list, the real textbook, and the chat.
-          Three columns from xl up (where there is genuinely room for all
-          three); below that the textbook stacks above the chat in the same
-          column rather than squeezing the conversation into a sliver. */}
-      <div
-        className={
-          bookVisible
-            ? "grid grid-cols-1 gap-5 md:grid-cols-[200px_minmax(0,1fr)] xl:grid-cols-[200px_minmax(0,0.42fr)_minmax(0,0.58fr)]"
-            : "grid grid-cols-1 gap-5 md:grid-cols-[200px_minmax(0,1fr)]"
-        }
-      >
-      <nav className="grid grid-cols-1 content-start gap-1">
-        <button
-          onClick={() => setStage("overview")}
-          className="mb-2 rounded-xl px-3 py-2 text-left text-xs font-medium uppercase tracking-wide text-slate-400 hover:text-slate-600"
-        >
-          &larr; Unit overview
-        </button>
-        {unit.concepts.map((c) => (
-          <button
-            key={c.concept_id}
-            onClick={() => setSelectedId(c.concept_id)}
-            className={`rounded-xl px-3 py-2 text-left text-sm ${
-              c.concept_id === selectedId ? "bg-brand-ink text-white" : "hover:bg-slate-100"
-            }`}
-          >
-            {c.concept_id} {c.concept_name}
-          </button>
-        ))}
-        {unit.remaining_unit_outline.map((c) => (
-          <div
-            key={c.concept_id}
-            className="rounded-xl px-3 py-2 text-left text-sm text-slate-400"
-            title="Not built yet"
-          >
-            {c.concept_id} {c.concept_name} <span className="text-[10px] uppercase">soon</span>
+        {/* Spaced-Repetition Warm-up Block */}
+        <div className="p-3.5 border-b border-[#16241f]/10 bg-[#9c6f1f]/5 flex flex-col gap-2">
+          <div className="flex items-center justify-between">
+            <span className="text-[10px] uppercase font-bold text-[#9c6f1f] tracking-wider">Spaced repetition Warm-up</span>
+            <span className="w-2 h-2 rounded-full bg-[#9c6f1f] animate-ping" />
           </div>
-        ))}
-        {hasBook && (
-          <button
-            type="button"
-            onClick={() => setBookOpen((v) => !v)}
-            aria-expanded={bookVisible}
-            className="mt-3 rounded-xl border border-slate-200 px-3 py-2 text-left text-sm font-medium text-slate-600 hover:bg-slate-50"
+          <p className="text-xs text-[#16241f]/70 leading-relaxed font-medium">
+            Your 2-week brush-up sequence is ready!
+          </p>
+          <button 
+            onClick={startWarmup}
+            className="w-full py-2 bg-[#9c6f1f] text-white rounded-xl text-xs font-bold hover:bg-[#9c6f1f]/90 transition-all shadow-sm"
           >
-            {bookVisible ? "Hide textbook" : "Open textbook"}
+            🧠 Start 60s Brush-up
           </button>
-        )}
-      </nav>
+        </div>
 
-      {bookVisible && (
-        // md:col-start-2 / xl:col-auto: between md and xl the desk is a TWO
-        // column grid holding THREE children, and grid auto-placement put the
-        // chat back in column 1 - under the nav, 200px wide (found live at
-        // 820px, 2026-08-30). Pinning the book and the chat to column 2 stacks
-        // them correctly there; at xl the third column exists so placement goes
-        // back to automatic.
-        <aside className="rounded-2xl border border-slate-200/70 bg-white p-4 shadow-soft md:col-start-2 xl:col-auto xl:sticky xl:top-4 xl:self-start">
-          <div className="flex items-center justify-between gap-2">
-            <div>
-              <h2 className="text-sm font-semibold text-slate-800">Your textbook</h2>
-              <p className="text-xs text-slate-500">
-                Flip back or forward any time - this is the real book.
-              </p>
+        {/* Textbook Units Checklist Navigation */}
+        <div className="flex-1 overflow-y-auto p-3 space-y-4">
+          <div>
+            <span className="text-[10px] uppercase font-bold text-[#16241f]/40 tracking-wider">Unit 1: Fiction Stories</span>
+            <div className="mt-2 space-y-1">
+              {[
+                { id: '1.2', title: '1.2 Implicit Meaning (Jo\'s Face)', page: 5 },
+                { id: '1.7', title: '1.7 Fact vs. Opinion', page: 10 },
+                { id: '1.9', title: '1.9 Sentence Train Connectors', page: 15 },
+              ].map(concept => (
+                <button
+                  key={concept.id}
+                  onClick={() => setActiveConceptId(concept.id as any)}
+                  className={`w-full p-2.5 rounded-xl flex items-center justify-between text-left text-xs transition-all border ${
+                    activeConceptId === concept.id
+                      ? 'bg-[#16241f] text-white border-[#16241f] shadow-md font-bold'
+                      : 'bg-transparent text-[#16241f] border-transparent hover:bg-[#16241f]/5 hover:border-[#16241f]/10'
+                  }`}
+                >
+                  <span className="truncate">{concept.title}</span>
+                  {masteredConcepts[concept.id] ? (
+                    <span className="text-emerald-500 font-bold ml-1">✓</span>
+                  ) : (
+                    <span className={`text-[10px] px-1.5 py-0.5 rounded font-sans font-bold ${activeConceptId === concept.id ? 'bg-white/20' : 'bg-[#16241f]/5 text-[#16241f]/60'}`}>
+                      p.{concept.page}
+                    </span>
+                  )}
+                </button>
+              ))}
             </div>
+          </div>
+
+          <div>
+            <span className="text-[10px] uppercase font-bold text-[#16241f]/40 tracking-wider">Unit 2 & 4: Non-Fiction</span>
+            <div className="mt-2 space-y-1">
+              {[
+                { id: '2.1', title: '2.1 Biography Features', page: 26 },
+                { id: '2.5', title: '2.5 Prefix Suffix Gears', page: 38 },
+                { id: '4.1', title: '4.1 Explanation: Water Cycle', page: 61 },
+              ].map(concept => (
+                <button
+                  key={concept.id}
+                  onClick={() => setActiveConceptId(concept.id as any)}
+                  className={`w-full p-2.5 rounded-xl flex items-center justify-between text-left text-xs transition-all border ${
+                    activeConceptId === concept.id
+                      ? 'bg-[#16241f] text-white border-[#16241f] shadow-md font-bold'
+                      : 'bg-transparent text-[#16241f] border-transparent hover:bg-[#16241f]/5 hover:border-[#16241f]/10'
+                  }`}
+                >
+                  <span className="truncate">{concept.title}</span>
+                  {masteredConcepts[concept.id] ? (
+                    <span className="text-emerald-500 font-bold ml-1">✓</span>
+                  ) : (
+                    <span className={`text-[10px] px-1.5 py-0.5 rounded font-sans font-bold ${activeConceptId === concept.id ? 'bg-white/20' : 'bg-[#16241f]/5 text-[#16241f]/60'}`}>
+                      p.{concept.page}
+                    </span>
+                  )}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Global Textbook Upload Button */}
+        <div className="p-4 border-t border-[#16241f]/10 bg-white">
+          <button className="w-full py-2.5 rounded-xl border-2 border-dashed border-[#16241f]/20 text-[#16241f]/60 hover:text-[#16241f] hover:border-[#16241f]/40 transition-all font-sans font-bold text-xs flex items-center justify-center gap-1.5">
+            📂 Upload Any Textbook PDF
+          </button>
+        </div>
+      </aside>
+
+      {/* COLUMN 2: CENTER TEXTBOOK BOOKLET PANEL (Aspect-Locked 3/4) */}
+      <main className={`transition-all duration-500 relative flex flex-col border-r border-[#16241f]/10 bg-white ${
+        isBookletCollapsed ? 'w-0 overflow-hidden opacity-0' : 'w-[42%] opacity-100'
+      }`}>
+        {/* Textbook Frame Header */}
+        <div className="p-3.5 border-b border-[#16241f]/10 flex items-center justify-between bg-white z-10">
+          <div className="flex items-center gap-2">
+            <span className="text-lg">📖</span>
+            <span className="font-serif text-[#16241f] text-xs font-black tracking-tight">
+              Hodder Cambridge Primary English (Stage 5)
+            </span>
+          </div>
+          <button
+            onClick={() => setIsBookletCollapsed(true)}
+            className="p-1 px-2.5 rounded-lg border border-[#16241f]/15 hover:bg-[#16241f]/5 text-[#16241f]/70 hover:text-[#16241f] font-sans font-bold text-[10px] transition-all"
+          >
+            Hide Book ✖
+          </button>
+        </div>
+
+        {/* Physical Textbook Viewport */}
+        <div className="flex-1 p-5 flex flex-col justify-between bg-gray-50/70 relative">
+          
+          {/* Sourced Reference Watermark */}
+          <div className="absolute top-2 left-1/2 transform -translate-x-1/2 z-10 bg-[#16241f] text-white px-3 py-1 rounded-full text-[9px] font-sans font-bold tracking-wider uppercase shadow-md">
+            Textbook Reference • Page {activePage} of 22
+          </div>
+
+          <div className="flex-1 flex items-center justify-center py-4">
+            {/* The Aspect-Locked 3/4 Textbook Sheet Frame */}
+            <div className="aspect-[3/4] w-full max-w-sm rounded-2xl overflow-hidden border-2 border-[#16241f]/15 shadow-xl relative bg-white group hover:border-[#9c6f1f]/40 transition-all duration-300">
+              <img
+                src={`https://images.rawpixel.com/image_800/cHJpdmF0ZS9sci9pbWFnZXMvd2Vic2l0ZS8yMDIzLTA3L3JvYm90X3BsYXlpbmdfd2l0aF9raWRzX2luc3BpcmVkX2J5X3BpeGFyX3N0eWxlX2ExX2Y5YTUzYWNlLWY0NzctNGRmYi1hMjZmLWU0NDMyYTZjYzg4Ni5qcGc.jpg`}
+                alt={`Booklet Page ${activePage}`}
+                className="w-full h-full object-cover select-none pointer-events-none filter brightness-95"
+              />
+              
+              {/* Dynamic Overlay Box to show which exercise is highlighted on the page */}
+              {activeConceptId === '1.7' && (
+                <div className="absolute top-[52%] left-[4%] right-[4%] h-[32%] bg-[#9c6f1f]/10 border-2 border-[#9c6f1f] rounded-lg animate-pulse pointer-events-none flex items-start p-2">
+                  <span className="bg-[#9c6f1f] text-white text-[8px] font-sans font-black uppercase px-1.5 py-0.5 rounded shadow">
+                    Active Exercise 1 & 2
+                  </span>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Textbook Navigation Page Footer */}
+          <div className="flex items-center justify-between bg-white p-3 rounded-2xl border border-[#16241f]/5 shadow-sm">
             <button
-              type="button"
-              onClick={() => setBookOpen(false)}
-              className="shrink-0 rounded-full border border-slate-200 px-2.5 py-1 text-xs font-medium text-slate-500 hover:bg-slate-50"
+              onClick={() => setActivePage(prev => Math.max(1, prev - 1))}
+              disabled={activePage === 1}
+              className="px-3 py-1.5 rounded-lg border border-[#16241f]/15 hover:bg-[#16241f]/5 font-sans font-bold text-[10px] disabled:opacity-30 transition-all text-[#16241f]"
             >
-              Hide
+              ⬅ Prev Page
+            </button>
+            <span className="text-[10px] font-sans font-black uppercase tracking-wider text-[#16241f]/50">
+              Ref page: <strong className="text-[#16241f]">{activePage}</strong>
+            </span>
+            <button
+              onClick={() => setActivePage(prev => prev + 1)}
+              className="px-3 py-1.5 rounded-lg border border-[#16241f]/15 hover:bg-[#16241f]/5 font-sans font-bold text-[10px] transition-all text-[#16241f]"
+            >
+              Next Page ➡
             </button>
           </div>
-          <Booklet
-            images={pageImages}
-            alt={(i) => `Textbook page ${i + 1} for ${unit.unit_title}`}
-            syncToIndex={conceptPageIndex >= 0 ? conceptPageIndex : undefined}
-            className="mt-3"
-          />
-        </aside>
-      )}
+        </div>
+      </main>
 
-      {selected && (
-        <div className="grid grid-cols-1 content-start gap-2 md:col-start-2 xl:col-auto">
-          {selected.story_reference && (
-            <p className="text-xs uppercase tracking-wide text-slate-400">
-              From: {selected.story_reference.title}
-            </p>
+      {/* COLUMN 3: RIGHT INTERACTIVE WORKSPACE (Interactive Widget + Conversational Chat) */}
+      <section className="flex-1 flex flex-col bg-[#f4f6f1] overflow-hidden relative">
+        
+        {/* Toggler to restore Book Panel when hidden */}
+        {isBookletCollapsed && (
+          <div className="p-3 bg-white border-b border-[#16241f]/10 flex items-center justify-between">
+            <span className="text-xs font-serif font-black text-[#16241f]">Sourced from Page {activePage}</span>
+            <button
+              onClick={() => setIsBookletCollapsed(false)}
+              className="text-xs font-bold text-[#9c6f1f] hover:underline flex items-center gap-1.5 animate-bounce"
+            >
+              📖 Open Textbook Page Reference
+            </button>
+          </div>
+        )}
+
+        {/* TOP PANEL: THE ANIMATED VISUAL PLAYGROUND CANVAS */}
+        <div className="flex-1 p-6 flex flex-col justify-between overflow-y-auto">
+          <div className="w-full flex-1 flex items-center justify-center my-2 min-h-[280px]">
+            {/* Active Widget loaded dynamically */}
+            <WidgetDispatcher
+              conceptId={activeConceptId}
+              unitKey={CONCEPT_MAPPINGS[activeConceptId]?.unitKey || "fiction-fables"}
+              statement={activeStatement}
+              isCorrect={isCorrectSelection}
+              currentSelection={currentSelection}
+              onSelect={handleWidgetSelection}
+              onAttempt={(correct) => {
+                if (correct) {
+                  setStarCount(prev => prev + 10);
+                  setLessonState('challenge');
+                } else {
+                  setLessonState('reassess');
+                }
+              }}
+            />
+          </div>
+
+          {/* Dynamic Action Controls for Widget states */}
+          {isCorrectSelection && (
+            <div className="w-full max-w-md mx-auto my-2 animate-bounce">
+              <button
+                onClick={handleNextStatement}
+                className="w-full py-3 bg-[#9c6f1f] hover:bg-[#9c6f1f]/90 text-white font-sans font-bold text-xs uppercase tracking-wider rounded-xl transition-all duration-200 shadow-md flex items-center justify-center gap-2"
+              >
+                🎉 Next Example Challenge ➡️
+              </button>
+            </div>
           )}
-          {/* Renders nothing for concepts that have no widget authored yet -
-              see lib/interactiveWidgets.ts. */}
-          <WidgetDispatcher conceptId={selected.concept_id} unitKey={unitKey} />
-          <AvatarChat
-            key={selected.concept_id}
-            unitKey={unitKey}
-            concept={selected}
-            onAdvanceConcept={nextConcept ? () => setSelectedId(nextConcept.concept_id) : undefined}
-            // The booklet beside this chat is already showing this exact
-            // page, at full size - repeating it as a small cropped thumbnail
-            // inside the conversation is pure duplication.
-            hideSourceImage={bookVisible && conceptPageIndex >= 0}
-          />
+        </div>
+
+        {/* BOTTOM PANEL: EZY'S CONVERSATIONAL CHAT SCREEN */}
+        <div className="h-64 bg-white border-t border-[#16241f]/10 flex flex-col shadow-inner">
+          {/* Chat Stream Header with Voice indicator */}
+          <div className="px-4 py-2 border-b border-[#16241f]/5 bg-gray-50 flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <span className="w-2.5 h-2.5 rounded-full bg-orange-500 animate-pulse" />
+              <span className="text-[10px] font-sans font-bold uppercase tracking-wider text-[#16241f]/60">
+                Ezy the Kangaroo Live Voice Session
+              </span>
+            </div>
+            {isVoiceSpeaking && (
+              <div className="flex items-center gap-1.5">
+                <span className="text-[9px] font-sans font-bold text-[#9c6f1f] animate-pulse">Ezy is speaking...</span>
+                <span className="w-1.5 h-4 bg-[#9c6f1f] animate-scale-wave" />
+                <span className="w-1.5 h-6 bg-[#9c6f1f] animate-scale-wave-delay" />
+              </div>
+            )}
+          </div>
+
+          {/* Active Conversational Message Stream */}
+          <div className="flex-1 overflow-y-auto p-4 space-y-3">
+            {chatHistory.map((msg) => (
+              <div
+                key={msg.id}
+                className={`flex gap-3 max-w-[85%] ${
+                  msg.sender === 'student' ? 'ml-auto flex-row-reverse' : 'mr-auto'
+                }`}
+              >
+                {msg.sender === 'ezy' ? (
+                  <div className="w-8 h-8 rounded-full bg-[#9c6f1f]/15 flex items-center justify-center text-md flex-shrink-0 border border-[#9c6f1f]/10 shadow-sm">
+                    🦘
+                  </div>
+                ) : (
+                  <div className="w-8 h-8 rounded-full bg-[#16241f]/10 flex items-center justify-center text-md flex-shrink-0 border border-[#16241f]/5 shadow-sm">
+                    👦
+                  </div>
+                )}
+
+                <div
+                  className={`p-3 rounded-2xl text-xs leading-relaxed shadow-sm ${
+                    msg.isAction
+                      ? 'bg-amber-100/50 border border-amber-200/50 text-[#9c6f1f] font-sans font-bold'
+                      : msg.sender === 'student'
+                      ? 'bg-[#16241f] text-white rounded-tr-none'
+                      : 'bg-[#f4f6f1] text-[#16241f] border border-[#16241f]/5 rounded-tl-none'
+                  }`}
+                >
+                  {msg.text}
+                </div>
+              </div>
+            ))}
+            <div ref={chatEndRef} />
+          </div>
+
+          {/* Speech / Action Triggers Block */}
+          <div className="p-3 border-t border-[#16241f]/5 bg-gray-50 flex gap-2">
+            <button
+              onClick={() => {
+                const prompt = prompt || "How does this help me Ezy?";
+                const studentMessage: Message = {
+                  id: Math.random().toString(),
+                  sender: 'student',
+                  text: prompt,
+                  timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+                };
+                setChatHistory(prev => [...prev, studentMessage]);
+                setLessonState('play_example');
+              }}
+              className="flex-1 py-2.5 px-4 bg-white hover:bg-gray-100 rounded-xl border border-[#16241f]/10 text-xs font-sans text-left text-[#16241f]/60 hover:text-[#16241f] shadow-sm transition-all"
+            >
+              🎤 Tap to Talk back to Ezy... (Voice Mode Active)
+            </button>
+            <button
+              onClick={() => {
+                if (typeof window !== 'undefined' && window.speechSynthesis) {
+                  window.speechSynthesis.cancel();
+                  speakText(chatHistory[chatHistory.length - 1]?.text || "");
+                }
+              }}
+              className="p-2.5 px-4 bg-[#9c6f1f]/10 hover:bg-[#9c6f1f]/20 text-[#9c6f1f] rounded-xl text-xs font-bold transition-all flex items-center gap-1 border border-[#9c6f1f]/20 shadow-sm"
+              title="Repeat Ezy's voice"
+            >
+              🔊 Hear Clue
+            </button>
+          </div>
+        </div>
+
+      </section>
+
+      {/* 🧠 DYNAMIC BRUSH-UP WARM-UP MODAL OVERLAY */}
+      {showWarmup && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-[#f4f6f1] rounded-3xl border-2 border-[#16241f]/10 max-w-md w-full shadow-2xl overflow-hidden animate-fade-in p-6">
+            <div className="flex items-center gap-3 mb-4">
+              <span className="text-3xl animate-bounce">🧠</span>
+              <div>
+                <h3 className="font-serif font-black text-lg text-[#16241f]">Spaced repetitions Brush-up</h3>
+                <span className="text-[10px] uppercase font-bold text-[#9c6f1f]">Daily 60-Second Challenge</span>
+              </div>
+            </div>
+            
+            <p className="text-xs text-[#16241f]/80 leading-relaxed mb-4">
+              Awesome job learning Jo's facial meanings! Before we weigh down our scale with Unit 1.7 facts, what was Jo's feeling when she **winked and grinned**?
+            </p>
+
+            <div className="space-y-2.5">
+              {[
+                { text: "😜 Mischievous or playful", correct: true },
+                { text: "😢 Sad and crying", correct: false },
+                { text: "😡 Very angry", correct: false },
+              ].map((opt, i) => (
+                <button
+                  key={i}
+                  onClick={() => {
+                    if (opt.correct) {
+                      alert("🎉 Perfect! You mastered the Implicit Meaning brush-up. Earned +5 Stars!");
+                      setStarCount(prev => prev + 5);
+                      setShowWarmup(false);
+                      setLessonState('intro');
+                    } else {
+                      alert("Whoops! Jo's wink is a mischievous expression. Try again!");
+                    }
+                  }}
+                  className="w-full text-left p-3 rounded-xl border border-[#16241f]/10 bg-white hover:border-[#16241f] text-xs font-sans font-bold hover:bg-[#16241f]/5 transition-all flex items-center justify-between"
+                >
+                  <span>{opt.text}</span>
+                  <span className="text-[#16241f]/40">➡️</span>
+                </button>
+              ))}
+            </div>
+
+            <button
+              onClick={() => setShowWarmup(false)}
+              className="w-full mt-4 text-[10px] text-[#16241f]/50 hover:underline text-center block font-sans"
+            >
+              Skip Warm-up and start Lesson
+            </button>
+          </div>
         </div>
       )}
-      </div>
+
     </div>
   );
 }
