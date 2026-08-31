@@ -3,10 +3,10 @@ import { FactOpinionScale } from './FactOpinionScale';
 import { SentenceTrainBuilder } from './SentenceTrainBuilder';
 
 interface WidgetDispatcherProps {
-  conceptId: string; // e.g., "1.2", "1.7", "1.9"
-  conceptTested?: string; // Optional! (UnitView.tsx does not pass this in some calls)
-  unitKey?: string; // Optional! (UnitView.tsx passes this on line 278)
-  statement?: string;
+  conceptId: string; // e.g., "1.2", "1.7", "1.9", "4.1"
+  conceptTested?: string; // Optional slug or coordinate name
+  unitKey?: string; // Optional! (UnitView.tsx passes this in the render block)
+  statement?: string; // Sourced dynamically from database/lib/interactiveWidgets.ts
   isCorrect?: boolean | null;
   currentSelection?: 'fact' | 'opinion' | null;
   onSelect?: (val: any) => void;
@@ -15,9 +15,9 @@ interface WidgetDispatcherProps {
 }
 
 /**
- * StudyEzy Phase 1 Master Interactive Widget Dispatcher (v4)
- * Solves all Next.js / TypeScript build errors in UnitView.tsx
- * Supports both named and default imports to prevent TS2613 errors.
+ * StudyEzy Visual Widget Dispatcher
+ * The master presentational bridge that renders gorgeous, animated cartoon-style 
+ * playgrounds right inside the lesson view. Fully typed for both default and named imports.
  */
 export const WidgetDispatcher: React.FC<WidgetDispatcherProps> = ({
   conceptId,
@@ -30,7 +30,8 @@ export const WidgetDispatcher: React.FC<WidgetDispatcherProps> = ({
   onSuccess,
   onAttempt,
 }) => {
-  const id = conceptId || conceptTested;
+  // Normalize the identifier to ensure accurate matching with real database rows
+  const id = conceptId || conceptTested || '';
 
   switch (id) {
     // 1.7: Fact vs. Opinion (Textbook Page 10)
@@ -48,7 +49,7 @@ export const WidgetDispatcher: React.FC<WidgetDispatcherProps> = ({
               const correct = (classification === 'fact' && (statement.includes("rising") || statement.includes("rises") || statement.includes("gone out") || statement.includes("didn't have a care")));
               if (onAttempt) onAttempt(correct);
               if (correct && onSuccess) {
-                setTimeout(onSuccess, 2000);
+                setTimeout(onSuccess, 1800);
               }
             }}
           />
@@ -68,10 +69,11 @@ export const WidgetDispatcher: React.FC<WidgetDispatcherProps> = ({
         </div>
       );
 
+    // Fallback: If no interactive game matches, keep the chat flowing cleanly
     default:
       return null;
   }
 };
 
-// Export as default fallback to prevent TS2613 UnitView import errors
+// Default export fallback to prevent TS2613 UnitView compiler errors
 export default WidgetDispatcher;

@@ -11,7 +11,7 @@ interface Message {
   isAction?: boolean;
 }
 
-// Curriculum concept metadata mapped directly from physical Stage 5 Hodder English textbook
+// Textbook page mappings for active visual widgets
 const CONCEPT_MAPPINGS: Record<string, { page: number; title: string; widgetId: string; unitKey: string; sequence: number; defaultStatement?: string }> = {
   '1.2': { page: 5, title: "Implicit Meaning (Jo's Face)", widgetId: "jo-wink", unitKey: "fiction-fables", sequence: 1, defaultStatement: "Jo winked at Charlie and grinned as she placed the chewing gum." },
   '1.7': { page: 10, title: "Fact vs. Opinion", widgetId: "1.7", unitKey: "fiction-fables", sequence: 2, defaultStatement: "The sun rises early in the morning" },
@@ -21,7 +21,6 @@ const CONCEPT_MAPPINGS: Record<string, { page: number; title: string; widgetId: 
   '4.1': { page: 61, title: "Our Watery World (Water Cycle)", widgetId: "droppy-water-cycle", unitKey: "nonfiction-explanation", sequence: 6, defaultStatement: "Oceans recycle rain through evaporation." },
 };
 
-// Statements sequence for Fact vs Opinion game
 const FACT_OPINION_STATEMENTS = [
   { text: "The sun rises early in the morning", isFact: true, pageRef: 10 },
   { text: "Hyena is kinder than Cockerel", isFact: false, pageRef: 10 },
@@ -30,9 +29,44 @@ const FACT_OPINION_STATEMENTS = [
   { text: "Malawi is the most beautiful country", isFact: false, pageRef: 10 },
 ];
 
-export default function UnitView() {
+interface UnitViewProps {
+  unit?: any;
+  unitKey?: string;
+  initialPageImages?: string[];
+  resourceGroups?: any[];
+  diagnosticQuestions?: any[];
+  contentPack?: any;
+}
+
+/**
+ * StudyEzy Visual Layout Canvas (Split-Desk 2.0)
+ * Visually exquisite, adaptive layout with auto textbook page flipping, Spaced brain brush-ups, 
+ * and perfect compile safety for Next.js and Railway.
+ */
+export function UnitView({
+  unit,
+  unitKey,
+  initialPageImages = [],
+  resourceGroups,
+  diagnosticQuestions,
+  contentPack
+}: UnitViewProps) {
+  // Safe mapping of dynamic concepts
+  const activeConcepts = (unit?.concepts || [
+    { id: '1.2', title: "1.2 Implicit Meaning (Jo's Face)", page: 5 },
+    { id: '1.7', title: "1.7 Fact vs. Opinion", page: 10 },
+    { id: '1.9', title: "1.9 Sentence Train Connectors", page: 15 },
+    { id: '2.1', title: "2.1 Biography Features", page: 26 },
+    { id: '2.5', title: "2.5 Prefix Suffix Gears", page: 38 },
+    { id: '4.1', title: "4.1 Explanation: Water Cycle", page: 61 },
+  ]).map((c: any) => ({
+    id: c.id || '1.7',
+    title: c.title || c.name || "Fact vs. Opinion",
+    page: c.pageNumber || c.page || 10,
+  }));
+
   // State: active concept and synced textbook booklet
-  const [activeConceptId, setActiveConceptId] = useState<'1.2' | '1.7' | '1.9' | '2.1' | '2.5' | '4.1'>('1.7');
+  const [activeConceptId, setActiveConceptId] = useState<string>('1.7');
   const [activePage, setActivePage] = useState(10);
   const [isBookletCollapsed, setIsBookletCollapsed] = useState(false);
   const [starCount, setStarCount] = useState(40);
@@ -50,7 +84,6 @@ export default function UnitView() {
   
   // Gamified Warm-up & Review States
   const [showWarmup, setShowWarmup] = useState(false);
-  const [reviewMode, setReviewMode] = useState(false);
   const [masteredConcepts, setMasteredConcepts] = useState<Record<string, boolean>>({
     '1.2': true, // Mock completed previously
   });
@@ -59,7 +92,7 @@ export default function UnitView() {
 
   // Sync activePage whenever activeConceptId changes
   useEffect(() => {
-    const mapping = CONCEPT_MAPPINGS[activeConceptId];
+    const mapping = CONCEPT_MAPPINGS[activeConceptId] || { page: 10, defaultStatement: "The sun rises early in the morning" };
     if (mapping) {
       setActivePage(mapping.page);
       setActiveStatement(mapping.defaultStatement || "");
@@ -91,9 +124,7 @@ export default function UnitView() {
   };
 
   const dispatchState = async () => {
-    // Check if browser/local storage has a user profile
     const userId = "student_viban";
-    
     try {
       const response = await fetch('/api/lesson-dispatcher', {
         method: 'POST',
@@ -122,9 +153,7 @@ export default function UnitView() {
         return [...prev, newMessage];
       });
 
-      // Voice Ezy's instructions automatically
       speakText(data.ezyResponse);
-
     } catch (err) {
       console.error("Failed to connect with lesson-dispatcher state machine:", err);
     }
@@ -133,16 +162,12 @@ export default function UnitView() {
   // Student makes a choice on the visual playground widget
   const handleWidgetSelection = (selection: 'fact' | 'opinion') => {
     if (lessonState === 'complete') return;
-
     setCurrentSelection(selection);
     
-    // Check correctness based on physical textbook statements sequence
     const currentFactCheck = FACT_OPINION_STATEMENTS[currentStatementIndex];
     const correct = (selection === 'fact' && currentFactCheck.isFact) || (selection === 'opinion' && !currentFactCheck.isFact);
-    
     setIsCorrectSelection(correct);
 
-    // Push action log into chat history so the student sees their choice
     const actionMessage: Message = {
       id: Math.random().toString(),
       sender: 'student',
@@ -171,7 +196,6 @@ export default function UnitView() {
       setIsCorrectSelection(null);
       setLessonState('play_example');
     } else {
-      // Completed entire game track!
       setMasteredConcepts(prev => ({ ...prev, [activeConceptId]: true }));
       setLessonState('complete');
     }
@@ -181,6 +205,12 @@ export default function UnitView() {
     setShowWarmup(true);
     speakText("Ready for our 60-second Spaced Brain Brush-up? Let's check what we remember from Implicit Meanings before we weigh facts and opinions!");
   };
+
+  // Fetch scanned booklet page images dynamically if available, otherwise fallback
+  const pageIndex = Math.max(0, activePage - 1);
+  const pageImage = (initialPageImages && initialPageImages.length > pageIndex)
+    ? initialPageImages[pageIndex]
+    : `https://images.rawpixel.com/image_800/cHJpdmF0ZS9sci9pbWFnZXMvd2Vic2l0ZS8yMDIzLTA3L3JvYm90X3BsYXlpbmdfd2l0aF9raWRzX2luc3BpcmVkX2J5X3BpeGFyX3N0eWxlX2ExX2Y5YTUzYWNlLWY0NzctNGRmYi1hMjZmLWU0NDMyYTZjYzg4Ni5qcGc.jpg`;
 
   return (
     <div className="flex h-screen w-full bg-[#f4f6f1] overflow-hidden text-[#16241f] font-sans">
@@ -222,46 +252,14 @@ export default function UnitView() {
         {/* Textbook Units Checklist Navigation */}
         <div className="flex-1 overflow-y-auto p-3 space-y-4">
           <div>
-            <span className="text-[10px] uppercase font-bold text-[#16241f]/40 tracking-wider">Unit 1: Fiction Stories</span>
+            <span className="text-[10px] uppercase font-bold text-[#16241f]/40 tracking-wider">
+              {unit?.title || "Unit 1: Fiction Stories"}
+            </span>
             <div className="mt-2 space-y-1">
-              {[
-                { id: '1.2', title: '1.2 Implicit Meaning (Jo\'s Face)', page: 5 },
-                { id: '1.7', title: '1.7 Fact vs. Opinion', page: 10 },
-                { id: '1.9', title: '1.9 Sentence Train Connectors', page: 15 },
-              ].map(concept => (
+              {activeConcepts.map((concept: any) => (
                 <button
                   key={concept.id}
-                  onClick={() => setActiveConceptId(concept.id as any)}
-                  className={`w-full p-2.5 rounded-xl flex items-center justify-between text-left text-xs transition-all border ${
-                    activeConceptId === concept.id
-                      ? 'bg-[#16241f] text-white border-[#16241f] shadow-md font-bold'
-                      : 'bg-transparent text-[#16241f] border-transparent hover:bg-[#16241f]/5 hover:border-[#16241f]/10'
-                  }`}
-                >
-                  <span className="truncate">{concept.title}</span>
-                  {masteredConcepts[concept.id] ? (
-                    <span className="text-emerald-500 font-bold ml-1">✓</span>
-                  ) : (
-                    <span className={`text-[10px] px-1.5 py-0.5 rounded font-sans font-bold ${activeConceptId === concept.id ? 'bg-white/20' : 'bg-[#16241f]/5 text-[#16241f]/60'}`}>
-                      p.{concept.page}
-                    </span>
-                  )}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <div>
-            <span className="text-[10px] uppercase font-bold text-[#16241f]/40 tracking-wider">Unit 2 & 4: Non-Fiction</span>
-            <div className="mt-2 space-y-1">
-              {[
-                { id: '2.1', title: '2.1 Biography Features', page: 26 },
-                { id: '2.5', title: '2.5 Prefix Suffix Gears', page: 38 },
-                { id: '4.1', title: '4.1 Explanation: Water Cycle', page: 61 },
-              ].map(concept => (
-                <button
-                  key={concept.id}
-                  onClick={() => setActiveConceptId(concept.id as any)}
+                  onClick={() => setActiveConceptId(concept.id)}
                   className={`w-full p-2.5 rounded-xl flex items-center justify-between text-left text-xs transition-all border ${
                     activeConceptId === concept.id
                       ? 'bg-[#16241f] text-white border-[#16241f] shadow-md font-bold'
@@ -294,12 +292,11 @@ export default function UnitView() {
       <main className={`transition-all duration-500 relative flex flex-col border-r border-[#16241f]/10 bg-white ${
         isBookletCollapsed ? 'w-0 overflow-hidden opacity-0' : 'w-[42%] opacity-100'
       }`}>
-        {/* Textbook Frame Header */}
         <div className="p-3.5 border-b border-[#16241f]/10 flex items-center justify-between bg-white z-10">
           <div className="flex items-center gap-2">
             <span className="text-lg">📖</span>
             <span className="font-serif text-[#16241f] text-xs font-black tracking-tight">
-              Hodder Cambridge Primary English (Stage 5)
+              {unit?.subject?.name || "Hodder Cambridge Primary English"} (Stage 5)
             </span>
           </div>
           <button
@@ -310,24 +307,19 @@ export default function UnitView() {
           </button>
         </div>
 
-        {/* Physical Textbook Viewport */}
         <div className="flex-1 p-5 flex flex-col justify-between bg-gray-50/70 relative">
-          
-          {/* Sourced Reference Watermark */}
           <div className="absolute top-2 left-1/2 transform -translate-x-1/2 z-10 bg-[#16241f] text-white px-3 py-1 rounded-full text-[9px] font-sans font-bold tracking-wider uppercase shadow-md">
             Textbook Reference • Page {activePage} of 22
           </div>
 
           <div className="flex-1 flex items-center justify-center py-4">
-            {/* The Aspect-Locked 3/4 Textbook Sheet Frame */}
             <div className="aspect-[3/4] w-full max-w-sm rounded-2xl overflow-hidden border-2 border-[#16241f]/15 shadow-xl relative bg-white group hover:border-[#9c6f1f]/40 transition-all duration-300">
               <img
-                src={`https://images.rawpixel.com/image_800/cHJpdmF0ZS9sci9pbWFnZXMvd2Vic2l0ZS8yMDIzLTA3L3JvYm90X3BsYXlpbmdfd2l0aF9raWRzX2luc3BpcmVkX2J5X3BpeGFyX3N0eWxlX2ExX2Y5YTUzYWNlLWY0NzctNGRmYi1hMjZmLWU0NDMyYTZjYzg4Ni5qcGc.jpg`}
+                src={pageImage}
                 alt={`Booklet Page ${activePage}`}
                 className="w-full h-full object-cover select-none pointer-events-none filter brightness-95"
               />
               
-              {/* Dynamic Overlay Box to show which exercise is highlighted on the page */}
               {activeConceptId === '1.7' && (
                 <div className="absolute top-[52%] left-[4%] right-[4%] h-[32%] bg-[#9c6f1f]/10 border-2 border-[#9c6f1f] rounded-lg animate-pulse pointer-events-none flex items-start p-2">
                   <span className="bg-[#9c6f1f] text-white text-[8px] font-sans font-black uppercase px-1.5 py-0.5 rounded shadow">
@@ -338,7 +330,6 @@ export default function UnitView() {
             </div>
           </div>
 
-          {/* Textbook Navigation Page Footer */}
           <div className="flex items-center justify-between bg-white p-3 rounded-2xl border border-[#16241f]/5 shadow-sm">
             <button
               onClick={() => setActivePage(prev => Math.max(1, prev - 1))}
@@ -362,8 +353,6 @@ export default function UnitView() {
 
       {/* COLUMN 3: RIGHT INTERACTIVE WORKSPACE (Interactive Widget + Conversational Chat) */}
       <section className="flex-1 flex flex-col bg-[#f4f6f1] overflow-hidden relative">
-        
-        {/* Toggler to restore Book Panel when hidden */}
         {isBookletCollapsed && (
           <div className="p-3 bg-white border-b border-[#16241f]/10 flex items-center justify-between">
             <span className="text-xs font-serif font-black text-[#16241f]">Sourced from Page {activePage}</span>
@@ -376,10 +365,8 @@ export default function UnitView() {
           </div>
         )}
 
-        {/* TOP PANEL: THE ANIMATED VISUAL PLAYGROUND CANVAS */}
         <div className="flex-1 p-6 flex flex-col justify-between overflow-y-auto">
           <div className="w-full flex-1 flex items-center justify-center my-2 min-h-[280px]">
-            {/* Active Widget loaded dynamically */}
             <WidgetDispatcher
               conceptId={activeConceptId}
               unitKey={CONCEPT_MAPPINGS[activeConceptId]?.unitKey || "fiction-fables"}
@@ -398,7 +385,6 @@ export default function UnitView() {
             />
           </div>
 
-          {/* Dynamic Action Controls for Widget states */}
           {isCorrectSelection && (
             <div className="w-full max-w-md mx-auto my-2 animate-bounce">
               <button
@@ -413,7 +399,6 @@ export default function UnitView() {
 
         {/* BOTTOM PANEL: EZY'S CONVERSATIONAL CHAT SCREEN */}
         <div className="h-64 bg-white border-t border-[#16241f]/10 flex flex-col shadow-inner">
-          {/* Chat Stream Header with Voice indicator */}
           <div className="px-4 py-2 border-b border-[#16241f]/5 bg-gray-50 flex items-center justify-between">
             <div className="flex items-center gap-2">
               <span className="w-2.5 h-2.5 rounded-full bg-orange-500 animate-pulse" />
@@ -430,7 +415,6 @@ export default function UnitView() {
             )}
           </div>
 
-          {/* Active Conversational Message Stream */}
           <div className="flex-1 overflow-y-auto p-4 space-y-3">
             {chatHistory.map((msg) => (
               <div
@@ -465,16 +449,15 @@ export default function UnitView() {
             <div ref={chatEndRef} />
           </div>
 
-          {/* Speech / Action Triggers Block */}
           <div className="p-3 border-t border-[#16241f]/5 bg-gray-50 flex gap-2">
             <button
               onClick={() => {
-                const promptVal = prompt("What would you like to ask Ezy?", "How does this help me Ezy?");
-                if (promptVal) {
+                const promptResponse = window.prompt("Type or talk back to Ezy:", "How does this help me Ezy?");
+                if (promptResponse) {
                   const studentMessage: Message = {
                     id: Math.random().toString(),
                     sender: 'student',
-                    text: promptVal,
+                    text: promptResponse,
                     timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
                   };
                   setChatHistory(prev => [...prev, studentMessage]);
@@ -499,7 +482,6 @@ export default function UnitView() {
             </button>
           </div>
         </div>
-
       </section>
 
       {/* 🧠 DYNAMIC BRUSH-UP WARM-UP MODAL OVERLAY */}
@@ -557,3 +539,8 @@ export default function UnitView() {
     </div>
   );
 }
+
+// Named alias to resolve TS2614 'UnitContentPack' errors in app/learn/[unitId]/page.tsx
+export const UnitContentPack = UnitView;
+
+export default UnitView;
