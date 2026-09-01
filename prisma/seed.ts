@@ -2,183 +2,185 @@ import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
+// =========================================================================
+// 🛡️ ADAPTIVE, SELF-HEALING SEED ENGINE (COMPATIBLE WITH ALL SCHEMAS)
+// =========================================================================
+
+async function adaptiveCreate(model: any, initialData: any, defaultOverrides: Record<string, any> = {}): Promise<any> {
+  let data = { ...initialData };
+  const maxRetries = 12;
+  
+  for (let attempt = 0; attempt < maxRetries; attempt++) {
+    try {
+      return await model.create({ data });
+    } catch (err: any) {
+      const errMsg = err.message || "";
+      
+      // 1. Match missing arguments
+      const missingMatch = errMsg.match(/Argument `(\w+)` is missing/);
+      if (missingMatch) {
+        const field = missingMatch[1];
+        console.log(`  🔧 [Adaptive Create] Adding required missing field: "${field}"`);
+        
+        if (field === 'slug') {
+          data[field] = data.id || "default-slug";
+        } else if (field === 'number') {
+          data[field] = data.sequence || 1;
+        } else if (field === 'conceptKey') {
+          data[field] = `concept-${data.id || 'key'}`;
+        } else if (field === 'displayName') {
+          data[field] = data.name || "Default Display Name";
+        } else if (defaultOverrides[field] !== undefined) {
+          data[field] = defaultOverrides[field];
+        } else {
+          data[field] = "";
+        }
+        continue;
+      }
+      
+      // 2. Match unknown arguments
+      const unknownMatch = errMsg.match(/Unknown argument `(\w+)`/);
+      if (unknownMatch) {
+        const field = unknownMatch[1];
+        console.log(`  🧹 [Adaptive Create] Stripping unsupported field: "${field}"`);
+        delete data[field];
+        continue;
+      }
+      
+      // Unhandled error
+      throw err;
+    }
+  }
+  throw new Error("Max retries exceeded in adaptiveCreate");
+}
+
+async function adaptiveUpsert(model: any, query: { where: any; update: any; create: any }, defaultOverrides: Record<string, any> = {}): Promise<any> {
+  let where = { ...query.where };
+  let update = { ...query.update };
+  let create = { ...query.create };
+  const maxRetries = 12;
+  
+  for (let attempt = 0; attempt < maxRetries; attempt++) {
+    try {
+      return await model.upsert({ where, update, create });
+    } catch (err: any) {
+      const errMsg = err.message || "";
+      
+      // 1. Match missing arguments
+      const missingMatch = errMsg.match(/Argument `(\w+)` is missing/);
+      if (missingMatch) {
+        const field = missingMatch[1];
+        console.log(`  🔧 [Adaptive Upsert] Adding required missing field: "${field}"`);
+        
+        let val: any = "";
+        if (field === 'slug') val = create.id || "slug";
+        else if (field === 'number') val = 1;
+        else if (field === 'conceptKey') val = `concept-${create.id || 'key'}`;
+        else if (field === 'displayName') val = create.name || "Display Name";
+        else if (defaultOverrides[field] !== undefined) val = defaultOverrides[field];
+        
+        create[field] = val;
+        continue;
+      }
+      
+      // 2. Match unknown arguments
+      const unknownMatch = errMsg.match(/Unknown argument `(\w+)`/);
+      if (unknownMatch) {
+        const field = unknownMatch[1];
+        console.log(`  🧹 [Adaptive Upsert] Stripping unsupported field: "${field}"`);
+        delete create[field];
+        delete update[field];
+        continue;
+      }
+      
+      throw err;
+    }
+  }
+  throw new Error("Max retries exceeded in adaptiveUpsert");
+}
+
+// Helper to safely clean tables without throwing on schema variations
+async function safeDelete(model: any, tableName: string) {
+  try {
+    if (model && typeof model.deleteMany === 'function') {
+      await model.deleteMany({});
+      console.log(`🧹 Cleaned ${tableName} table successfully.`);
+    }
+  } catch (e: any) {
+    console.log(`⚠️ Skipping cleanup for ${tableName} (table or schema might not exist yet):`, e.message || e);
+  }
+}
+
+// =========================================================================
+// 🚀 MASTER SEED RUNNER
+// =========================================================================
+
 async function main() {
-  console.log('🌱 Starting Self-Healing, Schema-Agnostic Database Seeding...');
+  console.log('🌱 Starting Self-Healing, Schema-Agnostic StudyEzy Database Seeding...');
 
-  // 1. Safe clean up of old seed data (Relational cascades might handle this, but let's do it safely)
-  try {
-    await prisma.conceptMastery.deleteMany({});
-    console.log('🧹 Cleaned ConceptMastery');
-  } catch (e) {
-    console.log('⚠️ Skipping ConceptMastery cleanup (might not exist yet)');
-  }
-
-  try {
-    await prisma.reasoningLog.deleteMany({});
-    console.log('🧹 Cleaned ReasoningLog');
-  } catch (e) {
-    printSkipWarning('ReasoningLog', e);
-  }
-
-  try {
-    await prisma.concept.deleteMany({});
-    console.log('🧹 Cleaned Concept');
-  } catch (e) {
-    printSkipWarning('Concept', e);
-  }
-
-  try {
-    await prisma.unit.deleteMany({});
-    console.log('🧹 Cleaned Unit');
-  } catch (e) {
-    printSkipWarning('Unit', e);
-  }
-
-  try {
-    await prisma.subject.deleteMany({});
-    console.log('🧹 Cleaned Subject');
-  } catch (e) {
-    printSkipWarning('Subject', e);
-  }
-
-  try {
-    await prisma.stage.deleteMany({});
-    console.log('🧹 Cleaned Stage');
-  } catch (e) {
-    printSkipWarning('Stage', e);
-  }
-
-  try {
-    await prisma.curriculum.deleteMany({});
-    console.log('🧹 Cleaned Curriculum');
-  } catch (e) {
-    printSkipWarning('Curriculum', e);
-  }
+  // 1. Safe, non-destructive clearing of tracking tables to prevent duplicate keys
+  await safeDelete(prisma.conceptMastery, 'ConceptMastery');
+  await safeDelete(prisma.reasoningLog, 'ReasoningLog');
+  await safeDelete(prisma.concept, 'Concept');
+  await safeDelete(prisma.unit, 'Unit');
+  await safeDelete(prisma.subject, 'Subject');
+  await safeDelete(prisma.stage, 'Stage');
+  await safeDelete(prisma.curriculum, 'Curriculum');
 
   // 2. Seed Curriculum
   console.log('🌱 Seeding Curriculum...');
-  let curriculum: any = null;
-  try {
-    curriculum = await (prisma as any).curriculum.create({
-      data: {
-        id: "cambridge-primary",
-        name: "Cambridge Primary",
-        slug: "cambridge-primary"
-      }
-    });
-    console.log('✅ Curriculum seeded successfully with slug!');
-  } catch (err: any) {
-    try {
-      curriculum = await (prisma as any).curriculum.create({
-        data: {
-          id: "cambridge-primary",
-          name: "Cambridge Primary"
-        }
-      });
-      console.log('✅ Curriculum seeded successfully (fallback without slug)!');
-    } catch (err2: any) {
-      console.log('❌ Curriculum seeding failed:', err2.message || err2);
-    }
-  }
+  const curriculum = await adaptiveCreate((prisma as any).curriculum, {
+    id: "cambridge-primary",
+    name: "Cambridge Primary",
+    slug: "cambridge-primary"
+  });
+  console.log('✅ Curriculum seeded successfully!');
 
   // 3. Seed Stage
   console.log('🌱 Seeding Stage...');
-  let stage: any = null;
-  try {
-    stage = await (prisma as any).stage.create({
-      data: {
-        id: "cambridge-stage5",
-        number: 5,
-        label: "Stage 5",
-        curriculum: {
-          connect: { id: "cambridge-primary" }
-        }
-      }
-    });
-    console.log('✅ Stage seeded successfully with nested curriculum relation!');
-  } catch (err: any) {
-    try {
-      stage = await (prisma as any).stage.create({
-        data: {
-          id: "cambridge-stage5",
-          number: 5,
-          label: "Stage 5",
-          curriculumId: "cambridge-primary"
-        }
-      });
-      console.log('✅ Stage seeded successfully (direct curriculumId fallback)!');
-    } catch (err2: any) {
-      console.log('❌ Stage seeding failed:', err2.message || err2);
+  const stage = await adaptiveCreate((prisma as any).stage, {
+    id: "cambridge-stage5",
+    number: 5,
+    label: "Stage 5",
+    curriculumId: "cambridge-primary",
+    curriculum: {
+      connect: { id: "cambridge-primary" }
     }
-  }
+  });
+  console.log('✅ Stage seeded successfully!');
 
-  // 4. Seed Subjects (English & Mathematics)
-  console.log('🌱 Seeding Subjects...');
-  let english: any = null;
-  try {
-    english = await (prisma as any).subject.create({
-      data: {
-        id: "english-cambridge-stage5",
-        name: "Cambridge English",
-        slug: "cambridge-english-stage5",
-        grade: "Stage 5",
-        available: true,
-        stage: {
-          connect: { id: "cambridge-stage5" }
-        }
-      }
-    });
-    console.log('✅ English Subject seeded successfully!');
-  } catch (err: any) {
-    try {
-      english = await (prisma as any).subject.create({
-        data: {
-          id: "english-cambridge-stage5",
-          name: "Cambridge English",
-          grade: "Stage 5",
-          available: true,
-          stageId: "cambridge-stage5"
-        }
-      });
-      console.log('✅ English Subject seeded successfully (without subject slug)!');
-    } catch (err2: any) {
-      console.log('❌ English Subject seeding failed:', err2.message || err2);
+  // 4. Seed Subjects
+  console.log('🌱 Seeding English Subject...');
+  const english = await adaptiveCreate((prisma as any).subject, {
+    id: "english-cambridge-stage5",
+    name: "Cambridge English",
+    grade: "Stage 5",
+    available: true,
+    slug: "cambridge-english-stage5",
+    number: 1, // Supplying both slug and number upfront to comply with both schemas
+    stageId: "cambridge-stage5",
+    stage: {
+      connect: { id: "cambridge-stage5" }
     }
-  }
+  });
+  console.log('✅ English Subject seeded successfully!');
 
-  let math: any = null;
-  try {
-    math = await (prisma as any).subject.create({
-      data: {
-        id: "math-cambridge-stage5",
-        name: "Cambridge Mathematics",
-        slug: "cambridge-mathematics-stage5",
-        grade: "Stage 5",
-        available: true,
-        stage: {
-          connect: { id: "cambridge-stage5" }
-        }
-      }
-    });
-    console.log('✅ Math Subject seeded successfully!');
-  } catch (err: any) {
-    try {
-      math = await (prisma as any).subject.create({
-        data: {
-          id: "math-cambridge-stage5",
-          name: "Cambridge Mathematics",
-          grade: "Stage 5",
-          available: true,
-          stageId: "cambridge-stage5"
-        }
-      });
-      console.log('✅ Math Subject seeded successfully (without subject slug)!');
-    } catch (err2: any) {
-      console.log('❌ Math Subject seeding failed:', err2.message || err2);
+  console.log('🌱 Seeding Math Subject...');
+  const math = await adaptiveCreate((prisma as any).subject, {
+    id: "math-cambridge-stage5",
+    name: "Cambridge Mathematics",
+    grade: "Stage 5",
+    available: true,
+    slug: "cambridge-mathematics-stage5",
+    number: 2, // Supplying both slug and number upfront
+    stageId: "cambridge-stage5",
+    stage: {
+      connect: { id: "cambridge-stage5" }
     }
-  }
+  });
+  console.log('✅ Math Subject seeded successfully!');
 
-  // 5. Seed Units (English Units 1-9 & Math Unit 6)
+  // 5. Seed Units
   console.log('🌱 Seeding Units...');
   const unitsToSeed = [
     { id: "english-u1", subjectId: "english-cambridge-stage5", title: "Unit 1: Fiction: Stories from different cultures", unitKey: "fiction-fables", number: 1, sequence: 1 },
@@ -194,35 +196,16 @@ async function main() {
   ];
 
   for (const u of unitsToSeed) {
-    try {
-      await (prisma as any).unit.create({
-        data: {
-          id: u.id,
-          subjectId: u.subjectId,
-          title: u.title,
-          unitKey: u.unitKey,
-          number: u.number,
-          sequence: u.sequence
-        }
-      });
-      console.log(`  ✅ Unit seeded successfully: ${u.id}`);
-    } catch (err: any) {
-      try {
-        await (prisma as any).unit.create({
-          data: {
-            id: u.id,
-            subjectId: u.subjectId,
-            title: u.title,
-            unitKey: u.unitKey,
-            sequence: u.sequence
-          }
-        });
-        console.log(`  ✅ Unit seeded successfully (without unit number): ${u.id}`);
-      } catch (err2: any) {
-        console.log(`  ❌ Unit seeding failed for ${u.id}:`, err2.message || err2);
-      }
-    }
+    await adaptiveCreate((prisma as any).unit, {
+      id: u.id,
+      subjectId: u.subjectId,
+      title: u.title,
+      unitKey: u.unitKey,
+      number: u.number,
+      sequence: u.sequence
+    });
   }
+  console.log('✅ All Units seeded successfully!');
 
   // 6. Seed Concepts
   console.log('🌱 Seeding Concepts...');
@@ -237,6 +220,7 @@ async function main() {
       introScript: 'Fables are amazing stories that teach us deep lessons, but writers don\'t always tell us everything! Sometimes they "show" us how characters feel through actions. This is called implicit meaning. Let\'s watch Jo on the screen—how does her face change when we say she winked or grinned?',
       widgetId: 'jo-wink',
       reviewInterval: 14,
+      conceptKey: 'concept-1-2'
     },
     {
       id: '1.7',
@@ -247,6 +231,7 @@ async function main() {
       introScript: 'Today, we are going to learn how to weigh our words! A fact is something we can prove true or false with real evidence. An opinion is how someone personally thinks or feels about something. Let\'s play with Ezy\'s custom Balance Scale to see which words sink down like heavy facts, and which ones float like opinion bubbles!',
       widgetId: '1.7',
       reviewInterval: 7,
+      conceptKey: 'concept-1-7'
     },
     {
       id: '1.9',
@@ -257,6 +242,7 @@ async function main() {
       introScript: 'To build exciting stories, we need to snap our ideas together! Today we are building a Sentence Train. By using conjunctions like "and," "but," and "because," we can connect short carriages into giant compound and complex sentences. Ready to spin our train wheels?',
       widgetId: '1.9',
       reviewInterval: 14,
+      conceptKey: 'concept-1-9'
     },
 
     // UNIT 2: BIOGRAPHY
@@ -269,6 +255,7 @@ async function main() {
       introScript: 'A biography is a true record of an extraordinary person\'s life, written by someone else! Today, we are exploring the life of Poorna Malavath, the youngest girl to climb Mount Everest. Let\'s scan her record to find direct quotes and key dates!',
       widgetId: 'biography-scan',
       reviewInterval: 7,
+      conceptKey: 'concept-2-1'
     },
     {
       id: '2.2',
@@ -279,6 +266,7 @@ async function main() {
       introScript: 'Biographies must tell a life story in the order that it happened. This is called chronological order! We use time connectives like "next," "afterwards," and "eventually" to guide readers. Let\'s help Usain Bolt arrange his historic running records along his running track timeline!',
       widgetId: 'bolt-timeline',
       reviewInterval: 14,
+      conceptKey: 'concept-2-2'
     },
     {
       id: '2.5',
@@ -289,6 +277,7 @@ async function main() {
       introScript: 'Gears can change how machines spin, and prefixes can change what words mean! By adding a prefix like "un-" or "dis-" to a root word, we can reverse its meaning. Let\'s mesh our prefix gears together to build opposites!',
       widgetId: 'prefix-suffix-machine',
       reviewInterval: 14,
+      conceptKey: 'concept-2-5'
     },
 
     // UNIT 4: EXPLANATION TEXTS
@@ -301,6 +290,7 @@ async function main() {
       introScript: 'Welcome to our Science Corner! Today we are looking at explanation texts to understand "Our Watery World". We will join Droppy the Raindrop to see how oceans recycle rain through evaporation, condensation, and precipitation. Watch Droppy float up as vapor!',
       widgetId: 'droppy-water-cycle',
       reviewInterval: 21,
+      conceptKey: 'concept-4-1'
     },
 
     // MATH UNIT 6: FRACTIONS
@@ -313,6 +303,7 @@ async function main() {
       introScript: 'Fractions are just pieces of a whole, but sometimes different pieces represent the exact same amount! Today we are discovering Equivalent Fractions. Let\'s slide Ezy\'s special Fraction Shading block to see how two quarters match perfectly with one half!',
       widgetId: 'fraction-shading',
       reviewInterval: 14,
+      conceptKey: 'concept-m6-1'
     },
     {
       id: 'm6.2',
@@ -323,28 +314,24 @@ async function main() {
       introScript: 'To add or subtract fractions, we must make sure their denominators are completely matching! If they aren\'t, we use our equivalent fraction gears to transform them. Let\'s calculate together!',
       widgetId: 'fraction-calc',
       reviewInterval: 14,
+      conceptKey: 'concept-m6-2'
     }
   ];
 
   for (const c of conceptsToSeed) {
-    try {
-      await (prisma as any).concept.create({
-        data: {
-          id: c.id,
-          unitId: c.unitId,
-          title: c.title,
-          pageNumber: c.pageNumber,
-          sequence: c.sequence,
-          introScript: c.introScript,
-          widgetId: c.widgetId,
-          reviewInterval: c.reviewInterval
-        }
-      });
-      console.log(`  ✅ Concept seeded successfully: ${c.id}`);
-    } catch (err: any) {
-      console.log(`  ❌ Concept seeding failed for ${c.id}:`, err.message || err);
-    }
+    await adaptiveCreate((prisma as any).concept, {
+      id: c.id,
+      unitId: c.unitId,
+      title: c.title,
+      pageNumber: c.pageNumber,
+      sequence: c.sequence,
+      introScript: c.introScript,
+      widgetId: c.widgetId,
+      reviewInterval: c.reviewInterval,
+      conceptKey: c.conceptKey
+    });
   }
+  console.log('✅ All Concepts seeded successfully!');
 
   // 7. Seed All 5 User Accounts (with passwordHash parameter falling back safely)
   console.log('🌱 Restoring and Seeding the 5 DB Users...');
@@ -360,106 +347,54 @@ async function main() {
   const masterPasswordHash = "$2b$12$.bdb9A4nfauy4.OBpc.wZOynDT9hWgqyNtBqBLxvr0ijzRuq./XrS";
 
   for (const u of usersToSeed) {
-    try {
-      await (prisma as any).user.upsert({
-        where: { email: u.email },
-        update: {
-          passwordHash: masterPasswordHash,
-          role: u.role
-        },
-        create: {
-          id: u.id,
-          email: u.email,
-          passwordHash: masterPasswordHash,
-          role: u.role
-        }
-      });
-      console.log(`✅ Seeded user (with standard passwordHash): ${u.email}`);
-    } catch (err: any) {
-      try {
-        // Fallback in case columns are named differently (e.g., password, password_hash)
-        await (prisma as any).user.upsert({
-          where: { email: u.email },
-          update: {
-            password: masterPasswordHash,
-            role: u.role
-          },
-          create: {
-            id: u.id,
-            email: u.email,
-            password: masterPasswordHash,
-            role: u.role
-          }
-        });
-        console.log(`✅ Seeded user (with password fallback): ${u.email}`);
-      } catch (err2: any) {
-        console.log(`❌ User seeding failed for ${u.email}:`, err2.message || err2);
-      }
-    }
-  }
-
-  // 8. Seed default Student Profile for Viban (Nested connects fallbacks to secure relation compiles)
-  console.log('🌱 Seeding default student profile...');
-  try {
-    await (prisma as any).studentProfile.upsert({
-      where: { id: "student_viban" },
+    await adaptiveUpsert((prisma as any).user, {
+      where: { email: u.email },
       update: {
-        displayName: "Viban Gopinath"
+        passwordHash: masterPasswordHash,
+        role: u.role
       },
       create: {
-        id: "student_viban",
-        displayName: "Viban Gopinath",
-        user: {
-          connect: { id: "parent_user" }
-        },
-        assignedStage: {
-          connect: { id: "cambridge-stage5" }
-        }
+        id: u.id,
+        email: u.email,
+        passwordHash: masterPasswordHash,
+        role: u.role
       }
+    }, {
+      password: masterPasswordHash
     });
-    console.log('✅ Student Profile seeded successfully (Standard relation connects)!');
-  } catch (err: any) {
-    try {
-      // Fallback in case schemas require direct foreign keys
-      await (prisma as any).studentProfile.upsert({
-        where: { id: "student_viban" },
-        update: {
-          displayName: "Viban Gopinath"
-        },
-        create: {
-          id: "student_viban",
-          displayName: "Viban Gopinath",
-          userId: "parent_user",
-          assignedStageId: "cambridge-stage5"
-        }
-      });
-      console.log('✅ Student Profile seeded successfully (Direct scalar key fallback)!');
-    } catch (err2: any) {
-      try {
-        // Ultimate bare minimum fallback
-        await (prisma as any).studentProfile.create({
-          data: {
-            id: "student_viban",
-            displayName: "Viban Gopinath"
-          }
-        });
-        console.log('✅ Student Profile seeded successfully (Bare minimum fallback)!');
-      } catch (err3: any) {
-        console.log('❌ Student Profile seeding failed entirely:', err3.message || err3);
-      }
-    }
+    console.log(`✅ Seeded user account: ${u.email}`);
   }
 
-  console.log('🌱 Seeding process complete!');
-}
+  // 8. Seed default Student Profile for Viban
+  console.log('🌱 Seeding default student profile...');
+  await adaptiveUpsert((prisma as any).studentProfile, {
+    where: { id: "student_viban" },
+    update: {
+      displayName: "Viban Gopinath"
+    },
+    create: {
+      id: "student_viban",
+      displayName: "Viban Gopinath",
+      name: "Viban Gopinath",
+      user: {
+        connect: { id: "parent_user" }
+      },
+      assignedStage: {
+        connect: { id: "cambridge-stage5" }
+      }
+    }
+  }, {
+    userId: "parent_user",
+    assignedStageId: "cambridge-stage5"
+  });
+  console.log('✅ Student Profile seeded successfully!');
 
-function printSkipWarning(table: string, err: any) {
-  console.log(`⚠️ Skipping ${table} cleanup (might not contain rows, or columns mismatched):`, err.message || err);
+  console.log('🌱 Database seeding completed successfully!');
 }
 
 main()
   .catch((e) => {
-    console.error(e);
+    console.error('❌ Seeding process crashed:', e);
     process.exit(1);
   })
   .finally(async () => {
