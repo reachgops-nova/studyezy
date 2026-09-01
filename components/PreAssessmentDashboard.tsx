@@ -102,7 +102,7 @@ export default function PreAssessmentDashboard() {
             <span className="bg-brand-ink/10 text-[#16241f] px-3 py-1 rounded-full text-xs font-bold">Stage 5 Pathway</span>
           </div>
           <h1 className="text-3xl font-black font-fredoka tracking-tight text-[#16241f]">
-            Viban's Learning Journey 🦘
+            Viban&apos;s Learning Journey 🦘
           </h1>
           <p className="text-sm text-slate-500 mt-1">Grounded telemetry and live parent metrics compiled from physical textbook page flips.</p>
         </div>
@@ -134,7 +134,7 @@ export default function PreAssessmentDashboard() {
             </h3>
 
             <p className="text-sm text-[#FFFEEA]/90 mb-6">
-              Viban's initial unguided Diagnostic Warm-up taken on <strong>{DIAGNOSTIC_BENCHMARK.testedAt}</strong> established our baseline.
+              Viban&apos;s initial unguided Diagnostic Warm-up taken on <strong>{DIAGNOSTIC_BENCHMARK.testedAt}</strong> established our baseline.
             </p>
 
             {/* Score Comparison Visual */}
@@ -223,7 +223,7 @@ export default function PreAssessmentDashboard() {
                 <h3 className="text-xl font-bold font-fredoka text-[#16241f] flex items-center gap-2">
                   <BarChart3 className="w-5 h-5 text-orange-500" /> Dynamic Spaced Repetition Matrix
                 </h3>
-                <p className="text-xs text-slate-500">Ezy dynamically updates these retest cadences based on Viban's voice answers.</p>
+                <p className="text-xs text-slate-500">Ezy dynamically updates these retest cadences based on Viban&apos;s voice answers.</p>
               </div>
 
               {/* Filtering tabs */}
@@ -314,7 +314,7 @@ export default function PreAssessmentDashboard() {
               <h3 className="text-lg font-bold font-fredoka text-[#16241f] flex items-center gap-2 mb-1">
                 <Volume2 className="w-5 h-5 text-orange-500 animate-pulse" /> Verbal Reasoning Telemetry
               </h3>
-              <p className="text-xs text-slate-500 mb-4">Click to inspect active audio responses and Claude's diagnostics.</p>
+              <p className="text-xs text-slate-500 mb-4">Click to inspect active audio responses and Claude&apos;s diagnostics.</p>
 
               <div className="flex flex-col gap-3">
                 {REASONING_LOGS.map((log) => (
@@ -333,7 +333,7 @@ export default function PreAssessmentDashboard() {
                     </div>
                     
                     <p className="text-xs text-slate-600 line-clamp-2 italic font-nunito">
-                      "{log.transcript}"
+                      &quot;{log.transcript}&quot;
                     </p>
 
                     <div className="flex justify-between items-center mt-1">
@@ -367,13 +367,13 @@ export default function PreAssessmentDashboard() {
                       <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">🎙️ What Viban said:</p>
                       <div className="bg-white p-3 rounded-xl border border-slate-200/50 relative">
                         <p className="text-xs text-slate-700 italic font-nunito">
-                          "{selectedLog.transcript}"
+                          &quot;{selectedLog.transcript}&quot;
                         </p>
                       </div>
                     </div>
 
                     <div>
-                      <p className="text-xs font-bold text-orange-600 uppercase tracking-wider mb-1">🦉 Ezy's Companion Insight:</p>
+                      <p className="text-xs font-bold text-orange-600 uppercase tracking-wider mb-1">🦉 Ezy&apos;s Companion Insight:</p>
                       <p className="text-xs text-[#16241f] font-nunito leading-relaxed bg-[#FFFEEA] border border-orange-200 p-3.5 rounded-xl">
                         {selectedLog.claudesFeedback}
                       </p>

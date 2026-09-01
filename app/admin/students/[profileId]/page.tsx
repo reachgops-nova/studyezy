@@ -66,9 +66,10 @@ export default async function AdminStudentPage({
       </div>
 
       <div>
-        <h2 className="text-lg font-semibold text-slate-800">Current improvement plan</h2>
-        <p className="mt-1 text-sm text-slate-500">The same "worth 20 minutes this week" list this kid sees on Prep Plan.</p>
-        {prepPlan.length === 0 ? (
+<h2 className="text-lg font-semibold text-slate-800">Current improvement plan</h2>
+<p className="mt-1 text-sm text-slate-500">
+  The same &quot;worth 20 minutes this week&quot; list this kid sees on Prep Plan.
+</p>        {prepPlan.length === 0 ? (
           <p className="mt-3 rounded-xl border border-slate-200 bg-white p-4 text-sm text-slate-500">
             Nothing urgent right now - either everything&apos;s mastered, or there&apos;s no test history yet.
           </p>
