@@ -7,7 +7,7 @@ const prisma = new PrismaClient();
  * Helper: Calculate Jaccard Similarity Coefficient between two text strings
  * Splits text into unique words (tokens) and calculates intersection over union.
  */
-export function calculateJaccardSimilarity(textA: string, textB: string): number {
+function calculateJaccardSimilarity(textA: string, textB: string): number {
   const sanitize = (text: string) => 
     text.toLowerCase().replace(/[^\w\s]/g, '').split(/\s+/).filter(Boolean);
 
@@ -26,7 +26,7 @@ export function calculateJaccardSimilarity(textA: string, textB: string): number
  * Helper: Calculate Hamming Distance between two 64-bit hexadecimal dHashes (Difference Hashes)
  * Lower distance means higher image similarity (distance <= 10 usually indicates duplicates).
  */
-export function calculateHammingDistance(hashA: string, hashB: string): number {
+function calculateHammingDistance(hashA: string, hashB: string): number {
   if (hashA.length !== hashB.length) return 999; // Length mismatch, not comparable
 
   let distance = 0;
@@ -49,7 +49,7 @@ export function calculateHammingDistance(hashA: string, hashB: string): number {
  * Evaluates raw textbook attributes (character transcripts or page image hashes) 
  * to find matching curricula and suggest joining an existing Stage.
  */
-export async function checkUploadedTextbookDuplicate(payload: {
+async function checkUploadedTextbookDuplicate(payload: {
   title: string;
   stageNumber: number;
   extractedSampleText?: string;
@@ -80,13 +80,11 @@ export async function checkUploadedTextbookDuplicate(payload: {
 
     // 2. Perform Text-based Overlap Analysis if sample text is provided
     if (extractedSampleText && extractedSampleText.trim().length > 50) {
-      // In a real database, we query existing concept texts or textbook page transcripts:
       const existingConcepts = await prisma.concept.findMany({
         select: {
           id: true,
           name: true,
           unitId: true,
-          // Let's assume we fetch mapped concept transcripts in your database schema:
           definition: true 
         }
       });
@@ -116,7 +114,6 @@ export async function checkUploadedTextbookDuplicate(payload: {
 
     // 3. Perform Perceptual Image Hash matching if page dHashes are provided
     if (samplePageHashes && samplePageHashes.length > 0) {
-      // Mock existing page hashes stored in textbook metadata:
       const mockDatabasePageHashes = [
         { subjectId: "english-cambridge-stage5", hash: "a3f2b1c0d9e8f7a6" },
         { subjectId: "mathematics-cambridge-stage5", hash: "1234567890abcdef" }
