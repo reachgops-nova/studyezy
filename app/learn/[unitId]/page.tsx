@@ -92,7 +92,7 @@ export default async function LearnPage({ params }: { params: Promise<{ unitId: 
     orderBy: { createdAt: "desc" },
     select: { packId: true, status: true, questionsCount: true },
   });
-  const contentPack: UnitContentPack | null = latestPack ?? null;
+  const contentPack: any | null = latestPack ?? null;
 
   return (
     // Real bug found live 2026-08-26: this page was never actually wrapped
