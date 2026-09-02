@@ -1,138 +1,121 @@
-🌱 Starting Self-Healing, Schema-Agnostic StudyEzy Database Seeding...
-🧹 Cleaned ConceptMastery
-🧹 Cleaned ReasoningLog
-🧹 Cleaned Concept
-🧹 Cleaned Unit
-🧹 Cleaned Subject
-🧹 Cleaned Stage
-🧹 Cleaned Curriculum
-🌱 Seeding Curriculum...
-✅ Curriculum seeded successfully!
-🌱 Seeding Stage...
-⚠️ Stage Strategy 1 failed, trying direct curriculumId... 
-Invalid `any).stage.create()` invocation in
-/Users/gopsair/studyezy/prisma/seed.ts:37:41
-
-  34 let stage: any = null;
-  35 try {
-  36   console.log('🌱 Seeding Stage...');
-→ 37   stage = await (prisma as any).stage.create({
-         data: {
-           id: "cambridge-stage5",
-           slug: "cambridge-stage5",
-           ~~~~
-           number: 5,
-           label: "Stage 5",
-           curriculum: {
-             connect: {
-               id: "cambridge-primary"
-             }
-           },
-       ?   available?: Boolean,
-       ?   subjects?: SubjectCreateNestedManyWithoutStageInput,
-       ?   assignedProfiles?: StudentProfileCreateNestedManyWithoutAssignedStageInput
-         }
-       })
-
-Unknown argument `slug`. Available options are marked with ?.
-⚠️ Stage Strategy 2 failed, trying minimal shape without curriculum... 
-Invalid `any).stage.create()` invocation in
-/Users/gopsair/studyezy/prisma/seed.ts:50:43
-
-  47 } catch (err: any) {
-  48   console.log('⚠️ Stage Strategy 1 failed, trying direct curriculumId...', err.message || err);
-  49   try {
-→ 50     stage = await (prisma as any).stage.create({
-           data: {
-             id: "cambridge-stage5",
-             slug: "cambridge-stage5",
-             ~~~~
-             number: 5,
-             label: "Stage 5",
-             curriculumId: "cambridge-primary",
-         ?   available?: Boolean,
-         ?   subjects?: SubjectUncheckedCreateNestedManyWithoutStageInput,
-         ?   assignedProfiles?: StudentProfileUncheckedCreateNestedManyWithoutAssignedStageInput
-           }
-         })
-
-Unknown argument `slug`. Available options are marked with ?.
-❌ All Stage seeding strategies failed. Please check Stage model schema. 
-Invalid `any).stage.create()` invocation in
-/Users/gopsair/studyezy/prisma/seed.ts:63:45
-
-  60 } catch (err2: any) {
-  61   console.log('⚠️ Stage Strategy 2 failed, trying minimal shape without curriculum...', err2.message || err2);
-  62   try {
-→ 63     stage = await (prisma as any).stage.create({
-           data: {
-             id: "cambridge-stage5",
-             slug: "cambridge-stage5",
-             number: 5,
-             label: "Stage 5",
-         +   curriculum: {
-         +     create: CurriculumCreateWithoutStagesInput | CurriculumUncheckedCreateWithoutStagesInput,
-         +     connectOrCreate: CurriculumCreateOrConnectWithoutStagesInput,
-         +     connect: CurriculumWhereUniqueInput
-         +   }
-           }
-         })
-
-Argument `curriculum` is missing.
-🌱 Seeding Subject...
-⚠️ Subject nested connection failed, trying with direct stageId... 
-Invalid `any).subject.create()` invocation in
-/Users/gopsair/studyezy/prisma/seed.ts:82:45
-
-  79 let english: any = null;
-  80 try {
-  81   console.log('🌱 Seeding Subject...');
-→ 82   english = await (prisma as any).subject.create({
-         data: {
-           id: "english-cambridge-stage5",
-           name: "Cambridge English",
-           slug: "cambridge-english-stage5",
-       +   stage: {
-       +     create: StageCreateWithoutSubjectsInput | StageUncheckedCreateWithoutSubjectsInput,
-       +     connectOrCreate: StageCreateOrConnectWithoutSubjectsInput,
-       +     connect: StageWhereUniqueInput
-       +   }
-         }
-       })
-
-Argument `stage` is missing.
-❌ Subject seeding failed entirely: 
-Invalid `any).subject.create()` invocation in
-/Users/gopsair/studyezy/prisma/seed.ts:94:47
-
-  91 } catch (err: any) {
-  92   console.log('⚠️ Subject nested connection failed, trying with direct stageId...', err.message || err);
-  93   try {
-→ 94     english = await (prisma as any).subject.create(
-Foreign key constraint violated on the constraint: `Subject_stageId_fkey`
-🌱 Seeding Units...
-🌱 Seeding Concepts...
-🌱 Seeding default student profile...
-⚠️ StudentProfile upsert failed (this is normal if schemas differ): 
-Invalid `any).studentProfile.upsert()` invocation in
-/Users/gopsair/studyezy/prisma/seed.ts:242:42
-
-  239 // 7. Seed Student Profile for Viban (Schema-Agnostic keys)
-  240 try {
-  241   console.log('🌱 Seeding default student profile...');
-→ 242   await (prisma as any).studentProfile.upsert({
-          where: {
-            id: "student_viban"
-          },
-          update: {},
-          create: {
-            id: "student_viban",
-            name: "Viban Gopinath",
-            assignedStageId: "cambridge-stage5",
-            preferredLanguage: "en",
-        +   displayName: String
-          }
-        })
-
-Argument `displayName` is missing.
-🌱 Database seeding completed successfully!
+🚀 [SEED] Starting Intelligent, Self-Healing Master Database Seeding...
+🧹 [CLEAN] Clearing old databases safe-paths...
+[CLEAN] Safe wiped: conceptMastery
+[CLEAN] Safe wiped: reasoningLog
+[CLEAN] Safe wiped: concept
+[CLEAN] Safe wiped: unit
+[CLEAN] Safe wiped: subject
+[CLEAN] Safe wiped: stage
+[CLEAN] Safe wiped: curriculum
+🌱 [SEED] Seeding Curriculum catalog...
+  ✅ [SUCCESS] Seeded Curriculum: cambridge-primary
+🌱 [SEED] Seeding Curriculum Stage...
+  ✅ [SUCCESS] Seeded Stage: cambridge-stage5
+🌱 [SEED] Seeding Subjects (Primary Textbooks)...
+  ✅ [SUCCESS] Seeded Subject: english-cambridge-stage5
+  ✅ [SUCCESS] Seeded Subject: math-cambridge-stage5
+🌱 [SEED] Seeding Textbook Units...
+  [SELF-HEAL][Unit] Removing unknown property: "sequence"
+  ✅ [SUCCESS] Seeded Unit: english-u1
+  [SELF-HEAL][Unit] Removing unknown property: "sequence"
+  ✅ [SUCCESS] Seeded Unit: english-u2
+  [SELF-HEAL][Unit] Removing unknown property: "sequence"
+  ✅ [SUCCESS] Seeded Unit: english-u3
+  [SELF-HEAL][Unit] Removing unknown property: "sequence"
+  ✅ [SUCCESS] Seeded Unit: english-u4
+  [SELF-HEAL][Unit] Removing unknown property: "sequence"
+  ✅ [SUCCESS] Seeded Unit: english-u5
+  [SELF-HEAL][Unit] Removing unknown property: "sequence"
+  ✅ [SUCCESS] Seeded Unit: english-u6
+  [SELF-HEAL][Unit] Removing unknown property: "sequence"
+  ✅ [SUCCESS] Seeded Unit: english-u7
+  [SELF-HEAL][Unit] Removing unknown property: "sequence"
+  ✅ [SUCCESS] Seeded Unit: english-u8
+  [SELF-HEAL][Unit] Removing unknown property: "sequence"
+  ✅ [SUCCESS] Seeded Unit: english-u9
+  [SELF-HEAL][Unit] Removing unknown property: "sequence"
+  ✅ [SUCCESS] Seeded Unit: math-u6
+🌱 [SEED] Seeding Interactive Concepts & Voice Scripts...
+  [SELF-HEAL][Concept] Supplying default for missing field: "name"
+  [SELF-HEAL][Concept] Removing unknown property: "title"
+  [SELF-HEAL][Concept] Removing unknown property: "pageNumber"
+  [SELF-HEAL][Concept] Removing unknown property: "sequence"
+  [SELF-HEAL][Concept] Removing unknown property: "introScript"
+  [SELF-HEAL][Concept] Removing unknown property: "widgetId"
+  [SELF-HEAL][Concept] Removing unknown property: "reviewInterval"
+  ✅ [SUCCESS] Seeded Concept: 1.2
+  [SELF-HEAL][Concept] Supplying default for missing field: "name"
+  [SELF-HEAL][Concept] Removing unknown property: "title"
+  [SELF-HEAL][Concept] Removing unknown property: "pageNumber"
+  [SELF-HEAL][Concept] Removing unknown property: "sequence"
+  [SELF-HEAL][Concept] Removing unknown property: "introScript"
+  [SELF-HEAL][Concept] Removing unknown property: "widgetId"
+  [SELF-HEAL][Concept] Removing unknown property: "reviewInterval"
+  ✅ [SUCCESS] Seeded Concept: 1.7
+  [SELF-HEAL][Concept] Supplying default for missing field: "name"
+  [SELF-HEAL][Concept] Removing unknown property: "title"
+  [SELF-HEAL][Concept] Removing unknown property: "pageNumber"
+  [SELF-HEAL][Concept] Removing unknown property: "sequence"
+  [SELF-HEAL][Concept] Removing unknown property: "introScript"
+  [SELF-HEAL][Concept] Removing unknown property: "widgetId"
+  [SELF-HEAL][Concept] Removing unknown property: "reviewInterval"
+  ✅ [SUCCESS] Seeded Concept: 1.9
+  [SELF-HEAL][Concept] Supplying default for missing field: "name"
+  [SELF-HEAL][Concept] Removing unknown property: "title"
+  [SELF-HEAL][Concept] Removing unknown property: "pageNumber"
+  [SELF-HEAL][Concept] Removing unknown property: "sequence"
+  [SELF-HEAL][Concept] Removing unknown property: "introScript"
+  [SELF-HEAL][Concept] Removing unknown property: "widgetId"
+  [SELF-HEAL][Concept] Removing unknown property: "reviewInterval"
+  ✅ [SUCCESS] Seeded Concept: 2.1
+  [SELF-HEAL][Concept] Supplying default for missing field: "name"
+  [SELF-HEAL][Concept] Removing unknown property: "title"
+  [SELF-HEAL][Concept] Removing unknown property: "pageNumber"
+  [SELF-HEAL][Concept] Removing unknown property: "sequence"
+  [SELF-HEAL][Concept] Removing unknown property: "introScript"
+  [SELF-HEAL][Concept] Removing unknown property: "widgetId"
+  [SELF-HEAL][Concept] Removing unknown property: "reviewInterval"
+  ✅ [SUCCESS] Seeded Concept: 2.2
+  [SELF-HEAL][Concept] Supplying default for missing field: "name"
+  [SELF-HEAL][Concept] Removing unknown property: "title"
+  [SELF-HEAL][Concept] Removing unknown property: "pageNumber"
+  [SELF-HEAL][Concept] Removing unknown property: "sequence"
+  [SELF-HEAL][Concept] Removing unknown property: "introScript"
+  [SELF-HEAL][Concept] Removing unknown property: "widgetId"
+  [SELF-HEAL][Concept] Removing unknown property: "reviewInterval"
+  ✅ [SUCCESS] Seeded Concept: 2.5
+  [SELF-HEAL][Concept] Supplying default for missing field: "name"
+  [SELF-HEAL][Concept] Removing unknown property: "title"
+  [SELF-HEAL][Concept] Removing unknown property: "pageNumber"
+  [SELF-HEAL][Concept] Removing unknown property: "sequence"
+  [SELF-HEAL][Concept] Removing unknown property: "introScript"
+  [SELF-HEAL][Concept] Removing unknown property: "widgetId"
+  [SELF-HEAL][Concept] Removing unknown property: "reviewInterval"
+  ✅ [SUCCESS] Seeded Concept: 4.1
+  [SELF-HEAL][Concept] Supplying default for missing field: "name"
+  [SELF-HEAL][Concept] Removing unknown property: "title"
+  [SELF-HEAL][Concept] Removing unknown property: "pageNumber"
+  [SELF-HEAL][Concept] Removing unknown property: "sequence"
+  [SELF-HEAL][Concept] Removing unknown property: "introScript"
+  [SELF-HEAL][Concept] Removing unknown property: "widgetId"
+  [SELF-HEAL][Concept] Removing unknown property: "reviewInterval"
+  ✅ [SUCCESS] Seeded Concept: m6.1
+  [SELF-HEAL][Concept] Supplying default for missing field: "name"
+  [SELF-HEAL][Concept] Removing unknown property: "title"
+  [SELF-HEAL][Concept] Removing unknown property: "pageNumber"
+  [SELF-HEAL][Concept] Removing unknown property: "sequence"
+  [SELF-HEAL][Concept] Removing unknown property: "introScript"
+  [SELF-HEAL][Concept] Removing unknown property: "widgetId"
+  [SELF-HEAL][Concept] Removing unknown property: "reviewInterval"
+  ✅ [SUCCESS] Seeded Concept: m6.2
+🌱 [SEED] Seeding System User Accounts...
+  ✅ [SUCCESS] Seeded user account: reachgops@gmail.com
+  ✅ [SUCCESS] Seeded user account: sivasakthi13425@gmail.com
+  ✅ [SUCCESS] Seeded user account: parent@studyezy.com
+  ✅ [SUCCESS] Seeded user account: admin@studyezy.com
+  ✅ [SUCCESS] Seeded user account: student@studyezy.com
+🌱 [SEED] Connecting Viban Gopinath's Student Profile...
+  [SELF-HEAL][StudentProfile] Removing unknown property: "name"
+  [SELF-HEAL][StudentProfile] Removing unknown property: "preferredLanguage"
+  ✅ [SUCCESS] Seeded student profile: student_viban (Viban Gopinath)
+🏁 [SEED] Perfect, self-healing database seeding is complete!
