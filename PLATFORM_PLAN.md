@@ -8,6 +8,8 @@
 
 **Last updated:** 2026-09-05
 
+**Since 2026-09-05 (night - widgets for every Unit 2-9 concept):** Asked to "process all the units in detail similar to unit 1 with widgets wherever required" - confirmed via direct DB query that all 9 units' concepts already had real prose content (definitions/key points/examples/tips/voice Q&A) from the earlier representative pass, so the actual gap was narrower than it first looked: only 16 of the English curriculum's 50 concepts had a widget (Unit 1's 13, plus 2.1/2.2/2.6). Read through the rest of `~/Downloads/hodder english learner5.pdf` page by page (Units 2's remainder through 9, roughly pages 31-169) to ground all 28 remaining widgets the same way Unit 1's were - confirmed the PDF-index-to-printed-page offset drifts periodically through the whole book (not just once, as first thought), so every target page was verified by its own printed corner number rather than computed from one fixed formula. One concept (9.2, countable/uncountable nouns) had no clean single source page near its citation and was grounded in the surrounding unit's own recurring theme instead, flagged in a code comment. All 50 English concepts across all 9 units now have a widget - no new widget components needed, every one reuses an existing kind whose real mechanic fits the content. Not yet re-verified live in a browser (same Chrome-bridge unreliability as earlier tonight).
+
 **Since 2026-09-05 (evening - end-of-unit flow, out-of-sequence readiness check, real progress, layout):** A long run of live feedback, addressed in order:
 
 1. *Widget-in-chat / illustration cell / left-nav width / mark-finished→assess→schedule* (the batch right below this entry) - see that entry for the mastery-wiring fix, the `hideIllustration` prop, and `DesktopSidebar`'s collapse.
@@ -299,7 +301,7 @@ User's vision, organized against what's already built (see FEATURE STATUS) so ef
 5. ~~Priority call for what's next~~ — superseded by the live feedback stream in the STATUS TRACKER above; this project is now driven by real usage, not a standing backlog.
 6. **Pending, not yet started**: "reference past units whenever relevant" in free-form Q&A (needs cross-unit context threaded into `askConceptQuestion` - see 2026-09-05 evening entry above).
 7. **Worth a decision**: the `User.role` case-mismatch bug (2026-09-05 entry) - confirm which account the family actually logs into day-to-day and normalize its `role` column if it's on the stale `"ADMIN"` value.
-8. **Worth a decision**: Units 2-9 are still "coming soon" outline stubs beyond the representative pass done 2026-09-04/05 - full content authoring for those, at whatever pace real usage calls for.
+8. ~~Units 2-9 content authoring~~ — done as of 2026-09-05 night: all 50 concepts across all 9 units have real prose content and now a widget each. Still missing for Units 2-9: a real textbook page-photo gallery (booklet panel) - only Unit 1 has one (`content/textbook-pages/`); the concepts themselves don't depend on it, but the booklet reference panel shows nothing for those units today.
 9. A real live click-through of the 2026-09-05 evening batch (readiness check, widget-reveal timing, wide/responsive layout) - built and typechecked/built clean, not yet browser-verified (the Chrome bridge was unreliable that session).
 
 ---
