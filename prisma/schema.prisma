@@ -79,6 +79,7 @@ model StudentProfile {
   reasoningLogs     ReasoningLog[]
   examSubmissions   ExamSubmission[]
   worksheetAttempts WorksheetAttempt[]
+  unitProgress      UnitProgress[]
 }
 
 // --- curriculum hierarchy ---
@@ -147,8 +148,29 @@ model Unit {
   questionPapers  QuestionPaper[]
   contentPacks    ContentPack[]
   worksheetAttempts WorksheetAttempt[]
+  progressMarkers UnitProgress[]
 
   @@unique([subjectId, number])
+}
+
+// A student/parent-set "our class has covered up to here" marker (real
+// feedback 2026-09-05: "school might reserve certain concepts to be taught
+// later, so kids can mark till which concept within a unit was taught for
+// our reference"). Deliberately separate from ConceptMastery - it's a
+// manual claim about the SCHOOL's own pacing, not evidence from an attempt
+// in this app, and a school's own concept order doesn't have to match this
+// unit's 1.1/1.2/1.3... numbering. Used to exempt concepts at or before the
+// mark from the out-of-sequence readiness check in UnitView.tsx.
+model UnitProgress {
+  id                   String   @id @default(cuid())
+  studentProfileId     String
+  studentProfile       StudentProfile @relation(fields: [studentProfileId], references: [id], onDelete: Cascade)
+  unitId               String
+  unit                 Unit     @relation(fields: [unitId], references: [id], onDelete: Cascade)
+  taughtUpToConceptKey String?
+  updatedAt            DateTime @updatedAt
+
+  @@unique([studentProfileId, unitId])
 }
 
 // A "markable" content pack (content/schema/pack.schema.json) - the

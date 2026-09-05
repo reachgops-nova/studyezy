@@ -41,6 +41,7 @@ export default function UnitOverview({
   latestTestAttempt,
   nextUnit,
   previousUnitRecap,
+  taughtUpToConceptKey,
 }: {
   unit: CurriculumUnit;
   unitKey: string;
@@ -52,6 +53,7 @@ export default function UnitOverview({
   latestTestAttempt?: LatestTestAttempt | null;
   nextUnit?: NextUnitInfo | null;
   previousUnitRecap?: PreviousUnitRecap | null;
+  taughtUpToConceptKey?: string | null;
 }) {
   const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -61,6 +63,28 @@ export default function UnitOverview({
   const [extracting, setExtracting] = useState(false);
   const [extractError, setExtractError] = useState<string | null>(null);
   const [extractSuccess, setExtractSuccess] = useState<string | null>(null);
+  const [taughtUpTo, setTaughtUpTo] = useState(taughtUpToConceptKey ?? "");
+  const [savingTaughtUpTo, setSavingTaughtUpTo] = useState(false);
+
+  // "School might reserve certain concepts to be taught later, so kids can
+  // mark till which concept within a unit was taught for our reference"
+  // (real feedback 2026-09-05) - a manual claim about the SCHOOL's own
+  // pacing, used by UnitView's out-of-sequence readiness check to exempt
+  // concepts at or before this point.
+  async function handleSaveTaughtUpTo(value: string) {
+    setTaughtUpTo(value);
+    setSavingTaughtUpTo(true);
+    try {
+      await fetch("/api/unit-progress", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ unitKey, taughtUpToConceptKey: value || null }),
+      });
+      router.refresh();
+    } finally {
+      setSavingTaughtUpTo(false);
+    }
+  }
 
   async function handleExtract() {
     setExtracting(true);
@@ -234,6 +258,32 @@ export default function UnitOverview({
             </li>
           ))}
         </ul>
+
+        {/* "School might reserve certain concepts to be taught later, so
+            kids can mark till which concept was taught for our reference"
+            (real feedback 2026-09-05) - a manual pacing marker, separate
+            from what's actually been done in this app. */}
+        {unit.concepts.length > 0 && (
+          <div className="mt-4 flex flex-wrap items-center gap-2 rounded-xl border border-dashed border-slate-300 bg-slate-50 px-3 py-2.5">
+            <label htmlFor="taught-up-to" className="text-xs text-slate-500">
+              📌 Mark how far your class has covered this unit at school:
+            </label>
+            <select
+              id="taught-up-to"
+              value={taughtUpTo}
+              disabled={savingTaughtUpTo}
+              onChange={(e) => handleSaveTaughtUpTo(e.target.value)}
+              className="rounded-lg border border-slate-300 bg-white px-2 py-1 text-xs text-slate-700"
+            >
+              <option value="">Not marked</option>
+              {unit.concepts.map((c) => (
+                <option key={c.concept_id} value={c.concept_id}>
+                  Up to {c.concept_id} {c.concept_name}
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
       </div>
 
       <UnitResources unitKey={unitKey} groups={resourceGroups} />

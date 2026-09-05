@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import WidgetDispatcher from './interactive/WidgetDispatcher';
 import { getWidgetForConcept, type InteractiveWidget } from '@/lib/interactiveWidgets';
-import type { CurriculumUnit, Concept, MasteryBand } from '@/lib/types';
+import type { CurriculumUnit, Concept, MasteryBand, TestQuestion } from '@/lib/types';
 import UnitOverview from './UnitOverview';
 import UnitDiagnostic from './UnitDiagnostic';
 import AvatarChat from './AvatarChat';
@@ -71,6 +71,10 @@ interface UnitViewProps {
   latestTestAttempt?: LatestTestAttempt | null;
   nextUnit?: NextUnitInfo | null;
   previousUnitRecap?: PreviousUnitRecap | null;
+  /** Real, persisted ConceptMastery coverage for this unit - not the old session-only local state. */
+  masteredConceptKeys?: string[];
+  /** "Our class has covered up to here" marker (lib/queries or the /api/unit-progress route) - see UnitOverview's control for setting it. */
+  taughtUpToConceptKey?: string | null;
 }
 
 export function UnitView({
@@ -83,6 +87,8 @@ export function UnitView({
   latestTestAttempt,
   nextUnit,
   previousUnitRecap,
+  masteredConceptKeys = [],
+  taughtUpToConceptKey = null,
 }: UnitViewProps) {
   const concepts = unit?.concepts || [];
   const activeConcepts = concepts.map((c: Concept) => ({
@@ -148,6 +154,76 @@ export function UnitView({
   const currentConcept = concepts.find((c) => c.concept_id === activeConceptId);
   const activeIdx = activeConcepts.findIndex((c) => c.id === activeConceptId);
   const hasNextConcept = activeIdx >= 0 && activeIdx < activeConcepts.length - 1;
+
+  // Real, persisted coverage (ConceptMastery) plus anything just finished
+  // this session (masteredConcepts, before the page next reloads) - either
+  // one counts as "covered" for the sidebar checkmark and the readiness
+  // gate below.
+  const isConceptCovered = (conceptId: string) => masteredConcepts[conceptId] || masteredConceptKeys.includes(conceptId);
+  const taughtUpToIndex = taughtUpToConceptKey
+    ? activeConcepts.findIndex((c) => c.id === taughtUpToConceptKey)
+    : -1;
+
+  // Out-of-sequence readiness check (real feedback 2026-09-05): "when I
+  // directly jump to a concept not sequentially, assess the student if he
+  // is aware of the earlier concepts... else advise him to cover the
+  // previous concepts". Skips the check for anything at or before the
+  // taughtUpToConceptKey marker - a school's own pacing doesn't have to
+  // match this unit's 1.1/1.2/1.3 order.
+  const [readinessCheck, setReadinessCheck] = useState<{
+    targetConceptId: string;
+    skippedIds: string[];
+    questions: Extract<TestQuestion, { type: 'multiple_choice' }>[];
+    answers: Record<number, number>;
+    result: 'pass' | 'fail' | null;
+  } | null>(null);
+
+  const handleConceptClick = (conceptId: string) => {
+    const targetIdx = activeConcepts.findIndex((c) => c.id === conceptId);
+    if (targetIdx <= activeIdx) {
+      // Going back to review, or re-clicking the current one - always fine.
+      setActiveConceptId(conceptId);
+      return;
+    }
+    const skipped = activeConcepts
+      .slice(0, targetIdx)
+      .filter((c, idx) => !isConceptCovered(c.id) && idx > taughtUpToIndex)
+      .map((c) => c.id);
+    if (skipped.length === 0) {
+      setActiveConceptId(conceptId);
+      return;
+    }
+    const candidates = ((diagnosticQuestions as TestQuestion[] | undefined) ?? []).filter(
+      (q): q is Extract<TestQuestion, { type: 'multiple_choice' }> =>
+        q.type === 'multiple_choice' && skipped.includes(q.concept_tested)
+    );
+    if (candidates.length === 0) {
+      // Nothing to actually check them on - let them through rather than
+      // block on a check that can't be run.
+      setActiveConceptId(conceptId);
+      return;
+    }
+    setReadinessCheck({
+      targetConceptId: conceptId,
+      skippedIds: skipped,
+      questions: candidates.slice(0, 3),
+      answers: {},
+      result: null,
+    });
+  };
+
+  const submitReadinessCheck = () => {
+    if (!readinessCheck) return;
+    const correct = readinessCheck.questions.filter((q, i) => readinessCheck.answers[i] === q.correct_answer).length;
+    const pass = correct / readinessCheck.questions.length >= 0.6;
+    setReadinessCheck({ ...readinessCheck, result: pass ? 'pass' : 'fail' });
+    if (pass) {
+      setTimeout(() => {
+        setActiveConceptId(readinessCheck.targetConceptId);
+        setReadinessCheck(null);
+      }, 1200);
+    }
+  };
 
   // Sync the booklet's reference page and reset widget state whenever the
   // active concept changes - AvatarChat owns its own teaching/speech state
@@ -233,6 +309,7 @@ export function UnitView({
         latestTestAttempt={latestTestAttempt}
         nextUnit={nextUnit}
         previousUnitRecap={previousUnitRecap}
+        taughtUpToConceptKey={taughtUpToConceptKey}
       />
     );
   }
@@ -367,7 +444,7 @@ export function UnitView({
               {activeConcepts.map((concept) => (
                 <button
                   key={concept.id}
-                  onClick={() => setActiveConceptId(concept.id)}
+                  onClick={() => handleConceptClick(concept.id)}
                   className={`w-full p-2.5 rounded-xl flex items-center justify-between text-left text-xs sm:text-sm transition-all border ${
                     activeConceptId === concept.id
                       ? 'bg-[#16241f] text-white border-[#16241f] shadow-md font-bold'
@@ -375,7 +452,7 @@ export function UnitView({
                   }`}
                 >
                   <span className="truncate">{concept.title}</span>
-                  {masteredConcepts[concept.id] ? (
+                  {isConceptCovered(concept.id) ? (
                     <span className="text-emerald-500 font-bold ml-1">✓</span>
                   ) : (
                     <span className={`text-[10px] px-1.5 py-0.5 rounded font-sans font-bold ${
@@ -568,6 +645,102 @@ export function UnitView({
         </div>
         </div>
       </section>
+
+      {/* Out-of-sequence readiness check - real feedback 2026-09-05: "assess
+          the student if he is aware of the earlier concepts... else advise
+          him to cover the previous concepts and come back." */}
+      {readinessCheck && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-[#f4f6f1] rounded-3xl border-2 border-[#16241f]/10 max-w-lg w-full shadow-2xl overflow-hidden p-6 max-h-[85vh] overflow-y-auto">
+            <div className="flex items-center gap-3 mb-3">
+              <span className="text-3xl">🤔</span>
+              <div>
+                <h3 className="font-serif font-black text-lg text-[#16241f]">Quick check before you jump ahead</h3>
+                <span className="text-[10px] uppercase font-bold text-[#9c6f1f]">
+                  You&apos;re skipping {readinessCheck.skippedIds.length} concept{readinessCheck.skippedIds.length === 1 ? '' : 's'}
+                </span>
+              </div>
+            </div>
+            <p className="text-xs text-[#16241f]/70 mb-4">
+              Let&apos;s make sure the earlier bits are solid first - answer these, then you&apos;re free to move on.
+            </p>
+
+            <div className="space-y-4">
+              {readinessCheck.questions.map((q, qi) => (
+                <div key={qi} className="rounded-xl border border-[#16241f]/10 bg-white p-3">
+                  <p className="text-xs font-bold text-[#16241f] mb-2">{q.question}</p>
+                  <div className="space-y-1.5">
+                    {q.options.map((opt, oi) => (
+                      <button
+                        key={oi}
+                        disabled={readinessCheck.result !== null}
+                        onClick={() =>
+                          setReadinessCheck({ ...readinessCheck, answers: { ...readinessCheck.answers, [qi]: oi } })
+                        }
+                        className={`w-full text-left px-3 py-1.5 rounded-lg border text-xs transition-all ${
+                          readinessCheck.answers[qi] === oi
+                            ? 'border-[#16241f] bg-[#16241f] text-white font-bold'
+                            : 'border-[#16241f]/10 bg-[#f4f6f1] hover:border-[#16241f]/30'
+                        } disabled:opacity-60`}
+                      >
+                        {opt}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {readinessCheck.result === 'fail' && (
+              <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50 p-3 text-xs text-amber-800">
+                💡 A few of these need another look. It&apos;s worth going back and covering the earlier concepts
+                first - but it&apos;s your call.
+                <div className="mt-2 flex flex-wrap gap-2">
+                  <button
+                    onClick={() => {
+                      setActiveConceptId(readinessCheck.skippedIds[0]);
+                      setReadinessCheck(null);
+                    }}
+                    className="rounded-lg bg-[#9c6f1f] px-3 py-1.5 text-white font-bold"
+                  >
+                    Review earlier concepts first
+                  </button>
+                  <button
+                    onClick={() => {
+                      setActiveConceptId(readinessCheck.targetConceptId);
+                      setReadinessCheck(null);
+                    }}
+                    className="rounded-lg border border-amber-300 px-3 py-1.5 text-amber-800"
+                  >
+                    Continue anyway
+                  </button>
+                </div>
+              </div>
+            )}
+            {readinessCheck.result === 'pass' && (
+              <p className="mt-4 text-xs font-bold text-emerald-600">✅ Nice - you&apos;ve got it. Moving on...</p>
+            )}
+
+            {readinessCheck.result === null && (
+              <div className="mt-4 flex justify-end gap-2">
+                <button
+                  onClick={() => setReadinessCheck(null)}
+                  className="text-[10px] text-[#16241f]/50 hover:underline"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={submitReadinessCheck}
+                  disabled={Object.keys(readinessCheck.answers).length < readinessCheck.questions.length}
+                  className="rounded-lg bg-[#16241f] px-4 py-2 text-xs font-bold text-white disabled:opacity-40"
+                >
+                  Check my answers
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

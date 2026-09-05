@@ -120,6 +120,27 @@ export default async function LearnPage({ params }: { params: Promise<{ unitId: 
     : null;
   const nextUnit = nextUnitRow?.available ? { unitKey: nextUnitRow.unitKey, title: nextUnitRow.title } : null;
 
+  // Real, persisted mastery + the "our class has covered up to here" marker
+  // (real feedback 2026-09-05) - both power UnitView's out-of-sequence
+  // readiness check: jumping past a concept that's neither mastered nor
+  // covered by this marker triggers a quick check first. Previously the
+  // sidebar's checkmarks were session-only React state, reset on every
+  // reload and useless for a real gate.
+  const [masteredRows, unitProgressRow] = unitRow
+    ? await Promise.all([
+        db.conceptMastery.findMany({
+          where: { studentProfileId: profile.id, concept: { unitId: unitRow.id } },
+          select: { concept: { select: { conceptKey: true } } },
+        }),
+        db.unitProgress.findUnique({
+          where: { studentProfileId_unitId: { studentProfileId: profile.id, unitId: unitRow.id } },
+          select: { taughtUpToConceptKey: true },
+        }),
+      ])
+    : [[], null];
+  const masteredConceptKeys = masteredRows.map((m) => m.concept.conceptKey);
+  const taughtUpToConceptKey = unitProgressRow?.taughtUpToConceptKey ?? null;
+
   // "While starting a unit, recollect main points from the previous unit and
   // move forward" (real feedback 2026-09-05) - a short recap of the unit
   // right before this one, shown once on the overview screen rather than
@@ -198,6 +219,8 @@ export default async function LearnPage({ params }: { params: Promise<{ unitId: 
         latestTestAttempt={latestTestAttempt}
         nextUnit={nextUnit}
         previousUnitRecap={previousUnitRecap}
+        masteredConceptKeys={masteredConceptKeys}
+        taughtUpToConceptKey={taughtUpToConceptKey}
       />
     </main>
     </AppShell>
