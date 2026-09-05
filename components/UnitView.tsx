@@ -4,6 +4,8 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import WidgetDispatcher from './interactive/WidgetDispatcher';
 import { getWidgetForConcept } from '@/lib/interactiveWidgets';
 import type { CurriculumUnit, Concept } from '@/lib/types';
+import UnitOverview from './UnitOverview';
+import UnitDiagnostic from './UnitDiagnostic';
 
 interface Message {
   id: string;
@@ -41,6 +43,26 @@ export function UnitView({
   const [activePage, setActivePage] = useState(activeConcepts[0]?.page || 1);
   const [isBookletCollapsed, setIsBookletCollapsed] = useState(false);
   const [starCount, setStarCount] = useState(40);
+
+  // Overview -> optional diagnostic -> lesson. Every unit lands on the
+  // overview first (objectives, lesson list, real upload/extract, the
+  // diagnostic-or-skip choice) instead of dropping straight into the chat -
+  // see UnitOverview.tsx/UnitDiagnostic.tsx, which existed already but had
+  // gone disconnected from routing entirely.
+  const [screen, setScreen] = useState<'overview' | 'diagnostic' | 'lesson'>('overview');
+  const [pageImages, setPageImages] = useState<string[]>(initialPageImages);
+
+  const handleStartDiagnostic = () => setScreen('diagnostic');
+  const handleSkipToTeaching = (conceptId?: string) => {
+    if (conceptId) setActiveConceptId(conceptId);
+    setScreen('lesson');
+  };
+  const handleReviewConcept = (conceptId: string) => {
+    setActiveConceptId(conceptId);
+    setScreen('lesson');
+  };
+  const handleAllMastered = () => setScreen('lesson');
+  const handlePageImagesUploaded = (paths: string[]) => setPageImages((prev) => [...prev, ...paths]);
 
   const [lessonState, setLessonState] = useState<'intro' | 'play_example' | 'challenge' | 'reassess' | 'complete'>('intro');
   const [chatHistory, setChatHistory] = useState<Message[]>([]);
@@ -174,7 +196,33 @@ export function UnitView({
   };
 
   const pageIndex = Math.max(0, activePage - 1);
-  const pageImage = initialPageImages[pageIndex] || null;
+  const pageImage = pageImages[pageIndex] || null;
+
+  if (screen === 'overview' && unit) {
+    return (
+      <UnitOverview
+        unit={unit}
+        unitKey={unitKey || ''}
+        pageImages={pageImages}
+        resourceGroups={resourceGroups || []}
+        onPageImagesUploaded={handlePageImagesUploaded}
+        onStartDiagnostic={handleStartDiagnostic}
+        onSkipToTeaching={handleSkipToTeaching}
+      />
+    );
+  }
+
+  if (screen === 'diagnostic' && unit) {
+    return (
+      <UnitDiagnostic
+        unit={unit}
+        unitKey={unitKey || ''}
+        questions={diagnosticQuestions || []}
+        onReviewConcept={handleReviewConcept}
+        onAllMastered={handleAllMastered}
+      />
+    );
+  }
 
   return (
     <div className="flex h-screen w-full bg-[#f4f6f1] overflow-hidden text-[#16241f] font-sans">
@@ -242,8 +290,11 @@ export function UnitView({
         </div>
 
         <div className="p-4 border-t border-[#16241f]/10 bg-white">
-          <button className="w-full py-2.5 rounded-xl border-2 border-dashed border-[#16241f]/20 text-[#16241f]/60 hover:text-[#16241f] hover:border-[#16241f]/40 transition-all font-sans font-bold text-xs flex items-center justify-center gap-1.5">
-            📂 Upload Any Textbook PDF
+          <button
+            onClick={() => setScreen('overview')}
+            className="w-full py-2.5 rounded-xl border-2 border-dashed border-[#16241f]/20 text-[#16241f]/60 hover:text-[#16241f] hover:border-[#16241f]/40 transition-all font-sans font-bold text-xs flex items-center justify-center gap-1.5"
+          >
+            📖 Unit overview &amp; textbook pages
           </button>
         </div>
       </aside>
