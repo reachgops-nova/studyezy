@@ -375,6 +375,7 @@ export default function AvatarChat({
   unitKey,
   concept,
   onAdvanceConcept,
+  onReachedPractice,
   hideSourceImage = false,
   hideIllustration = false,
 }: {
@@ -403,6 +404,15 @@ export default function AvatarChat({
   // in by UnitView.tsx (undefined on the unit's last concept, where there's
   // nothing to advance to).
   onAdvanceConcept?: () => void;
+  /**
+   * Fires once the explanation/checkpoints/micro-checks are actually done
+   * and the avatar is asking "ready to move on?" - real feedback
+   * (2026-09-05): the practice widget used to render unconditionally the
+   * whole time, "hanging separately at the bottom" even while Ezy was still
+   * mid-explanation. UnitView uses this to reveal the widget only once
+   * there's actually something to practise.
+   */
+  onReachedPractice?: () => void;
 }) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [readyForInput, setReadyForInput] = useState(false);
@@ -580,6 +590,7 @@ export default function AvatarChat({
     setReadyForInput(true);
     setAwaitingContinue(false);
     setAwaitingConceptAdvance(Boolean(onAdvanceConcept));
+    onReachedPractice?.();
   }
 
   function askMicroCheck(index: number, token: number) {
@@ -602,6 +613,7 @@ export default function AvatarChat({
       setReadyForInput(true);
       setAwaitingContinue(false);
       setAwaitingConceptAdvance(Boolean(onAdvanceConcept));
+      onReachedPractice?.();
       return;
     }
 

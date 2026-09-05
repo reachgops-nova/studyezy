@@ -19,7 +19,7 @@ export default async function SelectPage({
   const { terminalTestError } = await searchParams;
 
   const [catalog, assignedStageRef] = await Promise.all([
-    getCatalog(),
+    getCatalog(profile.id),
     profile.assignedStageId ? getStageRef(profile.assignedStageId) : Promise.resolve(null),
   ]);
 

@@ -137,6 +137,12 @@ export function UnitView({
   // advance past them at all. This is set from onSuccess directly instead.
   const [widgetCompleted, setWidgetCompleted] = useState(false);
   const [masteredConcepts, setMasteredConcepts] = useState<Record<string, boolean>>({});
+  // Real feedback (2026-09-05): the practice widget used to render the whole
+  // time, "hanging separately at the bottom" even while Ezy was still
+  // mid-explanation - a kid saw the activity before there was any reason to
+  // touch it. Now gated on AvatarChat's own onReachedPractice callback,
+  // which only fires once the explanation/checkpoints are actually done.
+  const [readyForPractice, setReadyForPractice] = useState(false);
 
   const currentWidget = getWidgetForConcept(activeConceptId);
   const currentConcept = concepts.find((c) => c.concept_id === activeConceptId);
@@ -152,6 +158,7 @@ export function UnitView({
     setCurrentSelection(null);
     setIsCorrectSelection(null);
     setWidgetCompleted(false);
+    setReadyForPractice(false);
   }, [activeConceptId, concepts]);
 
   const handleWidgetAttempt = (correct: boolean) => {
@@ -499,6 +506,7 @@ export function UnitView({
               unitKey={unitKey || ''}
               concept={currentConcept}
               onAdvanceConcept={hasNextConcept ? handleNextConcept : undefined}
+              onReachedPractice={() => setReadyForPractice(true)}
               hideSourceImage={!isBookletCollapsed}
               hideIllustration
             />
@@ -509,50 +517,54 @@ export function UnitView({
             </div>
           )}
 
-          {/* The widget is Ezy's practice activity for this concept, after the
-              conversation above teaches it - "Hear this activity" covers the
-              real gap where widget text (clue sentences, scenarios...) was
-              never read aloud, unlike every other piece of the lesson. */}
-          <div className="flex gap-3 max-w-[92%] mr-auto w-full">
-            <div className="w-8 h-8 rounded-full bg-[#9c6f1f]/15 flex items-center justify-center text-md flex-shrink-0 border border-[#9c6f1f]/10 shadow-sm">
-              🦘
-            </div>
-            <div className="flex-1 min-w-0">
-              {currentWidget && (
+          {/* The widget is Ezy's practice activity for this concept - only
+              shown once AvatarChat says it's actually reached that point
+              (onReachedPractice), not the whole time. Real feedback
+              (2026-09-05): it used to render unconditionally and "hang
+              separately at the bottom" while Ezy was still mid-explanation. */}
+          {currentWidget && readyForPractice && (
+            <div className="flex gap-3 max-w-[92%] mr-auto w-full animate-fade-in">
+              <div className="w-8 h-8 rounded-full bg-[#9c6f1f]/15 flex items-center justify-center text-md flex-shrink-0 border border-[#9c6f1f]/10 shadow-sm">
+                🦘
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="mb-1.5 text-xs font-sans font-bold text-[#16241f]">
+                  🎯 Time to practise! Read it aloud if that helps, then give it a try.
+                </p>
                 <button
                   onClick={speakWidgetAloud}
                   className="mb-1.5 flex items-center gap-1 text-[10px] font-sans font-bold text-[#9c6f1f] hover:underline"
                 >
                   🔊 Hear this activity
                 </button>
-              )}
-              <div className="w-full min-h-[280px] flex items-center justify-center">
-                <WidgetDispatcher
-                  conceptId={activeConceptId}
-                  unitKey={unitKey || ""}
-                  conceptTested={activeConceptId}
-                  isCorrect={isCorrectSelection}
-                  currentSelection={currentSelection}
-                  onAttempt={handleWidgetAttempt}
-                  onSuccess={() => {
-                    setStarCount((prev) => prev + 10);
-                    setWidgetCompleted(true);
-                  }}
-                />
-              </div>
-
-              {widgetCompleted && (
-                <div className="w-full max-w-md mx-auto mt-2 animate-bounce">
-                  <button
-                    onClick={handleNextConcept}
-                    className="w-full py-3 bg-[#9c6f1f] hover:bg-[#9c6f1f]/90 text-white font-sans font-bold text-xs uppercase tracking-wider rounded-xl transition-all duration-200 shadow-md flex items-center justify-center gap-2"
-                  >
-                    ✅ Mark finished &amp; continue
-                  </button>
+                <div className="w-full min-h-[280px] flex items-center justify-center">
+                  <WidgetDispatcher
+                    conceptId={activeConceptId}
+                    unitKey={unitKey || ""}
+                    conceptTested={activeConceptId}
+                    isCorrect={isCorrectSelection}
+                    currentSelection={currentSelection}
+                    onAttempt={handleWidgetAttempt}
+                    onSuccess={() => {
+                      setStarCount((prev) => prev + 10);
+                      setWidgetCompleted(true);
+                    }}
+                  />
                 </div>
-              )}
+
+                {widgetCompleted && (
+                  <div className="w-full max-w-md mx-auto mt-2 animate-bounce">
+                    <button
+                      onClick={handleNextConcept}
+                      className="w-full py-3 bg-[#9c6f1f] hover:bg-[#9c6f1f]/90 text-white font-sans font-bold text-xs uppercase tracking-wider rounded-xl transition-all duration-200 shadow-md flex items-center justify-center gap-2"
+                    >
+                      ✅ Mark finished &amp; continue
+                    </button>
+                  </div>
+                )}
+              </div>
             </div>
-          </div>
+          )}
         </div>
         </div>
       </section>

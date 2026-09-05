@@ -89,28 +89,52 @@ export default function CurriculumSelector({
       {subject && (
         <Step label="4. Unit">
           <div className="grid gap-2">
-            {subject.units.map((u) => (
-              <div
-                key={u.id}
-                className={`flex items-center justify-between rounded-xl border px-4 py-3 ${
-                  u.available ? "border-brand-gold/40 bg-brand-gold-bright/10" : "border-slate-200 bg-slate-50 text-slate-400"
-                }`}
-              >
-                <span>
-                  Unit {u.id}: {u.title}
-                </span>
-                {u.available ? (
-                  <Link
-                    href={`/learn/${curriculumId}-${stageId}-${subjectId}-${u.id}`}
-                    className="rounded-md bg-brand-ink px-3 py-1.5 text-sm font-medium text-white hover:bg-brand-ink-dark"
-                  >
-                    Start
-                  </Link>
-                ) : (
-                  <Badge>coming soon</Badge>
-                )}
-              </div>
-            ))}
+            {subject.units.map((u) => {
+              // Real feedback (2026-09-05): this list always said "Start",
+              // even for a unit already covered - undefined total/covered
+              // means getCatalog() was called without a profileId (not this
+              // page), so this degrades to the old plain "Start" then.
+              const hasProgress = u.totalConcepts !== undefined && u.coveredConcepts !== undefined;
+              const done = hasProgress && u.totalConcepts! > 0 && u.coveredConcepts === u.totalConcepts;
+              const started = hasProgress && (u.coveredConcepts ?? 0) > 0;
+              return (
+                <div
+                  key={u.id}
+                  className={`flex items-center justify-between gap-3 rounded-xl border px-4 py-3 ${
+                    u.available ? "border-brand-gold/40 bg-brand-gold-bright/10" : "border-slate-200 bg-slate-50 text-slate-400"
+                  }`}
+                >
+                  <div className="min-w-0">
+                    <span>
+                      Unit {u.id}: {u.title}
+                    </span>
+                    {u.available && hasProgress && u.totalConcepts! > 0 && (
+                      <div className="mt-1.5 flex items-center gap-2">
+                        <div className="h-1.5 w-24 overflow-hidden rounded-full bg-slate-200">
+                          <div
+                            className={`h-full rounded-full ${done ? "bg-emerald-500" : "bg-brand-gold"}`}
+                            style={{ width: `${Math.round(((u.coveredConcepts ?? 0) / u.totalConcepts!) * 100)}%` }}
+                          />
+                        </div>
+                        <span className="text-xs text-slate-500">
+                          {u.coveredConcepts}/{u.totalConcepts} covered
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                  {u.available ? (
+                    <Link
+                      href={`/learn/${curriculumId}-${stageId}-${subjectId}-${u.id}`}
+                      className="shrink-0 rounded-md bg-brand-ink px-3 py-1.5 text-sm font-medium text-white hover:bg-brand-ink-dark"
+                    >
+                      {done ? "Review" : started ? "Continue" : "Start"}
+                    </Link>
+                  ) : (
+                    <Badge>coming soon</Badge>
+                  )}
+                </div>
+              );
+            })}
           </div>
         </Step>
       )}

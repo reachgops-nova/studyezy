@@ -8,6 +8,10 @@ export interface CatalogUnit {
   id: number;
   title: string;
   available: boolean;
+  /** Total concepts currently drafted for this unit - undefined when getCatalog() was called without a profileId. */
+  totalConcepts?: number;
+  /** How many of those this student has a ConceptMastery row for (attempted via a widget or test, not just viewed). */
+  coveredConcepts?: number;
 }
 
 export interface CatalogSubject {
@@ -30,7 +34,13 @@ export interface CatalogCurriculum {
   stages: CatalogStage[];
 }
 
-export async function getCatalog(): Promise<CatalogCurriculum[]> {
+// profileId is optional (SwitcherGroup/AppShell's own catalog read below
+// doesn't need per-student progress, just the tree) - when passed (from
+// /select, real feedback 2026-09-05: "it again stays to start... it should
+// have status how much covered" - a unit list that never reflected any
+// progress), each unit also carries totalConcepts/coveredConcepts so the
+// picker can show real progress instead of a flat "Start" every time.
+export async function getCatalog(profileId?: string): Promise<CatalogCurriculum[]> {
   const curricula = await db.curriculum.findMany({
     include: {
       stages: {
@@ -38,12 +48,28 @@ export async function getCatalog(): Promise<CatalogCurriculum[]> {
         include: {
           subjects: {
             orderBy: { name: "asc" },
-            include: { units: { orderBy: { number: "asc" } } },
+            include: {
+              units: {
+                orderBy: { number: "asc" },
+                include: { concepts: { select: { id: true } } },
+              },
+            },
           },
         },
       },
     },
   });
+
+  const coveredConceptIds = profileId
+    ? new Set(
+        (
+          await db.conceptMastery.findMany({
+            where: { studentProfileId: profileId },
+            select: { conceptId: true },
+          })
+        ).map((m) => m.conceptId)
+      )
+    : null;
 
   return curricula.map((c) => ({
     id: c.slug,
@@ -60,6 +86,10 @@ export async function getCatalog(): Promise<CatalogCurriculum[]> {
           id: u.number,
           title: u.title,
           available: u.available,
+          totalConcepts: coveredConceptIds ? u.concepts.length : undefined,
+          coveredConcepts: coveredConceptIds
+            ? u.concepts.filter((concept) => coveredConceptIds.has(concept.id)).length
+            : undefined,
         })),
       })),
     })),
