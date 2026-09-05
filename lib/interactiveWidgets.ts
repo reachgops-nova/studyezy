@@ -420,6 +420,511 @@ export const WIDGETS_BY_CONCEPT: Record<string, InteractiveWidget> = {
       ],
     },
   },
+
+  // 2026-09-05: Units 2 (remainder) through 9's widgets - all grounded in the
+  // real Hodder Cambridge Primary English Learner's Book 5, re-read page by
+  // page (content/textbook-pages has Unit 1's own scans; these later pages
+  // were read directly from the PDF, not re-saved as repo assets - only
+  // Unit 1 has a live booklet gallery today). Same discipline as the rest
+  // of this file: no invented content, and each concept reuses whichever
+  // existing widget kind's real mechanic actually fits, not just its name.
+
+  "2.3": {
+    id: "W17",
+    title: "Formal or Informal?",
+    instruction: "Register means choosing language to suit your audience. Read the situation, then choose the register that fits.",
+    spec: {
+      kind: "predictive_brancher",
+      scenario: "You are writing a news report about an important event, for a serious, general audience.",
+      choices: [
+        { text: "A formal register - precise, serious language, no slang.", correct: true, feedback: "Exactly! A news report needs a formal register - the audience expects careful, serious reporting, not casual chat." },
+        { text: "A chatty, informal register full of slang, like texting a friend.", correct: false, feedback: "Not for a news report - that casual register would undermine how seriously the audience takes the report." },
+      ],
+    },
+  },
+
+  "2.4": {
+    id: "W18",
+    title: "Find a Stronger Synonym",
+    instruction: "Good writers vary their vocabulary instead of repeating the same word. Tap each overused word, then tap its stronger synonym.",
+    spec: {
+      kind: "idiom_connector",
+      items: [
+        { idiom: "hit (overused)", meaning: "strike" },
+        { idiom: "beat (overused)", meaning: "annihilate" },
+        { idiom: "best (overused)", meaning: "victorious" },
+        { idiom: "opponent (overused)", meaning: "adversary" },
+      ],
+    },
+  },
+
+  "2.5": {
+    id: "W19",
+    title: "Fact or Opinion in a Biography?",
+    instruction: "A fact can be proven true. An opinion is a belief, even one many people share. Sort this line from Joey Alexander's biography.",
+    spec: {
+      kind: "fact_opinion",
+      statements: [
+        { text: "Many people believed Joey Alexander was the world's best young musician.", answer: "Opinion", hint: "'Best' is a judgement - impossible to prove, even if lots of people agree." },
+      ],
+    },
+  },
+
+  "3.1": {
+    id: "W20",
+    title: "Count the Syllables",
+    instruction: "Narrative poems are built from words and their syllables. Tap each word, then tap how many syllables it has.",
+    spec: {
+      kind: "idiom_connector",
+      items: [
+        { idiom: "bat", meaning: "1 syllable" },
+        { idiom: "orange", meaning: "2 syllables" },
+        { idiom: "tomato", meaning: "3 syllables" },
+        { idiom: "mysterious", meaning: "4 syllables" },
+      ],
+    },
+  },
+
+  "3.2": {
+    id: "W21",
+    title: "What Does This Suggest About Neil?",
+    instruction: "In Valerie Bloom's poem, Neil keeps insisting he must 'teck a sandwich' even though Granny Lenore offers delicious home-cooked food instead. What does this suggest about Neil's character?",
+    spec: {
+      kind: "predictive_brancher",
+      scenario: "Neil repeats that he must 'teck a sandwich', even as Granny Lenore piles up corn pone, chicken and jerk meat for him to take instead.",
+      choices: [
+        { text: "He genuinely dislikes his grandmother's cooking.", correct: false, feedback: "The poem never suggests Neil dislikes the food - he even ends up wishing he could bring it!" },
+        { text: "He wants to fit in and follow what he was told to bring, even when a better option is right there.", correct: true, feedback: "Exactly! Neil repeating 'teck a sandwich' suggests he cares about following the rule and fitting in with the other children." },
+      ],
+    },
+  },
+
+  "3.3": {
+    id: "W22",
+    title: "Punctuate the Dialogue",
+    instruction: "A reporting clause can come before, after, or inside direct speech - each needs its own punctuation. Tap the unpunctuated line, then tap its correctly punctuated version.",
+    spec: {
+      kind: "idiom_connector",
+      items: [
+        { idiom: "Where asked the teacher is your sandwich", meaning: "'Where,' asked the teacher, 'is your sandwich?'" },
+        { idiom: "Make sure you bring a sandwich said the teacher", meaning: "'Make sure you bring a sandwich,' said the teacher." },
+      ],
+    },
+  },
+
+  "3.4": {
+    id: "W23",
+    title: "What Does This Metaphor Mean?",
+    instruction: "A metaphor says one thing IS another to create a strong image. Tap each metaphor, then tap what it really means.",
+    spec: {
+      kind: "trait_matcher",
+      pairs: [
+        { character: "Her anger is a volcano.", trait: "Her anger can suddenly explode powerfully, like a volcano erupting." },
+        { character: "His heart is a stone.", trait: "He is cold and shows no feeling, as hard and unfeeling as a stone." },
+        { character: "The moon was a ghostly ship upon the cloudy seas.", trait: "The moon looks pale and drifts silently across the sky, like a ship sailing at night." },
+      ],
+    },
+  },
+
+  "3.5": {
+    id: "W24",
+    title: "Spot the Personification",
+    instruction: "Personification describes something not human as if it were a person. Tap the highlighted parts of 'Emily Hurricane' to see the personification.",
+    spec: {
+      kind: "biography_scanner",
+      passage: [
+        { text: "Woke up this morning to a breakfast sky, fed the kitten marmalade, had some sunshine in my tea, and then went out to greet the day, met " },
+        { text: "Miss Emily Hurricane", feature: "🌪️ Personification - a hurricane is given a human name and title, 'Miss'." },
+        { text: ". She said, 'Wouldn't you like to swim in the sky, " },
+        { text: "sail with the trees as they go whizzing by, dance with the rooftops", feature: "💃 Personification - the wind is described doing human actions: sailing and dancing." },
+        { text: " as they go bubbling?' " },
+        { text: "She had silver hair but it was kind of wild, electricity for eyes and a crackling laugh", feature: "😄 Personification - the hurricane is given human hair, eyes, and a laugh." },
+        { text: "." },
+      ],
+    },
+  },
+
+  "4.1": {
+    id: "W25",
+    title: "Features of an Information Text",
+    instruction: "Information texts share common features. Match each feature to its real example.",
+    spec: {
+      kind: "trait_matcher",
+      pairs: [
+        { character: "Sub-headings and sections", trait: "Break the text into topics so a reader can find information quickly." },
+        { character: "Diagrams and pictures with labels", trait: "Show what something looks like or how it works, like a volcano cross-section." },
+        { character: "Technical vocabulary", trait: "Specific words for the topic, such as 'lava', 'magma' and 'ash cloud' for a volcano text." },
+      ],
+    },
+  },
+
+  "4.2": {
+    id: "W26",
+    title: "Spot the Explanation Process",
+    instruction: "An explanation text describes a process in order, often using time words. Tap the highlighted parts of this passage about sea ice.",
+    spec: {
+      kind: "biography_scanner",
+      passage: [
+        { text: "During the short polar summer, some ice melts. " },
+        { text: "Over time", feature: "⏳ Time-order word - shows this process happens in stages." },
+        { text: ", this grease ice thickens up and forms discs. " },
+        { text: "Eventually", feature: "⏳ Time-order word - signals the next stage in the process." },
+        { text: ", as these discs are pushed together, they jam together to build an ice floe, and " },
+        { text: "finally they join up to form a mighty sheet of pack ice", feature: "✅ Final stage - explanations often end by showing the finished result." },
+        { text: "." },
+      ],
+    },
+  },
+
+  "4.3": {
+    id: "W27",
+    title: "How Do You Scan For This?",
+    instruction: "Scanning tips depend on the question word. Read the scenario, then choose the right scanning strategy.",
+    spec: {
+      kind: "predictive_brancher",
+      scenario: "You need to answer 'Where do coral reefs form?' while scanning the Coral Reefs information text.",
+      choices: [
+        { text: "Look for a specific place in the answer, like 'warm shallow seas' or 'The Great Barrier Reef'.", correct: true, feedback: "Right - 'where' questions need a place in the answer, exactly as the text's own scanning tips say." },
+        { text: "Look for a list of numbered steps.", correct: false, feedback: "That's how you'd scan a 'how' question - a 'where' question needs a place, not a process." },
+      ],
+    },
+  },
+
+  "4.4": {
+    id: "W28",
+    title: "Register and Suffixes",
+    instruction: "Information texts vary in style, and use suffixes to build topic words. Match each item to what it means.",
+    spec: {
+      kind: "idiom_connector",
+      items: [
+        { idiom: "Presents facts with a serious, impersonal tone", meaning: "Formal style" },
+        { idiom: "Uses simple language with fun features like alliteration and rhyme", meaning: "Informal style" },
+        { idiom: "-graphy suffix, as in biography", meaning: "means 'writing'" },
+        { idiom: "-ology suffix, as in biology", meaning: "means 'the study of something'" },
+      ],
+    },
+  },
+
+  "5.1": {
+    id: "W29",
+    title: "What Does This Verb Choice Suggest?",
+    instruction: "Writers choose specific verbs and adverbs to show feelings without stating them directly.",
+    spec: {
+      kind: "predictive_brancher",
+      scenario: "The writer chooses 'Hugo trudged up the staircase... reluctantly... with heavy footsteps' instead of simply 'Hugo walked up the stairs'.",
+      choices: [
+        { text: "Hugo is excited and eager to reach the top.", correct: false, feedback: "'Trudged reluctantly' is the opposite of eager - that word choice suggests the climb feels unwanted." },
+        { text: "Hugo feels tired or unwilling - the climb feels like hard, unwanted work.", correct: true, feedback: "Exactly! 'Trudged', 'reluctantly' and 'heavy footsteps' all work together to suggest Hugo doesn't want to make this climb." },
+      ],
+    },
+  },
+
+  "5.2": {
+    id: "W30",
+    title: "Concrete or Abstract Noun?",
+    instruction: "Concrete nouns are physical things; abstract nouns are ideas. Tap each noun, then tap its type.",
+    spec: {
+      kind: "idiom_connector",
+      items: [
+        { idiom: "clocks", meaning: "Concrete noun - a physical thing you can touch or see" },
+        { idiom: "knowledge", meaning: "Abstract noun - an idea, not something physical" },
+        { idiom: "automaton", meaning: "Concrete noun - a physical wind-up machine" },
+        { idiom: "imagination", meaning: "Abstract noun - a thought, not something physical" },
+      ],
+    },
+  },
+
+  "5.3": {
+    id: "W31",
+    title: "Film Shot Types",
+    instruction: "Storyboards plan how a story becomes a film. Match each shot type to what it shows the audience.",
+    spec: {
+      kind: "trait_matcher",
+      pairs: [
+        { character: "Close-up", trait: "Shows a character's face in detail, so the audience can see their exact feelings." },
+        { character: "Low-angle shot", trait: "Makes the character or object seem more important or powerful." },
+        { character: "High-angle shot", trait: "Makes the character seem less powerful." },
+        { character: "Over-the-shoulder shot", trait: "Shows events from a character's own viewpoint." },
+      ],
+    },
+  },
+
+  "6.1": {
+    id: "W32",
+    title: "Match the Adverb and Adjective",
+    instruction: "Writers pair adverbs with adjectives to intensify feeling. Tap each adverb, then tap the adjective it pairs with in the extract.",
+    spec: {
+      kind: "idiom_connector",
+      items: [
+        { idiom: "bitterly", meaning: "disappointed" },
+        { idiom: "highly", meaning: "confident" },
+        { idiom: "completely", meaning: "overwhelmed" },
+        { idiom: "painfully", meaning: "shy" },
+      ],
+    },
+  },
+
+  "6.2": {
+    id: "W33",
+    title: "Use the Context Clues",
+    instruction: "You can often work out an unfamiliar word's meaning from the words around it, without a dictionary.",
+    spec: {
+      kind: "predictive_brancher",
+      scenario: "In the extract, the roc's talons are described as 'frighteningly sharp, like Damascus steel blades' as they slash down on the snake's skin.",
+      choices: [
+        { text: "The surrounding words 'frighteningly sharp' and the action of 'slashing down' - these tell you Damascus steel blades must be dangerously sharp.", correct: true, feedback: "Exactly! Even without knowing the phrase, the surrounding words give you a strong context clue." },
+        { text: "The word 'Damascus' just sounds like a sharp word.", correct: false, feedback: "Not quite - it's the surrounding description ('frighteningly sharp', 'slashing') that gives the real clue, not how the word sounds." },
+      ],
+    },
+  },
+
+  "6.3": {
+    id: "W34",
+    title: "Possibility or Certainty?",
+    instruction: "Modal verbs show how possible or certain something is. Match each example to what it shows.",
+    spec: {
+      kind: "trait_matcher",
+      pairs: [
+        { character: "My keys might be in my bag.", trait: "Possibility - it's possible, but not certain." },
+        { character: "The storm could get worse.", trait: "Possibility - things could still change." },
+        { character: "We couldn't have won that race!", trait: "Certainty about the past - looking back, it was impossible." },
+      ],
+    },
+  },
+
+  "6.4": {
+    id: "W35",
+    title: "Complete the Adverbial Phrase",
+    instruction: "Adverbial phrases (often -ing forms) add vivid detail to a sentence. Tap each sentence opener, then tap the phrase that completes it.",
+    spec: {
+      kind: "idiom_connector",
+      items: [
+        { idiom: "The raft moved uncertainly, ...", meaning: "tossing and turning in the current." },
+        { idiom: "Sinbad stared ahead, ...", meaning: "holding his breath." },
+        { idiom: "Suddenly, a light appeared, ...", meaning: "gleaming in the darkness." },
+      ],
+    },
+  },
+
+  "6.5": {
+    id: "W36",
+    title: "What's the Theme?",
+    instruction: "Classic literature often carries a bigger theme beyond the story itself. Match each voyage summary to its theme.",
+    spec: {
+      kind: "trait_matcher",
+      pairs: [
+        { character: "\"I learned my lesson about the folly of being selfish and the benefits of working together.\"", trait: "Theme: teamwork matters more than acting alone." },
+        { character: "\"I set up an organisation that promoted the good care of the animals we use.\"", trait: "Theme: caring for animals and treating them kindly." },
+        { character: "\"I am reminded that there is great power in storytelling.\"", trait: "Theme: stories have the power to shape who we are." },
+      ],
+    },
+  },
+
+  "7.1": {
+    id: "W37",
+    title: "Reading a Playscript",
+    instruction: "A playscript uses a specific layout. Tap the highlighted parts of this line to see what each part is for.",
+    spec: {
+      kind: "biography_scanner",
+      passage: [
+        { text: "LITTLE OLD MAN", feature: "🎭 Character name in capitals - tells the actor whose line comes next." },
+        { text: ": " },
+        { text: "[Whispering]", feature: "🎬 Stage direction - tells the actor HOW to say the line." },
+        { text: " You see this? ", feature: "💬 The actual words the actor speaks aloud." },
+        { text: "[Waving the bag in front of JAMES' face]", feature: "🎬 Stage direction - tells the actor WHAT to do while speaking." },
+      ],
+    },
+  },
+
+  "7.2": {
+    id: "W38",
+    title: "Stagecraft Effects",
+    instruction: "Lighting, sound and movement all help tell a story on stage. Match each stagecraft choice to its effect.",
+    spec: {
+      kind: "trait_matcher",
+      pairs: [
+        { character: "Flashing lights", trait: "Lets the audience only partly see what's happening - builds tension." },
+        { character: "Creaking and groaning sounds", trait: "Suggests something heavy is beginning to move, even before you see it." },
+        { character: "Characters spinning slowly in a circle", trait: "Shows a giant peach beginning to roll, without a real peach on stage." },
+      ],
+    },
+  },
+
+  "7.3": {
+    id: "W39",
+    title: "Direct to Reported Speech",
+    instruction: "Reported speech changes the verb tense and sometimes the pronoun. Tap each direct-speech line, then tap its reported-speech version.",
+    spec: {
+      kind: "idiom_connector",
+      items: [
+        { idiom: "\"I like spaghetti.\" (direct)", meaning: "He said that he liked spaghetti. (reported)" },
+        { idiom: "\"I bought a new bike.\" (direct)", meaning: "He said that he had bought a new bike. (reported)" },
+        { idiom: "\"I will see you later.\" (direct)", meaning: "She said that she would see me later. (reported)" },
+        { idiom: "\"I should polish my boots.\" (direct, modal)", meaning: "He said that he should polish his boots. (modal verbs don't change!)" },
+      ],
+    },
+  },
+
+  "7.4": {
+    id: "W40",
+    title: "Whose Viewpoint Is This?",
+    instruction: "In a play, different characters on stage at once can react very differently to the same moment.",
+    spec: {
+      kind: "predictive_brancher",
+      scenario: "Centipede shouts 'That's ridiculous! I don't believe it!' about the Cloud-Men making hailstones in summer, while James is fascinated and excited by the same thing.",
+      choices: [
+        { text: "All characters in a play must always agree with each other.", correct: false, feedback: "Not at all - that would make for a very flat play! Real characters react differently." },
+        { text: "Different characters on stage at the same moment can have completely different reactions and viewpoints.", correct: true, feedback: "Exactly! James's excitement and Centipede's disbelief show two genuine viewpoints existing side by side." },
+      ],
+    },
+  },
+
+  "8.1": {
+    id: "W41",
+    title: "Unstressed Vowel Sounds",
+    instruction: "Some vowel-plus-r spellings sound like 'uh' when unstressed. Tap each spelling pattern, then tap a word that uses it.",
+    spec: {
+      kind: "idiom_connector",
+      items: [
+        { idiom: "er (unstressed, sounds like 'uh')", meaning: "water" },
+        { idiom: "ar (unstressed, sounds like 'uh')", meaning: "dollar" },
+        { idiom: "or (unstressed, sounds like 'uh')", meaning: "sailor" },
+        { idiom: "ur (unstressed, sounds like 'uh')", meaning: "lemur" },
+      ],
+    },
+  },
+
+  "8.2": {
+    id: "W42",
+    title: "Spot the Sound Devices",
+    instruction: "Poets use repetition and alliteration to build rhythm. Tap the highlighted parts of 'The Coromandel Fishers'.",
+    spec: {
+      kind: "biography_scanner",
+      passage: [
+        { text: "Rise, brothers, rise", feature: "🔁 Repetition - repeating the word for rhythm and urgency." },
+        { text: "; the wakening skies pray to the morning light, the wind lies asleep in the arms of the dawn like a child that has cried all night. " },
+        { text: "Row, brothers, row", feature: "🔁 Repetition + alliteration - repeats for rhythm, and the R sounds echo each other." },
+        { text: " to the edge of the verge, where the low sky mates with the sea." },
+      ],
+    },
+  },
+
+  "8.3": {
+    id: "W43",
+    title: "One Word, Many Meanings",
+    instruction: "A homonym is spelled and sounds the same but has different meanings. Tap each use of 'bow', then tap its meaning.",
+    spec: {
+      kind: "idiom_connector",
+      items: [
+        { idiom: "tie a bow in your shoelaces", meaning: "bow = a knot with two loops" },
+        { idiom: "use a bow to play a violin", meaning: "bow = the stick used to play a stringed instrument" },
+        { idiom: "take a bow after the performance", meaning: "bow = bending forward to show thanks" },
+      ],
+    },
+  },
+
+  "8.4": {
+    id: "W44",
+    title: "What Mood Does This Create?",
+    instruction: "Writers create mood through their choice of details and language.",
+    spec: {
+      kind: "predictive_brancher",
+      scenario: "\"Jo strolled along in the sunshine, whistling her favourite tune.\"",
+      choices: [
+        { text: "A positive, happy mood - 'strolled', 'sunshine' and 'whistling a favourite tune' all suggest calm happiness.", correct: true, feedback: "Exactly right! Every word choice here builds a calm, happy mood." },
+        { text: "A negative, fearful mood.", correct: false, feedback: "Not this line - words like 'sunshine' and 'favourite tune' are warm and positive, not fearful." },
+      ],
+    },
+  },
+
+  "8.5": {
+    id: "W45",
+    title: "Common Exception Words",
+    instruction: "Some words don't follow common spelling rules and must be learned by sight. Match each word to its memory aid.",
+    spec: {
+      kind: "idiom_connector",
+      items: [
+        { idiom: "necessary", meaning: "Mnemonic: 'Never Eat Cake, Eat Salad Sandwiches And Remain Young'." },
+        { idiom: "efficient", meaning: "Breaks the 'i before e except after c' rule - learn it by sight." },
+        { idiom: "ancient", meaning: "Also breaks the usual ie/ei rule - learn it by sight." },
+      ],
+    },
+  },
+
+  "9.1": {
+    id: "W46",
+    title: "Persuasive Devices",
+    instruction: "Persuasive texts use specific devices to convince a reader. Match each device to its real example.",
+    spec: {
+      kind: "idiom_connector",
+      items: [
+        { idiom: "Rhetorical question", meaning: "\"Can you imagine the perfect sunset?\" - not meant to be answered, just to make the reader think." },
+        { idiom: "Exaggeration", meaning: "\"The most amazing ride in the world\" - makes something sound bigger than it really is." },
+        { idiom: "Alliteration", meaning: "\"Dan's delicious doughnuts\" - repeating the same starting sound for effect." },
+        { idiom: "Imperative verb", meaning: "\"Take a ride with us!\" - a command that tells the reader what to do." },
+      ],
+    },
+  },
+
+  // No single clean "countable/uncountable nouns" page was found near this
+  // concept's cited page (163) - that page turned out to repeat the
+  // facts/opinions content from 9.3 instead. Grounded in this unit's own
+  // recurring ocean/plastic-pollution theme (pages 156-163) rather than
+  // invented from nothing.
+  "9.2": {
+    id: "W47",
+    title: "Countable or Uncountable?",
+    instruction: "Countable nouns can be counted one by one; uncountable nouns need a quantifier instead. Tap each noun, then tap its type.",
+    spec: {
+      kind: "idiom_connector",
+      items: [
+        { idiom: "bottle (countable)", meaning: "one bottle, two bottles, 'a few bottles'" },
+        { idiom: "plastic (uncountable)", meaning: "not 'two plastics' - 'a lot of plastic', 'some plastic'" },
+        { idiom: "ocean (countable)", meaning: "one ocean, several oceans" },
+        { idiom: "water (uncountable)", meaning: "'a lot of water', 'a little water', not 'two waters'" },
+      ],
+    },
+  },
+
+  "9.3": {
+    id: "W48",
+    title: "Fact, Opinion, or Viewpoint?",
+    instruction: "Persuasive writing mixes facts, opinions, and an overall viewpoint. Sort this real statement about the ocean.",
+    spec: {
+      kind: "fact_opinion",
+      statements: [
+        { text: "The oceans are a fantastic, vast and wonderful playground for swimming, snorkelling, splashing and surfing!", answer: "Opinion", hint: "Words like 'fantastic' and 'wonderful' are the writer's own feelings, not provable facts." },
+      ],
+    },
+  },
+
+  "9.4": {
+    id: "W49",
+    title: "Why Build an Imaginative Picture?",
+    instruction: "Persuasive writers sometimes paint a vivid, imaginative picture instead of just stating an opinion plainly.",
+    spec: {
+      kind: "predictive_brancher",
+      scenario: "\"Imagine standing on a spotless beach, staring out at a vast ocean, free of plastic, pulsing with life... Pufflings fly, for the first time, flapping madly against the breeze.\"",
+      choices: [
+        { text: "It helps the reader FEEL what a plastic-free ocean would be like, making them want to help create that future.", correct: true, feedback: "Exactly! An imaginative picture makes the reader want the future the writer is describing, not just informs them." },
+        { text: "It makes the letter sound more like a boring textbook.", correct: false, feedback: "The opposite, really - imaginative description is what makes persuasive writing feel alive, not textbook-dry." },
+      ],
+    },
+  },
+
+  "9.5": {
+    id: "W50",
+    title: "Persuading Different Audiences",
+    instruction: "The same writer needs different language for different audiences.",
+    spec: {
+      kind: "predictive_brancher",
+      scenario: "Greta Thunberg wants to persuade world leaders to act on climate change, and separately wants to persuade her own friends to recycle more.",
+      choices: [
+        { text: "Yes - the exact same formal speech works equally well for everyone.", correct: false, feedback: "Not quite - a speech written for world leaders would feel stiff and distant to a group of friends." },
+        { text: "No - leaders need more formal language and hard facts; friends need informal, relatable language they connect with.", correct: true, feedback: "Exactly right! Choosing language for your audience is central to persuasive writing." },
+      ],
+    },
+  },
 };
 
 export function getWidgetForConcept(conceptId: string): InteractiveWidget | undefined {
