@@ -368,7 +368,9 @@ export function UnitView({
         </div>
       </main>
 
-      {/* COLUMN 3: INTERACTIVE WORKSPACE */}
+      {/* COLUMN 3: EZY'S CONVERSATION - explanation, checks, and the widget all
+          share one scrolling thread instead of the widget sitting in a
+          separate panel above a small chat box (ledger item 2). */}
       <section className="flex-1 min-w-[380px] flex flex-col bg-[#f4f6f1] overflow-hidden relative">
         {isBookletCollapsed && (
           <div className="p-3 bg-white border-b border-[#16241f]/10 flex items-center justify-between">
@@ -382,112 +384,117 @@ export function UnitView({
           </div>
         )}
 
-        <div className="flex-1 p-6 flex flex-col justify-between overflow-y-auto">
-          <div className="w-full flex-1 flex items-center justify-center my-2 min-h-[280px]">
-            <WidgetDispatcher
-              conceptId={activeConceptId}
-              unitKey={unitKey || ""}
-              conceptTested={activeConceptId}
-              isCorrect={isCorrectSelection}
-              currentSelection={currentSelection}
-              onAttempt={handleWidgetAttempt}
-              onSuccess={() => {
-                setStarCount(prev => prev + 10);
-                setLessonState('challenge');
-              }}
-            />
+        <div className="px-4 py-2 border-b border-[#16241f]/5 bg-gray-50 flex items-center justify-between shrink-0">
+          <div className="flex items-center gap-2">
+            <span className="w-2.5 h-2.5 rounded-full bg-orange-500 animate-pulse" />
+            <span className="text-[10px] font-sans font-bold uppercase tracking-wider text-[#16241f]/60">
+              Ezy the Kangaroo Live Voice Session
+            </span>
           </div>
-
-          {isCorrectSelection && (
-            <div className="w-full max-w-md mx-auto my-2 animate-bounce">
-              <button
-                onClick={handleNextConcept}
-                className="w-full py-3 bg-[#9c6f1f] hover:bg-[#9c6f1f]/90 text-white font-sans font-bold text-xs uppercase tracking-wider rounded-xl transition-all duration-200 shadow-md flex items-center justify-center gap-2"
-              >
-                🎉 Next Challenge ➡️
-              </button>
+          {isTTSLoading && (
+            <span className="text-[9px] font-sans font-bold text-[#9c6f1f] animate-pulse">Ezy is loading voice...</span>
+          )}
+          {isVoiceSpeaking && !isTTSLoading && (
+            <div className="flex items-center gap-1.5">
+              <span className="text-[9px] font-sans font-bold text-[#9c6f1f] animate-pulse">Ezy is speaking...</span>
+              <span className="w-1.5 h-4 bg-[#9c6f1f] animate-bounce" />
+              <span className="w-1.5 h-6 bg-[#9c6f1f] animate-bounce" style={{ animationDelay: '0.1s' }} />
             </div>
           )}
         </div>
 
-        {/* BOTTOM PANEL: EZY'S CHAT */}
-        <div className="h-64 bg-white border-t border-[#16241f]/10 flex flex-col shadow-inner">
-          <div className="px-4 py-2 border-b border-[#16241f]/5 bg-gray-50 flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <span className="w-2.5 h-2.5 rounded-full bg-orange-500 animate-pulse" />
-              <span className="text-[10px] font-sans font-bold uppercase tracking-wider text-[#16241f]/60">
-                Ezy the Kangaroo Live Voice Session
-              </span>
-            </div>
-            {isTTSLoading && (
-              <span className="text-[9px] font-sans font-bold text-[#9c6f1f] animate-pulse">Ezy is loading voice...</span>
-            )}
-            {isVoiceSpeaking && !isTTSLoading && (
-              <div className="flex items-center gap-1.5">
-                <span className="text-[9px] font-sans font-bold text-[#9c6f1f] animate-pulse">Ezy is speaking...</span>
-                <span className="w-1.5 h-4 bg-[#9c6f1f] animate-bounce" />
-                <span className="w-1.5 h-6 bg-[#9c6f1f] animate-bounce" style={{ animationDelay: '0.1s' }} />
-              </div>
-            )}
-          </div>
+        <div className="flex-1 overflow-y-auto p-4 space-y-3">
+          {chatHistory.map((msg) => (
+            <div
+              key={msg.id}
+              className={`flex gap-3 max-w-[85%] ${
+                msg.sender === 'student' ? 'ml-auto flex-row-reverse' : 'mr-auto'
+              }`}
+            >
+              {msg.sender === 'ezy' ? (
+                <div className="w-8 h-8 rounded-full bg-[#9c6f1f]/15 flex items-center justify-center text-md flex-shrink-0 border border-[#9c6f1f]/10 shadow-sm">
+                  🦘
+                </div>
+              ) : (
+                <div className="w-8 h-8 rounded-full bg-[#16241f]/10 flex items-center justify-center text-md flex-shrink-0 border border-[#16241f]/5 shadow-sm">
+                  👦
+                </div>
+              )}
 
-          <div className="flex-1 overflow-y-auto p-4 space-y-3">
-            {chatHistory.map((msg) => (
               <div
-                key={msg.id}
-                className={`flex gap-3 max-w-[85%] ${
-                  msg.sender === 'student' ? 'ml-auto flex-row-reverse' : 'mr-auto'
+                className={`p-3 rounded-2xl text-xs leading-relaxed shadow-sm ${
+                  msg.isAction
+                    ? 'bg-amber-100/50 border border-amber-200/50 text-[#9c6f1f] font-sans font-bold'
+                    : msg.sender === 'student'
+                    ? 'bg-[#16241f] text-white rounded-tr-none'
+                    : 'bg-[#f4f6f1] text-[#16241f] border border-[#16241f]/5 rounded-tl-none'
                 }`}
               >
-                {msg.sender === 'ezy' ? (
-                  <div className="w-8 h-8 rounded-full bg-[#9c6f1f]/15 flex items-center justify-center text-md flex-shrink-0 border border-[#9c6f1f]/10 shadow-sm">
-                    🦘
-                  </div>
-                ) : (
-                  <div className="w-8 h-8 rounded-full bg-[#16241f]/10 flex items-center justify-center text-md flex-shrink-0 border border-[#16241f]/5 shadow-sm">
-                    👦
-                  </div>
-                )}
-
-                <div
-                  className={`p-3 rounded-2xl text-xs leading-relaxed shadow-sm ${
-                    msg.isAction
-                      ? 'bg-amber-100/50 border border-amber-200/50 text-[#9c6f1f] font-sans font-bold'
-                      : msg.sender === 'student'
-                      ? 'bg-[#16241f] text-white rounded-tr-none'
-                      : 'bg-[#f4f6f1] text-[#16241f] border border-[#16241f]/5 rounded-tl-none'
-                  }`}
-                >
-                  {msg.text}
-                </div>
+                {msg.text}
               </div>
-            ))}
-            <div ref={chatEndRef} />
+            </div>
+          ))}
+
+          {/* The widget renders as Ezy's next turn in the same thread, not a
+              separate panel - same avatar-led bubble layout as a message. */}
+          <div className="flex gap-3 max-w-[92%] mr-auto w-full">
+            <div className="w-8 h-8 rounded-full bg-[#9c6f1f]/15 flex items-center justify-center text-md flex-shrink-0 border border-[#9c6f1f]/10 shadow-sm">
+              🦘
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="w-full min-h-[280px] flex items-center justify-center">
+                <WidgetDispatcher
+                  conceptId={activeConceptId}
+                  unitKey={unitKey || ""}
+                  conceptTested={activeConceptId}
+                  isCorrect={isCorrectSelection}
+                  currentSelection={currentSelection}
+                  onAttempt={handleWidgetAttempt}
+                  onSuccess={() => {
+                    setStarCount(prev => prev + 10);
+                    setLessonState('challenge');
+                  }}
+                />
+              </div>
+
+              {isCorrectSelection && (
+                <div className="w-full max-w-md mx-auto mt-2 animate-bounce">
+                  <button
+                    onClick={handleNextConcept}
+                    className="w-full py-3 bg-[#9c6f1f] hover:bg-[#9c6f1f]/90 text-white font-sans font-bold text-xs uppercase tracking-wider rounded-xl transition-all duration-200 shadow-md flex items-center justify-center gap-2"
+                  >
+                    🎉 Next Challenge ➡️
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
 
-          <div className="p-3 border-t border-[#16241f]/5 bg-gray-50 flex gap-2">
-            <button
-              onClick={() => {
-                const promptResponse = window.prompt("Type or talk back to Ezy:", "How does this help me Ezy?");
-                if (promptResponse) {
-                  addMessage('student', promptResponse);
-                  setLessonState('play_example');
-                }
-              }}
-              className="flex-1 py-2.5 px-4 bg-white hover:bg-gray-100 rounded-xl border border-[#16241f]/10 text-xs font-sans text-left text-[#16241f]/60 hover:text-[#16241f] shadow-sm transition-all"
-            >
-              🎤 Tap to Talk back to Ezy...
-            </button>
-            <button
-              onClick={() => {
-                const lastEzy = chatHistory.filter(m => m.sender === 'ezy').pop();
-                if (lastEzy) speak(lastEzy.text);
-              }}
-              className="p-2.5 px-4 bg-[#9c6f1f]/10 hover:bg-[#9c6f1f]/20 text-[#9c6f1f] rounded-xl text-xs font-bold transition-all flex items-center gap-1 border border-[#9c6f1f]/20 shadow-sm"
-            >
-              🔊 Hear Clue
-            </button>
-          </div>
+          <div ref={chatEndRef} />
+        </div>
+
+        <div className="p-3 border-t border-[#16241f]/5 bg-gray-50 flex gap-2 shrink-0">
+          <button
+            onClick={() => {
+              const promptResponse = window.prompt("Type or talk back to Ezy:", "How does this help me Ezy?");
+              if (promptResponse) {
+                addMessage('student', promptResponse);
+                setLessonState('play_example');
+              }
+            }}
+            className="flex-1 py-2.5 px-4 bg-white hover:bg-gray-100 rounded-xl border border-[#16241f]/10 text-xs font-sans text-left text-[#16241f]/60 hover:text-[#16241f] shadow-sm transition-all"
+          >
+            🎤 Tap to Talk back to Ezy...
+          </button>
+          <button
+            onClick={() => {
+              const lastEzy = chatHistory.filter(m => m.sender === 'ezy').pop();
+              if (lastEzy) speak(lastEzy.text);
+            }}
+            className="p-2.5 px-4 bg-[#9c6f1f]/10 hover:bg-[#9c6f1f]/20 text-[#9c6f1f] rounded-xl text-xs font-bold transition-all flex items-center gap-1 border border-[#9c6f1f]/20 shadow-sm"
+          >
+            🔊 Hear Clue
+          </button>
         </div>
       </section>
 
