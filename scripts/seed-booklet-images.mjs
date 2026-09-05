@@ -70,7 +70,16 @@ async function main() {
     return;
   }
 
-  const admin = await db.user.findFirst({ where: { role: "admin" }, orderBy: { createdAt: "asc" } });
+  // Case-insensitive: the DB has a real, pre-existing mix of "admin" (current
+  // convention) and legacy "ADMIN" rows from before this field's casing was
+  // standardized - found live while running this script (getCurrentUser()'s
+  // own `role === "admin"` checks are case-sensitive, so any account still
+  // stored as "ADMIN" is silently failing every isAdmin check in the app
+  // today; worth fixing separately, out of scope for this content-seed script).
+  const admin = await db.user.findFirst({
+    where: { role: { in: ["admin", "ADMIN"] } },
+    orderBy: { createdAt: "asc" },
+  });
   if (!admin) throw new Error("No admin user found to attribute the upload to.");
 
   const targetDir = path.join(UPLOADS_DIR, UNIT_KEY);
