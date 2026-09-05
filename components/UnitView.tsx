@@ -1,18 +1,47 @@
 "use client";
 
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import WidgetDispatcher from './interactive/WidgetDispatcher';
-import { getWidgetForConcept } from '@/lib/interactiveWidgets';
+import { getWidgetForConcept, type InteractiveWidget } from '@/lib/interactiveWidgets';
 import type { CurriculumUnit, Concept } from '@/lib/types';
 import UnitOverview from './UnitOverview';
 import UnitDiagnostic from './UnitDiagnostic';
+import AvatarChat from './AvatarChat';
+import { getSavedRate, getSavedVoiceName } from './VoicePicker';
 
-interface Message {
-  id: string;
-  sender: 'ezy' | 'student';
-  text: string;
-  timestamp: string;
-  isAction?: boolean;
+// Builds one spoken string for a widget's instructions + main content, since
+// none of the 9 widget components read their own text aloud (real gap
+// reported live - a kid could see the clue sentence/scenario but never hear
+// it, unlike every other piece of the lesson). Kept here rather than inside
+// each widget so new widget kinds just need one more switch case, not a
+// speech implementation each.
+function getWidgetSpokenText(widget: InteractiveWidget): string {
+  const parts: string[] = [widget.title, widget.instruction];
+  switch (widget.spec.kind) {
+    case 'clue_detective':
+      parts.push(widget.spec.sentence);
+      break;
+    case 'fact_opinion':
+      parts.push(widget.spec.statements[0]?.text ?? '');
+      break;
+    case 'sentence_train':
+      parts.push(`${widget.spec.leftCarriage}. ${widget.spec.rightCarriage}.`);
+      break;
+    case 'predictive_brancher':
+      parts.push(widget.spec.scenario);
+      break;
+    case 'biography_scanner':
+      parts.push(widget.spec.passage.map((p) => p.text).join(''));
+      break;
+    case 'prefix_machine':
+      if (widget.spec.challenges[0]) parts.push(`First word: ${widget.spec.challenges[0].root}`);
+      break;
+    // trait_matcher, idiom_connector, life_mountain: the instruction alone
+    // already describes the task; their content is a shuffled list rather
+    // than a passage, so reading it aloud in a fixed order would give away
+    // (or contradict) the shuffle.
+  }
+  return parts.filter(Boolean).join('. ');
 }
 
 interface UnitViewProps {
@@ -64,135 +93,63 @@ export function UnitView({
   const handleAllMastered = () => setScreen('lesson');
   const handlePageImagesUploaded = (paths: string[]) => setPageImages((prev) => [...prev, ...paths]);
 
-  const [lessonState, setLessonState] = useState<'intro' | 'play_example' | 'challenge' | 'reassess' | 'complete'>('intro');
-  const [chatHistory, setChatHistory] = useState<Message[]>([]);
-  const [isVoiceSpeaking, setIsVoiceSpeaking] = useState(false);
-  const [isTTSLoading, setIsTTSLoading] = useState(false);
-
   const [currentSelection, setCurrentSelection] = useState<'fact' | 'opinion' | null>(null);
   const [isCorrectSelection, setIsCorrectSelection] = useState<boolean | null>(null);
 
   const [showWarmup, setShowWarmup] = useState(false);
+  const [warmupFeedback, setWarmupFeedback] = useState<string | null>(null);
   const [masteredConcepts, setMasteredConcepts] = useState<Record<string, boolean>>({});
 
-  const chatEndRef = useRef<HTMLDivElement>(null);
   const currentWidget = getWidgetForConcept(activeConceptId);
   const currentConcept = concepts.find((c) => c.concept_id === activeConceptId);
+  const activeIdx = activeConcepts.findIndex((c) => c.id === activeConceptId);
+  const hasNextConcept = activeIdx >= 0 && activeIdx < activeConcepts.length - 1;
 
-  // Sync activePage when concept changes
+  // Sync the booklet's reference page and reset widget state whenever the
+  // active concept changes - AvatarChat owns its own teaching/speech state
+  // internally and resets that itself when its `concept` prop changes.
   useEffect(() => {
     const concept = concepts.find((c) => c.concept_id === activeConceptId);
-    const page = concept?.book_pages?.[0] || 1;
-    setActivePage(page);
+    setActivePage(concept?.book_pages?.[0] || 1);
     setCurrentSelection(null);
     setIsCorrectSelection(null);
-    setLessonState('intro');
-
-    // Add intro message
-    if (concept?.definition) {
-      const introMsg: Message = {
-        id: Math.random().toString(),
-        sender: 'ezy',
-        text: `Let's learn about **${concept.concept_name}**! ${concept.definition}`,
-        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-      };
-      setChatHistory([introMsg]);
-      speak(introMsg.text);
-    }
   }, [activeConceptId, concepts]);
-
-  useEffect(() => {
-    chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [chatHistory]);
-
-  // Server-side TTS via ElevenLabs
-  const speak = useCallback(async (text: string) => {
-    if (!text) return;
-
-    // Cancel any playing speech
-    if (typeof window !== 'undefined' && window.speechSynthesis) {
-      window.speechSynthesis.cancel();
-    }
-
-    setIsTTSLoading(true);
-    try {
-      const res = await fetch('/api/tts', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text }),
-      });
-      
-      if (!res.ok) throw new Error('TTS failed');
-      
-      const { audioUrl } = await res.json();
-      const audio = new Audio(audioUrl);
-      audio.onplay = () => {
-        setIsVoiceSpeaking(true);
-        setIsTTSLoading(false);
-      };
-      audio.onended = () => setIsVoiceSpeaking(false);
-      audio.onerror = () => {
-        setIsVoiceSpeaking(false);
-        setIsTTSLoading(false);
-        fallbackSpeak(text);
-      };
-      await audio.play();
-    } catch (err) {
-      setIsTTSLoading(false);
-      fallbackSpeak(text);
-    }
-  }, []);
-
-  // Browser fallback TTS
-  const fallbackSpeak = (text: string) => {
-    if (typeof window !== 'undefined' && window.speechSynthesis) {
-      const cleanText = text.replace(/[*🎉💡⚖️🚂💭🔍➡️]/g, '');
-      const utterance = new SpeechSynthesisUtterance(cleanText);
-      utterance.onstart = () => setIsVoiceSpeaking(true);
-      utterance.onend = () => setIsVoiceSpeaking(false);
-      window.speechSynthesis.speak(utterance);
-    }
-  };
-
-  const addMessage = (sender: 'ezy' | 'student', text: string, isAction?: boolean) => {
-    const msg: Message = {
-      id: Math.random().toString(),
-      sender,
-      text,
-      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-      isAction,
-    };
-    setChatHistory(prev => [...prev, msg]);
-    return msg;
-  };
 
   const handleWidgetAttempt = (correct: boolean) => {
     setIsCorrectSelection(correct);
-    if (correct) {
-      setStarCount(prev => prev + 10);
-      setLessonState('challenge');
-      addMessage('ezy', '🎉 Excellent! You got it right! +10 stars!', true);
-    } else {
-      setLessonState('reassess');
-      addMessage('ezy', '💡 Not quite! Let me give you a hint...', true);
-    }
+    if (correct) setStarCount((prev) => prev + 10);
   };
 
+  // Bounds-checked so both the widget's own "Next Challenge" button and
+  // AvatarChat's onAdvanceConcept can call this safely - on the unit's last
+  // concept it just marks mastery without moving (AvatarChat itself hides
+  // its "Next part" button then, since onAdvanceConcept is undefined).
   const handleNextConcept = () => {
-    const idx = activeConcepts.findIndex(c => c.id === activeConceptId);
+    setMasteredConcepts((prev) => ({ ...prev, [activeConceptId]: true }));
+    setCurrentSelection(null);
+    setIsCorrectSelection(null);
+    const idx = activeConcepts.findIndex((c) => c.id === activeConceptId);
     if (idx < activeConcepts.length - 1) {
-      setMasteredConcepts(prev => ({ ...prev, [activeConceptId]: true }));
       setActiveConceptId(activeConcepts[idx + 1].id);
-    } else {
-      setMasteredConcepts(prev => ({ ...prev, [activeConceptId]: true }));
-      setLessonState('complete');
-      addMessage('ezy', '🏆 Amazing! You have mastered all concepts in this unit!', true);
     }
   };
 
   const startWarmup = () => {
+    setWarmupFeedback(null);
     setShowWarmup(true);
-    speak("Ready for our Spaced Brain Brush-up? Let's check what we remember!");
+  };
+
+  const speakWidgetAloud = () => {
+    if (!currentWidget || typeof window === 'undefined' || !window.speechSynthesis) return;
+    const text = getWidgetSpokenText(currentWidget);
+    if (!text) return;
+    window.speechSynthesis.cancel();
+    const utterance = new SpeechSynthesisUtterance(text);
+    const savedName = getSavedVoiceName();
+    const voice = savedName ? window.speechSynthesis.getVoices().find((v) => v.name === savedName) : null;
+    if (voice) utterance.voice = voice;
+    utterance.rate = getSavedRate();
+    window.speechSynthesis.speak(utterance);
   };
 
   const pageIndex = Math.max(0, activePage - 1);
@@ -384,64 +341,46 @@ export function UnitView({
           </div>
         )}
 
-        <div className="px-4 py-2 border-b border-[#16241f]/5 bg-gray-50 flex items-center justify-between shrink-0">
-          <div className="flex items-center gap-2">
-            <span className="w-2.5 h-2.5 rounded-full bg-orange-500 animate-pulse" />
-            <span className="text-[10px] font-sans font-bold uppercase tracking-wider text-[#16241f]/60">
-              Ezy the Kangaroo Live Voice Session
-            </span>
-          </div>
-          {isTTSLoading && (
-            <span className="text-[9px] font-sans font-bold text-[#9c6f1f] animate-pulse">Ezy is loading voice...</span>
-          )}
-          {isVoiceSpeaking && !isTTSLoading && (
-            <div className="flex items-center gap-1.5">
-              <span className="text-[9px] font-sans font-bold text-[#9c6f1f] animate-pulse">Ezy is speaking...</span>
-              <span className="w-1.5 h-4 bg-[#9c6f1f] animate-bounce" />
-              <span className="w-1.5 h-6 bg-[#9c6f1f] animate-bounce" style={{ animationDelay: '0.1s' }} />
-            </div>
-          )}
+        <div className="px-4 py-2 border-b border-[#16241f]/5 bg-gray-50 flex items-center gap-2 shrink-0">
+          <span className="w-2.5 h-2.5 rounded-full bg-orange-500 animate-pulse" />
+          <span className="text-[10px] font-sans font-bold uppercase tracking-wider text-[#16241f]/60">
+            Ezy the Kangaroo Live Voice Session
+          </span>
         </div>
 
-        <div className="flex-1 overflow-y-auto p-4 space-y-3">
-          {chatHistory.map((msg) => (
-            <div
-              key={msg.id}
-              className={`flex gap-3 max-w-[85%] ${
-                msg.sender === 'student' ? 'ml-auto flex-row-reverse' : 'mr-auto'
-              }`}
-            >
-              {msg.sender === 'ezy' ? (
-                <div className="w-8 h-8 rounded-full bg-[#9c6f1f]/15 flex items-center justify-center text-md flex-shrink-0 border border-[#9c6f1f]/10 shadow-sm">
-                  🦘
-                </div>
-              ) : (
-                <div className="w-8 h-8 rounded-full bg-[#16241f]/10 flex items-center justify-center text-md flex-shrink-0 border border-[#16241f]/5 shadow-sm">
-                  👦
-                </div>
-              )}
-
-              <div
-                className={`p-3 rounded-2xl text-xs leading-relaxed shadow-sm ${
-                  msg.isAction
-                    ? 'bg-amber-100/50 border border-amber-200/50 text-[#9c6f1f] font-sans font-bold'
-                    : msg.sender === 'student'
-                    ? 'bg-[#16241f] text-white rounded-tr-none'
-                    : 'bg-[#f4f6f1] text-[#16241f] border border-[#16241f]/5 rounded-tl-none'
-                }`}
-              >
-                {msg.text}
-              </div>
+        <div className="flex-1 overflow-y-auto p-4 space-y-4">
+          {currentConcept ? (
+            <AvatarChat
+              key={activeConceptId}
+              unitKey={unitKey || ''}
+              concept={currentConcept}
+              onAdvanceConcept={hasNextConcept ? handleNextConcept : undefined}
+              hideSourceImage={!isBookletCollapsed}
+            />
+          ) : (
+            <div className="flex flex-col items-center justify-center p-8 text-[#16241f]/40">
+              <span className="text-4xl mb-2">🦘</span>
+              <p className="text-xs font-bold">Ezy is preparing this lesson...</p>
             </div>
-          ))}
+          )}
 
-          {/* The widget renders as Ezy's next turn in the same thread, not a
-              separate panel - same avatar-led bubble layout as a message. */}
+          {/* The widget is Ezy's practice activity for this concept, after the
+              conversation above teaches it - "Hear this activity" covers the
+              real gap where widget text (clue sentences, scenarios...) was
+              never read aloud, unlike every other piece of the lesson. */}
           <div className="flex gap-3 max-w-[92%] mr-auto w-full">
             <div className="w-8 h-8 rounded-full bg-[#9c6f1f]/15 flex items-center justify-center text-md flex-shrink-0 border border-[#9c6f1f]/10 shadow-sm">
               🦘
             </div>
             <div className="flex-1 min-w-0">
+              {currentWidget && (
+                <button
+                  onClick={speakWidgetAloud}
+                  className="mb-1.5 flex items-center gap-1 text-[10px] font-sans font-bold text-[#9c6f1f] hover:underline"
+                >
+                  🔊 Hear this activity
+                </button>
+              )}
               <div className="w-full min-h-[280px] flex items-center justify-center">
                 <WidgetDispatcher
                   conceptId={activeConceptId}
@@ -450,10 +389,7 @@ export function UnitView({
                   isCorrect={isCorrectSelection}
                   currentSelection={currentSelection}
                   onAttempt={handleWidgetAttempt}
-                  onSuccess={() => {
-                    setStarCount(prev => prev + 10);
-                    setLessonState('challenge');
-                  }}
+                  onSuccess={() => setStarCount((prev) => prev + 10)}
                 />
               </div>
 
@@ -469,32 +405,6 @@ export function UnitView({
               )}
             </div>
           </div>
-
-          <div ref={chatEndRef} />
-        </div>
-
-        <div className="p-3 border-t border-[#16241f]/5 bg-gray-50 flex gap-2 shrink-0">
-          <button
-            onClick={() => {
-              const promptResponse = window.prompt("Type or talk back to Ezy:", "How does this help me Ezy?");
-              if (promptResponse) {
-                addMessage('student', promptResponse);
-                setLessonState('play_example');
-              }
-            }}
-            className="flex-1 py-2.5 px-4 bg-white hover:bg-gray-100 rounded-xl border border-[#16241f]/10 text-xs font-sans text-left text-[#16241f]/60 hover:text-[#16241f] shadow-sm transition-all"
-          >
-            🎤 Tap to Talk back to Ezy...
-          </button>
-          <button
-            onClick={() => {
-              const lastEzy = chatHistory.filter(m => m.sender === 'ezy').pop();
-              if (lastEzy) speak(lastEzy.text);
-            }}
-            className="p-2.5 px-4 bg-[#9c6f1f]/10 hover:bg-[#9c6f1f]/20 text-[#9c6f1f] rounded-xl text-xs font-bold transition-all flex items-center gap-1 border border-[#9c6f1f]/20 shadow-sm"
-          >
-            🔊 Hear Clue
-          </button>
         </div>
       </section>
 
@@ -525,10 +435,10 @@ export function UnitView({
                   onClick={() => {
                     if (opt.correct) {
                       setStarCount(prev => prev + 5);
-                      setShowWarmup(false);
-                      addMessage('ezy', '🎉 Warm-up complete! +5 Stars!', true);
+                      setWarmupFeedback('🎉 Warm-up complete! +5 Stars!');
+                      setTimeout(() => setShowWarmup(false), 1200);
                     } else {
-                      addMessage('ezy', '💡 Not quite! Try again.', true);
+                      setWarmupFeedback('💡 Not quite! Try again.');
                     }
                   }}
                   className="w-full text-left p-3 rounded-xl border border-[#16241f]/10 bg-white hover:border-[#16241f] text-xs font-sans font-bold hover:bg-[#16241f]/5 transition-all flex items-center justify-between"
@@ -538,6 +448,10 @@ export function UnitView({
                 </button>
               ))}
             </div>
+
+            {warmupFeedback && (
+              <p className="mt-3 text-xs font-sans font-bold text-[#9c6f1f]">{warmupFeedback}</p>
+            )}
 
             <button
               onClick={() => setShowWarmup(false)}
