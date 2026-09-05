@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import WidgetDispatcher from './interactive/WidgetDispatcher';
 import { getWidgetForConcept, type InteractiveWidget } from '@/lib/interactiveWidgets';
-import type { CurriculumUnit, Concept } from '@/lib/types';
+import type { CurriculumUnit, Concept, MasteryBand } from '@/lib/types';
 import UnitOverview from './UnitOverview';
 import UnitDiagnostic from './UnitDiagnostic';
 import AvatarChat from './AvatarChat';
@@ -45,6 +45,22 @@ function getWidgetSpokenText(widget: InteractiveWidget): string {
   return parts.filter(Boolean).join('. ');
 }
 
+interface LatestTestAttempt {
+  band: MasteryBand;
+  scorePct: number;
+  takenAt: string;
+}
+
+interface NextUnitInfo {
+  unitKey: string;
+  title: string;
+}
+
+interface PreviousUnitRecap {
+  title: string;
+  points: string[];
+}
+
 interface UnitViewProps {
   unit?: CurriculumUnit;
   unitKey?: string;
@@ -52,6 +68,9 @@ interface UnitViewProps {
   resourceGroups?: any[];
   diagnosticQuestions?: any[];
   contentPack?: any;
+  latestTestAttempt?: LatestTestAttempt | null;
+  nextUnit?: NextUnitInfo | null;
+  previousUnitRecap?: PreviousUnitRecap | null;
 }
 
 export function UnitView({
@@ -60,7 +79,10 @@ export function UnitView({
   initialPageImages = [],
   resourceGroups,
   diagnosticQuestions,
-  contentPack
+  contentPack,
+  latestTestAttempt,
+  nextUnit,
+  previousUnitRecap,
 }: UnitViewProps) {
   const concepts = unit?.concepts || [];
   const activeConcepts = concepts.map((c: Concept) => ({
@@ -72,6 +94,18 @@ export function UnitView({
   const [activeConceptId, setActiveConceptId] = useState<string>(activeConcepts[0]?.id || '1.1');
   const [activePage, setActivePage] = useState(activeConcepts[0]?.page || 1);
   const [isBookletCollapsed, setIsBookletCollapsed] = useState(false);
+
+  // Defaults collapsed on phone/tablet widths (checked once, client-side
+  // only, so this never fights server-rendered markup) - the booklet stacks
+  // above the chat below the `lg` breakpoint now, and a kid opening a
+  // lesson on a phone should land straight on the conversation, not have to
+  // scroll past a full-width page photo first.
+  useEffect(() => {
+    if (typeof window !== 'undefined' && window.innerWidth < 1024) {
+      setIsBookletCollapsed(true);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   const [starCount, setStarCount] = useState(40);
 
   // Overview -> optional diagnostic -> lesson. Every unit lands on the
@@ -79,7 +113,7 @@ export function UnitView({
   // diagnostic-or-skip choice) instead of dropping straight into the chat -
   // see UnitOverview.tsx/UnitDiagnostic.tsx, which existed already but had
   // gone disconnected from routing entirely.
-  const [screen, setScreen] = useState<'overview' | 'diagnostic' | 'lesson'>('overview');
+  const [screen, setScreen] = useState<'overview' | 'diagnostic' | 'lesson' | 'unit_complete'>('overview');
   const [pageImages, setPageImages] = useState<string[]>(initialPageImages);
 
   const handleStartDiagnostic = () => setScreen('diagnostic');
@@ -126,8 +160,12 @@ export function UnitView({
 
   // Bounds-checked so both the widget's own "Mark finished" button and
   // AvatarChat's onAdvanceConcept can call this safely - on the unit's last
-  // concept it just marks mastery without moving (AvatarChat itself hides
-  // its "Next part" button then, since onAdvanceConcept is undefined).
+  // concept it now lands on the 'unit_complete' screen (quick revision +
+  // "take the unit test" CTA, real feedback 2026-09-05: "after finishing a
+  // unit, quick revision points and ask for a unit test") instead of
+  // silently doing nothing (AvatarChat still hides its own "Next part"
+  // button there, since onAdvanceConcept is undefined on the last concept -
+  // this only fires from the widget's "Mark finished" button in that case).
   //
   // This is also the one place a concept's completion gets reported to the
   // spaced-repetition backend (ConceptMastery/nextReviewDue, see
@@ -154,6 +192,8 @@ export function UnitView({
     const idx = activeConcepts.findIndex((c) => c.id === activeConceptId);
     if (idx < activeConcepts.length - 1) {
       setActiveConceptId(activeConcepts[idx + 1].id);
+    } else {
+      setScreen('unit_complete');
     }
   };
 
@@ -183,7 +223,78 @@ export function UnitView({
         onPageImagesUploaded={handlePageImagesUploaded}
         onStartDiagnostic={handleStartDiagnostic}
         onSkipToTeaching={handleSkipToTeaching}
+        latestTestAttempt={latestTestAttempt}
+        nextUnit={nextUnit}
+        previousUnitRecap={previousUnitRecap}
       />
+    );
+  }
+
+  if (screen === 'unit_complete' && unit) {
+    const revisionByConcept = concepts
+      .map((c) => ({ concept: c, points: (c.key_points?.length ? c.key_points : c.tips_to_remember) || [] }))
+      .filter((entry) => entry.points.length > 0);
+
+    return (
+      <div className="mx-auto grid w-full max-w-3xl gap-6 p-4 sm:p-6">
+        <div className="rounded-3xl border-2 border-[#9c6f1f]/20 bg-gradient-to-br from-[#9c6f1f]/10 to-[#f4f6f1] p-6 text-center shadow-sm sm:p-8">
+          <span className="text-4xl sm:text-5xl">🏆</span>
+          <h1 className="mt-3 font-serif text-xl font-black text-[#16241f] sm:text-2xl">
+            You&apos;ve finished every lesson in this unit!
+          </h1>
+          <p className="mx-auto mt-2 max-w-md text-sm text-[#16241f]/70">
+            Take a moment to skim the quick revision below, then take the unit test whenever you&apos;re ready -
+            no rush.
+          </p>
+        </div>
+
+        {revisionByConcept.length > 0 && (
+          <div className="rounded-2xl border border-[#16241f]/10 bg-white p-5 shadow-sm sm:p-6">
+            <h2 className="font-serif text-base font-black text-[#16241f] sm:text-lg">🧠 Quick revision</h2>
+            <p className="mt-1 text-xs text-[#16241f]/50">The key points from every lesson in this unit, in one place.</p>
+            <div className="mt-4 grid gap-4 sm:grid-cols-2">
+              {revisionByConcept.map(({ concept, points }) => (
+                <div key={concept.concept_id} className="rounded-xl border border-[#16241f]/5 bg-[#f4f6f1] p-3.5">
+                  <p className="text-[11px] font-bold uppercase tracking-wide text-[#9c6f1f]">
+                    {concept.concept_id} {concept.concept_name}
+                  </p>
+                  <ul className="mt-1.5 list-disc space-y-1 pl-4 text-sm text-[#16241f]/80">
+                    {points.slice(0, 4).map((point, i) => (
+                      <li key={i}>{point}</li>
+                    ))}
+                  </ul>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        <div className="grid gap-3 sm:grid-cols-2">
+          <Link
+            href={`/test/${unitKey}`}
+            className="flex flex-col items-center justify-center rounded-2xl border border-test-border bg-test-bg px-5 py-4 text-center shadow-sm transition hover:brightness-105"
+          >
+            <span className="text-2xl">🎯</span>
+            <span className="mt-1 text-sm font-bold text-test-accent">Take the Unit Test</span>
+            <span className="mt-0.5 text-xs text-test-accent/70">Pick your own difficulty - easy, moderate, or tough</span>
+          </Link>
+          <button
+            onClick={() => setScreen('overview')}
+            className="flex flex-col items-center justify-center rounded-2xl border border-[#16241f]/15 bg-white px-5 py-4 text-center shadow-sm transition hover:bg-[#16241f]/5"
+          >
+            <span className="text-2xl">📖</span>
+            <span className="mt-1 text-sm font-bold text-[#16241f]">Back to unit overview</span>
+            <span className="mt-0.5 text-xs text-[#16241f]/50">Revisit any lesson before testing</span>
+          </button>
+        </div>
+
+        {nextUnit && (
+          <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-center text-sm text-emerald-800">
+            When you&apos;re ready, <strong>Unit {nextUnit.title}</strong> is up next - the unit overview page will
+            let you know if it&apos;s best to move on or brush up first, based on how the test goes.
+          </div>
+        )}
+      </div>
     );
   }
 
@@ -200,15 +311,20 @@ export function UnitView({
   }
 
   return (
-    <div className="flex h-screen w-full bg-[#f4f6f1] overflow-hidden text-[#16241f] font-sans">
-      {/* COLUMN 1: SIDEBAR NAVIGATION */}
-      <aside className="w-64 shrink-0 border-r border-[#16241f]/10 bg-white flex flex-col shadow-sm">
+    <div className="flex flex-col lg:flex-row w-full lg:h-[calc(100vh-3rem)] bg-[#f4f6f1] lg:overflow-hidden text-[#16241f] font-sans">
+      {/* COLUMN 1: SIDEBAR NAVIGATION. Full-width block on mobile (stacked
+          above the booklet/chat, concept list height-capped so it doesn't
+          dominate the screen) rather than a fixed 256px column - that column
+          used to render at phone width too, since nothing here had a
+          breakpoint at all (real gap: "responsive for different devices and
+          resolutions"). */}
+      <aside className="w-full lg:w-72 shrink-0 border-b lg:border-b-0 lg:border-r border-[#16241f]/10 bg-white flex flex-col shadow-sm">
         <div className="p-4 border-b border-[#16241f]/10 bg-[#16241f]/5 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <span className="text-2xl">👦</span>
             <div>
-              <h2 className="font-serif text-sm font-bold text-[#16241f]">Viban Gopinath</h2>
-              <p className="text-[10px] text-[#16241f]/60 font-semibold tracking-wide uppercase">
+              <h2 className="font-serif text-sm font-bold text-[#16241f] sm:text-base">Viban Gopinath</h2>
+              <p className="text-[10px] text-[#16241f]/60 font-semibold tracking-wide uppercase sm:text-xs">
                 {unit?.curriculum || "Cambridge Primary"} • Stage {unit?.grade_stage || 5}
               </p>
             </div>
@@ -229,13 +345,13 @@ export function UnitView({
               ConceptMastery marks due for review, ranked by urgency. */}
           <Link
             href="/plan"
-            className="w-full py-2 bg-[#9c6f1f] text-white rounded-xl text-xs font-bold hover:bg-[#9c6f1f]/90 transition-all shadow-sm text-center"
+            className="w-full py-2 bg-[#9c6f1f] text-white rounded-xl text-xs sm:text-sm font-bold hover:bg-[#9c6f1f]/90 transition-all shadow-sm text-center"
           >
             🧠 Quick brush-up (Prep Plan)
           </Link>
         </div>
 
-        <div className="flex-1 overflow-y-auto p-3 space-y-4">
+        <div className="max-h-64 lg:max-h-none lg:flex-1 overflow-y-auto p-3 space-y-4">
           <div>
             <span className="text-[10px] uppercase font-bold text-[#16241f]/40 tracking-wider">
               {unit?.unit_title || "Unit"}
@@ -245,7 +361,7 @@ export function UnitView({
                 <button
                   key={concept.id}
                   onClick={() => setActiveConceptId(concept.id)}
-                  className={`w-full p-2.5 rounded-xl flex items-center justify-between text-left text-xs transition-all border ${
+                  className={`w-full p-2.5 rounded-xl flex items-center justify-between text-left text-xs sm:text-sm transition-all border ${
                     activeConceptId === concept.id
                       ? 'bg-[#16241f] text-white border-[#16241f] shadow-md font-bold'
                       : 'bg-transparent text-[#16241f] border-transparent hover:bg-[#16241f]/5 hover:border-[#16241f]/10'
@@ -270,86 +386,88 @@ export function UnitView({
         <div className="p-4 border-t border-[#16241f]/10 bg-white">
           <button
             onClick={() => setScreen('overview')}
-            className="w-full py-2.5 rounded-xl border-2 border-dashed border-[#16241f]/20 text-[#16241f]/60 hover:text-[#16241f] hover:border-[#16241f]/40 transition-all font-sans font-bold text-xs flex items-center justify-center gap-1.5"
+            className="w-full py-2.5 rounded-xl border-2 border-dashed border-[#16241f]/20 text-[#16241f]/60 hover:text-[#16241f] hover:border-[#16241f]/40 transition-all font-sans font-bold text-xs sm:text-sm flex items-center justify-center gap-1.5"
           >
             📖 Unit overview &amp; textbook pages
           </button>
         </div>
       </aside>
 
-      {/* COLUMN 2: TEXTBOOK BOOKLET PANEL */}
-      {/* Fixed px rather than a % of the row: this page renders inside
-          AppShell's max-w-6xl content area, which (once AppShell's own lg:
-          sidebar is showing) leaves this 3-column layout only ~900px total -
-          a % width here was squeezing COLUMN 3's interactive widget down to
-          ~170px, wrapping its text one word per line. A fixed cap keeps the
-          booklet reasonably sized and guarantees the widget column its
-          min-width below instead. */}
-      <main className={`transition-all duration-500 relative flex flex-col shrink-0 border-r border-[#16241f]/10 bg-white ${
-        isBookletCollapsed ? 'w-0 overflow-hidden opacity-0' : 'w-[300px] opacity-100'
-      }`}>
-        <div className="p-3.5 border-b border-[#16241f]/10 flex items-center justify-between bg-white z-10">
-          <div className="flex items-center gap-2">
-            <span className="text-lg">📖</span>
-            <span className="font-serif text-[#16241f] text-xs font-black tracking-tight">
-              {unit?.subject || "Cambridge English"} (Stage {unit?.grade_stage || 5})
-            </span>
-          </div>
-          <button
-            onClick={() => setIsBookletCollapsed(true)}
-            className="p-1 px-2.5 rounded-lg border border-[#16241f]/15 hover:bg-[#16241f]/5 text-[#16241f]/70 hover:text-[#16241f] font-sans font-bold text-[10px] transition-all"
-          >
-            Hide Book ✖
-          </button>
-        </div>
-
-        <div className="flex-1 p-5 flex flex-col justify-between bg-gray-50/70 relative">
-          <div className="absolute top-2 left-1/2 transform -translate-x-1/2 z-10 bg-[#16241f] text-white px-3 py-1 rounded-full text-[9px] font-sans font-bold tracking-wider uppercase shadow-md">
-            Textbook Reference • Page {activePage}
+      {/* COLUMN 2: TEXTBOOK BOOKLET PANEL. Conditionally mounted (not just
+          CSS-collapsed) so "hidden" actually means zero height on the
+          mobile stacked layout too, not just zero width - a width-only
+          collapse left an invisible full-height sliver when this row
+          stacks instead of sitting beside the others. */}
+      {!isBookletCollapsed && (
+        <main className="relative flex flex-col shrink-0 border-b lg:border-b-0 lg:border-r border-[#16241f]/10 bg-white w-full lg:w-[360px]">
+          <div className="p-3.5 border-b border-[#16241f]/10 flex items-center justify-between bg-white z-10">
+            <div className="flex items-center gap-2">
+              <span className="text-lg">📖</span>
+              <span className="font-serif text-[#16241f] text-xs sm:text-sm font-black tracking-tight">
+                {unit?.subject || "Cambridge English"} (Stage {unit?.grade_stage || 5})
+              </span>
+            </div>
+            <button
+              onClick={() => setIsBookletCollapsed(true)}
+              className="p-1 px-2.5 rounded-lg border border-[#16241f]/15 hover:bg-[#16241f]/5 text-[#16241f]/70 hover:text-[#16241f] font-sans font-bold text-[10px] transition-all"
+            >
+              Hide Book ✖
+            </button>
           </div>
 
-          <div className="flex-1 flex items-center justify-center py-4">
-            <div className="aspect-[3/4] w-full max-w-sm rounded-2xl overflow-hidden border-2 border-[#16241f]/15 shadow-xl relative bg-white group hover:border-[#9c6f1f]/40 transition-all duration-300">
-              {pageImage ? (
-                <img
-                  src={pageImage}
-                  alt={`Booklet Page ${activePage}`}
-                  className="w-full h-full object-cover select-none pointer-events-none filter brightness-95"
-                />
-              ) : (
-                <div className="w-full h-full flex items-center justify-center bg-[#f4f6f1] text-[#16241f]/30 text-xs font-bold">
-                  No page image uploaded yet
-                </div>
-              )}
+          <div className="flex-1 p-5 flex flex-col justify-between bg-gray-50/70 relative">
+            <div className="absolute top-2 left-1/2 transform -translate-x-1/2 z-10 bg-[#16241f] text-white px-3 py-1 rounded-full text-[9px] font-sans font-bold tracking-wider uppercase shadow-md">
+              Textbook Reference • Page {activePage}
+            </div>
+
+            <div className="flex-1 flex items-center justify-center py-4">
+              <div className="aspect-[3/4] w-full max-w-sm rounded-2xl overflow-hidden border-2 border-[#16241f]/15 shadow-xl relative bg-white group hover:border-[#9c6f1f]/40 transition-all duration-300">
+                {pageImage ? (
+                  <img
+                    src={pageImage}
+                    alt={`Booklet Page ${activePage}`}
+                    className="w-full h-full object-contain select-none pointer-events-none"
+                  />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center bg-[#f4f6f1] text-[#16241f]/30 text-xs font-bold">
+                    No page image uploaded yet
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div className="flex items-center justify-between bg-white p-3 rounded-2xl border border-[#16241f]/5 shadow-sm">
+              <button
+                onClick={() => setActivePage(prev => Math.max(1, prev - 1))}
+                disabled={activePage === 1}
+                className="px-3 py-1.5 rounded-lg border border-[#16241f]/15 hover:bg-[#16241f]/5 font-sans font-bold text-[10px] disabled:opacity-30 transition-all text-[#16241f]"
+              >
+                ⬅ Prev Page
+              </button>
+              <span className="text-[10px] font-sans font-black uppercase tracking-wider text-[#16241f]/50">
+                Ref page: <strong className="text-[#16241f]">{activePage}</strong>
+              </span>
+              <button
+                onClick={() => setActivePage(prev => prev + 1)}
+                disabled={activePage >= initialPageImages.length}
+                className="px-3 py-1.5 rounded-lg border border-[#16241f]/15 hover:bg-[#16241f]/5 font-sans font-bold text-[10px] transition-all text-[#16241f] disabled:opacity-30"
+              >
+                Next Page ➡
+              </button>
             </div>
           </div>
-
-          <div className="flex items-center justify-between bg-white p-3 rounded-2xl border border-[#16241f]/5 shadow-sm">
-            <button
-              onClick={() => setActivePage(prev => Math.max(1, prev - 1))}
-              disabled={activePage === 1}
-              className="px-3 py-1.5 rounded-lg border border-[#16241f]/15 hover:bg-[#16241f]/5 font-sans font-bold text-[10px] disabled:opacity-30 transition-all text-[#16241f]"
-            >
-              ⬅ Prev Page
-            </button>
-            <span className="text-[10px] font-sans font-black uppercase tracking-wider text-[#16241f]/50">
-              Ref page: <strong className="text-[#16241f]">{activePage}</strong>
-            </span>
-            <button
-              onClick={() => setActivePage(prev => prev + 1)}
-              disabled={activePage >= initialPageImages.length}
-              className="px-3 py-1.5 rounded-lg border border-[#16241f]/15 hover:bg-[#16241f]/5 font-sans font-bold text-[10px] transition-all text-[#16241f] disabled:opacity-30"
-            >
-              Next Page ➡
-            </button>
-          </div>
-        </div>
-      </main>
+        </main>
+      )}
 
       {/* COLUMN 3: EZY'S CONVERSATION - explanation, checks, and the widget all
           share one scrolling thread instead of the widget sitting in a
-          separate panel above a small chat box (ledger item 2). */}
-      <section className="flex-1 min-w-[380px] flex flex-col bg-[#f4f6f1] overflow-hidden relative">
+          separate panel above a small chat box (ledger item 2). min-w-0
+          (not min-w-[380px], the flex default is min-w-auto which refuses to
+          shrink below content size) is the standard flexbox fix that stops a
+          long unbroken line from forcing the whole page into horizontal
+          scroll on a narrow phone - a real, reproducible bug the old fixed
+          min-width caused below ~380px viewports. */}
+      <section className="flex-1 min-w-0 flex flex-col bg-[#f4f6f1] lg:overflow-hidden relative">
         {isBookletCollapsed && (
           <div className="p-3 bg-white border-b border-[#16241f]/10 flex items-center justify-between">
             <span className="text-xs font-serif font-black text-[#16241f]">Sourced from Page {activePage}</span>
@@ -369,7 +487,12 @@ export function UnitView({
           </span>
         </div>
 
-        <div className="flex-1 overflow-y-auto p-4 space-y-4">
+        {/* max-w-3xl mx-auto keeps chat text at a readable line length on a
+            wide monitor now that the 3-column layout can stretch much wider
+            (AppShell's `wide` mode) - without this, a one-sentence reply
+            would stretch edge-to-edge across 1000+px of column 3. */}
+        <div className="flex-1 overflow-y-auto p-4">
+        <div className="mx-auto max-w-3xl space-y-4">
           {currentConcept ? (
             <AvatarChat
               key={activeConceptId}
@@ -430,6 +553,7 @@ export function UnitView({
               )}
             </div>
           </div>
+        </div>
         </div>
       </section>
     </div>

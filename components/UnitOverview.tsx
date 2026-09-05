@@ -2,10 +2,33 @@
 
 import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import type { CurriculumUnit } from "@/lib/types";
+import Link from "next/link";
+import type { CurriculumUnit, MasteryBand } from "@/lib/types";
 import type { ResourceGroup } from "@/lib/queries/unitResources";
 import UnitResources from "./UnitResources";
 import Booklet from "./Booklet";
+
+interface LatestTestAttempt {
+  band: MasteryBand;
+  scorePct: number;
+  takenAt: string;
+}
+
+interface NextUnitInfo {
+  unitKey: string;
+  title: string;
+}
+
+interface PreviousUnitRecap {
+  title: string;
+  points: string[];
+}
+
+const BAND_COPY: Record<MasteryBand, { emoji: string; headline: string; tone: string }> = {
+  mastered: { emoji: "🎉", headline: "Great result - you've got this unit down.", tone: "border-emerald-200 bg-emerald-50 text-emerald-800" },
+  needs_brush_up: { emoji: "💡", headline: "Close - a quick brush-up on a few concepts would help.", tone: "border-amber-200 bg-amber-50 text-amber-800" },
+  needs_reteach: { emoji: "🔁", headline: "Worth revisiting a few concepts before moving on.", tone: "border-red-200 bg-red-50 text-red-800" },
+};
 
 export default function UnitOverview({
   unit,
@@ -15,6 +38,9 @@ export default function UnitOverview({
   onPageImagesUploaded,
   onStartDiagnostic,
   onSkipToTeaching,
+  latestTestAttempt,
+  nextUnit,
+  previousUnitRecap,
 }: {
   unit: CurriculumUnit;
   unitKey: string;
@@ -23,6 +49,9 @@ export default function UnitOverview({
   onPageImagesUploaded: (paths: string[]) => void;
   onStartDiagnostic: () => void;
   onSkipToTeaching: (conceptId?: string) => void;
+  latestTestAttempt?: LatestTestAttempt | null;
+  nextUnit?: NextUnitInfo | null;
+  previousUnitRecap?: PreviousUnitRecap | null;
 }) {
   const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -95,6 +124,64 @@ export default function UnitOverview({
 
   return (
     <div className="grid gap-6">
+      {/* Adaptive "continue or not" decision (real feedback 2026-09-05: "you
+          can decide if you continue or not depending on how the student is
+          responding") - driven by the student's own latest TestAttempt on
+          this unit, not a guess. Mastered -> point at the next unit if one
+          exists; anything else -> point back at the concepts/Prep Plan
+          instead of encouraging them to move on underprepared. */}
+      {latestTestAttempt && (
+        <div className={`rounded-2xl border p-5 shadow-soft ${BAND_COPY[latestTestAttempt.band].tone}`}>
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <p className="text-sm font-semibold">
+                {BAND_COPY[latestTestAttempt.band].emoji} {BAND_COPY[latestTestAttempt.band].headline}
+              </p>
+              <p className="mt-0.5 text-xs opacity-80">
+                Last test: {latestTestAttempt.scorePct}% on {new Date(latestTestAttempt.takenAt).toLocaleDateString()}
+              </p>
+            </div>
+            {latestTestAttempt.band === "mastered" && nextUnit ? (
+              <Link
+                href={`/learn/${nextUnit.unitKey}`}
+                className="shrink-0 rounded-xl bg-gradient-to-br from-brand-gold-bright to-brand-gold px-4 py-2 text-sm font-medium text-white"
+              >
+                Continue to Unit {nextUnit.title} →
+              </Link>
+            ) : latestTestAttempt.band !== "mastered" ? (
+              <Link
+                href="/plan"
+                className="shrink-0 rounded-xl border border-current px-4 py-2 text-sm font-medium"
+              >
+                Go to Prep Plan
+              </Link>
+            ) : null}
+          </div>
+        </div>
+      )}
+
+      {/* "While starting a unit, recollect main points from the previous unit
+          and move forward" (real feedback 2026-09-05) - a <details> so it's
+          there every visit without being repetitive after the first read. */}
+      {previousUnitRecap && previousUnitRecap.points.length > 0 && (
+        <details className="group rounded-2xl border border-slate-200/70 bg-white p-5 shadow-soft" open>
+          <summary className="cursor-pointer list-none">
+            <div className="flex items-center justify-between">
+              <h2 className="text-lg font-semibold">🔁 Quick recap: {previousUnitRecap.title}</h2>
+              <span className="text-xs text-slate-400 transition group-open:rotate-180">▾</span>
+            </div>
+            <p className="mt-1 text-xs text-slate-400">
+              Before diving into this unit, here&apos;s what you covered last time.
+            </p>
+          </summary>
+          <ul className="mt-3 list-disc space-y-1 pl-5 text-sm text-slate-700">
+            {previousUnitRecap.points.map((point, i) => (
+              <li key={i}>{point}</li>
+            ))}
+          </ul>
+        </details>
+      )}
+
       {unit.unit_mastery_checklist?.items && unit.unit_mastery_checklist.items.length > 0 && (
         <div className="rounded-2xl border border-slate-200/70 bg-white p-5 shadow-soft">
           <h2 className="text-lg font-semibold">What we&apos;re covering</h2>

@@ -27,11 +27,21 @@ export default async function AppShell({
   profile,
   active,
   isAdmin,
+  wide,
   children,
 }: {
   profile: { avatarEmoji: string; displayName: string };
   active?: NavKey;
   isAdmin?: boolean;
+  /**
+   * Real feedback (2026-09-05): the lesson screen's 3-column layout was
+   * capped to ~900px by this shell's own max-w-6xl (1152px) minus the
+   * sidebar, even on a wide desktop monitor with room to spare. Sizing
+   * pages (reading-width prose - dashboard, plan, admin) stay at max-w-6xl;
+   * pass `wide` only for pages built to actually use extra width, like the
+   * lesson view's 3 columns.
+   */
+  wide?: boolean;
   children: React.ReactNode;
 }) {
   const switcherGroups = await getSwitcherGroups();
@@ -46,7 +56,7 @@ export default async function AppShell({
       : undefined;
 
   return (
-    <div className="mx-auto flex w-full max-w-6xl lg:min-h-[calc(100vh-3rem)] lg:gap-8">
+    <div className={`mx-auto flex w-full lg:min-h-[calc(100vh-3rem)] lg:gap-8 ${wide ? "max-w-[1800px]" : "max-w-6xl"}`}>
       {/* Desktop sidebar - a client component so it can hold collapse state */}
       <DesktopSidebar switcherGroups={switcherGroups} active={active} isAdmin={isAdmin} profile={profile} />
 

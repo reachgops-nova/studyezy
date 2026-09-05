@@ -2,12 +2,13 @@ import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
 import { getActiveProfile } from "@/lib/auth";
 import { getCurrentUser } from "@/lib/session";
-import { getUnit, getUnitBookletImages } from "@/lib/content";
+import { getUnit, getUnitBookletImages, unitKey as buildUnitKey } from "@/lib/content";
 import { getUnitResourceGroupsByKey } from "@/lib/queries/unitResources";
 import { getQuestionPaperByKey } from "@/lib/queries/questionPapers";
 import { FREEZABLE_TYPES } from "@/lib/unitResources";
 import { isTrialActive, getPricingPlanForKid } from "@/lib/pricing";
 import { db } from "@/lib/db";
+import type { MasteryBand } from "@/lib/types";
 import { LogoMark } from "@/components/Logo";
 import UnitView, { type UnitContentPack } from "@/components/UnitView";
 import AppShell from "@/components/AppShell";
@@ -94,6 +95,47 @@ export default async function LearnPage({ params }: { params: Promise<{ unitId: 
   });
   const contentPack: any | null = latestPack ?? null;
 
+  // Powers the "unit complete" flow's next-step decision (real feedback
+  // 2026-09-05: "you can decide if you continue or not depending on how the
+  // student is responding") - the student's own latest result on THIS unit,
+  // not a guess, and whether there's actually a next unit to move to.
+  const unitRow = await db.unit.findUnique({ where: { unitKey: unitId } });
+  const [latestAttempt, nextUnitRow] = await Promise.all([
+    unitRow
+      ? db.testAttempt.findFirst({
+          where: { studentProfileId: profile.id, unitId: unitRow.id },
+          orderBy: { takenAt: "desc" },
+          select: { band: true, scorePct: true, takenAt: true },
+        })
+      : null,
+    unitRow
+      ? db.unit.findUnique({
+          where: { unitKey: buildUnitKey(curriculumId, grade, subjectId, Number(unitIdStr) + 1) },
+          select: { unitKey: true, title: true, available: true },
+        })
+      : null,
+  ]);
+  const latestTestAttempt = latestAttempt
+    ? { band: latestAttempt.band as MasteryBand, scorePct: latestAttempt.scorePct, takenAt: latestAttempt.takenAt.toISOString() }
+    : null;
+  const nextUnit = nextUnitRow?.available ? { unitKey: nextUnitRow.unitKey, title: nextUnitRow.title } : null;
+
+  // "While starting a unit, recollect main points from the previous unit and
+  // move forward" (real feedback 2026-09-05) - a short recap of the unit
+  // right before this one, shown once on the overview screen rather than
+  // making the student go dig it up themselves.
+  const previousUnitNumber = Number(unitIdStr) - 1;
+  const previousUnit =
+    previousUnitNumber >= 1 ? await getUnit(curriculumId, grade, subjectId, previousUnitNumber) : null;
+  const previousUnitRecap = previousUnit
+    ? {
+        title: previousUnit.unit_title,
+        points: previousUnit.concepts
+          .flatMap((c) => (c.key_points?.length ? c.key_points : c.tips_to_remember) || [])
+          .slice(0, 6),
+      }
+    : null;
+
   return (
     // Real bug found live 2026-08-26: this page was never actually wrapped
     // in AppShell despite a stray comment implying it was (grep for
@@ -101,18 +143,17 @@ export default async function LearnPage({ params }: { params: Promise<{ unitId: 
     // most-used page in the app (the lesson/chat view) had no persistent
     // navigation at all, which is exactly why the unit switcher never
     // showed up here even after it shipped elsewhere.
-    <AppShell profile={profile} isAdmin={user.role === "admin"}>
-    {/* Wider than the old max-w-3xl (768px) - on an actual desktop/laptop
-        screen that left most of the viewport empty around a phone-width
-        column (reported with a screenshot: lots of unused space either
-        side). max-w-6xl matches AppShell's own container width so this page
-        is visually consistent with the rest of the app, not just wider. */}
+    <AppShell profile={profile} isAdmin={user.role === "admin"} wide>
     {/* grid-cols-1 (= minmax(0,1fr)) rather than a bare `grid`: a
         single-column grid's implicit track is `auto`, which is sized to
         max-content and lets a wide child drag the whole container past the
         viewport. That is what put this page into a horizontal scroll on a
-        phone (2026-08-30); the track now clamps and children wrap instead. */}
-    <main className="mx-auto grid w-full max-w-6xl grid-cols-1 gap-6">
+        phone (2026-08-30); the track now clamps and children wrap instead.
+        `wide` on AppShell (real feedback 2026-09-05: "we still have more
+        space... expand the view broader") lifts the old max-w-6xl cap that
+        left this page's 3-column lesson view squeezed into ~900px even on a
+        wide monitor - this page fills whatever AppShell now gives it. */}
+    <main className="mx-auto grid w-full grid-cols-1 gap-6">
       {/* flex-wrap + min-w-0: the action links were `shrink-0` beside an
           unconstrained title block, so the header's min-content was wider
           than a phone viewport and put the whole lesson page into a
@@ -154,6 +195,9 @@ export default async function LearnPage({ params }: { params: Promise<{ unitId: 
         resourceGroups={resourceGroups}
         diagnosticQuestions={diagnosticQuestions}
         contentPack={contentPack}
+        latestTestAttempt={latestTestAttempt}
+        nextUnit={nextUnit}
+        previousUnitRecap={previousUnitRecap}
       />
     </main>
     </AppShell>

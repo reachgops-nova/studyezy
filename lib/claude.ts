@@ -121,7 +121,12 @@ export async function askConceptQuestion(
       "or concept term the student should remember (like 'third person' or 'chronological order'), wrap just " +
       "that term in ==double equals== the first time it appears (e.g. ==third person==) so it can be " +
       "highlighted for the student - at most 2-4 terms per answer, only the term itself and not the words " +
-      "around it, and skip this entirely if the answer doesn't really have standout vocabulary. This marker " +
+      "around it, and skip this entirely if the answer doesn't really have standout vocabulary. Same rule " +
+      "applies, and matters even more, when the student shares a piece of their own writing and asks you to " +
+      "check or correct it: wrap each word or phrase you actually changed in ==double equals== (just the " +
+      "fixed word or phrase itself, e.g. ==Gopi's== or ==searched everywhere==, not the whole sentence around " +
+      "it), so every real correction is visually highlighted for them to focus on - that's the main thing " +
+      "they need to see and remember for their next piece of writing. This marker " +
       "is stripped before the text is shown or read aloud, same as the illustration token." +
       languageInstruction +
       illustrationInstruction,
