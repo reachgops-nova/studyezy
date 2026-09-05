@@ -273,6 +273,153 @@ export const WIDGETS_BY_CONCEPT: Record<string, InteractiveWidget> = {
         "Remember the spelling rule! Use 'dis-' for actions like disobey, but feelings like happy take 'un-' to become unhappy.",
     },
   },
+
+  // 2026-09-05: Unit 1 concepts 1.3, 1.5, 1.6, 1.10, 1.11, 1.12, 1.13 had no
+  // widget at all (real gap reported live) - all seven grounded directly in
+  // the real "Why Cockerels Crow" / "Why Monkeys Live in Trees" / "The
+  // Broath with the Rocks" fables and their surrounding exercises (Hodder
+  // Cambridge Primary English Learner's Book 5, pages 6, 12, 18, 19, 23,
+  // 25), re-read page by page rather than invented, same discipline as the
+  // rest of this file. No new widget component needed - all seven reuse an
+  // existing kind whose real mechanic fits the content, not just its name.
+  "1.3": {
+    id: "W10",
+    title: "Spot the Explicit Details",
+    instruction:
+      "Explicit meaning is what a writer tells you directly - no reading between the lines needed. Tap the highlighted parts of this passage from 'Why Cockerels Crow' to see what each one states outright.",
+    spec: {
+      kind: "biography_scanner",
+      passage: [
+        { text: "Everyone admired Cockerel because he had " },
+        { text: "a bright red spiky comb on top of his head", feature: "📋 Explicit detail - directly describes what Cockerel looks like. No guessing needed." },
+        { text: ". The first time, " },
+        { text: "Hyena ploughed his field for free", feature: "✅ Explicit action - states exactly what Hyena did." },
+        { text: "! Cockerel sat in the shade and watched, " },
+        { text: "with his feet up on an old table under the trees", feature: "📍 Explicit detail - tells us exactly where and how Cockerel was resting." },
+        { text: "." },
+      ],
+    },
+  },
+
+  "1.5": {
+    id: "W11",
+    title: "Whose Side Are You On?",
+    instruction:
+      "Perspective (point of view) means how a character sees and explains their own actions. Read the moment from 'Why Monkeys Live in Trees', then choose the explanation that makes sense FROM MONKEY'S side of the story.",
+    spec: {
+      kind: "predictive_brancher",
+      scenario:
+        "Monkey happily picks the fleas from Lioness's fur until she falls asleep - then ties her tail to a tree in a big bow and creeps away laughing. From Monkey's own point of view, why might he have played this trick?",
+      choices: [
+        {
+          text: "Monkey is simply cruel and enjoys hurting others.",
+          correct: false,
+          feedback:
+            "Monkey helped Lioness kindly at first - that doesn't fit someone who's just cruel. Think about how lions usually treat monkeys in the wild.",
+        },
+        {
+          text: "Lioness is a predator who could easily hunt him - from his side, trapping her feels like protecting himself, with a bit of cheeky payback for once being the smaller animal.",
+          correct: true,
+          feedback:
+            "Exactly! Seen from Monkey's side - a small animal lions normally hunt - his trick looks like self-protection and cheek, not pure cruelty. That's what perspective does: the same action reads differently depending on whose side you're standing on.",
+        },
+      ],
+    },
+  },
+
+  "1.6": {
+    id: "W12",
+    title: "Proofread It!",
+    instruction:
+      "Good writers proofread (check) their work before calling it finished. This sentence from 'The Broath with the Rocks' has five mistakes - tap each wrong word on the left, then tap its correction on the right.",
+    spec: {
+      kind: "idiom_connector",
+      items: [
+        { idiom: "new", meaning: "knew - spelling (past tense of 'know')" },
+        { idiom: "hadnt", meaning: "hadn't - missing apostrophe for 'had not'" },
+        { idiom: "nightfal", meaning: "nightfall - missing a letter" },
+        { idiom: "lites", meaning: "lights - spelling" },
+        { idiom: "apeared", meaning: "appeared - missing a letter" },
+      ],
+    },
+  },
+
+  "1.10": {
+    id: "W13",
+    title: "Climb the Story Mountain",
+    instruction:
+      "Every fable climbs this same shape. Tap the stages in order, from the calm beginning up to the peak problem and back down to the ending.",
+    spec: {
+      kind: "life_mountain",
+      checkpoints: [
+        { adverb: "Beginning", description: "Where the story starts - who the characters are and what normal life looks like.", x: 110, y: 420 },
+        { adverb: "Build-up", description: "Something starts to happen that will lead to a problem.", x: 230, y: 280 },
+        { adverb: "Problem", description: "The biggest challenge the main character has to face - the peak of the story.", x: 350, y: 90 },
+        { adverb: "Resolution", description: "How the character deals with or overcomes the problem.", x: 470, y: 250 },
+        { adverb: "Ending", description: "Things settle back down - the story's final, calmer state.", x: 580, y: 400 },
+      ],
+      ezyOnComplete:
+        "Well done! Every story climbs like a mountain - it begins calmly, builds up tension, reaches a problem at the very peak, works towards a resolution, and comes back down to a calm ending.",
+    },
+  },
+
+  "1.11": {
+    id: "W14",
+    title: "What Mood Does This Create?",
+    instruction:
+      "Writers set the mood of a scene through the words they choose, not by naming the mood outright. Read this real example, then choose the mood these specific word choices create.",
+    spec: {
+      kind: "predictive_brancher",
+      scenario:
+        "A story's opening paragraph is meant to feel like a lovely place. The writer describes it using the words 'tiny village', 'fertile farmland' and 'perfect'.",
+      choices: [
+        {
+          text: "These word choices create a calm, peaceful mood.",
+          correct: true,
+          feedback:
+            "Exactly! Words like 'tiny', 'fertile' and 'perfect' paint a gentle, contented picture - that's how writers set a mood without ever saying 'this village is peaceful' directly.",
+        },
+        {
+          text: "These word choices create a frightening, tense mood.",
+          correct: false,
+          feedback:
+            "Not quite - 'fertile' and 'perfect' are warm, positive words. A frightening mood would lean on words like 'crumbling', 'shadowy' or 'abandoned' instead.",
+        },
+      ],
+    },
+  },
+
+  "1.12": {
+    id: "W15",
+    title: "Positive, Comparative or Superlative?",
+    instruction:
+      "Adverbs change form to compare: fast → faster → fastest, but quickly → more quickly → most quickly. Tap each positive form, then tap the form it matches.",
+    spec: {
+      kind: "idiom_connector",
+      items: [
+        { idiom: "fast (positive)", meaning: "faster - comparative, add -er" },
+        { idiom: "quickly (positive)", meaning: "more quickly - comparative, use 'more' for longer adverbs" },
+        { idiom: "hard (positive)", meaning: "hardest - superlative, add -est" },
+        { idiom: "carefully (positive)", meaning: "most carefully - superlative, use 'most' for longer adverbs" },
+      ],
+    },
+  },
+
+  "1.13": {
+    id: "W16",
+    title: "The Full Writing Checklist",
+    instruction:
+      "Before you call a piece of writing finished, run through this checklist. Match each question to why it actually matters.",
+    spec: {
+      kind: "trait_matcher",
+      pairs: [
+        { character: "Did you use adjectives, adverbs and adverbial phrases?", trait: "They add detail and help create a clear mood for the reader." },
+        { character: "Are commas and full stops used correctly?", trait: "They show the reader exactly where one idea ends and the next begins." },
+        { character: "Are apostrophes used correctly?", trait: "They show who something belongs to (Gopi's pen) or shorten two words (didn't)." },
+        { character: "Have you correctly punctuated direct speech?", trait: "Speech marks show the reader exactly which words a character actually said." },
+      ],
+    },
+  },
 };
 
 export function getWidgetForConcept(conceptId: string): InteractiveWidget | undefined {
