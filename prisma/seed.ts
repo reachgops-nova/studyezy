@@ -678,7 +678,76 @@ async function main() {
         ]
       },
       {
-        id: '2.5', unitId: 'english-u2', name: 'Prefixes & Suffixes', pageNumber: [38, 39], sequence: 5,
+        id: '2.3', unitId: 'english-u2', name: 'Register (formal vs. informal language)', pageNumber: [31], sequence: 3,
+        difficulty: 'intermediate',
+        definition: "Register is the tone and level of formality a writer or speaker chooses, depending on who they're communicating with and why - the same message can be written formally or informally.",
+        keyPoints: [
+          "Formal register avoids contractions and slang, using fuller vocabulary and complete sentences - used for official writing, or addressing someone you don't know well.",
+          "Informal register uses contractions, casual phrasing, and everyday words - used for messages to friends, diary entries, or casual conversation.",
+          "The right register depends on audience and purpose, not on which one is more 'correct' - both are correct for their own situation."
+        ],
+        examples: [
+          "Formal: 'I would be grateful if you could provide further information.' Informal: 'Can you tell me more about it?'",
+          "A biography written for a school reference book stays formal throughout; a personal diary entry about the same person might slip into informal register."
+        ],
+        tipsToRemember: [
+          "Check for contractions ('don't', 'it's') and slang - their presence is the biggest giveaway that a piece is informal.",
+          "Before writing, ask: who is going to read this, and how well do I know them? That answers what register to use."
+        ],
+        reasoningInterviewPrompts: ["If you rewrote this formal sentence informally, what specifically would change - the words, the sentence length, or both?"],
+        voiceQaSamples: [
+          { question: "What's the difference between formal and informal register?", answer: "Formal register uses fuller, more careful language without contractions or slang, like writing to someone important. Informal register is casual and conversational, with contractions and everyday words, like texting a friend." },
+          { question: "How do I know which register to use?", answer: "Think about your audience and purpose. Writing for someone you don't know, or for an official purpose, calls for formal register. Writing to a friend or family calls for informal register." }
+        ]
+      },
+      {
+        id: '2.4', unitId: 'english-u2', name: 'Varying vocabulary with synonyms', pageNumber: [32], sequence: 4,
+        difficulty: 'beginner',
+        definition: "Writing becomes more interesting and precise when you replace overused words with synonyms - words with very similar meanings - found using a thesaurus.",
+        keyPoints: [
+          "A thesaurus lists synonyms for nouns, verbs, adjectives, and adverbs, so the same idea can be expressed several different ways.",
+          "Repeating the same verb or adjective throughout a piece makes writing feel flat - swapping in synonyms adds variety and precision.",
+          "Not every synonym fits every context exactly the same way - part of the skill is picking the one that best matches the tone you want."
+        ],
+        examples: [
+          "'Win' can become 'triumph', 'succeed', or 'come out on top', depending on how dramatic the sentence should sound.",
+          "'Andre had the strength to hit the ball and beat his opponent' becomes more vivid as 'Andre had the power to blast the ball and annihilate his adversary.'"
+        ],
+        tipsToRemember: [
+          "Circle any word you've used three or more times on a page - that's your shortlist for synonym replacement.",
+          "Always read the replaced sentence back - a synonym that's technically correct can still sound wrong if it doesn't match the rest of the tone."
+        ],
+        reasoningInterviewPrompts: ["Why might 'annihilate' be the wrong synonym for 'beat' in a gentle, friendly story, even though it means something similar?"],
+        voiceQaSamples: [
+          { question: "What is a synonym?", answer: "A synonym is a word with a very similar meaning to another word - like 'happy' and 'joyful'. A thesaurus is the tool writers use to find them." },
+          { question: "Why not just use the same word every time if it's correct?", answer: "Because repeating the same word again and again makes writing feel dull and repetitive. Synonyms keep the writing lively and can add more precise shades of meaning." }
+        ]
+      },
+      {
+        id: '2.5', unitId: 'english-u2', name: 'Facts and opinions in biography writing', pageNumber: [35], sequence: 5,
+        difficulty: 'intermediate',
+        definition: "Biography writers sometimes phrase opinions in a confident, fact-like tone, using strong descriptive words - being able to spot these disguised opinions is important so you don't mistake them for proven facts.",
+        keyPoints: [
+          "Words like 'prodigy', 'sensation', or 'the greatest' are opinion signals, even when written in a confident, fact-sounding way.",
+          "Biographies mix real, checkable facts (dates, places, achievements) with the writer's admiring opinions about the person - both appear side by side.",
+          "Turning a sentence into a question ('is that provable?') is a quick way to test whether it's really a fact or an opinion in disguise."
+        ],
+        examples: [
+          "'She became a sensation overnight' sounds fact-like but is an opinion - 'sensation' is a judgement, not something you can measure exactly.",
+          "'She performed at 17 national concerts in one year' is a fact - it can be checked against a real record."
+        ],
+        tipsToRemember: [
+          "Watch for superlatives and glowing descriptions ('prodigy', 'the best', 'a sensation') in biographies - they're almost always opinions dressed up as facts.",
+          "If you can't verify a claim by checking a record, date, or count, it's probably an opinion, however confidently it's written."
+        ],
+        reasoningInterviewPrompts: ["Find a sentence in this biography that sounds impressive - is it something you could actually check and prove, or is it really someone's opinion?"],
+        voiceQaSamples: [
+          { question: "Why do biographies use so many opinions if they're supposed to be true stories?", answer: "Because a biography isn't just a list of facts - it also shows how impressive or admirable the person's achievements were, which naturally includes the writer's opinion, even in confident-sounding language." },
+          { question: "How do I tell a disguised opinion from a real fact in a biography?", answer: "Ask if you could actually check it - a date, a place, or a number can be verified. Words like 'amazing' or 'a sensation' can't be checked the same way, even if they sound certain." }
+        ]
+      },
+      {
+        id: '2.6', unitId: 'english-u2', name: 'Prefixes & Suffixes', pageNumber: [37, 38, 39], sequence: 6,
         definition: "Prefixes are letters added to the BEGINNING of a root word to change its meaning (often making it the opposite). Suffixes are letters added to the END of a word to change its grammatical form.",
         keyPoints: [
           "The prefix 'dis-' turns agree to disagree.",
@@ -697,8 +766,742 @@ async function main() {
         ]
       },
 
-      // UNIT 4: EXPLANATION TEXTS (no recovered rich content - name-only stub)
-      { id: '4.1', unitId: 'english-u4', name: 'Explanation Texts ("Our Watery World")', pageNumber: [61], sequence: 1 },
+      // UNIT 3: POETRY (Narrative poems) - representative pass, grounded directly
+      // against the real textbook pages (extracted from the source PDF this
+      // session), no illustrations yet.
+      {
+        id: '3.1', unitId: 'english-u3', name: 'Features of a narrative poem', pageNumber: [41], sequence: 1,
+        difficulty: 'beginner',
+        definition: "A narrative poem is a poem that tells a story. Like other stories, it can include characters, a plot, dialogue, and descriptions of settings - but it's written in poetic form, and may or may not rhyme.",
+        keyPoints: [
+          "Narrative poems always tell a story - that's what separates them from poems that are just about a feeling or an image.",
+          "Rhyme is optional in a narrative poem - the storytelling elements (characters, plot) are what define it, not the sound pattern.",
+          "A syllable is a vowel sound inside a word, and counting syllables per line is often used to analyse a poem's rhythm."
+        ],
+        examples: [
+          "A narrative poem about a school trip might include a character (the narrator), a plot (getting ready, going on the trip), dialogue, and a setting.",
+          "'Bat' has 1 syllable; 'mysterious' has 4 - counting syllables like this helps compare the rhythm of different lines in a poem."
+        ],
+        tipsToRemember: [
+          "Before analysing a narrative poem's features, first check: does it actually tell a story with events happening in order?",
+          "Clap out a line's syllables if you're unsure how many it has - a quick, reliable way to check rather than guessing."
+        ],
+        reasoningInterviewPrompts: ["What makes this poem 'narrative' rather than just descriptive - can you point to the actual story events?"],
+        voiceQaSamples: [
+          { question: "What makes a poem 'narrative'?", answer: "It tells a story - with characters and a plot, just like a prose story, but written in poetic lines. It might rhyme, or it might not; what matters is that it narrates events." },
+          { question: "Do narrative poems have to rhyme?", answer: "No! Some narrative poems rhyme and some don't. What makes a poem narrative is that it tells a story with characters and events, not whether the lines rhyme." }
+        ]
+      },
+      {
+        id: '3.2', unitId: 'english-u3', name: 'Inferring character in poetry', pageNumber: [44], sequence: 2,
+        difficulty: 'intermediate',
+        definition: "Just like in stories, poems reveal what characters are like through what they say, what they do, and what other characters think or say about them - readers must infer these traits rather than being told directly.",
+        keyPoints: [
+          "The same three clues used in fiction (speech, actions, others' opinions) apply to poetry - a poem rarely just states 'Neil was nervous.'",
+          "A single poem can give clues about several characters at once, including the narrator, who may share their own feelings without a direct statement.",
+          "Piecing together character clues from a poem is like solving a puzzle - no single clue tells the whole picture."
+        ],
+        examples: [
+          "If a poem's narrator describes fumbling with buttons and taking too long to get ready, readers infer nervousness, without the poem stating it directly.",
+          "If another character is described as calling out warmly and packing an extra treat, readers infer that character is caring."
+        ],
+        tipsToRemember: [
+          "List everything a character says, does, and what others say about them separately first - then combine the lists into one overall impression.",
+          "Watch for the narrator's own feelings too - narrators reveal character through tone and word choice, not just named characters."
+        ],
+        reasoningInterviewPrompts: ["Which specific line gave you that impression of the character? Was it something they said, did, or something someone else said about them?"],
+        voiceQaSamples: [
+          { question: "How do I find out about a character in a poem if the poet never describes them directly?", answer: "Look at what the character says, what they do, and what other characters think or say about them. Combining those three clues builds a picture of what they're like." },
+          { question: "Can the narrator of a poem be a character too?", answer: "Yes! The narrator's own words, tone, and feelings reveal what kind of character they are, even though they're the one telling the poem." }
+        ]
+      },
+      {
+        id: '3.3', unitId: 'english-u3', name: 'Punctuating dialogue in poems', pageNumber: [47], sequence: 3,
+        difficulty: 'intermediate',
+        definition: "Direct speech in a poem is punctuated the same way as in prose: speech marks around the exact words spoken, and a comma separating the reporting clause (who said it) from the words spoken - whether the reporting clause comes before or after.",
+        keyPoints: [
+          "The reporting clause ('she said', 'the teacher asked') can come before or after the speech itself, but a comma always separates it from the spoken words.",
+          "Speech marks go directly around the exact words a character speaks - nothing outside them should be included inside the marks.",
+          "Varying where you place the reporting clause keeps dialogue-heavy writing from feeling repetitive."
+        ],
+        examples: [
+          "'I love to read,' the teacher said. (comma before closing speech mark, reporting clause after)",
+          "The teacher said, 'I love to read.' (comma after reporting clause, reporting clause before)"
+        ],
+        tipsToRemember: [
+          "Read the sentence aloud - if it doesn't naturally pause where you've placed the comma, you've probably put it in the wrong spot.",
+          "Check that speech marks close immediately after the actual spoken words end, not after the reporting clause that follows."
+        ],
+        reasoningInterviewPrompts: ["Why does the comma go inside the speech marks in 'I love to read,' but outside them when the reporting clause comes first?"],
+        voiceQaSamples: [
+          { question: "Where does the comma go when I'm writing dialogue?", answer: "It goes right before the closing speech mark if the reporting clause comes after ('I'm ready,' she said), or right after the reporting clause if it comes before (She said, 'I'm ready.')." },
+          { question: "Can I move the reporting clause into the middle of a sentence someone is speaking?", answer: "Yes - just make sure commas surround the reporting clause on both sides: 'I'm ready,' she said, 'to go now.'" }
+        ]
+      },
+      {
+        id: '3.4', unitId: 'english-u3', name: 'Metaphors', pageNumber: [50], sequence: 4,
+        difficulty: 'intermediate',
+        definition: "A metaphor is a way of comparing two things by saying one thing IS another, without using 'like' or 'as' - unlike a simile, which makes the comparison directly using those words.",
+        keyPoints: [
+          "A simile compares using 'like' or 'as' ('the sky is shining like a star'); a metaphor drops those words and states the comparison directly ('the sky is a shining star').",
+          "Metaphors work because the two things share some quality, even though they're literally different things.",
+          "Metaphors appear in all kinds of poems, not just narrative ones, and can describe people, objects, feelings, or settings."
+        ],
+        examples: [
+          "'He is a giant' - the person isn't literally a giant, but the metaphor suggests great size or an imposing presence.",
+          "'Her heart is a stone' - suggests coldness or a lack of feeling, more directly than a simile would."
+        ],
+        tipsToRemember: [
+          "Test whether a comparison is a metaphor or simile by checking for 'like' or 'as' - if those words are missing but a comparison is still being made, it's a metaphor.",
+          "Ask what quality the two things share - that's the actual meaning the metaphor is trying to communicate, not the literal image."
+        ],
+        reasoningInterviewPrompts: ["What specific quality does this metaphor suggest the two things share? Would a simile with 'like' or 'as' feel weaker or stronger here?"],
+        voiceQaSamples: [
+          { question: "What's the difference between a metaphor and a simile?", answer: "A simile compares two things using 'like' or 'as' - 'brave as a lion.' A metaphor drops those words and says one thing simply IS the other - 'he is a lion.' Metaphors often feel more direct and powerful." },
+          { question: "Why do poets use metaphors instead of just saying what they mean?", answer: "Metaphors let a poet suggest a feeling or quality vividly and briefly, letting the reader picture it, rather than plainly stating a fact." }
+        ]
+      },
+      {
+        id: '3.5', unitId: 'english-u3', name: 'Personification', pageNumber: [53], sequence: 5,
+        difficulty: 'advanced',
+        definition: "Personification is a special type of metaphor where a writer describes something that isn't human or alive as if it were a person, giving it human actions, feelings, or qualities.",
+        keyPoints: [
+          "Personification is specifically about giving HUMAN qualities to non-human things - weather, objects, animals, or ideas.",
+          "It's a type of metaphor, since it makes an implied comparison without using 'like' or 'as'.",
+          "Personification helps create mood and atmosphere by making non-human things feel alive and relatable."
+        ],
+        examples: [
+          "'Sunshine tiptoed through my window' gives sunshine the human action of tiptoeing.",
+          "'The wind howled angrily all night' gives the wind a human emotion (anger) and a human-like sound."
+        ],
+        tipsToRemember: [
+          "Ask: is a non-human thing doing something only a person or animal could really do? If yes, that's personification.",
+          "When writing your own personification, pick a human action or feeling that matches the mood you want - a 'gentle breeze that whispered' feels calm; a 'wind that screamed' feels frightening."
+        ],
+        reasoningInterviewPrompts: ["What human quality is being given to this non-human thing, and how does it change the mood of the poem compared to a plain, literal description?"],
+        voiceQaSamples: [
+          { question: "How is personification different from a regular metaphor?", answer: "Personification is a specific kind of metaphor where the comparison always gives human qualities or actions to something non-human. A regular metaphor can compare any two things." },
+          { question: "Why do writers use personification instead of just describing something normally?", answer: "It makes non-human things feel alive and creates a stronger mood or atmosphere - 'the old house groaned' feels much more eerie than 'the old house creaked.'" }
+        ]
+      },
+
+      // UNIT 4: INFORMATION AND EXPLANATION TEXTS - representative pass,
+      // grounded directly against the real textbook pages, no illustrations yet.
+      {
+        id: '4.1', unitId: 'english-u4', name: 'What is an information text?', pageNumber: [60], sequence: 1,
+        difficulty: 'beginner',
+        definition: "An information text is a piece of non-fiction writing about a topic - it can be read in any order, not just from beginning to end, which is why information texts are sometimes called non-chronological reports.",
+        keyPoints: [
+          "Information texts share features with other non-fiction: a title and introduction, sub-headings and sections, paragraphs, facts, diagrams with labels, bullet points, and topic-specific technical vocabulary.",
+          "Because an information text isn't telling a story in order, a reader can jump straight to the section they need instead of reading start to finish.",
+          "Comparative and superlative adjectives (taller, the tallest) often appear when an information text compares facts about a topic."
+        ],
+        examples: [
+          "An information text about volcanoes might use technical vocabulary like 'lava', 'magma', and 'ash cloud', organized under sub-headings like 'How volcanoes form.'",
+          "A reader wanting to know only about ocean depth can skip straight to that sub-heading, instead of reading the whole text from the start."
+        ],
+        tipsToRemember: [
+          "Skim an information text first for a general impression, then scan it to find specific facts you actually need - two different reading speeds for two different jobs.",
+          "If a text uses topic-specific technical vocabulary and can be read out of order, that's a strong sign it's an information text."
+        ],
+        reasoningInterviewPrompts: ["Why can an information text be read in any order, when a story usually can't?"],
+        voiceQaSamples: [
+          { question: "What is an information text?", answer: "It's a piece of non-fiction writing about a topic, like volcanoes or the Ancient Egyptians. Because it's organized into sections rather than a single story, you can read it in any order - sometimes called a non-chronological report." },
+          { question: "What features should I look for to tell it's an information text?", answer: "Look for a title and introduction, sub-headings, bullet points, facts, diagrams with labels, and technical vocabulary specific to the topic." }
+        ]
+      },
+      {
+        id: '4.2', unitId: 'english-u4', name: 'Differences between information and explanation texts', pageNumber: [64], sequence: 2,
+        difficulty: 'intermediate',
+        definition: "An information text can be read in any order and presents facts about a topic; an explanation text specifically describes a process, showing how or why something happens, and is usually organized chronologically from start to end.",
+        keyPoints: [
+          "Information texts are non-chronological (read in any order); explanation texts are usually chronological, since they describe a sequence of events or steps.",
+          "Explanation texts rely heavily on adverbs and adverbial phrases of time - 'first', 'next', 'afterwards', 'eventually' - to guide the reader through the process.",
+          "The same topic can be presented as either kind of text: 'facts about volcanoes' is information; 'how a volcano erupts' is explanation."
+        ],
+        examples: [
+          "'Icebergs form when...then...eventually...' is an explanation text, chronologically describing the process.",
+          "A list of iceberg facts organized under sub-headings (size, location, danger) with no particular order is an information text."
+        ],
+        tipsToRemember: [
+          "Ask: does this text describe a PROCESS happening over time, or does it just present facts about a topic? That answers which type it is.",
+          "Look for sequencing words like 'first'/'next'/'eventually' - lots of them is a strong sign of an explanation text."
+        ],
+        reasoningInterviewPrompts: ["Could you rearrange the paragraphs of this text and have it still make complete sense? If yes, is it more likely information or explanation?"],
+        voiceQaSamples: [
+          { question: "What's the difference between an information text and an explanation text?", answer: "An information text presents facts about a topic and can be read in any order. An explanation text describes how or why something happens, step by step, usually in chronological order." },
+          { question: "Can the same topic have both kinds of text?", answer: "Yes - facts about volcanoes could be an information text, while 'how a volcano erupts' step by step would be an explanation text on the same topic." }
+        ]
+      },
+      {
+        id: '4.3', unitId: 'english-u4', name: 'Using information texts (scanning for specific answers)', pageNumber: [67], sequence: 3,
+        difficulty: 'intermediate',
+        definition: "Scanning means reading an information text quickly to find the answer to a specific question, rather than reading every word - different question words point you toward different kinds of answers.",
+        keyPoints: [
+          "Questions beginning with 'who' need a name or noun in the answer; 'where' needs a place; 'when' needs a time.",
+          "Questions beginning with 'what', 'how', or 'why' are harder to scan for - they usually need you to find and read a whole explanation section.",
+          "Scanning differs from skimming: skimming gets a general impression of a whole text, scanning hunts for one specific piece of information."
+        ],
+        examples: [
+          "For 'Where do coral reefs grow?', scan for a place name - the answer is 'in warm shallow seas and oceans.'",
+          "For 'Why are coral reefs important?', you can't scan for a single word - you need to find and read the explanation section."
+        ],
+        tipsToRemember: [
+          "Before scanning, turn the question into the kind of answer you're hunting for - a name, a place, a time, or an explanation - then search for just that.",
+          "'What/how/why' questions almost always need a slower, careful read of a whole paragraph, not a quick scan."
+        ],
+        reasoningInterviewPrompts: ["Why is 'where' easier to scan for than 'why'? What's different about the kind of answer each one needs?"],
+        voiceQaSamples: [
+          { question: "What's the difference between skimming and scanning?", answer: "Skimming is a fast read to get the general idea of a whole text. Scanning is hunting through a text for the answer to one specific question, ignoring everything else." },
+          { question: "Why are 'what/how/why' questions harder to scan for?", answer: "Because their answers are usually a whole explanation, not a single word like a name, place, or time - you have to find the right section and read it carefully." }
+        ]
+      },
+      {
+        id: '4.4', unitId: 'english-u4', name: 'Different styles of information text (register & suffixes)', pageNumber: [70], sequence: 4,
+        difficulty: 'intermediate',
+        definition: "Information texts can be written in a formal style (technical language, for an audience who knows the topic) or an informal style (simpler, everyday language, for a general audience) - and suffixes like '-ology'/'-ogy' often signal 'the study of' a topic.",
+        keyPoints: [
+          "Formal information texts use precise, technical vocabulary and an objective tone, often aimed at readers who already know something about the topic.",
+          "Informal information texts use simpler, more accessible language, often aimed at readers new to the topic, like younger children.",
+          "The suffix '-ology' or '-ogy' means 'the study of' - biology is the study of living things, geology is the study of the Earth."
+        ],
+        examples: [
+          "A formal information text about ecosystems might use 'photosynthesis' and 'biodiversity' without explaining them; an informal version might say 'how plants make food' instead.",
+          "'Zoology' = the study of animals; both share the '-ology' pattern meaning a field of study."
+        ],
+        tipsToRemember: [
+          "Check who the text seems to be written for - unexplained technical terms suggest a formal, expert audience; simple explained language suggests an informal, general one.",
+          "When you meet an unfamiliar '-ology'/'-ogy' word, try replacing the ending with 'the study of' to get a rough working definition."
+        ],
+        reasoningInterviewPrompts: ["If you rewrote this formal information text for a much younger reader, what specifically would you need to change?"],
+        voiceQaSamples: [
+          { question: "How do I know if an information text is formal or informal?", answer: "Look at the vocabulary and audience - a formal text uses precise, technical words often without explaining them, while an informal text uses simpler, everyday language and explains new terms." },
+          { question: "What does the suffix '-ology' mean?", answer: "It usually means 'the study of' something - biology is the study of living things, geology is the study of the Earth and its rocks." }
+        ]
+      },
+
+      // UNIT 5: FICTION (Stories developed into a film) - representative pass,
+      // grounded directly against the real textbook pages, no illustrations yet.
+      {
+        id: '5.1', unitId: 'english-u5', name: 'Showing character feelings through verb and adverb choice', pageNumber: [76], sequence: 1,
+        difficulty: 'intermediate',
+        definition: "Writers choose specific verbs and adverbs to show how a character feels through their actions, instead of directly telling the reader the character's emotion.",
+        keyPoints: [
+          "A carefully chosen verb (e.g. 'trudged' instead of 'walked') can suggest tiredness or reluctance without ever using the word 'tired.'",
+          "Adverbs added to a verb (e.g. 'reluctantly', 'heavily') sharpen the feeling even further.",
+          "This is implicit characterisation applied to actions - readers infer the feeling from HOW something is done, not from being told."
+        ],
+        examples: [
+          "'Hugo trudged up the staircase' suggests tiredness or reluctance through the verb 'trudged' alone, rather than saying 'Hugo was tired.'",
+          "'She snatched the pen and threw it down' suggests frustration through the choice of 'snatched' and 'threw', without stating the emotion directly."
+        ],
+        tipsToRemember: [
+          "When writing your own characters, replace a plain verb (walked, said, took) with a more specific one that already carries a feeling (trudged, snapped, snatched).",
+          "Add an adverb only if the verb alone isn't doing enough work - stacking too many can feel overwritten."
+        ],
+        reasoningInterviewPrompts: ["What plain verb could replace 'trudged' here, and how would swapping it change how the character's feeling comes across?"],
+        voiceQaSamples: [
+          { question: "How can a verb show a character's feelings without saying the feeling directly?", answer: "Some verbs already carry a feeling built in - 'trudged' suggests tiredness or reluctance, while 'strolled' suggests being relaxed. Choosing the right verb lets the action itself show the emotion." },
+          { question: "What's the point of adding an adverb to a verb like this?", answer: "An adverb can sharpen or clarify the feeling the verb suggests - 'trudged reluctantly' makes the reluctance clearer than 'trudged' alone." }
+        ]
+      },
+      {
+        id: '5.2', unitId: 'english-u5', name: 'Concrete and abstract nouns', pageNumber: [79], sequence: 2,
+        difficulty: 'beginner',
+        definition: "Concrete nouns name things you can physically sense - see, hear, touch, smell, or taste. Abstract nouns name things that aren't physical, like feelings, ideas, or qualities.",
+        keyPoints: [
+          "Concrete nouns include people, objects, places, and sounds - anything with a physical presence, like 'clock' or 'staircase.'",
+          "Abstract nouns include feelings, thoughts, and qualities that can't be physically touched or seen, like 'fear' or 'bravery.'",
+          "Writers often pair a concrete noun with an abstract idea to make a feeling easier to picture."
+        ],
+        examples: [
+          "'Clock', 'wheels', 'staircase' are concrete nouns - you could point to each one.",
+          "'Concentration', 'fear', 'intensity' are abstract nouns - you can't point to fear itself, only to things that show it."
+        ],
+        tipsToRemember: [
+          "Test a noun by asking: can I touch, see, or hear this thing directly? If yes, it's concrete; if it's a feeling or idea, it's abstract.",
+          "Abstract nouns often come from adjectives or verbs - 'brave' becomes 'bravery', 'concentrate' becomes 'concentration.'"
+        ],
+        reasoningInterviewPrompts: ["Find one concrete noun and one abstract noun in this same sentence - how did you decide which was which?"],
+        voiceQaSamples: [
+          { question: "What's the difference between a concrete noun and an abstract noun?", answer: "A concrete noun names something physical you can sense, like a clock or a staircase. An abstract noun names something non-physical, like a feeling or an idea, like concentration or bravery." },
+          { question: "Can I turn an abstract noun into something more concrete?", answer: "You can't make an abstract noun physical, but you can show it through a concrete detail - instead of just saying 'fear,' describing trembling hands lets the reader sense the fear indirectly." }
+        ]
+      },
+      {
+        id: '5.3', unitId: 'english-u5', name: 'Comparing a story across book and film adaptations', pageNumber: [82], sequence: 3,
+        difficulty: 'intermediate',
+        definition: "When a book becomes a film, some parts of the story may be changed, added, or removed - understanding a character clearly through the book's own word choices helps you judge whether a film adaptation stays true to that character.",
+        keyPoints: [
+          "Film-makers and actors must show a character's feelings visually and through performance, sometimes interpreting choices the author only implied through word choice.",
+          "Comparing the book and the film side by side reveals what was kept, changed, or added for a different medium.",
+          "A reader who understands a character's traits well from the book's own language can predict how believable a film's portrayal will be."
+        ],
+        examples: [
+          "If a book describes a character as 'trudging' and 'reluctant', a film should show that reluctance through the actor's body language and pacing, not just tell viewers about it.",
+          "A scene taking many pages of description in a book might be compressed into a few seconds of film, cutting some of the book's implied detail."
+        ],
+        tipsToRemember: [
+          "Before comparing book and film, write down the character traits you can prove from the book's own words - that becomes your checklist for judging the film's accuracy.",
+          "A film adds things a book doesn't have (expressions, music, pacing) and can also remove things - neither medium is simply 'more right.'"
+        ],
+        reasoningInterviewPrompts: ["Choose one verb or adjective from the book describing a character - if you were the film director, how would you show that same quality on screen without using any words?"],
+        voiceQaSamples: [
+          { question: "Why do films change parts of the book when they're based on it?", answer: "Films have different tools than books - they can't include every line of description, but they can show feelings visually through actors and pacing. Some story parts get compressed, cut, or added to fit the new medium." },
+          { question: "How can I tell if a film 'stays true' to a character from the book?", answer: "Check whether the film shows the same personality traits the book's own words gave that character - if the book showed reluctance through a verb like 'trudged,' does the film's performance show that same reluctance?" }
+        ]
+      },
+
+      // UNIT 6: FICTION (Classic literature) - representative pass, grounded
+      // directly against the real textbook pages, no illustrations yet.
+      {
+        id: '6.1', unitId: 'english-u6', name: 'Combining figurative language with adverbs and adjectives for effect', pageNumber: [95], sequence: 1,
+        difficulty: 'advanced',
+        definition: "Classic literature often layers figurative language (metaphor, simile, personification, idiom) together with carefully chosen adverbs and adjectives, so the effect builds rather than relying on just one technique at a time.",
+        keyPoints: [
+          "A plain comparison ('The roc was a large bird') becomes more powerful by adding an adverb to the adjective ('an unbelievably large bird').",
+          "Combining more than one figurative device in the same description (a simile plus personification, for example) creates a richer, more vivid image.",
+          "The choice of adverb changes the intensity of the effect - 'very large' feels ordinary, 'unbelievably large' feels dramatic."
+        ],
+        examples: [
+          "'The roc was a large bird' -> 'The roc was an unbelievably large bird' - the adverb 'unbelievably' intensifies the adjective for greater effect.",
+          "'Dangerously fierce', 'frighteningly sharp' - pairing a dramatic adverb with an adjective sharpens the reader's sense of danger."
+        ],
+        tipsToRemember: [
+          "Don't stack too many intensifying adverbs in the same sentence - one well-chosen one is more powerful than three weaker ones together.",
+          "When revising your own writing, look for plain adjectives ('big', 'scary') and ask if a stronger adverb+adjective pairing would create a better effect."
+        ],
+        reasoningInterviewPrompts: ["Why does 'unbelievably large' create a stronger image than just 'very large'? What does the word 'unbelievably' add?"],
+        voiceQaSamples: [
+          { question: "How can I make my descriptions in a story more powerful?", answer: "Try combining an intensifying adverb with your adjective - instead of 'a large bird', try 'an unbelievably large bird'. You can also combine more than one figurative technique, like a simile and personification, in the same description." },
+          { question: "Is it good to use lots of adverbs and adjectives together?", answer: "Not too many at once - one strong, well-chosen adverb+adjective pairing is usually more effective than piling up several weaker ones in the same sentence." }
+        ]
+      },
+      {
+        id: '6.2', unitId: 'english-u6', name: 'Using context clues to understand unfamiliar words', pageNumber: [98], sequence: 2,
+        difficulty: 'intermediate',
+        definition: "Readers can often work out the meaning of an unfamiliar word by using the information around it - the context - rather than needing a dictionary every time.",
+        keyPoints: [
+          "Context clues can come from the rest of the sentence, the surrounding sentences, or even the situation being described in the story.",
+          "Sometimes the clue is a definition hidden in the same sentence; sometimes it's an example, or the general mood of the passage.",
+          "Even without knowing an unfamiliar word exactly, context often lets you make a good-enough guess to keep reading without stopping."
+        ],
+        examples: [
+          "'The giants moved with a menacing gait, and everyone stepped back in fear' - even without knowing 'menacing', the surrounding fear-related words suggest it means something threatening.",
+          "'The maroon-coloured door was a deep brownish-red' - the sentence itself defines 'maroon' through the description that follows it."
+        ],
+        tipsToRemember: [
+          "Before reaching for a dictionary, reread the sentence and the one before/after it - the context clue is often right there.",
+          "Ask what feeling or reaction the surrounding words create - that often points you toward roughly what the unfamiliar word means, even if not its exact definition."
+        ],
+        reasoningInterviewPrompts: ["What specific words nearby helped you guess this word's meaning? Would you have guessed the same thing without them?"],
+        voiceQaSamples: [
+          { question: "What are context clues?", answer: "They're hints in the surrounding text - the rest of the sentence, nearby sentences, or the situation - that help you work out what an unfamiliar word means without looking it up." },
+          { question: "What if the context doesn't give an exact definition?", answer: "That's normal - context clues often only get you a rough idea of a word's meaning, which is usually enough to keep reading and understand the story." }
+        ]
+      },
+      {
+        id: '6.3', unitId: 'english-u6', name: 'Modal verbs (possibility and certainty)', pageNumber: [102], sequence: 3,
+        difficulty: 'intermediate',
+        definition: "Modal verbs (like 'might', 'may', 'could', 'couldn't') show how possible, certain, or permitted something is, rather than stating it as a plain fact.",
+        keyPoints: [
+          "'Might' and 'may' show something is possible but not certain - 'My keys might be in my bag.'",
+          "'Could' can show ability, possibility, or a polite request, depending on context - 'I could travel again next year' shows possibility.",
+          "'Couldn't' shows impossibility - 'We couldn't have won that race' means winning was not possible in that situation."
+        ],
+        examples: [
+          "'The ticket says: if you cancel, you'll get a full refund' vs 'The ticket might say you'll get a refund' - the second is far less certain.",
+          "'We couldn't have won that race' expresses that victory was impossible, not just unlikely."
+        ],
+        tipsToRemember: [
+          "Swap the modal verb out and ask: does the sentence still mean the same thing? If not, the modal verb was doing real work showing certainty or possibility.",
+          "Modal verbs never change form for tense the normal way (no 'mighted' or 'coulding') - they stay the same regardless of subject."
+        ],
+        reasoningInterviewPrompts: ["How would the meaning of this sentence change if you swapped 'might' for 'will'?"],
+        voiceQaSamples: [
+          { question: "What is a modal verb?", answer: "It's a verb like 'might', 'may', 'could', or 'couldn't' that shows how possible, certain, or permitted something is, instead of stating it as a plain fact." },
+          { question: "What's the difference between 'might' and 'couldn't'?", answer: "'Might' shows something is possible but uncertain. 'Couldn't' shows something was impossible. They sit at opposite ends of how likely something is." }
+        ]
+      },
+      {
+        id: '6.4', unitId: 'english-u6', name: 'Adverbial phrases (using -ing forms)', pageNumber: [107], sequence: 4,
+        difficulty: 'advanced',
+        definition: "An adverbial phrase built from an -ing verb form can describe how an action happens, adding detail to a sentence without needing a separate clause.",
+        keyPoints: [
+          "An -ing adverbial phrase usually describes what's happening at the same time as the main action - 'tossing and turning in the current.'",
+          "These phrases can open a sentence for variety, rather than always sitting at the end.",
+          "Overusing this pattern in every sentence can feel repetitive - it works best mixed with other sentence structures."
+        ],
+        examples: [
+          "'The raft moved uncertainly, tossing and turning in the current.' - the -ing phrase adds detail about HOW the raft moved.",
+          "'Sinbad set sail with a tear in his eye' could become 'Wiping away a tear, Sinbad set sail' - moving the -ing phrase to the front for variety."
+        ],
+        tipsToRemember: [
+          "Check that the -ing action could realistically happen at the SAME time as the main verb - otherwise the sentence won't make logical sense.",
+          "Try moving an -ing adverbial phrase to the start of a sentence occasionally instead of always at the end, for rhythm and variety."
+        ],
+        reasoningInterviewPrompts: ["Could the action in this -ing phrase really happen at the same time as the main verb? What would go wrong if it couldn't?"],
+        voiceQaSamples: [
+          { question: "What is an -ing adverbial phrase?", answer: "It's a phrase built from an -ing verb (like 'tossing and turning') that describes how an action happens, usually at the same time as the sentence's main action." },
+          { question: "Where can I place an -ing adverbial phrase in a sentence?", answer: "Most often at the end, but you can also move it to the beginning of the sentence for variety - just make sure a comma follows it there." }
+        ]
+      },
+      {
+        id: '6.5', unitId: 'english-u6', name: 'Themes in classic literature', pageNumber: [109], sequence: 5,
+        difficulty: 'advanced',
+        definition: "A theme is a big idea about life that a story explores throughout its events - unlike the plot (what happens), the theme is the deeper message or question the whole story is really about.",
+        keyPoints: [
+          "Common themes in classic literature include courage, greed, friendship, and the difference between appearance and reality.",
+          "A single story can explore more than one theme at once - a story can be about greed AND friendship simultaneously.",
+          "Theme is found by looking at the whole story's pattern of events and outcomes, not just one single moment or line."
+        ],
+        examples: [
+          "In a story where a character's dishonesty repeatedly causes trouble until they finally tell the truth, the theme might be about the value of honesty.",
+          "A story where two rivals must work together to survive might explore the theme of friendship overcoming difference."
+        ],
+        tipsToRemember: [
+          "Ask: what lesson or big idea do the character's choices and consequences seem to be teaching, across the whole story?",
+          "Don't confuse theme (the big idea) with plot (what actually happens) - the plot is the events; the theme is what those events mean."
+        ],
+        reasoningInterviewPrompts: ["What big idea do you think this story is really about, and which specific events made you think that?"],
+        voiceQaSamples: [
+          { question: "What's the difference between theme and plot?", answer: "The plot is what actually happens in the story - the events in order. The theme is the deeper idea or message those events explore, like courage or friendship." },
+          { question: "Can a story have more than one theme?", answer: "Yes - most stories explore several big ideas at once, like greed and loyalty both appearing in the same tale." }
+        ]
+      },
+
+      // UNIT 7: PLAYSCRIPTS (A playscript, book, and film of the same story) -
+      // representative pass, grounded directly against the real textbook
+      // pages, no illustrations yet.
+      {
+        id: '7.1', unitId: 'english-u7', name: 'Comparing playscripts and books', pageNumber: [116], sequence: 1,
+        difficulty: 'beginner',
+        definition: "Playscripts and books can tell the exact same story, but in very different formats: a book uses a narrator to describe what characters do and how, while a playscript has no narrator - stage directions tell the actors how to behave, and only dialogue is spoken aloud.",
+        keyPoints: [
+          "In a book, the narrator describes character actions and feelings directly to the reader; in a playscript, that information moves into stage directions instead.",
+          "A playscript formats a character's name in capital letters before their line, followed by the words they actually say.",
+          "Stage directions (often in brackets or italics) tell an actor HOW to say a line or move, information a book might give through an adverb instead."
+        ],
+        examples: [
+          "Book: 'Aunt Sue said crossly.' Playscript: 'AUNT SUE: (crossly) Where have you been?'",
+          "A book might write 'James trembled with fear'; a playscript would show this only through a stage direction like '(James shivers, looking around nervously)'."
+        ],
+        tipsToRemember: [
+          "When turning a book scene into a playscript, look for every 'said [adverb]' and turn it into a bracketed stage direction instead.",
+          "Remember a playscript has NO narrator voice - anything the reader needs to know comes through dialogue or stage directions."
+        ],
+        reasoningInterviewPrompts: ["If a book describes a character's inner thoughts, how would a playscript show that same information to an audience instead?"],
+        voiceQaSamples: [
+          { question: "What's the main difference between how a book and a playscript tell a story?", answer: "A book has a narrator who describes what's happening and how characters feel. A playscript has no narrator - stage directions tell actors how to behave, and everything else comes through spoken dialogue." },
+          { question: "How is a character's name formatted in a playscript?", answer: "It's written in capital letters right before their line of dialogue, so actors and readers instantly know who's speaking." }
+        ]
+      },
+      {
+        id: '7.2', unitId: 'english-u7', name: 'Stagecraft (stage directions, lighting, and movement)', pageNumber: [121], sequence: 2,
+        difficulty: 'intermediate',
+        definition: "Stagecraft is everything a playwright and director use beyond the spoken words - stage directions, lighting, props, and movement - to help an audience understand what's happening and feel the right mood.",
+        keyPoints: [
+          "Stage directions can describe how actors move around the stage, not just how they say their lines.",
+          "Lighting choices (bright, dim, coloured) can suggest mood, time of day, or a change of location without changing the set itself.",
+          "Comparing a playscript's stage directions to a filmed version of the same scene reveals different choices directors make for the same story."
+        ],
+        examples: [
+          "'(The lights dim slowly as James climbs into the peach)' uses lighting to signal both a mood shift and a scene change.",
+          "A stage direction like '(Centipede shuffles forward, dragging his many legs)' tells an actor exactly how to move to suggest the character's personality."
+        ],
+        tipsToRemember: [
+          "When reading a playscript, picture the stage directions happening, not just the dialogue - they carry real information about mood and setting.",
+          "If you were directing this scene, ask what lighting and movement choices you'd make differently - there's often more than one valid choice."
+        ],
+        reasoningInterviewPrompts: ["Why might a director choose dim lighting for this particular scene? What mood does it create that bright lighting wouldn't?"],
+        voiceQaSamples: [
+          { question: "What is stagecraft?", answer: "It's everything beyond the spoken dialogue that brings a play to life - stage directions, lighting, props, and how actors move - all working together to create mood and meaning." },
+          { question: "Why do stage directions matter if they're not spoken aloud?", answer: "They tell the actors and director exactly how to perform the scene - movement, tone, and timing - which shapes how the audience experiences the story." }
+        ]
+      },
+      {
+        id: '7.3', unitId: 'english-u7', name: 'Direct speech and reported speech', pageNumber: [126], sequence: 3,
+        difficulty: 'intermediate',
+        definition: "Direct speech gives someone's exact spoken words inside speech marks. Reported speech describes what someone said without quoting their exact words - the verb tense usually shifts back, and pronouns often change too.",
+        keyPoints: [
+          "Direct speech: 'I like spaghetti,' he said. Reported speech: He said that he liked spaghetti - the verb 'like' shifts to 'liked' and the pronoun 'I' becomes 'he'.",
+          "Reported speech usually removes speech marks entirely, folding the words into the sentence structure instead.",
+          "Playscripts rely heavily on direct speech, since characters speak their lines aloud; reported speech is more common in narrated prose."
+        ],
+        examples: [
+          "Direct: 'I bought a new bike,' she said. Reported: She said that she had bought a new bike.",
+          "Direct: 'I will polish my boots,' he said. Reported: He said that he would polish his boots."
+        ],
+        tipsToRemember: [
+          "Check three things when converting to reported speech: does the verb tense shift back, does the pronoun need to change, and do the speech marks disappear?",
+          "Not every direct-speech sentence needs 'that' in its reported version, but including it often makes the sentence clearer."
+        ],
+        reasoningInterviewPrompts: ["Why does 'will' become 'would' when you change this sentence from direct to reported speech?"],
+        voiceQaSamples: [
+          { question: "What's the difference between direct and reported speech?", answer: "Direct speech gives someone's exact words inside speech marks - 'I'm hungry,' she said. Reported speech describes what was said without the exact words - she said that she was hungry - and the verb tense usually shifts back." },
+          { question: "Why does the pronoun change in reported speech?", answer: "Because you're describing the speech from a different point of view - if James says 'I'm cold', reporting it becomes 'James said that he was cold', since you're not James speaking." }
+        ]
+      },
+      {
+        id: '7.4', unitId: 'english-u7', name: 'Character viewpoints in plays', pageNumber: [130], sequence: 4,
+        difficulty: 'advanced',
+        definition: "In a play, the audience can understand events through more than one character's viewpoint at the same time - what one character says and does can reveal a very different perspective from how another character experiences the exact same moment.",
+        keyPoints: [
+          "A 'defeated'-sounding character's words might contrast with stage directions revealing an inward determination the other characters can't see.",
+          "Audiences watching a play often know more than any single character does, since they see and hear every character's reactions at once.",
+          "Comparing how two characters describe or react to the same event on stage reveals their different viewpoints without a narrator explaining it."
+        ],
+        examples: [
+          "One character might loudly declare defeat while a stage direction shows them secretly smiling, revealing two different viewpoints on the same moment.",
+          "A dismissive character's words about another can be contrasted with that other character's own confident actions, showing the audience both sides at once."
+        ],
+        tipsToRemember: [
+          "When reading a playscript, track each character's words AND stage directions separately - viewpoints can be hidden in either one.",
+          "Ask: does the audience know something a character on stage doesn't? That gap is often exactly where interesting viewpoint contrasts live."
+        ],
+        reasoningInterviewPrompts: ["Whose viewpoint do you trust more in this scene - what a character says, or what their stage directions show them doing? Why?"],
+        voiceQaSamples: [
+          { question: "How can a play show more than one character's viewpoint at once?", answer: "Through a mix of dialogue and stage directions - what a character says might contrast with what their actions or expressions reveal, letting the audience see multiple perspectives on the same moment." },
+          { question: "Do audiences always know more than the characters in a play?", answer: "Often, yes - because audiences see and hear everyone at once, they can notice things individual characters miss about each other." }
+        ]
+      },
+
+      // UNIT 8: POETRY (Poems by famous poets) - representative pass, grounded
+      // directly against the real textbook pages, no illustrations yet.
+      {
+        id: '8.1', unitId: 'english-u8', name: 'Unstressed vowel phonemes in spelling', pageNumber: [136], sequence: 1,
+        difficulty: 'intermediate',
+        definition: "An unstressed vowel phoneme is a vowel sound that isn't emphasized when a word is spoken - it often sounds like a plain 'uh' sound no matter which vowel letter is actually written, which is why these words are commonly misspelled.",
+        keyPoints: [
+          "When a vowel sound is unstressed, it can sound like 'a', 'e', 'i', 'o', or 'u' regardless of which letter is actually there - spelling by sound alone often fails.",
+          "Many multi-syllable words have an unstressed vowel in an unexpected position, like the middle or end of the word.",
+          "Because you can't rely on how the word sounds, learning these spellings often means memorising the written pattern directly."
+        ],
+        examples: [
+          "'Separate' has an unstressed vowel that could sound like almost any letter - spelling it by ear alone is unreliable.",
+          "'Different' and 'chocolate' both have unstressed syllables that are easy to drop or misspell when writing quickly."
+        ],
+        tipsToRemember: [
+          "When a word has a tricky, easy-to-misspell unstressed vowel, break it into syllables and say each one separately and clearly.",
+          "Keep a small list of your own personal 'tricky spelling' words with unstressed vowels, and review it regularly."
+        ],
+        reasoningInterviewPrompts: ["Why can't you always spell an unstressed vowel just by sounding the word out? What do you have to do instead?"],
+        voiceQaSamples: [
+          { question: "What is an unstressed vowel phoneme?", answer: "It's a vowel sound in a word that isn't emphasized when spoken - it often just sounds like a plain 'uh', no matter which vowel letter is actually written, which makes these words tricky to spell by ear." },
+          { question: "How can I remember how to spell words with unstressed vowels?", answer: "Break the word into syllables and say each one clearly and separately - it helps you notice the actual letter pattern instead of relying on how the word sounds when spoken quickly." }
+        ]
+      },
+      {
+        id: '8.2', unitId: 'english-u8', name: 'Poetic sound devices (rhyme, repetition, alliteration)', pageNumber: [141], sequence: 2,
+        difficulty: 'beginner',
+        definition: "Poets choose how their poems sound using devices like rhyme (matching end sounds), repetition (repeating words or phrases), and alliteration (repeating a starting sound) to create rhythm and emphasis.",
+        keyPoints: [
+          "Rhyme links lines together through matching sounds, often at the end of lines.",
+          "Repetition emphasizes an idea by using the same word or phrase more than once, building rhythm and importance.",
+          "Alliteration repeats a starting consonant sound across nearby words, creating a pleasing or emphatic sound pattern."
+        ],
+        examples: [
+          "Rhyme: 'In my imagination, I see a world full of fascination.'",
+          "Alliteration: 'Thudding and thumping' - both words share the same starting sound, emphasizing a heavy, rhythmic action."
+        ],
+        tipsToRemember: [
+          "Read a poem aloud, not just silently - sound devices like rhyme and alliteration are easiest to notice when heard.",
+          "When writing your own poem, don't force a rhyme if it changes your intended meaning - a strong idea matters more than a forced rhyme."
+        ],
+        reasoningInterviewPrompts: ["Why might a poet choose repetition instead of just saying something once? What effect does repeating it create?"],
+        voiceQaSamples: [
+          { question: "What's the difference between rhyme and alliteration?", answer: "Rhyme is matching sounds, usually at the end of lines - like 'fascination' and 'imagination'. Alliteration is repeating a starting sound across nearby words - like 'thudding and thumping'." },
+          { question: "Why do poets use repetition?", answer: "Repeating a word or phrase builds rhythm and draws extra attention to that idea, making it feel more important or memorable." }
+        ]
+      },
+      {
+        id: '8.3', unitId: 'english-u8', name: 'Homonyms in poetry', pageNumber: [145], sequence: 3,
+        difficulty: 'intermediate',
+        definition: "A homonym is a word that has two or more different meanings, sometimes even different pronunciations - in poetry, working out which meaning fits requires reading the surrounding context carefully.",
+        keyPoints: [
+          "Some homonyms are spelled and pronounced identically but mean different things depending on context (like 'bark' - a tree's covering, or a dog's sound).",
+          "Poetry often uses homonyms deliberately, playing with double meanings for effect.",
+          "Context clues from surrounding words are essential for working out which meaning of a homonym is intended in a specific line."
+        ],
+        examples: [
+          "'The bark of the tree was rough' vs 'The dog gave a loud bark' - same word, two unrelated meanings depending on context.",
+          "'the wind' (moving air) vs 'to wind' (to turn) - spelled the same, pronounced differently, meaning something completely different."
+        ],
+        tipsToRemember: [
+          "If a line of poetry seems confusing, check whether a key word might be a homonym being used in an unexpected sense.",
+          "Reading the whole sentence, not just the single word, almost always reveals which meaning of a homonym is intended."
+        ],
+        reasoningInterviewPrompts: ["This word has two possible meanings here - which one fits, and what clue in the surrounding words told you that?"],
+        voiceQaSamples: [
+          { question: "What is a homonym?", answer: "It's a word with two or more different meanings - sometimes even pronounced differently - like 'bark' (a tree's covering) and 'bark' (the sound a dog makes)." },
+          { question: "Why do poets use homonyms?", answer: "They can play with double meanings, letting a single word suggest two ideas at once, which adds richness or surprise to a poem." }
+        ]
+      },
+      {
+        id: '8.4', unitId: 'english-u8', name: 'Exploring mood through word choice in poetry', pageNumber: [148], sequence: 4,
+        difficulty: 'intermediate',
+        definition: "A poem's mood - the feeling it creates for the reader - comes through the poet's choice of details, connotations, setting, and actions, not through the poet directly stating an emotion.",
+        keyPoints: [
+          "The same scene can be given a positive or negative mood purely through which details and words the poet chooses to include.",
+          "Word connotations (the feelings a word suggests beyond its literal meaning) shape mood just as much as the events described.",
+          "Mood can shift within a single poem as the details and word choices change from one stanza to the next."
+        ],
+        examples: [
+          "'The ground opened up beneath her feet and she found herself tumbling into unknowable, endless darkness' creates a frightening mood through words like 'unknowable' and 'darkness.'",
+          "The same event described with 'gentle', 'warm', and 'golden' details would create a completely different, positive mood."
+        ],
+        tipsToRemember: [
+          "Highlight the specific words in a poem doing the mood-building work - what happens to the mood if you swap just one for a neutral word?",
+          "When writing your own poem, choose your details and word connotations deliberately to match the mood you want."
+        ],
+        reasoningInterviewPrompts: ["Which specific words in this stanza are creating its mood, and how would the mood change if you swapped one of them for a plainer word?"],
+        voiceQaSamples: [
+          { question: "How do poets create mood without just stating a feeling?", answer: "Through their choice of details, connotations, and actions described - words like 'unknowable' and 'darkness' create a frightening mood without the poet ever saying 'this is scary.'" },
+          { question: "Can mood change within one poem?", answer: "Yes - as the details and word choices shift from stanza to stanza, the mood can shift too, moving from calm to tense, for example." }
+        ]
+      },
+      {
+        id: '8.5', unitId: 'english-u8', name: 'Common exception words (spelling)', pageNumber: [152], sequence: 5,
+        difficulty: 'beginner',
+        definition: "Common exception words are words that don't follow the usual English spelling rules, so they need to be learned and remembered individually rather than worked out from a pattern.",
+        keyPoints: [
+          "Spelling 'rules' like 'i before e except after c' have well-known exceptions, and common exception words are often exactly those exceptions.",
+          "A useful method for memorising them is Look-Say-Cover-Write-Check: look at the word, say it, cover it, write it from memory, then check.",
+          "Building a personal list of your own commonly-misspelled exception words is more useful than trying to memorise every possible exception at once."
+        ],
+        examples: [
+          "'Their' doesn't follow the 'i before e' pattern the way a regular word would, and simply has to be learned as an exception.",
+          "Words like 'people' or 'once' have spellings that don't match how they sound, making them common exception words."
+        ],
+        tipsToRemember: [
+          "Use Look-Say-Cover-Write-Check regularly on your own list of tricky exception words rather than trying to learn them all at once.",
+          "When you misspell the same exception word more than once, that's the clearest sign it belongs on your personal practice list."
+        ],
+        reasoningInterviewPrompts: ["Why can't you just sound this word out to spell it correctly? What makes it an 'exception'?"],
+        voiceQaSamples: [
+          { question: "What is a common exception word?", answer: "It's a word that doesn't follow the usual English spelling rules, so instead of working out its spelling from a pattern, you just have to learn and remember it directly." },
+          { question: "What's a good way to learn tricky exception words?", answer: "Try Look-Say-Cover-Write-Check: look at the word, say it aloud, cover it up, write it from memory, then check if you got it right - repeating this helps it stick." }
+        ]
+      },
+
+      // UNIT 9: NON-FICTION (Persuasive texts) - representative pass so far
+      // covers the unit's opening concept; more to follow.
+      {
+        id: '9.1', unitId: 'english-u9', name: 'Features of persuasive texts', pageNumber: [156], sequence: 1,
+        difficulty: 'beginner',
+        definition: "A persuasive text is written to convince the reader to think or act a certain way, using techniques like rhetorical questions, exaggeration, powerful adjectives, alliteration, and direct commands to sway the audience.",
+        keyPoints: [
+          "Rhetorical questions are asked to make a reader think, not to get a literal answer - 'Can you imagine your life without it?'",
+          "Exaggeration and powerful, emotive adjectives make a claim feel more dramatic and convincing than a plain, neutral description would.",
+          "Imperative verbs (commands like 'Don't miss out!') and direct address to the reader ('Dear reader...') push the audience toward taking action."
+        ],
+        examples: [
+          "'Isn't it time you gave your family the very best?' is a rhetorical question designed to make the reader agree without needing to answer aloud.",
+          "'This spectacular, life-changing opportunity' uses powerful adjectives and exaggeration to make an ordinary offer feel dramatic and urgent."
+        ],
+        tipsToRemember: [
+          "When reading an advert or persuasive letter, list every rhetorical question, command, and emotionally loaded adjective you spot - that reveals exactly how it's trying to persuade you.",
+          "When writing your own persuasive text, combine several techniques (a rhetorical question AND powerful adjectives AND a direct command) rather than relying on just one."
+        ],
+        reasoningInterviewPrompts: ["Why does a rhetorical question feel more persuasive than simply stating the same opinion directly?"],
+        voiceQaSamples: [
+          { question: "What makes a text 'persuasive'?", answer: "It uses specific techniques - like rhetorical questions, exaggeration, powerful adjectives, alliteration, and direct commands - all aimed at convincing the reader to think or act a certain way." },
+          { question: "Why do persuasive texts use rhetorical questions?", answer: "A rhetorical question gets the reader thinking and often nudges them toward agreeing with the writer's point, without the writer having to state it as a flat command." }
+        ]
+      },
+
+      {
+        id: '9.2', unitId: 'english-u9', name: 'Countable and uncountable nouns (with quantifiers)', pageNumber: [163], sequence: 2,
+        difficulty: 'intermediate',
+        definition: "Countable nouns name things that can be counted individually (one bottle, two bottles); uncountable nouns name things that can't be split into individual countable units (water, plastic) and are measured with quantifiers like 'a lot of' or 'less' instead.",
+        keyPoints: [
+          "Countable nouns have both singular and plural forms and can follow numbers directly - 'three bottles', 'many students.'",
+          "Uncountable nouns have no plural form and can't follow a number directly - you can't say 'three waters', but you can say 'a lot of water.'",
+          "Quantifiers pair with one or the other: 'fewer'/'many' with countable nouns, 'less'/'much' with uncountable nouns."
+        ],
+        examples: [
+          "'A lot of plastic ends up in the ocean' (uncountable) vs 'A lot of bottles end up in the ocean' (countable).",
+          "'There is less rubbish this year' (uncountable, 'less') vs 'There are fewer plastic bags this year' (countable, 'fewer')."
+        ],
+        tipsToRemember: [
+          "Test a noun by trying to put a number directly in front of it - if that sounds wrong ('three waters'), it's likely uncountable.",
+          "Remember the pairing: fewer/many go with countable nouns, less/much go with uncountable nouns."
+        ],
+        reasoningInterviewPrompts: ["Why does 'fewer plastic bottles' sound correct but 'fewer plastic' sound wrong? What's the difference between the two nouns?"],
+        voiceQaSamples: [
+          { question: "What's the difference between countable and uncountable nouns?", answer: "Countable nouns can be counted individually and have plural forms, like 'bottle/bottles'. Uncountable nouns can't be split into individual units, like 'water' or 'plastic', and use quantifiers like 'a lot of' instead of a number." },
+          { question: "When do I use 'fewer' versus 'less'?", answer: "Use 'fewer' with countable nouns ('fewer bottles') and 'less' with uncountable nouns ('less plastic'). Mixing them up is a really common mistake, even for adults!" }
+        ]
+      },
+      {
+        id: '9.3', unitId: 'english-u9', name: "Facts, opinions, and the writer's viewpoint in persuasive writing", pageNumber: [160], sequence: 3,
+        difficulty: 'advanced',
+        definition: "Persuasive texts often blend facts with the writer's own opinions and viewpoint - recognising which is which, and noticing the writer's emotional stance, helps a reader judge how one-sided a persuasive text really is.",
+        keyPoints: [
+          "A writer's viewpoint is their personal belief or stance on the topic, often revealed through tone and word choice, not just what they explicitly say.",
+          "Persuasive texts mix genuine facts with opinions dressed up as if they were facts, to make the argument feel stronger.",
+          "Noticing whether a writer's tone is angry, calm, or encouraging helps a reader judge how emotionally charged the argument is."
+        ],
+        examples: [
+          "'Plastic can take hundreds of years to break down' is a fact; 'and that's simply unacceptable' is the writer's opinion layered right next to it.",
+          "A calm, encouraging tone ('Together, we can make a difference') persuades differently than an angry, accusing tone ('How dare we let this happen?')."
+        ],
+        tipsToRemember: [
+          "Separate a persuasive text's claims into two columns as you read: facts you could verify, and opinions/viewpoint you couldn't.",
+          "Notice emotionally loaded words (unacceptable, shocking, wonderful) - they're usually signals of the writer's viewpoint, not neutral facts."
+        ],
+        reasoningInterviewPrompts: ["Find one fact and one opinion sitting right next to each other in this persuasive text - how did you tell them apart?"],
+        voiceQaSamples: [
+          { question: "Why do persuasive texts mix facts and opinions?", answer: "Mixing real facts with the writer's opinions makes the argument feel more credible and convincing - the facts lend the whole argument a sense of truth, even where opinions are woven in." },
+          { question: "How can I tell what a writer's viewpoint is?", answer: "Look at their tone and word choice - angry, calm, or encouraging language all reveal how the writer feels about the topic, beyond just the facts they state." }
+        ]
+      },
+      {
+        id: '9.4', unitId: 'english-u9', name: 'Building imaginative descriptions to persuade', pageNumber: [166], sequence: 4,
+        difficulty: 'advanced',
+        definition: "Persuasive writers sometimes paint an idealized picture of how much better things could be, using adverbial phrases and complex (multi-clause) sentences that build an increasingly vivid, imaginative picture across each sentence.",
+        keyPoints: [
+          "Describing an idealized 'perfect world' scenario can be more persuasive than simply criticising the current situation.",
+          "Adverbial phrases and multi-clause (complex) sentences let a writer add layer upon layer of vivid detail within a single sentence.",
+          "This technique works by appealing to the reader's imagination and emotions, not just presenting facts and logic."
+        ],
+        examples: [
+          "'Kittens snuggle up and purr themselves contentedly to sleep, while their mother cat watches over them in the safety of the animal rescue centre' builds an idealized, emotionally appealing picture through layered clauses.",
+          "Adding an adverbial phrase like 'with smartly gleaming floors, free of rubbish and clutter' extends and intensifies the imagined scene."
+        ],
+        tipsToRemember: [
+          "When writing this kind of persuasive description, build your sentence in layers - start with the core idea, then add adverbial phrases and extra clauses to deepen the picture.",
+          "Remember commas are often needed to separate the added adverbial phrases and clauses from the rest of the sentence."
+        ],
+        reasoningInterviewPrompts: ["Which part of this sentence is doing the persuading - the plain facts, or the imaginative, idealized picture being painted? How can you tell?"],
+        voiceQaSamples: [
+          { question: "How do writers use imaginative descriptions to persuade?", answer: "They paint a vivid, idealized picture of how good things could be, using adverbial phrases and multi-clause sentences that build layer upon layer of detail, appealing to the reader's imagination and emotions." },
+          { question: "Why use a complex, multi-clause sentence instead of several short ones?", answer: "A longer, layered sentence can build an increasingly vivid picture in one continuous flow, rather than breaking the imaginative effect into separate, disconnected statements." }
+        ]
+      },
+      {
+        id: '9.5', unitId: 'english-u9', name: 'Adapting persuasive writing for a chosen audience', pageNumber: [169], sequence: 5,
+        difficulty: 'advanced',
+        definition: "Effective persuasive writing changes its language, examples, and appeals depending on exactly who the intended audience is - the same argument needs different treatment for different readers.",
+        keyPoints: [
+          "Understanding your audience's age, interests, and existing beliefs shapes which facts, examples, and tone will actually persuade them.",
+          "A persuasive text can appeal to different senses (sight, sound, touch) to help a specific audience imagine and connect with the topic more vividly.",
+          "The same underlying argument might use very different language for young children compared to adults, even though the core persuasive goal stays the same."
+        ],
+        examples: [
+          "Persuading children to recycle might use simple, friendly language and vivid sensory details a child can imagine (the smell, the sound, the feel).",
+          "Persuading adults about climate policy might instead use statistics, expert quotes, and a more formal, urgent tone."
+        ],
+        tipsToRemember: [
+          "Before writing, picture your specific audience and ask what they already care about - that tells you which appeals will actually land.",
+          "Try using multiple senses (sight, sound, touch, smell) in your descriptions to help any audience imagine your topic more vividly."
+        ],
+        reasoningInterviewPrompts: ["If you had to persuade a much younger audience of this same argument, what specifically would you need to change about your language and examples?"],
+        voiceQaSamples: [
+          { question: "Why does persuasive writing need to change depending on the audience?", answer: "Because different audiences care about different things and respond to different kinds of language - what convinces a young child won't necessarily convince an adult, even for the exact same underlying argument." },
+          { question: "How can appealing to the senses help persuade an audience?", answer: "Describing sight, sound, touch, or smell helps any reader imagine the topic vividly and emotionally, making the argument feel more real and immediate, regardless of their age or background." }
+        ]
+      },
 
       // MATH UNIT 6: FRACTIONS (no recovered rich content - name-only stubs)
       { id: 'm6.1', unitId: 'math-u6', name: 'Equivalent Fractions', pageNumber: [112], sequence: 1 },
