@@ -299,16 +299,21 @@ async function main() {
   console.log('[SEED] Seeding Concepts...');
   const conceptModel = getModel(prisma, 'Concept');
   if (conceptModel) {
-    // Restored from ~/Downloads/curriculum-english-stage5.json (the real
-    // hand-authored content export - see PLATFORM_PLAN.md's "Unit 1 English
-    // ... 13/13 concepts" history) after an earlier session's schema-agnostic
-    // seeder wiped the live rows down to bare id/name stubs. Only the 9
-    // concepts that JSON actually covers get full content here; the
-    // remaining Unit 1 concepts (1.3, 1.5, 1.6, 1.10-1.13) and the Math unit
-    // have no recovered source text, so they stay as name-only stubs below
-    // rather than inventing content. illustrationKey values come from the
-    // already-intact components/illustrations.tsx (untouched by the wipe -
-    // only the DB rows pointing at them were lost).
+    // Restored from three sources that survived on disk after an earlier
+    // session's schema-agnostic seeder wiped the live Concept rows down to
+    // bare id/name stubs (see PLATFORM_PLAN.md's "Unit 1 English ...
+    // 13/13 concepts" history for what existed before):
+    //   - ~/Downloads/curriculum-english-stage5.json (1.1, 1.2, 2.1, 2.2, 2.5)
+    //   - prisma/content/unit1-batch2.ts (1.4-1.9, richer than the JSON copy -
+    //     used in place of it, includes difficulty/tipsToRemember/story refs)
+    //   - prisma/content/unit1-batch3.ts (1.10-1.13, the last four of Unit 1)
+    // 1.3 (Explicit Meaning) had no recovered source anywhere - written fresh
+    // here as the natural complement to 1.2 (Implicit Meaning), same
+    // no-copying boundary as every other hand-authored concept in this file.
+    // Only the Math unit beyond m6.1/m6.2 remains a genuine content gap.
+    // illustrationKey values come from the already-intact
+    // components/illustrations.tsx (untouched by the wipe - only the DB rows
+    // pointing at them were lost).
     //
     // conceptKey must equal the plain id ("1.2", "1.7", ...): that's the key
     // lib/interactiveWidgets.ts's WIDGETS_BY_CONCEPT is indexed by, and it's
@@ -350,76 +355,295 @@ async function main() {
         illustrationKey: 'implicit_meaning_clue'
       },
       {
-        id: '1.4', unitId: 'english-u1', name: 'Predicting', pageNumber: [8], sequence: 4,
-        definition: "Predicting is a reading strategy where you guess what might happen next in a story based on clues the writer has already given you, combined with what you already know about how stories work.",
+        id: '1.3', unitId: 'english-u1', name: 'Explicit Meaning', pageNumber: [5], sequence: 3,
+        difficulty: 'beginner',
+        storyReferenceTitle: "Why Cockerels Crow (a fable from Malawi)",
+        storyReferenceSynopsis: "The same page that introduces implicit meaning also states several facts about Cockerel and Hyena directly - a natural pairing for contrasting the two.",
+        definition: "Explicit meaning is information a writer states directly and plainly in the text - you don't need to infer or guess anything, because the writer has told you outright.",
         keyPoints: [
-          "Good predictions are not wild guesses—they are backed by evidence from the text.",
-          "Look at a character's traits to predict how they will behave.",
-          "Use the sentence frames: 'I predict that... because...' or 'Since... happened, I think...'"
-        ],
-        examples: ["\"Hyena's fire went out, and he was terrified that Cockerel's spiky comb would burn him. He crept into Cockerel's house carrying a stick...\" Prediction: Since Hyena is scared of the fire and carrying a stick, I predict he will try to poke the comb from a safe distance to see if it is hot."],
-        reasoningInterviewPrompts: ["Why is a prediction better when you can explain 'why' with evidence?"],
-        voiceQaSamples: [
-          { question: "How do I make a good prediction?", answer: "Stop and ask yourself: What has this character done before? What are they trying to achieve? Combining those clues will lead to a very logical prediction!" }
-        ],
-        illustrationKey: 'predicting_next_page'
-      },
-      {
-        id: '1.7', unitId: 'english-u1', name: 'Fact vs. Opinion', pageNumber: [9, 10], sequence: 7,
-        definition: "A fact is something that can be tested and proven to be true with evidence (e.g., 'The sun rises in the east'). An opinion is a belief, feeling, or thought that cannot be proven, as different people may feel differently (e.g., 'Math is the most fun subject').",
-        keyPoints: [
-          "Facts are objective and stay the same for everyone.",
-          "Opinions are subjective and can change from person to person.",
-          "Words like 'best', 'wonderful', 'bad', or 'should' often signal opinions."
+          "Explicit meaning needs no reading between the lines - if a sentence says a character 'was angry', that's explicit; showing anger through actions instead is implicit.",
+          "Writers use explicit statements when they want the reader to be certain about a fact, and implicit clues when they want the reader to work something out themselves.",
+          "A single passage often mixes both - some things are told to you outright, other things you're expected to notice on your own."
         ],
         examples: [
-          "\"Cockerel did all of Cockerel's chores for him.\" — Fact: this can be verified directly by observing the actions in the fable.",
-          "\"Hyena is kinder than Cockerel.\" — Opinion: people have different ideas of what makes a character 'kind'."
+          "\"Cockerel had a red, spiky comb on his head\" is explicit - it states a fact directly, nothing to infer.",
+          "\"Hyena's paws trembled as he reached for the comb\" doesn't say 'Hyena was scared' explicitly - that's implicit, since you infer the fear from the trembling."
         ],
-        reasoningInterviewPrompts: ["If I say 'This book has 25 pages,' is that a fact or opinion?"],
+        tipsToRemember: [
+          "Ask: did the writer just TELL me this, or did I have to figure it out myself? 'Told directly' = explicit.",
+          "Explicit information is a good place to start when answering a comprehension question, since it doesn't require interpretation - check there first before making an inference."
+        ],
+        reasoningInterviewPrompts: ["Find one explicit fact and one implicit clue on this page - how did you decide which was which?"],
         voiceQaSamples: [
-          { question: "Can an opinion become a fact?", answer: "No. Even if millions of people agree on an opinion (like 'Ice cream is delicious'), it remains an opinion because it's still based on personal taste, not a scientific test." }
+          { question: "What's the difference between explicit and implicit meaning?", answer: "Explicit meaning is stated directly by the writer - no guessing needed. Implicit meaning is hinted at through clues like actions or expressions, and you have to infer it yourself." },
+          { question: "Which is easier to find, explicit or implicit meaning?", answer: "Explicit meaning is usually easier, since it's written directly in the text. Implicit meaning takes more work, because you have to notice clues and work out what they mean." }
         ],
-        illustrationKey: 'fact_vs_opinion_scale'
+        illustrationKey: 'explicit_meaning_direct',
+        illustrationCaption: 'Stated plainly, nothing to infer'
       },
       {
-        id: '1.8', unitId: 'english-u1', name: 'Idiomatic Phrases', pageNumber: [17, 18], sequence: 8,
-        definition: "An idiom (or idiomatic phrase) is an expression where the words together have a special, figurative meaning that is completely different from the literal, word-for-word meaning.",
+        id: '1.4', unitId: 'english-u1', name: 'Predicting as a reading strategy', pageNumber: [8, 9], sequence: 4,
+        difficulty: 'beginner',
+        storyReferenceTitle: "Why Cockerels Crow (a fable from Malawi)",
+        storyReferenceSynopsis: "Between Part 1 and Part 2, students pause to predict what Hyena might do next, based on what they already know about his character.",
+        definition: "Predicting means using what you already know - from the story so far, the title, or the pictures - to make a sensible guess about what might happen next, before you read on.",
         keyPoints: [
-          "Literal means exactly what the words say.",
-          "Figurative means the words paint a picture of a different idea.",
-          "Idioms are culture-specific and have to be learned as whole phrases."
+          "A good prediction is a guess based on evidence, not a random guess - you should always be able to say why you think it.",
+          "Predictions don't have to come true. Checking whether you were right (and why or why not) is what actually helps you understand the story better.",
+          "Titles, illustrations, and how a character has behaved so far are all clues you can use to predict."
         ],
         examples: [
-          "A heart of gold — literally a heart made of metal; idiomatically means being extremely kind, generous, and caring.",
-          "Give the cold shoulder — literally pressing a cold shoulder against someone; idiomatically means to ignore someone or act unfriendly toward them.",
-          "In hot water — literally sitting in boiling water; idiomatically means being in serious trouble for doing something wrong.",
-          "Hit the sack — literally punching a bag; idiomatically means to go to bed because you are tired."
+          "If a story is called The Boy Who Cried Wolf, you can predict the boy will pretend danger is coming when it isn't, because that's what the title hints at.",
+          "A character has been unkind to everyone else in the story so far, so you predict that unkindness will cause a problem for them later on."
         ],
-        reasoningInterviewPrompts: ["If Ezy says 'This test is a piece of cake,' does he want you to eat it?"],
+        tipsToRemember: [
+          "Say your prediction as 'I think ___ will happen because ___' - the 'because' is the important part, not the guess itself.",
+          "Keep reading with your prediction in mind - were you right, partly right, or completely wrong, and what actually happened instead?"
+        ],
+        reasoningInterviewPrompts: ["What clue from the story made you predict that? Point to something specific, not just a feeling."],
         voiceQaSamples: [
-          { question: "Why do people use idioms if they are confusing?", answer: "People use them because they add color and humor to our speech. They are like verbal shortcuts that paint a strong mental picture!" }
+          { question: "What does it mean to predict in reading?", answer: "It means making a sensible guess about what happens next, using clues you already have - like the title, the pictures, or what's happened in the story so far. It's not a random guess, it's a guess backed by evidence." },
+          { question: "Do I need to be right for it to be a good prediction?", answer: "No! A good prediction just needs a good reason behind it. Even if you're wrong, comparing your guess to what actually happened helps you understand the story better." }
         ],
-        illustrationKey: 'idiom_literal_vs_meaning'
+        illustrationKey: 'predicting_next_page',
+        illustrationCaption: 'Guessing what comes next, backed by clues'
       },
       {
-        id: '1.9', unitId: 'english-u1', name: 'Sentence Types & Connectors', pageNumber: [14, 15], sequence: 9,
-        definition: "Sentences come in different structures to make writing interesting. We can build Simple, Compound, and Complex sentences using words called connectives (or conjunctions) to join our ideas together.",
+        id: '1.5', unitId: 'english-u1', name: 'Perspective / point of view', pageNumber: [12, 13], sequence: 5,
+        difficulty: 'intermediate',
+        storyReferenceTitle: "Why Monkeys live in Trees (a fable from South Africa)",
+        storyReferenceSynopsis: "A lioness asks a monkey for help and is tricked and left tied to a tree - a story that feels very different depending on whose side you're following.",
+        definition: "Perspective (or point of view) is whose eyes a story is being seen through - the same events can feel completely different depending on which character's thoughts and feelings you're following.",
         keyPoints: [
-          "Simple Sentence: has only one independent clause expressing a single complete thought (e.g., 'The magpies sang their song.').",
-          "Compound Sentence: joins two independent clauses of equal weight using connectives like 'and', 'but', 'so', 'or' (e.g., 'The magpies loved the warmth, but the wombats missed their burrows.').",
-          "Complex Sentence: joins a main clause with a dependent clause using connectives like 'because', 'although', 'when', 'since'."
+          "The same event can be described very differently by two different characters, because each one only knows and feels their own side of it.",
+          "Changing perspective can make you sympathise with a character you didn't like before, once you understand why they acted that way.",
+          "Writers show perspective through whose thoughts and feelings we're told about, and what that character happens to notice."
         ],
         examples: [
-          "Simple: \"The train sped down the hill.\"",
-          "Compound: \"The train sped down the hill, and it went out of control.\"",
-          "Complex: \"When the brakes failed, the train sped out of control down the hill.\""
+          "A story about a lost dog might feel worrying told from the owner's perspective, but exciting told from the dog's own perspective.",
+          "From one character's perspective, a story might be about being desperately hungry. From another's, the same event is about being robbed. Same event, two very different feelings."
         ],
-        reasoningInterviewPrompts: ["What makes 'Because the magpies had never hopped' a dependent clause?"],
+        tipsToRemember: [
+          "Ask yourself: whose thoughts and feelings am I being told about right now? That tells you whose perspective you're in.",
+          "To retell a story from a different character's perspective, only include what THAT character would actually know, see, or feel - not information they don't have."
+        ],
+        reasoningInterviewPrompts: ["If you retold this story from the other character's perspective, what would change about how the reader feels?"],
         voiceQaSamples: [
-          { question: "Why do we need complex sentences?", answer: "If we only write simple sentences, our writing sounds choppy and babyish. Complex sentences help show how actions depend on each other, like cause and effect!" }
+          { question: "What's the difference between perspective and opinion?", answer: "Perspective is whose eyes and feelings the story is told through - it shapes what details you get. An opinion is what someone thinks or believes. A character's opinion often comes from their perspective, but they aren't exactly the same thing." },
+          { question: "How do I write from a different character's point of view?", answer: "Only tell the reader what that character would actually see, know, and feel in that moment - not things only another character knows. Use 'I' or their name, and describe events the way it would feel to be them." }
         ],
-        illustrationKey: 'sentence_types_blocks'
+        illustrationKey: 'perspective_two_views',
+        illustrationCaption: 'Same story, different eyes'
+      },
+      {
+        id: '1.6', unitId: 'english-u1', name: 'Proofreading checklist', pageNumber: [10], sequence: 6,
+        difficulty: 'beginner',
+        definition: "Proofreading means carefully checking your own writing after you've finished a draft, to fix small mistakes in punctuation, spelling, and grammar before it's a finished piece.",
+        keyPoints: [
+          "Proofreading is different from planning or drafting - it happens last, once your ideas are already down on the page.",
+          "A good checklist covers capital letters, end punctuation, spacing, spelling, grammar, and whether it actually makes sense when read back.",
+          "Reading your writing aloud (or slowly in your head) helps you catch mistakes your eyes skip over when reading fast."
+        ],
+        examples: [
+          "'She walked to the shop.' has a capital letter, correct spacing, and a full stop - proofread and ready. 'she walked to the shop' is missing its capital letter and needs fixing.",
+          "'I like pizza I also like pasta' is missing punctuation between two ideas - proofreading catches that it needs a full stop or connective: 'I like pizza. I also like pasta.'"
+        ],
+        tipsToRemember: [
+          "Check one thing at a time - read once just for capital letters and full stops, then again just for spelling, rather than trying to catch everything at once.",
+          "Ask 'does this actually make sense?' as its own separate check - a sentence can be perfectly spelled and punctuated and still not make sense."
+        ],
+        reasoningInterviewPrompts: ["You wrote this sentence - if you read it aloud right now, does every part of it sound like it makes sense?"],
+        voiceQaSamples: [
+          { question: "What's proofreading?", answer: "It's checking your writing after you've written it, to catch mistakes - missing capital letters, missing full stops, spelling errors, and sentences that don't quite make sense. It's the last step, after your ideas are already down." },
+          { question: "How is proofreading different from editing my ideas?", answer: "Editing ideas is about whether your writing says what you mean - is anything missing, confusing, or in the wrong order? Proofreading is smaller and comes after - checking spelling, punctuation, and grammar in the sentences you've already decided on." }
+        ],
+        illustrationKey: 'proofreading_checklist',
+        illustrationCaption: 'The last check before you\'re done'
+      },
+      {
+        id: '1.7', unitId: 'english-u1', name: 'Fact vs. opinion', pageNumber: [9, 11], sequence: 7,
+        difficulty: 'beginner',
+        storyReferenceTitle: "Why Cockerels Crow (a fable from Malawi)",
+        storyReferenceSynopsis: "Students sort statements about Cockerel and Hyena into facts (provable from the text) and opinions (personal judgements about the characters).",
+        definition: "A fact is something that can be proven true or false with evidence. An opinion is what someone personally thinks, feels, or believes - and it can be different from person to person, even about the same thing.",
+        keyPoints: [
+          "You can check a fact (by measuring, counting, or looking it up) - you can't check an opinion the same way, because it's about feelings or personal judgement.",
+          "Words like 'best', 'worst', 'should', 'beautiful', or 'boring' are usually signs of an opinion, not a fact.",
+          "A single passage can mix both - 'The book has 200 pages' is a fact; 'and it's the best book ever' is an opinion."
+        ],
+        examples: [
+          "'The rooster has red feathers on its head' is a fact - you could look and check. 'The rooster is the most impressive animal in the story' is an opinion - someone else might disagree.",
+          "'It rained yesterday' is a fact that can be checked against a weather record. 'Yesterday was a terrible day' is an opinion - it depends on how the person felt about it."
+        ],
+        tipsToRemember: [
+          "Ask: could two reasonable people disagree about this? If yes, it's probably an opinion, not a fact.",
+          "Facts don't need 'I think' in front of them to be true. If a sentence would only make sense with 'I think...' added, that's a clue it's an opinion."
+        ],
+        reasoningInterviewPrompts: ["You said that sentence was a fact - could someone reasonably disagree with it? If not, why not?"],
+        voiceQaSamples: [
+          { question: "How do I tell a fact from an opinion?", answer: "Ask if it can be proven true or false - that's a fact. If it's about what someone thinks, feels, or believes, and someone else could reasonably think differently, that's an opinion." },
+          { question: "Can a sentence be both a fact and an opinion?", answer: "Not the exact same part, but a sentence can contain both - like 'The story is 10 pages long (fact) and it's a bit too short (opinion).' The trick is spotting where the fact ends and the opinion starts." }
+        ],
+        illustrationKey: 'fact_vs_opinion_scale',
+        illustrationCaption: 'Provable vs. personal'
+      },
+      {
+        id: '1.8', unitId: 'english-u1', name: 'Idiomatic phrases', pageNumber: [17], sequence: 8,
+        difficulty: 'intermediate',
+        storyReferenceTitle: "The Elephant who lost his Patience (a fable from India)",
+        storyReferenceSynopsis: "An ant who teases every animal in the jungle finally pushes King Elephant too far - a story that leans on idiomatic phrases like 'hold your tongue' and 'out of hand.'",
+        definition: "An idiomatic phrase (or idiom) is a group of words that means something different from what the individual words literally say - you have to know the phrase as a whole to understand it.",
+        keyPoints: [
+          "Idioms usually can't be worked out word-by-word - 'it's raining cats and dogs' has nothing to do with actual animals falling from the sky.",
+          "Idioms often describe feelings, warnings, or advice in a more colourful way than saying it plainly.",
+          "Because idioms are cultural, they can confuse someone who hasn't heard that exact phrase before - even if they know every individual word in it."
+        ],
+        examples: [
+          "'Break a leg!' doesn't mean an actual injury - it's an idiom meaning 'good luck', often said before a performance.",
+          "'She let the cat out of the bag' doesn't involve a real cat - it means she accidentally revealed a secret."
+        ],
+        tipsToRemember: [
+          "If a phrase makes no literal sense in context (no cat was ever mentioned before), that's a strong sign it's an idiom, not a literal statement.",
+          "When you meet a new idiom, try to guess its meaning from how it's used in the sentence before looking it up - it trains you to spot the pattern."
+        ],
+        reasoningInterviewPrompts: ["If someone translated this idiom word-for-word into another language, would it make any sense? What does that tell you about idioms?"],
+        voiceQaSamples: [
+          { question: "What's an idiomatic phrase?", answer: "It's a group of words where the meaning of the whole phrase is different from what the individual words say. Like 'it cost an arm and a leg' - it just means something was very expensive, not an actual body part!" },
+          { question: "How do I figure out what an idiom means if I've never heard it before?", answer: "Look at the sentence around it for clues about the feeling or situation, since idioms are almost never meant literally. If it still doesn't make sense, that's a good sign to ask someone or look it up." }
+        ],
+        illustrationKey: 'idiom_literal_vs_meaning',
+        illustrationCaption: "Words that don't mean what they say"
+      },
+      {
+        id: '1.9', unitId: 'english-u1', name: 'Sentence types: simple, compound, complex + connectives', pageNumber: [16], sequence: 9,
+        difficulty: 'advanced',
+        definition: "Sentences can be simple (one idea), compound (two equal ideas joined by 'and', 'but', or 'or'), or complex/multi-clause (a main idea joined to a dependent clause using a connective like 'because', 'although', or 'when').",
+        keyPoints: [
+          "A simple sentence has just one main clause: one subject, one main verb, one complete idea - e.g. 'The dog barked.'",
+          "A compound sentence joins two simple sentences with 'and', 'but', or 'or' - both halves could stand alone as their own sentence.",
+          "A complex (multi-clause) sentence joins a main clause to a dependent clause that can't stand alone, using a connective like 'because', 'although', 'when', 'while', or 'after' - and needs a comma when the dependent clause comes first."
+        ],
+        examples: [
+          "Simple: 'The kangaroo jumped.' Compound: 'The kangaroo jumped, but it missed the branch.' Complex: 'Although it was tired, the kangaroo kept jumping.'",
+          "'Because the fire had gone out, they couldn't cook dinner' is complex - the comma comes after the dependent clause ('Because the fire had gone out') since it comes first in the sentence."
+        ],
+        tipsToRemember: [
+          "Test a compound sentence by splitting it at 'and'/'but'/'or' - if both halves make sense alone, it's compound. A complex sentence fails this test - the dependent-clause half won't make sense alone.",
+          "When the dependent clause starts the sentence (starts with 'Because', 'Although', 'When'...), put a comma before the main clause. When the main clause comes first, you usually don't need one."
+        ],
+        reasoningInterviewPrompts: ["You wrote a long sentence - is it actually compound, complex, or just two ideas stuck together without the right punctuation?"],
+        voiceQaSamples: [
+          { question: "What's the difference between a compound and a complex sentence?", answer: "In a compound sentence, both halves could be their own complete sentence, joined by 'and', 'but', or 'or'. In a complex sentence, one half (the dependent clause) can't stand alone - it needs a connective like 'because' or 'although' and relies on the main clause to make full sense." },
+          { question: "When do I need a comma in a complex sentence?", answer: "If the dependent clause comes first - starting with a word like 'Because', 'When', or 'Although' - put a comma right after it, before the main clause. If the main clause comes first, you usually don't need a comma." }
+        ],
+        illustrationKey: 'sentence_types_blocks',
+        illustrationCaption: 'Building bigger sentences, one clause at a time'
+      },
+      {
+        id: '1.10', unitId: 'english-u1', name: "Story structure (the narrative 'mountain')", pageNumber: [19], sequence: 10,
+        difficulty: 'beginner',
+        storyReferenceTitle: "The Elephant who lost his Patience (a fable from India)",
+        storyReferenceSynopsis: "An ant who teases every animal in the jungle finally pushes King Elephant too far and gets blasted into the sky - the story's shape maps neatly onto the narrative mountain.",
+        definition: "Story structure is the shape a story's events follow from beginning to end. Many stories follow a 'narrative mountain': the beginning sets the scene, then events build up, lead to a challenge, reach a problem (the most tense point), the problem gets solved, and the story reaches its ending.",
+        keyPoints: [
+          "The 'problem' sits at the top of the mountain - it's the most exciting or tense moment, with everything before it building up and everything after it resolving.",
+          "Not every story spends equal time on each stage - a fable might rush through the beginning in a sentence but spend paragraphs on the problem.",
+          "Knowing the structure helps you both understand a story you're reading (what stage are we at right now?) and plan one you're writing."
+        ],
+        examples: [
+          "In a fable about a clever ant who tricks a lion, the build up shows the lion boasting, the challenge is the ant deciding to teach him a lesson, the problem is the trick going wrong, and the ending shows what the lion learned.",
+          "If a story jumps straight from 'the beginning' to 'the ending' with no build up or problem in between, it will feel flat - readers expect that rise and fall in tension."
+        ],
+        tipsToRemember: [
+          "Before writing your own story, sketch the six stages first (even just one phrase each) - it stops you rambling in the middle with no clear problem to solve.",
+          "When retelling a story, check you can name its problem in one sentence - if you can't, you probably haven't found the actual turning point yet."
+        ],
+        reasoningInterviewPrompts: ["Where's the 'problem' - the most tense moment - in this story? How do you know that's the peak, and not an earlier or later moment?"],
+        voiceQaSamples: [
+          { question: "What is the 'narrative mountain'?", answer: "It's a way of picturing a story's shape: beginning, build up, challenge, problem, problem solved, ending. The 'problem' is the peak - the most tense or exciting part - with the story building up to it and then coming back down as it gets solved." },
+          { question: "Do all stories use this structure?", answer: "Most do, especially fables and adventure stories, but not every story hits every stage in the same order or for the same length. It's a useful pattern to expect, not a strict rule every story must follow exactly." }
+        ],
+        illustrationKey: 'narrative_mountain',
+        illustrationCaption: 'The shape a story climbs and comes down'
+      },
+      {
+        id: '1.11', unitId: 'english-u1', name: 'Mood created through setting and word choice', pageNumber: [20], sequence: 11,
+        difficulty: 'intermediate',
+        storyReferenceTitle: "The Lion with the Red Eyes (a fable from Somalia)",
+        storyReferenceSynopsis: "A lion cub with unusual red eyes is treated as an outsider by his village, until his differences end up saving everyone from a dragon.",
+        definition: "Mood is the feeling or atmosphere a writer creates for the reader - like happiness, sadness, fear, or calm - built mainly through the physical setting a writer chooses and the specific words used to describe it.",
+        keyPoints: [
+          "The same event can feel completely different depending on the setting and words chosen - a dark, stormy forest creates a different mood than a sunny meadow, even for the same character doing the same thing.",
+          "Word connotations matter, not just their literal meaning - 'skinny' and 'slender' can describe the same body, but 'skinny' feels negative and 'slender' feels positive.",
+          "A story's theme (what it's really about, like courage or kindness) often works together with mood, but they aren't the same thing - mood is the feeling in a moment, theme is the bigger idea across the whole story."
+        ],
+        examples: [
+          "'The old house creaked and groaned in the wind, its broken windows staring out like empty eyes' creates a scary mood through word choice, not just by saying 'it was scary.'",
+          "The same walk through a forest could feel peaceful ('sunlight dappled gently through the leaves') or frightening ('shadows twisted between the trees, and every snap of a twig echoed'), purely through setting and word choice."
+        ],
+        tipsToRemember: [
+          "Ask which specific words are doing the mood-building work in a sentence - which ones would you have to change to flip a calm scene into a tense one?",
+          "When writing your own setting, pick words with the connotation you want (not just any accurate word) - 'ancient' and 'crumbling' both describe an old building, but only one sounds inviting."
+        ],
+        reasoningInterviewPrompts: ["Which specific words in this description are creating the mood? What happens to the mood if you swap just one of them for a plainer word?"],
+        voiceQaSamples: [
+          { question: "How is mood different from just describing what a place looks like?", answer: "Describing a place is just facts - 'the room was old, with a wooden floor.' Creating mood means choosing words that make the reader FEEL something about it - 'the ancient floorboards groaned underfoot, as if the house itself was tired' makes the same room feel eerie, not just old." },
+          { question: "What's the difference between mood and theme?", answer: "Mood is the feeling in a specific scene or moment - like tension or calm. Theme is the bigger idea or lesson running through the whole story, like 'being different can be a strength.' A scary mood in one scene doesn't mean the story's theme is about fear." }
+        ],
+        illustrationKey: 'mood_setting_words',
+        illustrationCaption: 'The same place, painted with different words'
+      },
+      {
+        id: '1.12', unitId: 'english-u1', name: 'Comparative and superlative adverbs', pageNumber: [20], sequence: 12,
+        difficulty: 'intermediate',
+        definition: "Adverbs have three forms: positive (the plain form, e.g. 'quickly'), comparative (comparing two things, e.g. 'more quickly' or 'faster'), and superlative (comparing three or more things, e.g. 'most quickly' or 'fastest').",
+        keyPoints: [
+          "Most adverbs ending in -ly form the comparative and superlative with 'more'/'most' in front, rather than changing the word itself - 'more quickly', 'most quickly', not 'quicklier.'",
+          "Some short adverbs add -er/-est directly instead - 'fast' becomes 'faster'/'fastest', not 'more fast.'",
+          "A handful of common adverbs are irregular and just have to be learned: 'well' becomes 'better'/'best', 'badly' becomes 'worse'/'worst', 'much' becomes 'more'/'most', 'little' becomes 'less'/'least.'"
+        ],
+        examples: [
+          "Positive: 'Zach played well in the match.' Comparative: 'Masie played better than him.' Superlative: 'Ronan played the best of everyone.'",
+          "Positive: 'She ran quickly.' Comparative: 'She ran more quickly than her brother.' Superlative: 'She ran the most quickly of the whole team.'"
+        ],
+        tipsToRemember: [
+          "Comparative compares exactly two things ('better than him'); superlative compares three or more, and almost always needs 'the' in front ('the best').",
+          "If an adverb is irregular, don't try to guess a rule for it - just memorise the small set (well/badly/much/little) since there are only a few."
+        ],
+        reasoningInterviewPrompts: ["Is this comparing exactly two things, or three or more? How does that tell you whether it should be comparative or superlative?"],
+        voiceQaSamples: [
+          { question: "How do I know whether to use 'more'/'most' or add -er/-est to an adverb?", answer: "Most adverbs ending in -ly use 'more'/'most' in front, like 'more carefully.' Shorter adverbs that don't end in -ly, like 'fast' or 'hard', usually just add -er/-est instead, like 'faster'/'fastest.'" },
+          { question: "What are the irregular comparative and superlative adverbs?", answer: "The most common ones are: well -> better -> best, badly -> worse -> worst, much -> more -> most, and little -> less -> least. These don't follow the usual -er/-est or more/most pattern, so they just need to be remembered." }
+        ],
+        illustrationKey: 'adverb_ladder',
+        illustrationCaption: 'Climbing from good, to better, to best'
+      },
+      {
+        id: '1.13', unitId: 'english-u1', name: 'Full writing checklist (mood, punctuation, apostrophes, direct speech)', pageNumber: [25], sequence: 13,
+        difficulty: 'advanced',
+        storyReferenceTitle: "The Broath with the Rocks (a fable from Scotland)",
+        storyReferenceSynopsis: "A hungry traveller tricks a suspicious old man into cooking a real meal by pretending a plain rock can make delicious broth - the two end up sharing the meal as friends.",
+        definition: "A full writing checklist brings together everything you check before calling a piece of writing finished: does it use adjectives/adverbs/adverbial phrases well, does it make sense, is there a clear setting and mood, and is the punctuation (commas, full stops, apostrophes, direct speech) all correct.",
+        keyPoints: [
+          "This checklist combines earlier, smaller skills (proofreading, mood, sentence types) into one final pass, rather than teaching anything brand new - it's the 'put it all together' step.",
+          "Content checks (does it make sense? is there a clear mood and setting?) and punctuation checks (commas, full stops, apostrophes, direct speech) are different kinds of check - a piece can be perfectly punctuated and still not make sense, or vice versa.",
+          "Apostrophes and direct speech punctuation are easy to get wrong even in otherwise strong writing, which is why they get their own specific checklist items instead of being lumped into 'grammar.'"
+        ],
+        examples: [
+          "'The travellers coat was soaked' is missing an apostrophe (should be 'traveller's') - a small error a full read-through checklist would catch even if the sentence otherwise makes perfect sense.",
+          "'Where did you get that from he asked' is missing direct speech punctuation - it should read: \"Where did you get that from?\" he asked."
+        ],
+        tipsToRemember: [
+          "Work through a checklist like this in passes, not all at once - one read for mood/setting/sense, a separate read just for commas and full stops, a separate read just for apostrophes and speech marks.",
+          "Apostrophes have exactly two jobs - showing possession ('the traveller's rock') or showing a missing letter in a contraction ('hadn't') - if it's doing neither, it probably doesn't belong there."
+        ],
+        reasoningInterviewPrompts: ["Go through your writing checking only apostrophes this time, ignoring everything else - did you find anything a first read-through missed?"],
+        voiceQaSamples: [
+          { question: "Why do I need a whole checklist just to finish a piece of writing?", answer: "Because there are several different things to check, and trying to catch all of them in one read is hard - a checklist makes sure you don't forget one (like apostrophes) just because you were focused on another (like whether the story makes sense)." },
+          { question: "What are the two jobs an apostrophe can do?", answer: "Showing something belongs to someone or something, like 'the traveller's rock', or showing a letter's been left out in a contraction, like 'hadn't' instead of 'had not.' If it's not doing one of those two jobs, it probably shouldn't be there." }
+        ],
+        illustrationKey: 'writing_checklist_final',
+        illustrationCaption: 'Bringing every skill together, one pass at a time'
       },
 
       // UNIT 2: BIOGRAPHY (no recovered illustration for this unit)
@@ -495,9 +719,14 @@ async function main() {
             definition: (c as any).definition,
             keyPoints: (c as any).keyPoints ?? [],
             examples: (c as any).examples ?? [],
+            tipsToRemember: (c as any).tipsToRemember ?? [],
             reasoningInterviewPrompts: (c as any).reasoningInterviewPrompts ?? [],
             voiceQaSamples: (c as any).voiceQaSamples,
-            illustrationKey: (c as any).illustrationKey
+            illustrationKey: (c as any).illustrationKey,
+            illustrationCaption: (c as any).illustrationCaption,
+            difficulty: (c as any).difficulty,
+            storyReferenceTitle: (c as any).storyReferenceTitle,
+            storyReferenceSynopsis: (c as any).storyReferenceSynopsis
           }
         });
         console.log(`  [SUCCESS] Concept seeded successfully: ${c.id}`);
