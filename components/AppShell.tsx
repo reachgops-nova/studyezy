@@ -1,8 +1,9 @@
 import Link from "next/link";
-import Logo, { LogoMark } from "./Logo";
+import { LogoMark } from "./Logo";
 import AccountMenu from "./AccountMenu";
+import DesktopSidebar from "./DesktopSidebar";
 import UnitSwitcher from "./UnitSwitcher";
-import { BookIcon, ChartIcon, ClipboardIcon, FolderPlusIcon, ShieldIcon, ArchiveIcon, TagIcon, ScaleIcon, LayersIcon } from "./NavIcons";
+import { BookIcon, ChartIcon, ClipboardIcon } from "./NavIcons";
 import { getSwitcherGroups } from "@/lib/catalog";
 
 type NavKey =
@@ -46,67 +47,8 @@ export default async function AppShell({
 
   return (
     <div className="mx-auto flex w-full max-w-6xl lg:min-h-[calc(100vh-3rem)] lg:gap-8">
-      {/* Desktop sidebar */}
-      <aside className="hidden shrink-0 lg:sticky lg:top-6 lg:flex lg:h-[calc(100vh-3rem)] lg:w-56 lg:flex-col lg:self-start">
-        <Link href="/select" aria-label="StudyEzy home">
-          <Logo textClassName="text-base" className="h-8" />
-        </Link>
-
-        <div className="mt-6">
-          <UnitSwitcher groups={switcherGroups} />
-        </div>
-
-        <nav className="mt-4 grid gap-1">
-          <SidebarLink href="/select" isActive={active === "select"} icon={<BookIcon />}>
-            Learn
-          </SidebarLink>
-          <SidebarLink href="/dashboard" isActive={active === "dashboard"} icon={<ChartIcon />}>
-            Dashboard
-          </SidebarLink>
-          <SidebarLink href="/plan" isActive={active === "plan"} icon={<ClipboardIcon />}>
-            Prep Plan
-          </SidebarLink>
-        </nav>
-
-        <div className="mt-6 border-t border-slate-200 pt-6">
-          <p className="px-3 text-xs font-semibold uppercase tracking-wide text-slate-400">Manage</p>
-          <nav className="mt-2 grid gap-1">
-            <SidebarLink href="/manage" isActive={active === "manage"} icon={<FolderPlusIcon />}>
-              Add subject or unit
-            </SidebarLink>
-            {isAdmin && (
-              <>
-                <SidebarLink href="/admin" isActive={active === "admin"} icon={<ShieldIcon />}>
-                  Manage accounts
-                </SidebarLink>
-                <SidebarLink href="/admin/resources" isActive={active === "admin-resources"} icon={<ArchiveIcon />}>
-                  Curriculum materials
-                </SidebarLink>
-                <SidebarLink href="/admin/pricing" isActive={active === "admin-pricing"} icon={<TagIcon />}>
-                  Pricing
-                </SidebarLink>
-                <SidebarLink href="/admin/model-compare" isActive={active === "admin-compare"} icon={<ScaleIcon />}>
-                  Model comparison
-                </SidebarLink>
-                <SidebarLink
-                  href="/admin/content-packs"
-                  isActive={active === "admin-content-packs"}
-                  icon={<LayersIcon />}
-                >
-                  Content packs
-                </SidebarLink>
-              </>
-            )}
-          </nav>
-        </div>
-
-        <div className="mt-auto flex items-center gap-2 rounded-2xl border border-slate-200/70 bg-white p-3">
-          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-slate-100 text-base" aria-hidden>
-            {profile.avatarEmoji}
-          </span>
-          <span className="truncate text-sm font-medium text-slate-700">{profile.displayName}</span>
-        </div>
-      </aside>
+      {/* Desktop sidebar - a client component so it can hold collapse state */}
+      <DesktopSidebar switcherGroups={switcherGroups} active={active} isAdmin={isAdmin} profile={profile} />
 
       <div className="min-w-0 flex-1">
         {/* Mobile/tablet: the compact top-nav bar, plus the unit switcher on
@@ -151,30 +93,6 @@ export default async function AppShell({
         <main className="grid gap-6 pb-12">{children}</main>
       </div>
     </div>
-  );
-}
-
-function SidebarLink({
-  href,
-  isActive,
-  icon,
-  children,
-}: {
-  href: string;
-  isActive: boolean;
-  icon: React.ReactNode;
-  children: React.ReactNode;
-}) {
-  return (
-    <Link
-      href={href}
-      className={`flex items-center gap-2.5 rounded-xl px-3 py-2 text-sm font-medium transition ${
-        isActive ? "bg-brand-ink text-white" : "text-slate-600 hover:bg-slate-100"
-      }`}
-    >
-      <span className={isActive ? "text-white" : "text-slate-400"}>{icon}</span>
-      {children}
-    </Link>
   );
 }
 

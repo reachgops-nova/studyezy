@@ -376,6 +376,7 @@ export default function AvatarChat({
   concept,
   onAdvanceConcept,
   hideSourceImage = false,
+  hideIllustration = false,
 }: {
   unitKey: string;
   concept: Concept;
@@ -386,6 +387,14 @@ export default function AvatarChat({
    * page the booklet is displaying at full size.
    */
   hideSourceImage?: boolean;
+  /**
+   * Set by UnitView to drop the built-in cartoon illustration card at the
+   * top of the thread - real feedback (2026-09-05): the generic art wasn't
+   * worth the vertical space it took from the actual lesson/widget below on
+   * a 3-column layout that's already tight on room. Independent of
+   * hideSourceImage, which only ever governs the real scanned textbook page.
+   */
+  hideIllustration?: boolean;
   // Real gap found live 2026-08-27: after finishing a concept's checkpoints
   // and micro-check questions, the avatar asked "Ready to move on?" but
   // nothing in this component ever acted on a "yes" - there was no
@@ -882,7 +891,8 @@ export default function AvatarChat({
 
   return (
     <div className="grid grid-cols-1 gap-4">
-      {((concept.media?.source_image_path && !hideSourceImage) || concept.media?.illustration_key) && (
+      {((concept.media?.source_image_path && !hideSourceImage) ||
+        (concept.media?.illustration_key && !hideIllustration)) && (
         // max-w-xl + aspect-ratio (matching the illustrations' own 300x180
         // viewBox) gives the artwork real presence instead of a small
         // thumbnail, while still capping it well short of the full-width

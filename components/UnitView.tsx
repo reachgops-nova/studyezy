@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
+import Link from 'next/link';
 import WidgetDispatcher from './interactive/WidgetDispatcher';
 import { getWidgetForConcept, type InteractiveWidget } from '@/lib/interactiveWidgets';
 import type { CurriculumUnit, Concept } from '@/lib/types';
@@ -95,9 +96,12 @@ export function UnitView({
 
   const [currentSelection, setCurrentSelection] = useState<'fact' | 'opinion' | null>(null);
   const [isCorrectSelection, setIsCorrectSelection] = useState<boolean | null>(null);
-
-  const [showWarmup, setShowWarmup] = useState(false);
-  const [warmupFeedback, setWarmupFeedback] = useState<string | null>(null);
+  // Distinct from isCorrectSelection (which only fact_opinion's onAttempt ever
+  // sets) - real bug found live 2026-09-05: every other widget kind only
+  // calls onSuccess, never onAttempt, so the "mark finished" button below
+  // never appeared for 8 of the app's 9 widget kinds and a kid could not
+  // advance past them at all. This is set from onSuccess directly instead.
+  const [widgetCompleted, setWidgetCompleted] = useState(false);
   const [masteredConcepts, setMasteredConcepts] = useState<Record<string, boolean>>({});
 
   const currentWidget = getWidgetForConcept(activeConceptId);
@@ -113,30 +117,44 @@ export function UnitView({
     setActivePage(concept?.book_pages?.[0] || 1);
     setCurrentSelection(null);
     setIsCorrectSelection(null);
+    setWidgetCompleted(false);
   }, [activeConceptId, concepts]);
 
   const handleWidgetAttempt = (correct: boolean) => {
     setIsCorrectSelection(correct);
-    if (correct) setStarCount((prev) => prev + 10);
   };
 
-  // Bounds-checked so both the widget's own "Next Challenge" button and
+  // Bounds-checked so both the widget's own "Mark finished" button and
   // AvatarChat's onAdvanceConcept can call this safely - on the unit's last
   // concept it just marks mastery without moving (AvatarChat itself hides
   // its "Next part" button then, since onAdvanceConcept is undefined).
+  //
+  // This is also the one place a concept's completion gets reported to the
+  // spaced-repetition backend (ConceptMastery/nextReviewDue, see
+  // lib/recordMastery.ts and lib/queries/prepPlanner.ts) - real gap found
+  // live 2026-09-05: that system was fully built (Prep Plan page, mastery
+  // bands, review scheduling) but nothing in the live lesson screen ever
+  // called it, so it never had real data to work from. Reuses
+  // /api/widget-practice's existing "practice_widget" attempt type - a
+  // fire-and-forget signal that's real evidence but capped below "mastered"
+  // (a real progression test still owns that), whether this concept had an
+  // interactive widget or was explanation-only.
   const handleNextConcept = () => {
     setMasteredConcepts((prev) => ({ ...prev, [activeConceptId]: true }));
+    if (unitKey) {
+      fetch('/api/widget-practice', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ unitKey, conceptKey: activeConceptId, correct: 1, total: 1 }),
+      }).catch(() => {});
+    }
     setCurrentSelection(null);
     setIsCorrectSelection(null);
+    setWidgetCompleted(false);
     const idx = activeConcepts.findIndex((c) => c.id === activeConceptId);
     if (idx < activeConcepts.length - 1) {
       setActiveConceptId(activeConcepts[idx + 1].id);
     }
-  };
-
-  const startWarmup = () => {
-    setWarmupFeedback(null);
-    setShowWarmup(true);
   };
 
   const speakWidgetAloud = () => {
@@ -203,15 +221,18 @@ export function UnitView({
 
         <div className="p-3.5 border-b border-[#16241f]/10 bg-[#9c6f1f]/5 flex flex-col gap-2">
           <div className="flex items-center justify-between">
-            <span className="text-[10px] uppercase font-bold text-[#9c6f1f] tracking-wider">Spaced Repetition Warm-up</span>
+            <span className="text-[10px] uppercase font-bold text-[#9c6f1f] tracking-wider">Before your next test</span>
             <span className="w-2 h-2 rounded-full bg-[#9c6f1f] animate-ping" />
           </div>
-          <button 
-            onClick={startWarmup}
-            className="w-full py-2 bg-[#9c6f1f] text-white rounded-xl text-xs font-bold hover:bg-[#9c6f1f]/90 transition-all shadow-sm"
+          {/* Real Prep Plan (lib/queries/prepPlanner.ts), not the old fake
+              hardcoded 3-option quiz - pulls the actual concepts this kid's
+              ConceptMastery marks due for review, ranked by urgency. */}
+          <Link
+            href="/plan"
+            className="w-full py-2 bg-[#9c6f1f] text-white rounded-xl text-xs font-bold hover:bg-[#9c6f1f]/90 transition-all shadow-sm text-center"
           >
-            🧠 Start 60s Brush-up
-          </button>
+            🧠 Quick brush-up (Prep Plan)
+          </Link>
         </div>
 
         <div className="flex-1 overflow-y-auto p-3 space-y-4">
@@ -356,6 +377,7 @@ export function UnitView({
               concept={currentConcept}
               onAdvanceConcept={hasNextConcept ? handleNextConcept : undefined}
               hideSourceImage={!isBookletCollapsed}
+              hideIllustration
             />
           ) : (
             <div className="flex flex-col items-center justify-center p-8 text-[#16241f]/40">
@@ -389,17 +411,20 @@ export function UnitView({
                   isCorrect={isCorrectSelection}
                   currentSelection={currentSelection}
                   onAttempt={handleWidgetAttempt}
-                  onSuccess={() => setStarCount((prev) => prev + 10)}
+                  onSuccess={() => {
+                    setStarCount((prev) => prev + 10);
+                    setWidgetCompleted(true);
+                  }}
                 />
               </div>
 
-              {isCorrectSelection && (
+              {widgetCompleted && (
                 <div className="w-full max-w-md mx-auto mt-2 animate-bounce">
                   <button
                     onClick={handleNextConcept}
                     className="w-full py-3 bg-[#9c6f1f] hover:bg-[#9c6f1f]/90 text-white font-sans font-bold text-xs uppercase tracking-wider rounded-xl transition-all duration-200 shadow-md flex items-center justify-center gap-2"
                   >
-                    🎉 Next Challenge ➡️
+                    ✅ Mark finished &amp; continue
                   </button>
                 </div>
               )}
@@ -407,61 +432,6 @@ export function UnitView({
           </div>
         </div>
       </section>
-
-      {/* WARM-UP MODAL */}
-      {showWarmup && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-fade-in">
-          <div className="bg-[#f4f6f1] rounded-3xl border-2 border-[#16241f]/10 max-w-md w-full shadow-2xl overflow-hidden p-6 animate-shake">
-            <div className="flex items-center gap-3 mb-4">
-              <span className="text-3xl animate-bounce">🧠</span>
-              <div>
-                <h3 className="font-serif font-black text-lg text-[#16241f]">Spaced Repetition Brush-up</h3>
-                <span className="text-[10px] uppercase font-bold text-[#9c6f1f]">Daily 60-Second Challenge</span>
-              </div>
-            </div>
-            
-            <p className="text-xs text-[#16241f]/80 leading-relaxed mb-4">
-              What was the main thing we learned in the last concept? Tap the correct answer!
-            </p>
-
-            <div className="space-y-2.5">
-              {[
-                { text: "✅ The correct answer from previous concept", correct: true },
-                { text: "❌ A distractor answer", correct: false },
-                { text: "❌ Another distractor", correct: false },
-              ].map((opt, i) => (
-                <button
-                  key={i}
-                  onClick={() => {
-                    if (opt.correct) {
-                      setStarCount(prev => prev + 5);
-                      setWarmupFeedback('🎉 Warm-up complete! +5 Stars!');
-                      setTimeout(() => setShowWarmup(false), 1200);
-                    } else {
-                      setWarmupFeedback('💡 Not quite! Try again.');
-                    }
-                  }}
-                  className="w-full text-left p-3 rounded-xl border border-[#16241f]/10 bg-white hover:border-[#16241f] text-xs font-sans font-bold hover:bg-[#16241f]/5 transition-all flex items-center justify-between"
-                >
-                  <span>{opt.text}</span>
-                  <span className="text-[#16241f]/40">➡️</span>
-                </button>
-              ))}
-            </div>
-
-            {warmupFeedback && (
-              <p className="mt-3 text-xs font-sans font-bold text-[#9c6f1f]">{warmupFeedback}</p>
-            )}
-
-            <button
-              onClick={() => setShowWarmup(false)}
-              className="w-full mt-4 text-[10px] text-[#16241f]/50 hover:underline text-center block font-sans"
-            >
-              Skip Warm-up and start Lesson
-            </button>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
