@@ -246,7 +246,9 @@ export const WIDGETS_BY_CONCEPT: Record<string, InteractiveWidget> = {
     },
   },
 
-  "2.6": {
+  // Real seeded conceptKey for "Prefixes & Suffixes" is 2.5, not 2.6 - see
+  // prisma/seed.ts's Unit 1-13/Unit 2 numbering (matches PLATFORM_PLAN.md).
+  "2.5": {
     id: "W4",
     title: "The Prefix Machine",
     instruction: "Every word below needs the prefix that flips it to its opposite. Pick the gear that meshes.",
