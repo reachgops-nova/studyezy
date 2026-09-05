@@ -1,121 +1,47 @@
-🚀 [SEED] Starting Intelligent, Self-Healing Master Database Seeding...
-🧹 [CLEAN] Clearing old databases safe-paths...
-[CLEAN] Safe wiped: conceptMastery
-[CLEAN] Safe wiped: reasoningLog
-[CLEAN] Safe wiped: concept
-[CLEAN] Safe wiped: unit
-[CLEAN] Safe wiped: subject
-[CLEAN] Safe wiped: stage
-[CLEAN] Safe wiped: curriculum
-🌱 [SEED] Seeding Curriculum catalog...
-  ✅ [SUCCESS] Seeded Curriculum: cambridge-primary
-🌱 [SEED] Seeding Curriculum Stage...
-  ✅ [SUCCESS] Seeded Stage: cambridge-stage5
-🌱 [SEED] Seeding Subjects (Primary Textbooks)...
-  ✅ [SUCCESS] Seeded Subject: english-cambridge-stage5
-  ✅ [SUCCESS] Seeded Subject: math-cambridge-stage5
-🌱 [SEED] Seeding Textbook Units...
-  [SELF-HEAL][Unit] Removing unknown property: "sequence"
-  ✅ [SUCCESS] Seeded Unit: english-u1
-  [SELF-HEAL][Unit] Removing unknown property: "sequence"
-  ✅ [SUCCESS] Seeded Unit: english-u2
-  [SELF-HEAL][Unit] Removing unknown property: "sequence"
-  ✅ [SUCCESS] Seeded Unit: english-u3
-  [SELF-HEAL][Unit] Removing unknown property: "sequence"
-  ✅ [SUCCESS] Seeded Unit: english-u4
-  [SELF-HEAL][Unit] Removing unknown property: "sequence"
-  ✅ [SUCCESS] Seeded Unit: english-u5
-  [SELF-HEAL][Unit] Removing unknown property: "sequence"
-  ✅ [SUCCESS] Seeded Unit: english-u6
-  [SELF-HEAL][Unit] Removing unknown property: "sequence"
-  ✅ [SUCCESS] Seeded Unit: english-u7
-  [SELF-HEAL][Unit] Removing unknown property: "sequence"
-  ✅ [SUCCESS] Seeded Unit: english-u8
-  [SELF-HEAL][Unit] Removing unknown property: "sequence"
-  ✅ [SUCCESS] Seeded Unit: english-u9
-  [SELF-HEAL][Unit] Removing unknown property: "sequence"
-  ✅ [SUCCESS] Seeded Unit: math-u6
-🌱 [SEED] Seeding Interactive Concepts & Voice Scripts...
-  [SELF-HEAL][Concept] Supplying default for missing field: "name"
-  [SELF-HEAL][Concept] Removing unknown property: "title"
-  [SELF-HEAL][Concept] Removing unknown property: "pageNumber"
-  [SELF-HEAL][Concept] Removing unknown property: "sequence"
-  [SELF-HEAL][Concept] Removing unknown property: "introScript"
-  [SELF-HEAL][Concept] Removing unknown property: "widgetId"
-  [SELF-HEAL][Concept] Removing unknown property: "reviewInterval"
-  ✅ [SUCCESS] Seeded Concept: 1.2
-  [SELF-HEAL][Concept] Supplying default for missing field: "name"
-  [SELF-HEAL][Concept] Removing unknown property: "title"
-  [SELF-HEAL][Concept] Removing unknown property: "pageNumber"
-  [SELF-HEAL][Concept] Removing unknown property: "sequence"
-  [SELF-HEAL][Concept] Removing unknown property: "introScript"
-  [SELF-HEAL][Concept] Removing unknown property: "widgetId"
-  [SELF-HEAL][Concept] Removing unknown property: "reviewInterval"
-  ✅ [SUCCESS] Seeded Concept: 1.7
-  [SELF-HEAL][Concept] Supplying default for missing field: "name"
-  [SELF-HEAL][Concept] Removing unknown property: "title"
-  [SELF-HEAL][Concept] Removing unknown property: "pageNumber"
-  [SELF-HEAL][Concept] Removing unknown property: "sequence"
-  [SELF-HEAL][Concept] Removing unknown property: "introScript"
-  [SELF-HEAL][Concept] Removing unknown property: "widgetId"
-  [SELF-HEAL][Concept] Removing unknown property: "reviewInterval"
-  ✅ [SUCCESS] Seeded Concept: 1.9
-  [SELF-HEAL][Concept] Supplying default for missing field: "name"
-  [SELF-HEAL][Concept] Removing unknown property: "title"
-  [SELF-HEAL][Concept] Removing unknown property: "pageNumber"
-  [SELF-HEAL][Concept] Removing unknown property: "sequence"
-  [SELF-HEAL][Concept] Removing unknown property: "introScript"
-  [SELF-HEAL][Concept] Removing unknown property: "widgetId"
-  [SELF-HEAL][Concept] Removing unknown property: "reviewInterval"
-  ✅ [SUCCESS] Seeded Concept: 2.1
-  [SELF-HEAL][Concept] Supplying default for missing field: "name"
-  [SELF-HEAL][Concept] Removing unknown property: "title"
-  [SELF-HEAL][Concept] Removing unknown property: "pageNumber"
-  [SELF-HEAL][Concept] Removing unknown property: "sequence"
-  [SELF-HEAL][Concept] Removing unknown property: "introScript"
-  [SELF-HEAL][Concept] Removing unknown property: "widgetId"
-  [SELF-HEAL][Concept] Removing unknown property: "reviewInterval"
-  ✅ [SUCCESS] Seeded Concept: 2.2
-  [SELF-HEAL][Concept] Supplying default for missing field: "name"
-  [SELF-HEAL][Concept] Removing unknown property: "title"
-  [SELF-HEAL][Concept] Removing unknown property: "pageNumber"
-  [SELF-HEAL][Concept] Removing unknown property: "sequence"
-  [SELF-HEAL][Concept] Removing unknown property: "introScript"
-  [SELF-HEAL][Concept] Removing unknown property: "widgetId"
-  [SELF-HEAL][Concept] Removing unknown property: "reviewInterval"
-  ✅ [SUCCESS] Seeded Concept: 2.5
-  [SELF-HEAL][Concept] Supplying default for missing field: "name"
-  [SELF-HEAL][Concept] Removing unknown property: "title"
-  [SELF-HEAL][Concept] Removing unknown property: "pageNumber"
-  [SELF-HEAL][Concept] Removing unknown property: "sequence"
-  [SELF-HEAL][Concept] Removing unknown property: "introScript"
-  [SELF-HEAL][Concept] Removing unknown property: "widgetId"
-  [SELF-HEAL][Concept] Removing unknown property: "reviewInterval"
-  ✅ [SUCCESS] Seeded Concept: 4.1
-  [SELF-HEAL][Concept] Supplying default for missing field: "name"
-  [SELF-HEAL][Concept] Removing unknown property: "title"
-  [SELF-HEAL][Concept] Removing unknown property: "pageNumber"
-  [SELF-HEAL][Concept] Removing unknown property: "sequence"
-  [SELF-HEAL][Concept] Removing unknown property: "introScript"
-  [SELF-HEAL][Concept] Removing unknown property: "widgetId"
-  [SELF-HEAL][Concept] Removing unknown property: "reviewInterval"
-  ✅ [SUCCESS] Seeded Concept: m6.1
-  [SELF-HEAL][Concept] Supplying default for missing field: "name"
-  [SELF-HEAL][Concept] Removing unknown property: "title"
-  [SELF-HEAL][Concept] Removing unknown property: "pageNumber"
-  [SELF-HEAL][Concept] Removing unknown property: "sequence"
-  [SELF-HEAL][Concept] Removing unknown property: "introScript"
-  [SELF-HEAL][Concept] Removing unknown property: "widgetId"
-  [SELF-HEAL][Concept] Removing unknown property: "reviewInterval"
-  ✅ [SUCCESS] Seeded Concept: m6.2
-🌱 [SEED] Seeding System User Accounts...
-  ✅ [SUCCESS] Seeded user account: reachgops@gmail.com
-  ✅ [SUCCESS] Seeded user account: sivasakthi13425@gmail.com
-  ✅ [SUCCESS] Seeded user account: parent@studyezy.com
-  ✅ [SUCCESS] Seeded user account: admin@studyezy.com
-  ✅ [SUCCESS] Seeded user account: student@studyezy.com
-🌱 [SEED] Connecting Viban Gopinath's Student Profile...
-  [SELF-HEAL][StudentProfile] Removing unknown property: "name"
-  [SELF-HEAL][StudentProfile] Removing unknown property: "preferredLanguage"
-  ✅ [SUCCESS] Seeded student profile: student_viban (Viban Gopinath)
-🏁 [SEED] Perfect, self-healing database seeding is complete!
+[SEED] Starting Self-Healing, Schema-Agnostic Database Seeding...
+[CLEAN] Cleaned ConceptMastery
+[CLEAN] Cleaned ReasoningLog
+[CLEAN] Cleaned Concept
+[CLEAN] Cleaned Unit
+[CLEAN] Cleaned Subject
+[CLEAN] Cleaned Stage
+[CLEAN] Cleaned Curriculum
+[SEED] Seeding Curriculum...
+[SUCCESS] Curriculum seeded successfully with slug!
+[SEED] Seeding Stage...
+[SUCCESS] Stage seeded successfully with nested curriculum relation!
+[SEED] Seeding Subjects...
+[SUCCESS] English Subject seeded successfully with Stage connection!
+[SUCCESS] Math Subject seeded successfully with Stage connection!
+[SEED] Seeding Units...
+  [SUCCESS] Unit seeded successfully: english-u1
+  [SUCCESS] Unit seeded successfully: english-u2
+  [SUCCESS] Unit seeded successfully: english-u3
+  [SUCCESS] Unit seeded successfully: english-u4
+  [SUCCESS] Unit seeded successfully: english-u5
+  [SUCCESS] Unit seeded successfully: english-u6
+  [SUCCESS] Unit seeded successfully: english-u7
+  [SUCCESS] Unit seeded successfully: english-u8
+  [SUCCESS] Unit seeded successfully: english-u9
+  [SUCCESS] Unit seeded successfully: math-u6
+[SEED] Seeding Concepts...
+  [SUCCESS] Concept seeded successfully: 1.2
+  [SUCCESS] Concept seeded successfully: 1.7
+  [SUCCESS] Concept seeded successfully: 1.9
+  [SUCCESS] Concept seeded successfully: 2.1
+  [SUCCESS] Concept seeded successfully: 2.2
+  [SUCCESS] Concept seeded successfully: 2.5
+  [SUCCESS] Concept seeded successfully: 4.1
+  [SUCCESS] Concept seeded successfully: m6.1
+  [SUCCESS] Concept seeded successfully: m6.2
+[SEED] Restoring and Seeding the 5 DB Users...
+[SUCCESS] Seeded user (with standard passwordHash): reachgops@gmail.com
+[SUCCESS] Seeded user (with standard passwordHash): sivasakthi13425@gmail.com
+[SUCCESS] Seeded user (with standard passwordHash): parent@studyezy.com
+[SUCCESS] Seeded user (with standard passwordHash): admin@studyezy.com
+[SUCCESS] Seeded user (with standard passwordHash): student@studyezy.com
+[SEED] Seeding default student profile...
+[SUCCESS] Student Profile seeded successfully (Standard relation connects)!
+[SEED] Seeding custom Viban demo profile...
+  ✅ [SUCCESS] Seeded Viban Gopinath demo profile (IGCSE Grade 4/5)
+[SEED] Seeding process complete!

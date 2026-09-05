@@ -1,12 +1,16 @@
+"use client";
+
 import React from 'react';
 import { FactOpinionScale } from './FactOpinionScale';
 import { SentenceTrainBuilder } from './SentenceTrainBuilder';
+import { ClueDetective } from './ClueDetective';
+import { getWidgetForConcept } from '@/lib/interactiveWidgets';
 
 interface WidgetDispatcherProps {
-  conceptId: string; // e.g., "1.2", "1.7", "1.9", "4.1"
-  conceptTested?: string; // Optional slug or coordinate name
-  unitKey?: string; // Optional! (UnitView.tsx passes this in the render block)
-  statement?: string; // Sourced dynamically from database/lib/interactiveWidgets.ts
+  conceptId: string;
+  conceptTested?: string;
+  unitKey?: string;
+  statement?: string;
   isCorrect?: boolean | null;
   currentSelection?: 'fact' | 'opinion' | null;
   onSelect?: (val: any) => void;
@@ -14,11 +18,6 @@ interface WidgetDispatcherProps {
   onAttempt?: (correct: boolean) => void;
 }
 
-/**
- * StudyEzy Visual Widget Dispatcher
- * The master presentational bridge that renders gorgeous, animated cartoon-style 
- * playgrounds right inside the lesson view. Fully typed for both default and named imports.
- */
 export const WidgetDispatcher: React.FC<WidgetDispatcherProps> = ({
   conceptId,
   conceptTested,
@@ -30,36 +29,39 @@ export const WidgetDispatcher: React.FC<WidgetDispatcherProps> = ({
   onSuccess,
   onAttempt,
 }) => {
-  // Normalize the identifier to ensure accurate matching with real database rows
   const id = conceptId || conceptTested || '';
+  const widget = getWidgetForConcept(id);
 
-  switch (id) {
-    // 1.7: Fact vs. Opinion (Textbook Page 10)
-    case '1.7':
-    case 'fact-vs-opinion':
-    case 'concept-1-7':
+  if (!widget) {
+    return (
+      <div className="flex flex-col items-center justify-center p-8 text-[#16241f]/40">
+        <span className="text-4xl mb-2">🦘</span>
+        <p className="text-xs font-bold">Ezy is preparing this lesson...</p>
+      </div>
+    );
+  }
+
+  switch (widget.spec.kind) {
+    case 'fact_opinion': {
+      const spec = widget.spec;
       return (
         <div className="w-full h-full p-2 flex items-center justify-center animate-fade-in">
           <FactOpinionScale
-            statement={statement}
+            statement={spec.statements[0]?.text || statement}
             currentSelection={currentSelection}
             isCorrect={isCorrect}
             onSelect={(classification) => {
               if (onSelect) onSelect(classification);
-              const correct = (classification === 'fact' && (statement.includes("rising") || statement.includes("rises") || statement.includes("gone out") || statement.includes("didn't have a care")));
+              const correct = classification === spec.statements[0]?.answer.toLowerCase();
               if (onAttempt) onAttempt(correct);
-              if (correct && onSuccess) {
-                setTimeout(onSuccess, 1800);
-              }
+              if (correct && onSuccess) setTimeout(onSuccess, 1800);
             }}
           />
         </div>
       );
+    }
 
-    // 1.9: Sentence Types & Connectors (Textbook Page 15 - The Sentence Train)
-    case '1.9':
-    case 'sentence-connectors':
-    case 'concept-1-9':
+    case 'sentence_train':
       return (
         <div className="w-full h-full p-2 flex items-center justify-center animate-fade-in">
           <SentenceTrainBuilder
@@ -69,11 +71,36 @@ export const WidgetDispatcher: React.FC<WidgetDispatcherProps> = ({
         </div>
       );
 
-    // Fallback: If no interactive game matches, keep the chat flowing cleanly
+    case 'clue_detective': {
+      const spec = widget.spec;
+      return (
+        <div className="w-full h-full p-2 flex items-center justify-center animate-fade-in">
+          <ClueDetective
+            sentence={spec.sentence}
+            clues={spec.clues}
+            onAttempt={onAttempt}
+            onSuccess={onSuccess}
+          />
+        </div>
+      );
+    }
+
+    // TODO: Add cases for other widget kinds as components are built:
+    // case 'biography_scanner': return <BiographyScanner ... />;
+    // case 'life_mountain': return <LifeMountain ... />;
+    // case 'prefix_machine': return <PrefixMachine ... />;
+    // case 'trait_matcher': return <TraitMatcher ... />;
+    // case 'predictive_brancher': return <PredictiveBrancher ... />;
+    // case 'idiom_connector': return <IdiomConnector ... />;
+
     default:
-      return null;
+      return (
+        <div className="flex flex-col items-center justify-center p-8 text-[#16241f]/40">
+          <span className="text-4xl mb-2">🚧</span>
+          <p className="text-xs font-bold">Widget "{widget.spec.kind}" coming soon!</p>
+        </div>
+      );
   }
 };
 
-// Default export fallback to prevent TS2613 UnitView compiler errors
 export default WidgetDispatcher;

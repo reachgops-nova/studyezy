@@ -62,9 +62,14 @@ const config: Config = {
           "60%": { transform: "translateX(-3px)" },
           "80%": { transform: "translateX(3px)" },
         },
+        "fade-in": {
+          from: { opacity: "0", transform: "translateY(12px) scale(0.98)" },
+          to: { opacity: "1", transform: "translateY(0) scale(1)" },
+        },
       },
       animation: {
         shake: "shake 0.4s ease-in-out",
+        "fade-in": "fade-in 0.4s ease-out forwards",
       },
     },
   },
