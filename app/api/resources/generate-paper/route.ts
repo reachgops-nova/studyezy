@@ -22,29 +22,28 @@ const MEDIA_TYPE_BY_EXT: Record<string, "image/jpeg" | "image/png" | "image/webp
 };
 const MAX_IMAGES = 10;
 
-// Same try-best-fit-then-fallback shape as app/api/pages/extract/route.ts's
-// runExtraction - real gap found live 2026-09-06: this route's own
-// isConfigured() gate meant it 503'd unconditionally whenever
-// ANTHROPIC_API_KEY was unset, even once OpenRouter became a real,
-// configured, vision-capable alternative.
+// OpenRouter first, Claude as pure fallback - same shape and reasoning as
+// app/api/pages/extract/route.ts's runExtraction: OpenRouter now handles
+// PDFs itself (lib/openrouter.ts's file-parser plugin), and it's the
+// provider actually confirmed configured in production (ANTHROPIC_API_KEY
+// still isn't set there as of 2026-09-06), so there's no reason to prefer
+// Claude for a PDF upload anymore.
 async function runGeneration(
   images: ExtractionSourceFile[],
   concepts: { concept_id: string; concept_name: string }[],
   difficulty: QuestionPaperDifficulty
 ): Promise<ProgressionTestDraft> {
-  const hasPdf = images.some((f) => f.mediaType === "application/pdf");
   const providers: { name: string; configured: boolean; run: () => Promise<ProgressionTestDraft> }[] = [
-    { name: "claude", configured: isConfigured(), run: () => generateQuestionPaper(images, concepts, difficulty) },
     {
       name: "openrouter",
       configured: isOpenRouterConfigured(),
       run: () => generateQuestionPaperOpenRouter(images, concepts, difficulty),
     },
+    { name: "claude", configured: isConfigured(), run: () => generateQuestionPaper(images, concepts, difficulty) },
   ];
-  const ordered = hasPdf ? providers : [...providers].reverse();
 
   let lastError: unknown;
-  for (const provider of ordered) {
+  for (const provider of providers) {
     if (!provider.configured) continue;
     try {
       return await provider.run();

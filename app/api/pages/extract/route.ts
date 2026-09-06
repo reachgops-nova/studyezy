@@ -35,37 +35,33 @@ const MEDIA_TYPE_BY_EXT: Record<string, "image/jpeg" | "image/png" | "image/webp
 // extraction run sends.
 const MAX_IMAGES_PER_EXTRACTION = 10;
 
-// Tries whichever provider fits best first, falls back to the other on
-// failure or if it's not configured - same try/catch fallback shape as
-// app/api/ask/route.ts's Groq-then-Claude chain. Order depends on whether a
-// PDF was uploaded: only Claude reads one natively (OpenRouter's
-// chat-completions vision input is images-only, see lib/openrouter.ts), so
-// a PDF goes to Claude first; an all-images upload tries OpenRouter first
-// since it's the provider actually confirmed configured/working in
-// production as of 2026-09-06.
+// OpenRouter first, Claude as pure fallback - same try/catch shape as
+// app/api/ask/route.ts's Groq-then-Claude chain. OpenRouter handles PDFs
+// itself now (its file-parser plugin, see lib/openrouter.ts - not limited to
+// images), and it's the provider actually confirmed configured in
+// production as of 2026-09-06 (ANTHROPIC_API_KEY still isn't set there), so
+// there's no longer a reason to route a PDF to Claude first.
 async function runExtraction(
   images: ExtractionSourceFile[],
   expected: ExpectedConcept[],
   isFreeform: boolean
 ): Promise<Concept[]> {
-  const hasPdf = images.some((f) => f.mediaType === "application/pdf");
   const providers: { name: string; configured: boolean; run: () => Promise<Concept[]> }[] = [
-    {
-      name: "claude",
-      configured: isConfigured(),
-      run: () => (isFreeform ? extractFreeformConcepts(images) : extractConceptsFromPages(images, expected)),
-    },
     {
       name: "openrouter",
       configured: isOpenRouterConfigured(),
       run: () =>
         isFreeform ? extractFreeformConceptsOpenRouter(images) : extractConceptsFromPagesOpenRouter(images, expected),
     },
+    {
+      name: "claude",
+      configured: isConfigured(),
+      run: () => (isFreeform ? extractFreeformConcepts(images) : extractConceptsFromPages(images, expected)),
+    },
   ];
-  const ordered = hasPdf ? providers : [...providers].reverse();
 
   let lastError: unknown;
-  for (const provider of ordered) {
+  for (const provider of providers) {
     if (!provider.configured) continue;
     try {
       return await provider.run();

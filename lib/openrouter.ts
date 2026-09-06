@@ -18,7 +18,9 @@ import type { Concept, ProgressionTestDraft, QuestionPaperDifficulty } from "./t
 // been completely unavailable in production this whole time, not just
 // short on credit. Groq (the existing fallback tier elsewhere in this app)
 // has no vision model, so it can't fill this specific gap - OpenRouter's
-// openai/gpt-4o can.
+// openai/gpt-4o can. Now the FIRST choice everywhere in this file (not just
+// for images) - Claude is a pure fallback, tried only if OpenRouter itself
+// isn't configured or its call fails.
 const OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions";
 const OPENROUTER_MODEL = "openai/gpt-4o";
 
@@ -27,15 +29,17 @@ export function isOpenRouterConfigured(): boolean {
 }
 
 interface OpenRouterMessageContentPart {
-  type: "text" | "image_url";
+  type: "text" | "image_url" | "file";
   text?: string;
   image_url?: { url: string };
+  file?: { filename: string; file_data: string };
 }
 
 async function openRouterChat(
   feature: string,
   system: string,
-  content: OpenRouterMessageContentPart[]
+  content: OpenRouterMessageContentPart[],
+  hasPdf: boolean
 ): Promise<string> {
   const res = await fetch(OPENROUTER_URL, {
     method: "POST",
@@ -57,6 +61,14 @@ async function openRouterChat(
         { role: "system", content: system },
         { role: "user", content },
       ],
+      // mistral-ocr is the right engine for this app's PDFs specifically -
+      // they're scanned/photographed workbook pages, not born-digital text,
+      // so a text-layer-only engine (pdf-text) would return near nothing.
+      // ~$2/1000 pages, billed by OpenRouter separately from this call's own
+      // token usage - not reflected in logAiCost's numbers below. Only sent
+      // when a PDF is actually present; adding the plugin to an all-image
+      // call would be pure overhead.
+      ...(hasPdf ? { plugins: [{ id: "file-parser", pdf: { engine: "mistral-ocr" } }] } : {}),
     }),
   });
 
@@ -73,69 +85,79 @@ async function openRouterChat(
   return data.choices?.[0]?.message?.content ?? "[]";
 }
 
-// Standard OpenAI-style vision input - a base64 data URI per image. Unlike
-// Claude, this chat-completions endpoint has no native "here's a whole PDF
-// document" block; a PDF is simply skipped here rather than sent broken -
-// see extractConceptsFromPagesOpenRouter's filtering before this is called.
-function toImageContentPart(file: ExtractionSourceFile): OpenRouterMessageContentPart {
+// Standard OpenAI-style vision input for an image; a PDF instead goes as a
+// "file" part - OpenRouter's own file-parser plugin (see the `plugins` block
+// above) handles it independent of whether the underlying model has native
+// PDF support, so this isn't limited to images-only the way a raw
+// OpenAI-compatible endpoint would be.
+function toContentPart(file: ExtractionSourceFile): OpenRouterMessageContentPart {
+  if (file.mediaType === "application/pdf") {
+    return {
+      type: "file",
+      file: { filename: "document.pdf", file_data: `data:application/pdf;base64,${file.base64}` },
+    };
+  }
   return {
     type: "image_url",
     image_url: { url: `data:${file.mediaType};base64,${file.base64}` },
   };
 }
 
-function stripNonImageFiles(images: ExtractionSourceFile[]): ExtractionSourceFile[] {
-  return images.filter((f) => f.mediaType !== "application/pdf");
+function hasPdf(images: ExtractionSourceFile[]): boolean {
+  return images.some((f) => f.mediaType === "application/pdf");
 }
 
-/**
- * Same contract as lib/claude.ts's extractConceptsFromPages, for whenever
- * Claude isn't configured/available - a PDF in `images` is silently
- * excluded (OpenRouter's chat-completions vision input only takes images),
- * so callers should still prefer Claude for a unit that uploaded a PDF.
- */
+/** Same contract as lib/claude.ts's extractConceptsFromPages, for whenever Claude isn't configured/available. */
 export async function extractConceptsFromPagesOpenRouter(
   images: ExtractionSourceFile[],
   expected: ExpectedConcept[]
 ): Promise<Concept[]> {
-  const imageOnly = stripNonImageFiles(images);
-  if (imageOnly.length === 0) {
-    throw new Error("OpenRouter extraction only reads image pages, not PDFs - no image pages were provided.");
+  if (images.length === 0) {
+    throw new Error("No pages were provided to extract from.");
   }
-  const raw = await openRouterChat("extract-openrouter", EXTRACTION_SYSTEM_PROMPT, [
-    ...imageOnly.map(toImageContentPart),
-    { type: "text", text: `Expected concepts for this unit:\n${JSON.stringify(expected, null, 2)}` },
-  ]);
-  return parseExtractedConcepts(raw, imageOnly);
+  const raw = await openRouterChat(
+    "extract-openrouter",
+    EXTRACTION_SYSTEM_PROMPT,
+    [
+      ...images.map(toContentPart),
+      { type: "text", text: `Expected concepts for this unit:\n${JSON.stringify(expected, null, 2)}` },
+    ],
+    hasPdf(images)
+  );
+  return parseExtractedConcepts(raw, images);
 }
 
-/** Same contract as lib/claude.ts's extractFreeformConcepts, same PDF caveat as above. */
+/** Same contract as lib/claude.ts's extractFreeformConcepts. */
 export async function extractFreeformConceptsOpenRouter(images: ExtractionSourceFile[]): Promise<Concept[]> {
-  const imageOnly = stripNonImageFiles(images);
-  if (imageOnly.length === 0) {
-    throw new Error("OpenRouter extraction only reads image pages, not PDFs - no image pages were provided.");
+  if (images.length === 0) {
+    throw new Error("No pages were provided to extract from.");
   }
   const raw = await openRouterChat(
     "extract-freeform-openrouter",
     FREEFORM_EXTRACTION_SYSTEM_PROMPT,
-    imageOnly.map(toImageContentPart)
+    images.map(toContentPart),
+    hasPdf(images)
   );
-  return parseExtractedConcepts(raw, imageOnly);
+  return parseExtractedConcepts(raw, images);
 }
 
-/** Same contract as lib/claude.ts's generateQuestionPaper, same PDF caveat as the extraction functions above. */
+/** Same contract as lib/claude.ts's generateQuestionPaper. */
 export async function generateQuestionPaperOpenRouter(
   images: ExtractionSourceFile[],
   concepts: { concept_id: string; concept_name: string }[],
   difficulty: QuestionPaperDifficulty = "moderate"
 ): Promise<ProgressionTestDraft> {
-  const imageOnly = stripNonImageFiles(images);
-  if (imageOnly.length === 0) {
-    throw new Error("OpenRouter extraction only reads image pages, not PDFs - no image pages were provided.");
+  if (images.length === 0) {
+    throw new Error("No pages were provided to generate from.");
   }
-  const raw = await openRouterChat("question-paper-openrouter", questionPaperSystemPrompt(difficulty), [
-    ...imageOnly.map(toImageContentPart),
-    { type: "text", text: `Concepts this unit covers:\n${JSON.stringify(concepts, null, 2)}` },
-  ]);
+  const raw = await openRouterChat(
+    "question-paper-openrouter",
+    questionPaperSystemPrompt(difficulty),
+    [
+      ...images.map(toContentPart),
+      { type: "text", text: `Concepts this unit covers:\n${JSON.stringify(concepts, null, 2)}` },
+    ],
+    hasPdf(images)
+  );
   return parseQuestionPaperResponse(raw);
 }
