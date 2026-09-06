@@ -7,12 +7,17 @@ import { db } from "@/lib/db";
 import { getCurrentUser } from "@/lib/session";
 import { ALLOWED_IMAGE_TYPES, MAX_UPLOAD_FILE_BYTES, sanitizeFilename, UPLOADS_DIR } from "@/lib/uploads";
 
+// Real bug found live 2026-09-06: this used to collapse non-alphanumeric
+// runs into a single hyphen (e.g. "Olympiad Computers 4th Grade" ->
+// "olympiad-computers-4th-grade"). Every unitKey parser in the app
+// (app/learn/[unitId]/page.tsx and ~8 others) does `unitKey.split("-")`
+// expecting exactly 4 tokens - curriculum/[stage]/subject/unit - which only
+// holds if the curriculum and subject slugs are themselves hyphen-free.
+// A multi-word board/subject name broke that invariant and 404'd every
+// unit under it. Concatenating instead of hyphenating keeps every existing
+// `.split("-")` call site correct without having to touch all of them.
 function slugify(name: string): string {
-  return name
-    .toLowerCase()
-    .trim()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "");
+  return name.toLowerCase().trim().replace(/[^a-z0-9]+/g, "");
 }
 
 // Resolves (or creates) the Stage a new subject/board should attach to.

@@ -284,6 +284,33 @@ export interface UploadedPageImage {
   base64: string;
 }
 
+// Deliberately not folded into UploadedPageImage above - that type is shared
+// by several other functions (exam coaching, page transcription, worksheet
+// conversion) this pass didn't touch, and a PDF isn't a valid `type: "image"`
+// content block for any of them. Only the two lesson-extraction functions
+// below (which now accept a workbook as one PDF, not just page photos - real
+// feedback 2026-09-06: "I have content/sample workbook... I can upload")
+// know how to route a PDF to Claude's native `type: "document"` block
+// instead.
+export interface ExtractionSourceFile {
+  path: string;
+  mediaType: "image/jpeg" | "image/png" | "image/webp" | "application/pdf";
+  base64: string;
+}
+
+function toExtractionContentBlock(file: ExtractionSourceFile) {
+  if (file.mediaType === "application/pdf") {
+    return {
+      type: "document" as const,
+      source: { type: "base64" as const, media_type: "application/pdf" as const, data: file.base64 },
+    };
+  }
+  return {
+    type: "image" as const,
+    source: { type: "base64" as const, media_type: file.mediaType, data: file.base64 },
+  };
+}
+
 const TRANSCRIBE_SYSTEM_PROMPT = `You transcribe the printed content of a textbook/workbook page image, precisely and completely, for a tutoring app to use as reference when answering a student's questions about this exact page.
 
 Preserve:
@@ -413,7 +440,7 @@ interface RawExtractedConcept {
  * every concept hand-authored - see app/api/pages/extract/route.ts.
  */
 export async function extractConceptsFromPages(
-  images: UploadedPageImage[],
+  images: ExtractionSourceFile[],
   expected: ExpectedConcept[]
 ): Promise<Concept[]> {
   const response = await getClient().messages.create({
@@ -431,10 +458,7 @@ export async function extractConceptsFromPages(
       {
         role: "user",
         content: [
-          ...images.map((img) => ({
-            type: "image" as const,
-            source: { type: "base64" as const, media_type: img.mediaType, data: img.base64 },
-          })),
+          ...images.map(toExtractionContentBlock),
           {
             type: "text" as const,
             text: `Expected concepts for this unit:\n${JSON.stringify(expected, null, 2)}`,
@@ -508,7 +532,7 @@ Respond with ONLY a JSON array matching this shape, no other text, no markdown f
  * pre-declared ones. See app/api/pages/extract/route.ts for when each mode
  * is used.
  */
-export async function extractFreeformConcepts(images: UploadedPageImage[]): Promise<Concept[]> {
+export async function extractFreeformConcepts(images: ExtractionSourceFile[]): Promise<Concept[]> {
   const response = await getClient().messages.create({
     model: EXTRACTION_MODEL,
     max_tokens: 8000,
@@ -517,10 +541,7 @@ export async function extractFreeformConcepts(images: UploadedPageImage[]): Prom
     messages: [
       {
         role: "user",
-        content: images.map((img) => ({
-          type: "image" as const,
-          source: { type: "base64" as const, media_type: img.mediaType, data: img.base64 },
-        })),
+        content: images.map(toExtractionContentBlock),
       },
     ],
   });

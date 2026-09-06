@@ -155,12 +155,13 @@ export default function AddUnitForm({
           type="file"
           name="pages"
           multiple
-          accept="image/*"
+          accept="image/*,application/pdf"
           className="rounded-xl border border-slate-300 px-3 py-2 text-sm file:mr-3 file:rounded-full file:border-0 file:bg-brand-ink file:px-3 file:py-1.5 file:text-xs file:font-medium file:text-white"
         />
         <span className="text-xs font-normal text-slate-500">
-          A photo of each page from your textbook or workbook - these go straight to whichever tool
-          matches what you pick below, so the unit already has real material to work from.
+          A photo of each page, or a single PDF of the whole workbook - either works. Goes
+          straight to whichever tool matches what you pick below, so the unit already has real
+          material to work from.
         </span>
       </label>
       <details className="rounded-xl border border-dashed border-slate-300 p-3 text-sm text-slate-600">

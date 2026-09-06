@@ -3,7 +3,7 @@ import { readFile } from "node:fs/promises";
 import path from "node:path";
 import { getActiveProfileId } from "@/lib/auth";
 import { getUnit, getUploadedPageImages } from "@/lib/content";
-import { extractConceptsFromPages, extractFreeformConcepts, isConfigured, type UploadedPageImage } from "@/lib/claude";
+import { extractConceptsFromPages, extractFreeformConcepts, isConfigured, type ExtractionSourceFile } from "@/lib/claude";
 import { db } from "@/lib/db";
 import { checkRateLimit } from "@/lib/rateLimit";
 import { UPLOADS_DIR } from "@/lib/uploads";
@@ -12,11 +12,12 @@ import type { Prisma } from "@prisma/client";
 export const runtime = "nodejs";
 
 const UNIT_KEY_PATTERN = /^[a-z0-9]+-\d+-[a-z0-9]+-\d+$/i;
-const MEDIA_TYPE_BY_EXT: Record<string, "image/jpeg" | "image/png" | "image/webp"> = {
+const MEDIA_TYPE_BY_EXT: Record<string, "image/jpeg" | "image/png" | "image/webp" | "application/pdf"> = {
   ".jpg": "image/jpeg",
   ".jpeg": "image/jpeg",
   ".png": "image/png",
   ".webp": "image/webp",
+  ".pdf": "application/pdf",
 };
 // Vision calls get expensive fast with many large photos - cap what one
 // extraction run sends.
@@ -77,7 +78,7 @@ export async function POST(req: NextRequest) {
   }
 
   const selectedPaths = pagePaths.slice(0, MAX_IMAGES_PER_EXTRACTION);
-  const images: UploadedPageImage[] = [];
+  const images: ExtractionSourceFile[] = [];
   for (const servedPath of selectedPaths) {
     const storageKey = servedPath.replace(/^\/api\/uploads\//, "");
     const ext = path.extname(storageKey).toLowerCase();
