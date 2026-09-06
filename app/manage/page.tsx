@@ -3,11 +3,17 @@ import { getActiveProfile } from "@/lib/auth";
 import { getCurrentUser } from "@/lib/session";
 import { db } from "@/lib/db";
 import AppShell from "@/components/AppShell";
-import { createSubject, createUnit } from "./actions";
+import { createSubject, createUnit, createBoard } from "./actions";
+import AddSubjectForm from "@/components/manage/AddSubjectForm";
+import AddUnitForm from "@/components/manage/AddUnitForm";
+import ExamPresetForm from "@/components/manage/ExamPresetForm";
 
 const ERROR_MESSAGES: Record<string, string> = {
-  missing_subject_fields: "Pick a stage and give the subject a name.",
-  unknown_stage: "That stage wasn't found - try again.",
+  missing_subject_fields: "Pick (or add) a board and grade, and give the subject a name.",
+  missing_grade_fields: "Give the grade a label and a number.",
+  missing_board_fields: "Give the board/exam a name.",
+  unknown_board: "That board wasn't found - try again.",
+  unknown_stage: "That grade wasn't found - try again.",
   missing_unit_fields: "Pick a subject, and give the unit a number and a title.",
   unknown_subject: "That subject wasn't found - try again.",
   unit_exists: "That unit number already exists for this subject.",
@@ -25,13 +31,23 @@ export default async function ManagePage({
 
   const { error, success } = await searchParams;
 
-  const stages = await db.stage.findMany({
-    include: { curriculum: true, subjects: { orderBy: { name: "asc" } } },
-    orderBy: { number: "asc" },
+  // One query, real DB ids throughout (not the slug/number scheme
+  // lib/catalog.ts's getCatalog() uses for student-facing URLs) - this page
+  // creates rows, so it needs ids it can actually pass to Prisma.
+  const curricula = await db.curriculum.findMany({
+    orderBy: { name: "asc" },
+    include: {
+      stages: {
+        orderBy: { number: "asc" },
+        include: {
+          subjects: {
+            orderBy: { name: "asc" },
+            include: { units: { orderBy: { number: "asc" } } },
+          },
+        },
+      },
+    },
   });
-  const subjects = stages.flatMap((s) =>
-    s.subjects.map((subj) => ({ id: subj.id, label: `${s.label} - ${subj.name}` }))
-  );
 
   return (
     <AppShell profile={profile} active="manage" isAdmin={user.role === "admin"}>
@@ -39,100 +55,52 @@ export default async function ManagePage({
         <h1 className="text-2xl font-bold">Add subjects and units</h1>
         <p className="mt-1 text-slate-600">
           New subjects and units are available to practice right away - fill in the actual lesson
-          content afterwards from the unit page (upload textbook pages, then extract).
+          content afterwards from the unit page (upload textbook pages, then extract). Any board,
+          grade, or subject can be added below - check what already exists first so families share
+          one copy instead of duplicating the same book.
         </p>
       </div>
 
-      {error && ERROR_MESSAGES[error] && (
-        <p className="rounded-xl bg-red-50 px-3 py-2 text-sm text-red-600">{ERROR_MESSAGES[error]}</p>
+      {error && (
+        <p className="rounded-xl bg-red-50 px-3 py-2 text-sm text-red-600">
+          {ERROR_MESSAGES[error] ?? "Something went wrong - try again."}
+        </p>
       )}
       {success === "subject_added" && (
         <p className="rounded-xl bg-green-50 px-3 py-2 text-sm text-green-700">Subject added.</p>
       )}
+      {success === "board_added" && (
+        <p className="rounded-xl bg-green-50 px-3 py-2 text-sm text-green-700">
+          Board added - pick it below to add a subject under it.
+        </p>
+      )}
 
       <section className="rounded-2xl border border-slate-200/70 bg-white p-5 shadow-soft">
         <h2 className="text-lg font-semibold">Add a subject</h2>
-        <form action={createSubject} className="mt-3 grid max-w-md gap-3">
-          <label className="grid gap-1 text-sm font-medium text-slate-700">
-            Stage
-            <select name="stageId" required className="rounded-xl border border-slate-300 px-3 py-2 text-base">
-              {stages.map((s) => (
-                <option key={s.id} value={s.id}>
-                  {s.curriculum.name} - {s.label}
-                </option>
-              ))}
-            </select>
-          </label>
-          <label className="grid gap-1 text-sm font-medium text-slate-700">
-            Subject name
-            <input
-              type="text"
-              name="name"
-              required
-              placeholder="e.g. Math"
-              className="rounded-xl border border-slate-300 px-3 py-2 text-base"
-            />
-          </label>
-          <button type="submit" className="justify-self-start rounded-full bg-gradient-to-br from-brand-gold-bright to-brand-gold px-5 py-2.5 text-sm font-medium text-white transition active:scale-95">
-            Add subject
-          </button>
-        </form>
+        <p className="mt-1 text-sm text-slate-500">
+          Choose the board and grade this subject belongs to - add a new board or grade inline if
+          yours isn&apos;t listed yet.
+        </p>
+        <AddSubjectForm action={createSubject} curricula={curricula} />
       </section>
 
       <section className="rounded-2xl border border-slate-200/70 bg-white p-5 shadow-soft">
         <h2 className="text-lg font-semibold">Add a unit</h2>
-        <form action={createUnit} className="mt-3 grid max-w-md gap-3">
-          <label className="grid gap-1 text-sm font-medium text-slate-700">
-            Subject
-            <select name="subjectId" required className="rounded-xl border border-slate-300 px-3 py-2 text-base">
-              {subjects.map((s) => (
-                <option key={s.id} value={s.id}>
-                  {s.label}
-                </option>
-              ))}
-            </select>
-          </label>
-          <label className="grid gap-1 text-sm font-medium text-slate-700">
-            Unit number
-            <input
-              type="number"
-              name="number"
-              min={1}
-              required
-              className="rounded-xl border border-slate-300 px-3 py-2 text-base"
-            />
-          </label>
-          <label className="grid gap-1 text-sm font-medium text-slate-700">
-            Unit title
-            <input
-              type="text"
-              name="title"
-              required
-              placeholder="e.g. Fractions and decimals"
-              className="rounded-xl border border-slate-300 px-3 py-2 text-base"
-            />
-          </label>
-          <label className="grid gap-1 text-sm font-medium text-slate-700">
-            Textbook publisher (optional)
-            <input type="text" name="publisher" className="rounded-xl border border-slate-300 px-3 py-2 text-base" />
-          </label>
-          <label className="grid gap-1 text-sm font-medium text-slate-700">
-            Textbook title (optional)
-            <input type="text" name="bookTitle" className="rounded-xl border border-slate-300 px-3 py-2 text-base" />
-          </label>
-          <label className="grid gap-1 text-sm font-medium text-slate-700">
-            Concepts this unit covers (optional, one per line as <code>id: name</code>)
-            <textarea
-              name="outline"
-              rows={4}
-              placeholder={"2.1: Adding fractions\n2.2: Comparing decimals"}
-              className="rounded-xl border border-slate-300 px-3 py-2 text-sm font-mono"
-            />
-          </label>
-          <button type="submit" className="justify-self-start rounded-full bg-gradient-to-br from-brand-gold-bright to-brand-gold px-5 py-2.5 text-sm font-medium text-white transition active:scale-95">
-            Add unit
-          </button>
-        </form>
+        <p className="mt-1 text-sm text-slate-500">
+          Pick the board, grade and subject first - existing units show up so you can confirm
+          yours isn&apos;t already there.
+        </p>
+        <AddUnitForm action={createUnit} curricula={curricula} />
+      </section>
+
+      <section className="rounded-2xl border border-slate-200/70 bg-white p-5 shadow-soft">
+        <h2 className="text-lg font-semibold">Add a global or competitive exam</h2>
+        <p className="mt-1 text-sm text-slate-500">
+          For exams that don&apos;t fit a school grade - Olympiad, NEET, JEE, GRE, and the like.
+          This adds it as a board with one general grade; add its subjects and units below
+          afterwards, same as any other board.
+        </p>
+        <ExamPresetForm action={createBoard} existingBoardNames={curricula.map((c) => c.name)} />
       </section>
     </AppShell>
   );
