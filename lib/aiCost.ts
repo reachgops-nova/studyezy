@@ -19,6 +19,9 @@ const PRICE_PER_MILLION_USD: Record<string, { input: number; output: number }> =
   // own cost_details against this rate (matched exactly: 14 prompt tokens x
   // $2.50/M + 1 completion token x $10/M = $0.000045).
   "openai/gpt-4o": { input: 2.5, output: 10.0 },
+  // Verified 2026-09-06 against ai.google.dev/gemini-api/docs/pricing,
+  // standard tier (through 2026-12-31 - doubles to $1.50/$7.50 on 2027-01-01).
+  "gemini-flash-latest": { input: 0.75, output: 3.75 },
 };
 
 /** Shared by logAiCost and anything else (e.g. /admin/model-compare) that needs the same real per-call number. */

@@ -15,6 +15,7 @@ import {
   extractFreeformConceptsOpenRouter,
   isOpenRouterConfigured,
 } from "@/lib/openrouter";
+import { extractConceptsFromPagesGemini, extractFreeformConceptsGemini, isGeminiConfigured } from "@/lib/gemini";
 import { db } from "@/lib/db";
 import type { Concept } from "@/lib/types";
 import { checkRateLimit } from "@/lib/rateLimit";
@@ -35,18 +36,25 @@ const MEDIA_TYPE_BY_EXT: Record<string, "image/jpeg" | "image/png" | "image/webp
 // extraction run sends.
 const MAX_IMAGES_PER_EXTRACTION = 10;
 
-// OpenRouter first, Claude as pure fallback - same try/catch shape as
-// app/api/ask/route.ts's Groq-then-Claude chain. OpenRouter handles PDFs
-// itself now (its file-parser plugin, see lib/openrouter.ts - not limited to
-// images), and it's the provider actually confirmed configured in
-// production as of 2026-09-06 (ANTHROPIC_API_KEY still isn't set there), so
-// there's no longer a reason to route a PDF to Claude first.
+// Gemini first, then OpenRouter, then Claude - Groq is never a candidate
+// here (no vision model in its catalog, confirmed 2026-09-06). Gemini added
+// 2026-09-06 specifically because OpenRouter's file-parser plugin has its
+// own $0.50-account-balance floor for PDFs (hit live on this account) while
+// Gemini reads a PDF as plain inline_data, same as an image, no such floor -
+// verified live against the real Olympiad Computers workbook PDF that had
+// been failing. OpenRouter stays second (confirmed working for images
+// today) and Claude last (ANTHROPIC_API_KEY still isn't set in production).
 async function runExtraction(
   images: ExtractionSourceFile[],
   expected: ExpectedConcept[],
   isFreeform: boolean
 ): Promise<Concept[]> {
   const providers: { name: string; configured: boolean; run: () => Promise<Concept[]> }[] = [
+    {
+      name: "gemini",
+      configured: isGeminiConfigured(),
+      run: () => (isFreeform ? extractFreeformConceptsGemini(images) : extractConceptsFromPagesGemini(images, expected)),
+    },
     {
       name: "openrouter",
       configured: isOpenRouterConfigured(),
@@ -87,12 +95,12 @@ export async function POST(req: NextRequest) {
   // Real gap found live 2026-09-06: ANTHROPIC_API_KEY was never actually set
   // on the deployed service at all (only locally), so this route had been
   // completely unusable in production the whole time it existed - not just
-  // short on Claude credit. OpenRouter (openai/gpt-4o) fills the same
+  // short on Claude credit. Gemini/OpenRouter both fill the same
   // vision-capable role Groq can't (no vision model there), so this now
-  // only 503s if genuinely neither provider is configured anywhere.
-  if (!isConfigured() && !isOpenRouterConfigured()) {
+  // only 503s if genuinely none of the three is configured anywhere.
+  if (!isConfigured() && !isOpenRouterConfigured() && !isGeminiConfigured()) {
     return NextResponse.json(
-      { error: "Extraction isn't configured yet - add ANTHROPIC_API_KEY or OPENROUTER_API_KEY." },
+      { error: "Extraction isn't configured yet - add GOOGLE_AI_API_KEY, OPENROUTER_API_KEY, or ANTHROPIC_API_KEY." },
       { status: 503 }
     );
   }

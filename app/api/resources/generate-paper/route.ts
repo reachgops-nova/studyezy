@@ -5,6 +5,7 @@ import { getCurrentAdmin } from "@/lib/session";
 import { db } from "@/lib/db";
 import { generateQuestionPaper, isConfigured, type ExtractionSourceFile } from "@/lib/claude";
 import { generateQuestionPaperOpenRouter, isOpenRouterConfigured } from "@/lib/openrouter";
+import { generateQuestionPaperGemini, isGeminiConfigured } from "@/lib/gemini";
 import { UPLOADS_DIR } from "@/lib/uploads";
 import { FREEZABLE_TYPES } from "@/lib/unitResources";
 import { QUESTION_PAPER_DIFFICULTIES, type ProgressionTestDraft, type QuestionPaperDifficulty } from "@/lib/types";
@@ -22,18 +23,23 @@ const MEDIA_TYPE_BY_EXT: Record<string, "image/jpeg" | "image/png" | "image/webp
 };
 const MAX_IMAGES = 10;
 
-// OpenRouter first, Claude as pure fallback - same shape and reasoning as
-// app/api/pages/extract/route.ts's runExtraction: OpenRouter now handles
-// PDFs itself (lib/openrouter.ts's file-parser plugin), and it's the
-// provider actually confirmed configured in production (ANTHROPIC_API_KEY
-// still isn't set there as of 2026-09-06), so there's no reason to prefer
-// Claude for a PDF upload anymore.
+// Gemini first, then OpenRouter, then Claude - same ordering and reasoning
+// as app/api/pages/extract/route.ts's runExtraction: OpenRouter's PDF
+// file-parser has its own $0.50-account-balance floor (hit live on this
+// account against this exact unit's material), Gemini has no such floor and
+// reads a PDF as plain inline_data like an image, and Claude stays last
+// since ANTHROPIC_API_KEY still isn't set in production.
 async function runGeneration(
   images: ExtractionSourceFile[],
   concepts: { concept_id: string; concept_name: string }[],
   difficulty: QuestionPaperDifficulty
 ): Promise<ProgressionTestDraft> {
   const providers: { name: string; configured: boolean; run: () => Promise<ProgressionTestDraft> }[] = [
+    {
+      name: "gemini",
+      configured: isGeminiConfigured(),
+      run: () => generateQuestionPaperGemini(images, concepts, difficulty),
+    },
     {
       name: "openrouter",
       configured: isOpenRouterConfigured(),
@@ -72,9 +78,12 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Admin only." }, { status: 403 });
   }
 
-  if (!isConfigured() && !isOpenRouterConfigured()) {
+  if (!isConfigured() && !isOpenRouterConfigured() && !isGeminiConfigured()) {
     return NextResponse.json(
-      { error: "Question-paper generation isn't configured yet - add ANTHROPIC_API_KEY or OPENROUTER_API_KEY." },
+      {
+        error:
+          "Question-paper generation isn't configured yet - add GOOGLE_AI_API_KEY, OPENROUTER_API_KEY, or ANTHROPIC_API_KEY.",
+      },
       { status: 503 }
     );
   }
