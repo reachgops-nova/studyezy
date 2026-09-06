@@ -63,9 +63,19 @@ answers must not be encoded as `exact_number` — that punishes a child for bein
 `spider` `{centre,around:[]}` · `square_pattern` `{stages:[[top,bottom]]}` ·
 `matchstick` `{shape:"triangle"|"square"|"house",stages}` · `photo_crop` `{note}`
 
-Use `photo_crop` plus `needsHuman:true` for any diagram you cannot express.
-Add `"redrawn": true` whenever the photograph was too poor to count and you rebuilt the
-figure from the numbers stated in the text.
+**`square_pattern` is generic, not literally about squares** - it draws `top` count
+markers in a row (and, if given, a second row of `bottom` markers) per stage. Use it
+for ANY "Pattern 1 has 3 mugs, Pattern 2 has 6 mugs, Pattern 3 has 9 mugs" style
+growing-count question, whatever the real objects are (mugs, apples, dots, tiles) -
+set `bottom: 0` for a plain single-row count. Example: `{"stages": [[3,0],[6,0],[9,0]]}`
+for exactly that 3/6/9-mugs pattern. Prefer this over `photo_crop` whenever the figure
+is really just "N items, repeated/growing across labeled stages" - `photo_crop` is for
+a genuinely one-off diagram (a mirror-image face, a specific labeled picture) that
+isn't just a count.
+
+Use `photo_crop` plus `needsHuman:true` only when a diagram truly can't be expressed by
+one of the kinds above. Add `"redrawn": true` whenever the photograph was too poor to
+count and you rebuilt the figure from the numbers stated in the text.
 
 ### Writing the teaching content
 
