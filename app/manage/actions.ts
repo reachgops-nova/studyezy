@@ -1,8 +1,11 @@
 "use server";
 
 import { redirect } from "next/navigation";
+import { mkdir, writeFile } from "node:fs/promises";
+import path from "node:path";
 import { db } from "@/lib/db";
 import { getCurrentUser } from "@/lib/session";
+import { ALLOWED_IMAGE_TYPES, MAX_UPLOAD_FILE_BYTES, sanitizeFilename, UPLOADS_DIR } from "@/lib/uploads";
 
 function slugify(name: string): string {
   return name
@@ -126,7 +129,6 @@ export async function createUnit(formData: FormData) {
   if (!user) redirect("/login");
 
   const subjectId = String(formData.get("subjectId") ?? "");
-  const number = Number(formData.get("number"));
   const title = String(formData.get("title") ?? "").trim();
   const publisher = String(formData.get("publisher") ?? "").trim();
   const bookTitle = String(formData.get("bookTitle") ?? "").trim();
@@ -143,23 +145,23 @@ export async function createUnit(formData: FormData) {
   // material and GeneratePaperButton already are.
   const nextStep = String(formData.get("nextStep") ?? "learn");
 
-  if (!subjectId || !title || !Number.isInteger(number) || number <= 0) {
+  if (!subjectId || !title) {
     redirect("/manage?error=missing_unit_fields");
   }
 
   const subject = await db.subject.findUnique({
     where: { id: subjectId },
-    include: { stage: { include: { curriculum: true } } },
+    include: { stage: { include: { curriculum: true } }, units: { select: { number: true } } },
   });
   if (!subject) {
     redirect("/manage?error=unknown_subject");
   }
 
+  // Real feedback (2026-09-06): "we don't need to feed unit numbers here
+  // which makes it complicated" - just the next one after whatever's
+  // already in this subject, instead of asking the family to track it.
+  const number = subject.units.length > 0 ? Math.max(...subject.units.map((u) => u.number)) + 1 : 1;
   const unitKey = `${subject.stage.curriculum.slug}-${subject.stage.number}-${subject.slug}-${number}`;
-  const existing = await db.unit.findUnique({ where: { unitKey } });
-  if (existing) {
-    redirect("/manage?error=unit_exists");
-  }
 
   const unit = await db.unit.create({
     data: {
@@ -195,6 +197,65 @@ export async function createUnit(formData: FormData) {
     await db.concept.create({
       data: { unitId: unit.id, conceptKey, name, status: "outline", orderIndex: orderIndex++ },
     });
+  }
+
+  // "Take a picture and upload here... this subject can be processed with
+  // Workbook and text explanation if chosen" (real feedback 2026-09-06) -
+  // lets a brand-new unit get its source pages right at creation instead of
+  // requiring a separate trip to the unit page or Curriculum Materials
+  // first. Goes to whichever table matches what was actually chosen above:
+  // UploadedPage (feeds the freeform-extraction path just added) for
+  // explanation content, UnitResource (feeds Curriculum Materials'
+  // approve-then-convert pipeline) for a workbook/exam papers.
+  const files = formData.getAll("pages").filter((f): f is File => f instanceof File && f.size > 0);
+  if (files.length > 0) {
+    const validFiles = files.filter(
+      (f) => ALLOWED_IMAGE_TYPES.has(f.type) && f.size <= MAX_UPLOAD_FILE_BYTES
+    );
+    if (nextStep === "resources") {
+      const targetDir = path.join(UPLOADS_DIR, "resources", unitKey);
+      await mkdir(targetDir, { recursive: true });
+      const isAdmin = user.role === "admin";
+      const now = new Date();
+      for (const file of validFiles) {
+        const filename = sanitizeFilename(file.name);
+        const storageKey = `resources/${unitKey}/${filename}`;
+        await writeFile(path.join(UPLOADS_DIR, storageKey), Buffer.from(await file.arrayBuffer()));
+        await db.unitResource.create({
+          data: {
+            unitId: unit.id,
+            resourceType: "textbook",
+            storageKey,
+            originalFilename: file.name,
+            mimeType: file.type,
+            byteSize: file.size,
+            uploadedByUserId: user.id,
+            status: isAdmin ? "approved" : "pending",
+            approvedByUserId: isAdmin ? user.id : null,
+            approvedAt: isAdmin ? now : null,
+          },
+        });
+      }
+    } else {
+      const targetDir = path.join(UPLOADS_DIR, unitKey);
+      await mkdir(targetDir, { recursive: true });
+      for (const file of validFiles) {
+        const filename = sanitizeFilename(file.name);
+        const storageKey = `${unitKey}/${filename}`;
+        await writeFile(path.join(UPLOADS_DIR, storageKey), Buffer.from(await file.arrayBuffer()));
+        await db.uploadedPage.create({
+          data: {
+            unitId: unit.id,
+            uploadedByUserId: user.id,
+            storageKey,
+            originalFilename: file.name,
+            mimeType: file.type,
+            byteSize: file.size,
+            purpose: "textbook_source",
+          },
+        });
+      }
+    }
   }
 
   redirect(nextStep === "resources" ? `/admin/resources?unitKey=${unitKey}` : `/learn/${unitKey}`);

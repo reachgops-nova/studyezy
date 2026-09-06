@@ -8,13 +8,13 @@ const NEXT_STEP_OPTIONS = [
     value: "learn",
     emoji: "📖",
     label: "Explanation & coaching content",
-    description: "The actual lessons - start here first. Takes you to the unit page to upload textbook pages and extract the lesson content.",
+    description: "The actual lessons - start here first. Takes any pages you uploaded above straight to the unit page, ready to extract lesson content from.",
   },
   {
     value: "resources",
     emoji: "📝",
     label: "Practice workbook",
-    description: "Worksheets a student can retry. Takes you to Curriculum Materials to upload pages and convert them.",
+    description: "Worksheets a student can retry. Takes any pages you uploaded above to Curriculum Materials, ready to convert.",
   },
   {
     value: "resources",
@@ -127,16 +127,10 @@ export default function AddUnitForm({
         </div>
       )}
 
-      <label className="grid gap-1 text-sm font-medium text-slate-700">
-        Unit number
-        <input
-          type="number"
-          name="number"
-          min={1}
-          required
-          className="rounded-xl border border-slate-300 px-3 py-2 text-base"
-        />
-      </label>
+      {/* Real feedback (2026-09-06): "we don't need to feed unit numbers here
+          which makes it complicated" - createUnit now picks the next number
+          after whatever's already in this subject, so this just isn't asked
+          for any more. */}
       <label className="grid gap-1 text-sm font-medium text-slate-700">
         Unit title
         <input
@@ -154,6 +148,20 @@ export default function AddUnitForm({
       <label className="grid gap-1 text-sm font-medium text-slate-700">
         Textbook title (optional)
         <input type="text" name="bookTitle" className="rounded-xl border border-slate-300 px-3 py-2 text-base" />
+      </label>
+      <label className="grid gap-1 text-sm font-medium text-slate-700">
+        Upload pages now (optional)
+        <input
+          type="file"
+          name="pages"
+          multiple
+          accept="image/*"
+          className="rounded-xl border border-slate-300 px-3 py-2 text-sm file:mr-3 file:rounded-full file:border-0 file:bg-brand-ink file:px-3 file:py-1.5 file:text-xs file:font-medium file:text-white"
+        />
+        <span className="text-xs font-normal text-slate-500">
+          A photo of each page from your textbook or workbook - these go straight to whichever tool
+          matches what you pick below, so the unit already has real material to work from.
+        </span>
       </label>
       <details className="rounded-xl border border-dashed border-slate-300 p-3 text-sm text-slate-600">
         <summary className="cursor-pointer font-medium">

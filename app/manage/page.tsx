@@ -14,7 +14,7 @@ const ERROR_MESSAGES: Record<string, string> = {
   missing_board_fields: "Give the board/exam a name.",
   unknown_board: "That board wasn't found - try again.",
   unknown_stage: "That grade wasn't found - try again.",
-  missing_unit_fields: "Pick a subject, and give the unit a number and a title.",
+  missing_unit_fields: "Pick a subject, and give the unit a title.",
   unknown_subject: "That subject wasn't found - try again.",
   unit_exists: "That unit number already exists for this subject.",
 };

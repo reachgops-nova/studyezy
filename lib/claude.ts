@@ -478,6 +478,84 @@ export async function extractConceptsFromPages(
     });
 }
 
+// A brand-new unit with literally no outline yet (real feedback 2026-09-06:
+// "Units can be derived from there... we don't need to feed unit numbers
+// here") has nothing for extractConceptsFromPages' "expected concepts" list
+// to match against - that function explicitly refuses to invent a concept
+// that isn't already named. This is the from-scratch counterpart: given
+// just the photos (no pre-declared breakdown), it proposes one itself.
+const FREEFORM_EXTRACTION_SYSTEM_PROMPT = `You are structuring curriculum content for a voice-led tutoring app, from photos of a family's own textbook or workbook pages for a subject that has no lesson breakdown yet at all.
+
+CRITICAL - originality: Write your OWN explanations of what's shown in the photos, in your own words, the way a tutor would explain it out loud. Do NOT copy or closely paraphrase sentences directly from the page images - this becomes original teaching content, not a reproduction of the book.
+
+You will be given photos of pages from a workbook or textbook. Propose a sensible breakdown into distinct concepts/topics these pages actually cover - however many the material genuinely supports (typically 2-6), never padding out topics that aren't really there. For each concept, produce:
+- concept_id: a short id in "N.M" form, numbered in the order they should be taught (e.g. "1.1", "1.2", ...)
+- concept_name: a short, clear topic name (e.g. "Binary numbers", "Loops in Python")
+- definition: 1-2 original sentences, grade-appropriate
+- key_points: 2-4 original bullet points
+- examples: 1-2 original examples
+- tips_to_remember: 1 short original memory tip
+- voice_qa_samples: 2 short original question+answer pairs a curious kid might ask, with simple grade-appropriate answers
+- source_image_index: the 0-based index of the single uploaded photo that best represents this concept
+
+Respond with ONLY a JSON array matching this shape, no other text, no markdown fences:
+[{"concept_id": string, "concept_name": string, "definition": string, "key_points": string[], "examples": string[], "tips_to_remember": string[], "voice_qa_samples": [{"question": string, "answer": string}], "source_image_index": number}]`;
+
+/**
+ * Same output shape and originality rules as extractConceptsFromPages, but
+ * for a unit with no existing outline to match against - it proposes its
+ * own concept_id/concept_name breakdown instead of only filling in
+ * pre-declared ones. See app/api/pages/extract/route.ts for when each mode
+ * is used.
+ */
+export async function extractFreeformConcepts(images: UploadedPageImage[]): Promise<Concept[]> {
+  const response = await getClient().messages.create({
+    model: EXTRACTION_MODEL,
+    max_tokens: 8000,
+    output_config: { effort: "medium" },
+    system: FREEFORM_EXTRACTION_SYSTEM_PROMPT,
+    messages: [
+      {
+        role: "user",
+        content: images.map((img) => ({
+          type: "image" as const,
+          source: { type: "base64" as const, media_type: img.mediaType, data: img.base64 },
+        })),
+      },
+    ],
+  });
+
+  logAiCost("extract-freeform", EXTRACTION_MODEL, response.usage.input_tokens, response.usage.output_tokens);
+  const textBlock = response.content.find((block) => block.type === "text");
+  const raw = textBlock && textBlock.type === "text" ? textBlock.text : "[]";
+
+  let parsed: RawExtractedConcept[];
+  try {
+    parsed = JSON.parse(raw) as RawExtractedConcept[];
+  } catch {
+    throw new Error("Couldn't understand the extracted content - please try again.");
+  }
+
+  return parsed
+    .filter((c) => images[c.source_image_index])
+    .map((c): Concept => ({
+      concept_id: c.concept_id,
+      concept_name: c.concept_name,
+      status: "drafted",
+      source: "extracted",
+      definition: c.definition,
+      key_points: c.key_points,
+      examples: c.examples,
+      tips_to_remember: c.tips_to_remember,
+      voice_qa_samples: c.voice_qa_samples,
+      media: {
+        source_image_path: images[c.source_image_index].path,
+        illustration_caption: c.concept_name,
+        video_status: "coming_soon",
+      },
+    }));
+}
+
 // Per-difficulty instruction appended to the shared prompt below - keeps the
 // three tiers meaningfully different (not just "same paper, relabeled"),
 // per the 2026-08-20 decision that kids should be able to choose their own

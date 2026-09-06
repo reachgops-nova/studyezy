@@ -3,7 +3,7 @@ import { readFile } from "node:fs/promises";
 import path from "node:path";
 import { getActiveProfileId } from "@/lib/auth";
 import { getUnit, getUploadedPageImages } from "@/lib/content";
-import { extractConceptsFromPages, isConfigured, type UploadedPageImage } from "@/lib/claude";
+import { extractConceptsFromPages, extractFreeformConcepts, isConfigured, type UploadedPageImage } from "@/lib/claude";
 import { db } from "@/lib/db";
 import { checkRateLimit } from "@/lib/rateLimit";
 import { UPLOADS_DIR } from "@/lib/uploads";
@@ -58,7 +58,16 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Unit not found." }, { status: 404 });
   }
 
-  if (unit.remaining_unit_outline.length === 0) {
+  // A brand-new unit with no outline at all (real feedback 2026-09-06: "we
+  // don't need to feed unit numbers/concepts here... units can be derived
+  // from there") has nothing for the expected-concepts path to match
+  // against - that path only ever fills in pre-declared stubs, it never
+  // invents a concept that isn't already named. Freeform mode covers this:
+  // propose the breakdown from the photos themselves instead of requiring
+  // one typed in first.
+  const isFreeform = unit.concepts.length === 0 && unit.remaining_unit_outline.length === 0;
+
+  if (!isFreeform && unit.remaining_unit_outline.length === 0) {
     return NextResponse.json({ error: "This unit already has every concept built." }, { status: 400 });
   }
 
@@ -89,36 +98,66 @@ export async function POST(req: NextRequest) {
   }));
 
   try {
-    const extracted = await extractConceptsFromPages(images, expected);
+    const extracted = isFreeform
+      ? await extractFreeformConcepts(images)
+      : await extractConceptsFromPages(images, expected);
 
     if (extracted.length === 0) {
       return NextResponse.json(
-        { error: "Couldn't find enough material in these pages for the remaining concepts." },
+        {
+          error: isFreeform
+            ? "Couldn't find enough material in these pages to propose any concepts."
+            : "Couldn't find enough material in these pages for the remaining concepts.",
+        },
         { status: 422 }
       );
     }
 
-    const unitRow = await db.unit.findUnique({ where: { unitKey } });
+    const unitRow = await db.unit.findUnique({ where: { unitKey }, include: { concepts: true } });
     if (!unitRow) {
       return NextResponse.json({ error: "Unit not found." }, { status: 404 });
     }
 
-    for (const c of extracted) {
-      await db.concept.updateMany({
-        where: { unitId: unitRow.id, conceptKey: c.concept_id },
-        data: {
-          status: "drafted",
-          source: "extracted",
-          definition: c.definition,
-          keyPoints: c.key_points ?? [],
-          examples: c.examples ?? [],
-          tipsToRemember: c.tips_to_remember ?? [],
-          voiceQaSamples: (c.voice_qa_samples ?? []) as unknown as Prisma.InputJsonValue,
-          sourceImagePath: c.media?.source_image_path,
-          illustrationCaption: c.media?.illustration_caption,
-          videoStatus: c.media?.video_status ?? "coming_soon",
-        },
-      });
+    if (isFreeform) {
+      let orderIndex = unitRow.concepts.length;
+      for (const c of extracted) {
+        await db.concept.create({
+          data: {
+            unitId: unitRow.id,
+            conceptKey: c.concept_id,
+            name: c.concept_name,
+            status: "drafted",
+            source: "extracted",
+            orderIndex: orderIndex++,
+            definition: c.definition,
+            keyPoints: c.key_points ?? [],
+            examples: c.examples ?? [],
+            tipsToRemember: c.tips_to_remember ?? [],
+            voiceQaSamples: (c.voice_qa_samples ?? []) as unknown as Prisma.InputJsonValue,
+            sourceImagePath: c.media?.source_image_path,
+            illustrationCaption: c.media?.illustration_caption,
+            videoStatus: c.media?.video_status ?? "coming_soon",
+          },
+        });
+      }
+    } else {
+      for (const c of extracted) {
+        await db.concept.updateMany({
+          where: { unitId: unitRow.id, conceptKey: c.concept_id },
+          data: {
+            status: "drafted",
+            source: "extracted",
+            definition: c.definition,
+            keyPoints: c.key_points ?? [],
+            examples: c.examples ?? [],
+            tipsToRemember: c.tips_to_remember ?? [],
+            voiceQaSamples: (c.voice_qa_samples ?? []) as unknown as Prisma.InputJsonValue,
+            sourceImagePath: c.media?.source_image_path,
+            illustrationCaption: c.media?.illustration_caption,
+            videoStatus: c.media?.video_status ?? "coming_soon",
+          },
+        });
+      }
     }
 
     return NextResponse.json({
