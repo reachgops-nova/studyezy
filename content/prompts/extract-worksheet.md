@@ -77,6 +77,18 @@ Use `photo_crop` plus `needsHuman:true` only when a diagram truly can't be expre
 one of the kinds above. Add `"redrawn": true` whenever the photograph was too poor to
 count and you rebuilt the figure from the numbers stated in the text.
 
+**When you're sent the whole document (not a single cropped page) and a `photo_crop`
+diagram is a real, specific photograph** (a device, a screenshot, a labeled part,
+anything that genuinely can't be redrawn) - identify exactly where it is so the real
+image can be cropped from the source, instead of only leaving a text note:
+- `"sourcePage"`: the 1-indexed page number within the document this diagram appears on.
+- `"box_2d"`: `[ymin, xmin, ymax, xmax]`, each normalized 0-1000 relative to that page
+  (the same convention used for image object-detection) - a TIGHT box around just the
+  diagram/photo itself, not the surrounding question text or answer options.
+Only include both fields when you're genuinely confident of the page and region - if
+you're not sure, omit them and rely on `needsHuman`/`note` alone as before. Never guess
+a page number or box you're not confident in; a wrong crop is worse than no crop.
+
 ### Writing the teaching content
 
 For every question produce:

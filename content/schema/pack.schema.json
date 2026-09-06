@@ -140,7 +140,11 @@
       "description": "Parameters only. The player owns all drawing code.",
       "properties": {
         "kind": { "enum": ["number_line", "thermometer", "spider", "square_pattern", "matchstick", "photo_crop"] },
-        "redrawn": { "type": "boolean", "description": "True when the photograph was unusable and the figure was rebuilt from stated numbers." }
+        "redrawn": { "type": "boolean", "description": "True when the photograph was unusable and the figure was rebuilt from stated numbers." },
+        "note": { "type": "string", "description": "photo_crop only: human-readable description of the figure, shown if no croppedImageUrl exists." },
+        "sourcePage": { "type": "integer", "description": "photo_crop only: 1-indexed page in the source document this diagram was found on - set by the model, consumed by lib/pdfCrop.ts to render+crop it." },
+        "box_2d": { "type": "array", "items": { "type": "number" }, "minItems": 4, "maxItems": 4, "description": "photo_crop only: [ymin,xmin,ymax,xmax] normalized 0-1000, set by the model." },
+        "croppedImageUrl": { "type": "string", "description": "photo_crop only: set by lib/contentPackExtraction.ts's post-processing step (never by the model) once sourcePage+box_2d have been rendered and cropped from the real source PDF." }
       }
     }
   }

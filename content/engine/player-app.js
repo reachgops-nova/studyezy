@@ -106,6 +106,9 @@ const MEDIA_RENDERERS = {
     return out+'</svg>';
   },
   photo_crop(m){
+    if(m.croppedImageUrl){
+      return `<img src="${esc(m.croppedImageUrl)}" alt="${esc(m.note||'Figure from the source material')}" style="max-width:100%;border-radius:8px;border:1px solid #C7D8E6;">`;
+    }
     return `<p class="redrawn">Original figure could not be rebuilt automatically${m.note?': '+esc(m.note):''}. Sent for review.</p>`;
   }
 };

@@ -1,9 +1,11 @@
 import "server-only";
-import { readFile } from "node:fs/promises";
+import { readFile, mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { extractPackFragmentClaude, isConfigured, type ExtractionSourceFile } from "./claude";
 import { extractPackFragmentGroq, isGroqConfigured } from "./groq";
 import { extractPackFragmentGemini, isGeminiConfigured } from "./gemini";
+import { renderPdfPageToPng, cropNormalizedBox } from "./pdfCrop";
+import { UPLOADS_DIR } from "./uploads";
 // @ts-ignore - plain JS module (allowJs handles resolution; this silences any type-inference gaps without failing the build if none turn out to exist)
 import { validatePack } from "../content/engine/validate.mjs";
 
@@ -188,6 +190,68 @@ function parsePackJson(raw: string): { error?: string; sheets?: unknown[] } | nu
   }
 }
 
+interface PhotoCropMedia {
+  kind: "photo_crop";
+  note?: string;
+  sourcePage?: number;
+  box_2d?: [number, number, number, number];
+  croppedImageUrl?: string;
+}
+
+/**
+ * Real region cropped from the source PDF, for every photo_crop question the
+ * model confidently localized (sourcePage + box_2d - see extract-worksheet.md's
+ * updated guidance). Mutates each question's media in place; a question the
+ * model didn't localize, or one that fails to render/crop for any reason,
+ * is left exactly as it was (still needsHuman - a missing crop is never
+ * treated as a hard failure of the whole conversion).
+ *
+ * Only meaningful for the whole-document Gemini path - a per-page-image
+ * conversion (Groq/Claude) has no multi-page PDF to look a page number up
+ * against, so this is only called when the source file was itself a PDF.
+ */
+async function fillPhotoCrops(sheets: unknown[], pdfBytes: Buffer, packId: string): Promise<number> {
+  const pageCache = new Map<number, Buffer>();
+  let filled = 0;
+
+  for (const s of sheets) {
+    const sheet = s as RawSheet;
+    for (const q of sheet.questions ?? []) {
+      const question = q as RawQuestion;
+      const media = question.media as PhotoCropMedia | undefined;
+      if (!media || media.kind !== "photo_crop" || !media.sourcePage || !media.box_2d) continue;
+
+      try {
+        let pageImage = pageCache.get(media.sourcePage);
+        if (!pageImage) {
+          pageImage = await renderPdfPageToPng(pdfBytes, media.sourcePage);
+          pageCache.set(media.sourcePage, pageImage);
+        }
+        const cropped = await cropNormalizedBox(pageImage, media.box_2d);
+
+        const dir = path.join(UPLOADS_DIR, "content-crops", packId);
+        await mkdir(dir, { recursive: true });
+        const filename = `${question.id ?? `q${filled}`}.png`;
+        await writeFile(path.join(dir, filename), cropped);
+
+        media.croppedImageUrl = `/api/content-crops/${packId}/${filename}`;
+        // A real image now stands in for the review flag that asked a human
+        // to check this question - leaving both would show a real diagram
+        // next to a "needs a check" banner that no longer applies, and would
+        // keep inflating needsHumanCount (which drives the pack's clean/
+        // needs_review status) for something that's now actually resolved.
+        delete question.needsHuman;
+        delete question.reviewReason;
+        filled++;
+      } catch (err) {
+        console.error(`Couldn't crop photo for question ${question.id} (page ${media.sourcePage})`, err);
+      }
+    }
+  }
+
+  return filled;
+}
+
 /**
  * Converts a set of real photographed pages into a validated "content pack"
  * (content/schema/pack.schema.json) - the declarative-check alternative to
@@ -282,6 +346,11 @@ export async function convertPagesToPack(
       userText =
         `${filledUser}${pagingNote}${FIELD_SHAPE_REMINDER}\n\nYour previous attempt failed automated validation. Fix exactly these ` +
         `problems and return the corrected pack in full. Do not change anything else.\n\n${v.errors.join("\n")}`;
+    }
+
+    if (isDocument && sheets.length > 0) {
+      const filled = await fillPhotoCrops(sheets, Buffer.from(image.base64, "base64"), packId);
+      if (filled > 0) console.log(`Filled ${filled} photo_crop image(s) from the source document.`);
     }
 
     allSheets.push(...renumberSheets(sheets, allSheets.length));
