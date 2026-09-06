@@ -8,13 +8,17 @@ type Mode = "existing" | "new_grade" | "new_board";
 export default function AddSubjectForm({
   action,
   curricula,
+  initialCurriculumId,
 }: {
   action: (formData: FormData) => void;
   curricula: ManageCurriculum[];
+  /** Pre-selects a just-created board (createBoard redirects here with its id) instead of leaving the picker on whatever sorted first - real friction found live 2026-09-06: a newly added board wasn't auto-selected, so it looked like adding it hadn't worked. */
+  initialCurriculumId?: string;
 }) {
   const [mode, setMode] = useState<Mode>("existing");
-  const [curriculumId, setCurriculumId] = useState(curricula[0]?.id ?? "");
-  const [stageId, setStageId] = useState(curricula[0]?.stages[0]?.id ?? "");
+  const initialCurriculum = curricula.find((c) => c.id === initialCurriculumId) ?? curricula[0];
+  const [curriculumId, setCurriculumId] = useState(initialCurriculum?.id ?? "");
+  const [stageId, setStageId] = useState(initialCurriculum?.stages[0]?.id ?? "");
 
   const curriculum = curricula.find((c) => c.id === curriculumId);
   const stage = curriculum?.stages.find((s) => s.id === stageId);

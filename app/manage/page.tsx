@@ -22,14 +22,14 @@ const ERROR_MESSAGES: Record<string, string> = {
 export default async function ManagePage({
   searchParams,
 }: {
-  searchParams: Promise<{ error?: string; success?: string }>;
+  searchParams: Promise<{ error?: string; success?: string; curriculumId?: string }>;
 }) {
   const user = await getCurrentUser();
   if (!user) redirect("/login");
   const profile = await getActiveProfile();
   if (!profile) redirect("/profiles");
 
-  const { error, success } = await searchParams;
+  const { error, success, curriculumId } = await searchParams;
 
   // One query, real DB ids throughout (not the slug/number scheme
   // lib/catalog.ts's getCatalog() uses for student-facing URLs) - this page
@@ -81,7 +81,7 @@ export default async function ManagePage({
           Choose the board and grade this subject belongs to - add a new board or grade inline if
           yours isn&apos;t listed yet.
         </p>
-        <AddSubjectForm action={createSubject} curricula={curricula} />
+        <AddSubjectForm action={createSubject} curricula={curricula} initialCurriculumId={curriculumId} />
       </section>
 
       <section className="rounded-2xl border border-slate-200/70 bg-white p-5 shadow-soft">
@@ -90,7 +90,7 @@ export default async function ManagePage({
           Pick the board, grade and subject first - existing units show up so you can confirm
           yours isn&apos;t already there.
         </p>
-        <AddUnitForm action={createUnit} curricula={curricula} />
+        <AddUnitForm action={createUnit} curricula={curricula} isAdmin={user.role === "admin"} />
       </section>
 
       <section className="rounded-2xl border border-slate-200/70 bg-white p-5 shadow-soft">

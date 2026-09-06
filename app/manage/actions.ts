@@ -118,7 +118,7 @@ export async function createBoard(formData: FormData) {
     update: { available: true },
   });
 
-  redirect("/manage?success=board_added");
+  redirect(`/manage?success=board_added&curriculumId=${curriculum.id}`);
 }
 
 export async function createUnit(formData: FormData) {
@@ -131,6 +131,17 @@ export async function createUnit(formData: FormData) {
   const publisher = String(formData.get("publisher") ?? "").trim();
   const bookTitle = String(formData.get("bookTitle") ?? "").trim();
   const outlineRaw = String(formData.get("outline") ?? "");
+  // Real feedback (2026-09-06): "once I choose subject its asking for units
+  // to add. Instead say textbook unit content etc. question paper workbook
+  // etc. we will choose only what to add" - the old flow dropped straight
+  // into a raw "id: name" concepts textarea with no guidance on what to do
+  // next. nextStep sends them straight to the real tool for whichever kind
+  // of content they actually want: the lesson/coaching content lives on the
+  // unit's own overview page (upload pages, then extract); a practice
+  // workbook or 1-3 final exam papers (with hints - already built into the
+  // pack player) both live on /admin/resources, which is where approved
+  // material and GeneratePaperButton already are.
+  const nextStep = String(formData.get("nextStep") ?? "learn");
 
   if (!subjectId || !title || !Number.isInteger(number) || number <= 0) {
     redirect("/manage?error=missing_unit_fields");
@@ -186,5 +197,5 @@ export async function createUnit(formData: FormData) {
     });
   }
 
-  redirect(`/learn/${unitKey}`);
+  redirect(nextStep === "resources" ? `/admin/resources?unitKey=${unitKey}` : `/learn/${unitKey}`);
 }
