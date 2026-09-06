@@ -1,8 +1,9 @@
 import "server-only";
 import { readFile } from "node:fs/promises";
 import path from "node:path";
-import { extractPackFragmentClaude, isConfigured, type UploadedPageImage } from "./claude";
+import { extractPackFragmentClaude, isConfigured, type ExtractionSourceFile } from "./claude";
 import { extractPackFragmentGroq, isGroqConfigured } from "./groq";
+import { extractPackFragmentGemini, isGeminiConfigured } from "./gemini";
 // @ts-ignore - plain JS module (allowJs handles resolution; this silences any type-inference gaps without failing the build if none turn out to exist)
 import { validatePack } from "../content/engine/validate.mjs";
 
@@ -55,9 +56,22 @@ export interface ContentPackResult {
 // required "title"/"no" at the sheet level. A concrete worked example
 // (proven more reliable for structured generation than an abstract JSON
 // Schema) fixes both, without editing extract-worksheet.md itself.
+//
+// Second gap found live 2026-09-06, converting a real multiple-choice
+// Olympiad paper via Gemini: every choice-type field wrote its answer
+// options under "choices", but content/engine/validate.mjs requires
+// "options" specifically (content/engine/checks.js's f.input === 'choice' /
+// 'multi' branch) - 35/35 questions got this wrong the same way, a
+// systematic naming guess rather than a random mistake, which the repair
+// loop's generic "fix this validation error" feedback is unlikely to
+// resolve on its own since it never states the correct key name. Added a
+// second worked example below covering exactly this shape.
 const FIELD_SHAPE_REMINDER = `
 
-IMPORTANT - exact shape reminder, because this is commonly gotten wrong: every question needs a "fields" array, even for a single blank. Never put "check" directly on the question object. Every sheet needs "title" (a short worksheet title) and "no" (its number) - "label" only belongs on questions and fields, never on a sheet. Example of a correctly-shaped sheet with one single-answer question:
+IMPORTANT - exact shape reminder, because this is commonly gotten wrong: every question needs a "fields" array, even for a single blank. Never put "check" directly on the question object. Every sheet needs "title" (a short worksheet title) and "no" (its number) - "label" only belongs on questions and fields, never on a sheet. A choice/multiple-choice field's answer options go under "options" (never "choices"), and its "input" must be exactly "choice" (one answer) or "multi" (several answers) - not "multi_choice". Example of a correctly-shaped multiple-choice question:
+{"id": "q1", "label": "1", "prompt": "Which type of network connects personal devices within a short range?", "fields": [{"key": "ans", "label": "Answer", "input": "choice", "options": ["Personal Area Network", "Local Area Network", "Wide Area Network", "Metropolitan Area Network"], "check": {"kind": "choice", "value": "Personal Area Network"}}], "hint": "Think about the range - a smartwatch talking to a phone, not a whole building.", "explanation": "A Personal Area Network (PAN) connects devices within a few metres of one person, like a phone and a smartwatch."}
+
+Example of a correctly-shaped sheet with one single-answer question:
 {"id": "sheet-1", "no": 1, "title": "Comprehension: Why Cockerels Crow", "objective": "Recall characters and setting from the story.", "skill": "reading-comprehension", "questions": [{"id": "q1a", "label": "a", "prompt": "Who are the main characters in this story?", "fields": [{"key": "a", "label": "Your answer", "input": "text", "check": {"kind": "keywords", "allOf": [["Hyena", "Cockerel"]], "modelAnswer": "Hyena and Cockerel."}}], "hint": "Look for the names mentioned in the dialogue.", "explanation": "The text names two characters: Hyena and Cockerel."}]}`;
 
 let cachedPrompt: { system: string; userTemplate: string } | null = null;
@@ -84,8 +98,9 @@ function fillTemplate(template: string, meta: PackMeta): string {
 
 // Groq-first, Claude-fallback - same tiering as lib/conceptImageTranscription.ts,
 // for the same reason (this deployment has no ANTHROPIC_API_KEY configured).
+// Images only - a PDF goes through callVisionModelForDocument below instead.
 async function callVisionModel(
-  image: UploadedPageImage,
+  image: { path: string; mediaType: "image/jpeg" | "image/png" | "image/webp"; base64: string },
   system: string,
   userText: string
 ): Promise<{ text: string; inputTokens: number; outputTokens: number; modelUsed: string }> {
@@ -102,6 +117,34 @@ async function callVisionModel(
     return { ...result, modelUsed: "claude-sonnet-5" };
   }
   throw new Error("Neither Groq nor Claude is configured for content-pack extraction.");
+}
+
+// A bare `mediaType !== "application/pdf"` check narrows that one property
+// read but not the whole containing object's assignability to
+// callVisionModel's narrower parameter type - an explicit type predicate
+// does, and is what actually lets the branch below typecheck.
+function isImageFile(
+  file: ExtractionSourceFile
+): file is ExtractionSourceFile & { mediaType: "image/jpeg" | "image/png" | "image/webp" } {
+  return file.mediaType !== "application/pdf";
+}
+
+// A whole PDF document, not one photographed page - added 2026-09-06 so this
+// pipeline can read a PDF at all (Groq has no vision model; Claude isn't
+// configured in production - neither was ever a candidate for this). Gemini
+// only for now: verified live against a real workbook PDF, and unlike the
+// image path above, no second PDF-capable fallback is wired in here yet -
+// that gap is real, not silently papered over, hence the explicit throw.
+async function callVisionModelForDocument(
+  file: ExtractionSourceFile,
+  system: string,
+  userText: string
+): Promise<{ text: string; inputTokens: number; outputTokens: number; modelUsed: string }> {
+  if (!isGeminiConfigured()) {
+    throw new Error("Gemini isn't configured - PDF content-pack conversion has no other capable provider right now.");
+  }
+  const result = await extractPackFragmentGemini(file, system, userText);
+  return { ...result, modelUsed: "gemini-flash-latest" };
 }
 
 interface RawQuestion {
@@ -161,7 +204,7 @@ function parsePackJson(raw: string): { error?: string; sheets?: unknown[] } | nu
  * this batch's pages get appended onto the same running pack.
  */
 export async function convertPagesToPack(
-  images: UploadedPageImage[],
+  images: ExtractionSourceFile[],
   meta: PackMeta,
   packId: string,
   existing?: { sheets: unknown[]; photoCount: number }
@@ -178,20 +221,32 @@ export async function convertPagesToPack(
 
   for (let i = 0; i < images.length; i++) {
     const image = images[i];
-    const pagingNote =
-      `\n\nYou are being sent ONE page at a time (page ${i + 1} of ${images.length} in this batch), not the whole ` +
-      `book. Extract only the sheet(s) whose full content appears on this page. If a question's content clearly ` +
-      `continues onto a page you don't have, set "needsHuman": true with a reviewReason explaining that it spans pages.`;
+    const isDocument = image.mediaType === "application/pdf";
+    const pagingNote = isDocument
+      ? `\n\nYou are being sent the ENTIRE document as one file, not a single page - it may span many pages. Extract ` +
+        `every distinct sheet you can find across the WHOLE document, not just the first page. If a question's ` +
+        `content clearly continues past what you can read, set "needsHuman": true with a reviewReason explaining why.`
+      : `\n\nYou are being sent ONE page at a time (page ${i + 1} of ${images.length} in this batch), not the whole ` +
+        `book. Extract only the sheet(s) whose full content appears on this page. If a question's content clearly ` +
+        `continues onto a page you don't have, set "needsHuman": true with a reviewReason explaining that it spans pages.`;
 
     let userText = filledUser + pagingNote + FIELD_SHAPE_REMINDER;
     let sheets: unknown[] = [];
     let lastErrors: string[] = [];
 
     for (let attempt = 1; attempt <= MAX_REPAIR_ATTEMPTS; attempt++) {
-      if (!isFirstCall) await sleep(CALL_SPACING_MS);
+      // The 65s pacing below exists only for Groq's rolling rate limit - a
+      // PDF always goes to Gemini (see callVisionModelForDocument), which
+      // has no such constraint, so it skips the wait entirely.
+      if (!isFirstCall && !isDocument) await sleep(CALL_SPACING_MS);
       isFirstCall = false;
 
-      const result = await callVisionModel(image, system, userText);
+      let result: { text: string; inputTokens: number; outputTokens: number; modelUsed: string };
+      if (isImageFile(image)) {
+        result = await callVisionModel(image, system, userText);
+      } else {
+        result = await callVisionModelForDocument(image, system, userText);
+      }
       totalInput += result.inputTokens;
       totalOutput += result.outputTokens;
       modelUsed = result.modelUsed;

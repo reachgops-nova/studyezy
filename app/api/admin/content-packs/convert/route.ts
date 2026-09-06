@@ -6,14 +6,15 @@ import { db } from "@/lib/db";
 import { UPLOADS_DIR } from "@/lib/uploads";
 import { convertPagesToPack } from "@/lib/contentPackExtraction";
 import { estimateCostUsd } from "@/lib/aiCost";
-import type { UploadedPageImage } from "@/lib/claude";
+import type { ExtractionSourceFile } from "@/lib/claude";
 import type { Prisma } from "@prisma/client";
 
-const MEDIA_TYPE_BY_EXT: Record<string, "image/jpeg" | "image/png" | "image/webp"> = {
+const MEDIA_TYPE_BY_EXT: Record<string, "image/jpeg" | "image/png" | "image/webp" | "application/pdf"> = {
   ".jpg": "image/jpeg",
   ".jpeg": "image/jpeg",
   ".png": "image/png",
   ".webp": "image/webp",
+  ".pdf": "application/pdf",
 };
 
 // Same cap reasoning as app/api/pages/extract/route.ts - and doubly relevant
@@ -79,7 +80,7 @@ export async function POST(req: NextRequest) {
   }
 
   const selectedKeys = (storageKeys as string[]).slice(0, MAX_PAGES_PER_CONVERSION);
-  const images: UploadedPageImage[] = [];
+  const images: ExtractionSourceFile[] = [];
   for (const storageKey of selectedKeys) {
     const ext = path.extname(storageKey).toLowerCase();
     const mediaType = MEDIA_TYPE_BY_EXT[ext];

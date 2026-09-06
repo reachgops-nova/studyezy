@@ -31,7 +31,19 @@ interface GeminiPart {
   inline_data?: { mime_type: string; data: string };
 }
 
-async function geminiGenerate(feature: string, system: string, parts: GeminiPart[]): Promise<string> {
+interface GeminiCallResult {
+  text: string;
+  inputTokens: number;
+  outputTokens: number;
+}
+
+// gemini-flash-latest "thinks" by default - a real call verified live
+// 2026-09-06 showed a non-trivial thoughtsTokenCount alongside the visible
+// candidatesTokenCount, and maxOutputTokens caps BOTH combined, not just the
+// visible completion. 8000 left comfortable headroom on every call tried so
+// far (a 7-question paper used under 1900 of it); worth raising if a
+// genuinely large document ever truncates.
+async function geminiGenerateRaw(feature: string, system: string, parts: GeminiPart[], maxOutputTokens = 8000): Promise<GeminiCallResult> {
   const res = await fetch(GEMINI_URL, {
     method: "POST",
     headers: {
@@ -45,7 +57,7 @@ async function geminiGenerate(feature: string, system: string, parts: GeminiPart
       // lib/claude.ts's parseExtractedConcepts/parseQuestionPaperResponse
       // both do a bare JSON.parse on whatever comes back, same as they do
       // for Claude/OpenRouter's responses.
-      generationConfig: { responseMimeType: "application/json", maxOutputTokens: 8000 },
+      generationConfig: { responseMimeType: "application/json", maxOutputTokens },
     }),
   });
 
@@ -58,13 +70,16 @@ async function geminiGenerate(feature: string, system: string, parts: GeminiPart
     candidates?: { content?: { parts?: { text?: string }[] } }[];
     usageMetadata?: { promptTokenCount?: number; candidatesTokenCount?: number };
   };
-  logAiCost(
-    feature,
-    GEMINI_MODEL,
-    data.usageMetadata?.promptTokenCount ?? 0,
-    data.usageMetadata?.candidatesTokenCount ?? 0
-  );
-  return data.candidates?.[0]?.content?.parts?.map((p) => p.text ?? "").join("") || "[]";
+  const inputTokens = data.usageMetadata?.promptTokenCount ?? 0;
+  const outputTokens = data.usageMetadata?.candidatesTokenCount ?? 0;
+  logAiCost(feature, GEMINI_MODEL, inputTokens, outputTokens);
+  const text = data.candidates?.[0]?.content?.parts?.map((p) => p.text ?? "").join("") || "[]";
+  return { text, inputTokens, outputTokens };
+}
+
+async function geminiGenerate(feature: string, system: string, parts: GeminiPart[]): Promise<string> {
+  const result = await geminiGenerateRaw(feature, system, parts);
+  return result.text;
 }
 
 // A PDF and an image both go through inline_data the same way - Gemini's
@@ -111,4 +126,28 @@ export async function generateQuestionPaperGemini(
     { text: `Concepts this unit covers:\n${JSON.stringify(concepts, null, 2)}` },
   ]);
   return parseQuestionPaperResponse(raw);
+}
+
+/**
+ * Same contract as lib/claude.ts's extractPackFragmentClaude / lib/groq.ts's
+ * extractPackFragmentGroq (content-pack/workbook extraction, see
+ * lib/contentPackExtraction.ts), for a whole PDF document instead of one
+ * photographed page - added 2026-09-06 specifically so that pipeline can
+ * finally read a PDF at all (neither Groq nor Claude can: Groq has no
+ * vision model, Claude isn't configured in production).
+ *
+ * 32000 tokens, not the usual 8000 - real, live-tested constraint: a real
+ * ~9-page Olympiad workbook (35 questions across it) needed ~11000 thinking
+ * tokens plus ~10000 for the actual JSON to come back complete. 12000
+ * (this function's first attempt) truncated the JSON mid-object every time -
+ * thinking and the visible completion draw from the SAME maxOutputTokens
+ * budget, and thinking alone can eat most of a modest cap. Do not lower this
+ * without re-testing against a real multi-page document.
+ */
+export async function extractPackFragmentGemini(
+  file: ExtractionSourceFile,
+  system: string,
+  userText: string
+): Promise<GeminiCallResult> {
+  return geminiGenerateRaw("content-pack-gemini", system, [toGeminiPart(file), { text: userText }], 32000);
 }

@@ -173,10 +173,11 @@ export async function getUnitBookletImages(key: string): Promise<BookletPage[]> 
  * in. A unit whose material came in through /manage's newer "Workbook"
  * upload flow (which writes UnitResource, not UploadedPage) never appeared
  * in the Content Packs unit picker at all as a result - not a rejected
- * conversion, just completely invisible to this list. Approved + image-only,
- * same reasoning as getUnitBookletImages: content-pack conversion has no PDF
- * support (Groq/Claude are both called per-page-image here), and an
- * unapproved upload hasn't been vetted yet.
+ * conversion, just completely invisible to this list. Approved + (image or
+ * PDF) - content-pack conversion gained real PDF support the same day
+ * (lib/contentPackExtraction.ts's callVisionModelForDocument, via Gemini),
+ * so a PDF resource belongs in this list now too; an unapproved upload
+ * still hasn't been vetted yet.
  */
 export async function getUploadedPageStorageKeys(
   key: string
@@ -196,7 +197,7 @@ export async function getUploadedPageStorageKeys(
   ]);
 
   const entries = [...pages, ...resources]
-    .filter((row) => row.mimeType.startsWith("image/"))
+    .filter((row) => row.mimeType.startsWith("image/") || row.mimeType === "application/pdf")
     .map((row) => ({ storageKey: row.storageKey, originalFilename: row.originalFilename }));
 
   const seen = new Set<string>();
