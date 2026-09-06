@@ -24,6 +24,29 @@ const NEXT_STEP_OPTIONS = [
   },
 ] as const;
 
+// Mirrors lib/uploads.ts's ALLOWED_IMAGE_TYPES/MAX_UPLOAD_FILE_BYTES - kept
+// as a separate copy since that file is server-only and can't be imported
+// into a client component. Checked here too (real feedback 2026-09-06:
+// "throw exact error to uploaders") so a bad file gets a specific reason
+// immediately, rather than only after a round trip - or, for a large
+// enough file, instead of the browser's own opaque "this page couldn't
+// load" if it were left to hit Next.js's Server Action body-size cap.
+const ALLOWED_TYPES = new Set(["image/jpeg", "image/png", "image/webp", "image/heic", "image/heif", "application/pdf"]);
+const MAX_FILE_BYTES = 200 * 1024 * 1024;
+
+function validateFiles(files: FileList): string[] {
+  const errors: string[] = [];
+  for (const file of Array.from(files)) {
+    if (!ALLOWED_TYPES.has(file.type)) {
+      errors.push(`"${file.name}" isn't a supported file type - only images and PDF are accepted.`);
+    } else if (file.size > MAX_FILE_BYTES) {
+      const mb = (file.size / (1024 * 1024)).toFixed(1);
+      errors.push(`"${file.name}" is ${mb}MB - over the ${MAX_FILE_BYTES / (1024 * 1024)}MB limit.`);
+    }
+  }
+  return errors;
+}
+
 export default function AddUnitForm({
   action,
   curricula,
@@ -34,6 +57,7 @@ export default function AddUnitForm({
   isAdmin: boolean;
 }) {
   const [nextStep, setNextStep] = useState<"learn" | "resources">("learn");
+  const [fileErrors, setFileErrors] = useState<string[]>([]);
   const curriculaWithSubjects = curricula.filter((c) => c.stages.some((s) => s.subjects.length > 0));
 
   const [curriculumId, setCurriculumId] = useState(curriculaWithSubjects[0]?.id ?? "");
@@ -156,6 +180,7 @@ export default function AddUnitForm({
           name="pages"
           multiple
           accept="image/*,application/pdf"
+          onChange={(e) => setFileErrors(e.target.files ? validateFiles(e.target.files) : [])}
           className="rounded-xl border border-slate-300 px-3 py-2 text-sm file:mr-3 file:rounded-full file:border-0 file:bg-brand-ink file:px-3 file:py-1.5 file:text-xs file:font-medium file:text-white"
         />
         <span className="text-xs font-normal text-slate-500">
@@ -163,6 +188,14 @@ export default function AddUnitForm({
           straight to whichever tool matches what you pick below, so the unit already has real
           material to work from.
         </span>
+        {fileErrors.length > 0 && (
+          <div className="rounded-xl border border-red-200 bg-red-50 p-2.5 text-xs text-red-600">
+            {fileErrors.map((msg, i) => (
+              <p key={i}>{msg}</p>
+            ))}
+            Remove or replace {fileErrors.length === 1 ? "this file" : "these files"} before adding the unit.
+          </div>
+        )}
       </label>
       <details className="rounded-xl border border-dashed border-slate-300 p-3 text-sm text-slate-600">
         <summary className="cursor-pointer font-medium">
@@ -218,7 +251,8 @@ export default function AddUnitForm({
 
       <button
         type="submit"
-        className="justify-self-start rounded-full bg-gradient-to-br from-brand-gold-bright to-brand-gold px-5 py-2.5 text-sm font-medium text-white transition active:scale-95"
+        disabled={fileErrors.length > 0}
+        className="justify-self-start rounded-full bg-gradient-to-br from-brand-gold-bright to-brand-gold px-5 py-2.5 text-sm font-medium text-white transition active:scale-95 disabled:opacity-50"
       >
         Add unit
       </button>

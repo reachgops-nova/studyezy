@@ -27,4 +27,9 @@ export const ALLOWED_IMAGE_TYPES = new Set([
   "image/heif",
   "application/pdf",
 ]);
-export const MAX_UPLOAD_FILE_BYTES = 12 * 1024 * 1024; // 12MB - generous for a phone photo
+// Raised from 12MB (2026-09-06, real request: "raise it to 250MB") once a
+// large PDF workbook, not just a phone photo, became a realistic upload -
+// kept somewhat under next.config.mjs's 250mb total Server Action body cap
+// so a few smaller files can still ride alongside one large one in the same
+// multi-file selection without the whole request being rejected outright.
+export const MAX_UPLOAD_FILE_BYTES = 200 * 1024 * 1024; // 200MB

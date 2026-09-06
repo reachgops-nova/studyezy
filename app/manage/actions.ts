@@ -213,10 +213,27 @@ export async function createUnit(formData: FormData) {
   // explanation content, UnitResource (feeds Curriculum Materials'
   // approve-then-convert pipeline) for a workbook/exam papers.
   const files = formData.getAll("pages").filter((f): f is File => f instanceof File && f.size > 0);
+  // Real feedback (2026-09-06): "throw exact error to uploaders" - a
+  // rejected file used to just vanish with zero explanation (silently
+  // filtered out). Each one now gets a specific, real reason instead of a
+  // generic failure, and surfaces even though the unit itself (and
+  // whichever files DID pass) still gets created - nothing is lost, the
+  // family just needs to know which file(s) to try again separately.
+  const rejectedFiles: string[] = [];
   if (files.length > 0) {
-    const validFiles = files.filter(
-      (f) => ALLOWED_IMAGE_TYPES.has(f.type) && f.size <= MAX_UPLOAD_FILE_BYTES
-    );
+    const validFiles = files.filter((f) => {
+      if (!ALLOWED_IMAGE_TYPES.has(f.type)) {
+        rejectedFiles.push(`"${f.name}" isn't a supported file type - only images and PDF are accepted.`);
+        return false;
+      }
+      if (f.size > MAX_UPLOAD_FILE_BYTES) {
+        const mb = (f.size / (1024 * 1024)).toFixed(1);
+        const maxMb = Math.round(MAX_UPLOAD_FILE_BYTES / (1024 * 1024));
+        rejectedFiles.push(`"${f.name}" is ${mb}MB - over the ${maxMb}MB limit.`);
+        return false;
+      }
+      return true;
+    });
     if (nextStep === "resources") {
       const targetDir = path.join(UPLOADS_DIR, "resources", unitKey);
       await mkdir(targetDir, { recursive: true });
@@ -261,6 +278,10 @@ export async function createUnit(formData: FormData) {
         });
       }
     }
+  }
+
+  if (rejectedFiles.length > 0) {
+    redirect(`/manage?error=file_rejected&detail=${encodeURIComponent(rejectedFiles.join(" "))}`);
   }
 
   redirect(nextStep === "resources" ? `/admin/resources?unitKey=${unitKey}` : `/learn/${unitKey}`);

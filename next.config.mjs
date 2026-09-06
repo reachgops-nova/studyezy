@@ -11,7 +11,7 @@ const nextConfig = {
   // several files at once in one multi-file selection.
   experimental: {
     serverActions: {
-      bodySizeLimit: "50mb",
+      bodySizeLimit: "250mb",
     },
   },
 };

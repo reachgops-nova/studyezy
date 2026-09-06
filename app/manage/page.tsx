@@ -17,19 +17,23 @@ const ERROR_MESSAGES: Record<string, string> = {
   missing_unit_fields: "Pick a subject, and give the unit a title.",
   unknown_subject: "That subject wasn't found - try again.",
   unit_exists: "That unit number already exists for this subject.",
+  // Real feedback (2026-09-06): "throw exact error to uploaders" - the real
+  // per-file reason travels in `detail` instead of a fixed generic message
+  // here; this is only the fallback if that's somehow missing.
+  file_rejected: "One or more files couldn't be uploaded.",
 };
 
 export default async function ManagePage({
   searchParams,
 }: {
-  searchParams: Promise<{ error?: string; success?: string; curriculumId?: string }>;
+  searchParams: Promise<{ error?: string; detail?: string; success?: string; curriculumId?: string }>;
 }) {
   const user = await getCurrentUser();
   if (!user) redirect("/login");
   const profile = await getActiveProfile();
   if (!profile) redirect("/profiles");
 
-  const { error, success, curriculumId } = await searchParams;
+  const { error, detail, success, curriculumId } = await searchParams;
 
   // One query, real DB ids throughout (not the slug/number scheme
   // lib/catalog.ts's getCatalog() uses for student-facing URLs) - this page
@@ -63,7 +67,7 @@ export default async function ManagePage({
 
       {error && (
         <p className="rounded-xl bg-red-50 px-3 py-2 text-sm text-red-600">
-          {ERROR_MESSAGES[error] ?? "Something went wrong - try again."}
+          {error === "file_rejected" && detail ? detail : ERROR_MESSAGES[error] ?? "Something went wrong - try again."}
         </p>
       )}
       {success === "subject_added" && (
