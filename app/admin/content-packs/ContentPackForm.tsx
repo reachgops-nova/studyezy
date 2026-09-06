@@ -47,8 +47,16 @@ function statusPill(status: string) {
   );
 }
 
-export default function ContentPackForm({ unitOptions }: { unitOptions: UnitOption[] }) {
-  const [unitKey, setUnitKey] = useState(unitOptions[0]?.unitKey ?? "");
+export default function ContentPackForm({
+  unitOptions,
+  initialUnitKey,
+}: {
+  unitOptions: UnitOption[];
+  initialUnitKey?: string;
+}) {
+  const [unitKey, setUnitKey] = useState(
+    (initialUnitKey && unitOptions.some((u) => u.unitKey === initialUnitKey) ? initialUnitKey : unitOptions[0]?.unitKey) ?? ""
+  );
   const selectedUnit = unitOptions.find((u) => u.unitKey === unitKey);
   const [selectedKeys, setSelectedKeys] = useState<string[]>(
     selectedUnit ? selectedUnit.pages.slice(0, 3).map((p) => p.storageKey) : []

@@ -581,7 +581,9 @@ const DIFFICULTY_INSTRUCTIONS: Record<QuestionPaperDifficulty, string> = {
 // before the cache_control block, so each tier gets its own cache entry -
 // generation is rare/admin-triggered, so a smaller cache-hit-rate hit here
 // is an acceptable trade for genuinely different papers per tier).
-function questionPaperSystemPrompt(difficulty: QuestionPaperDifficulty): string {
+// Exported so lib/openrouter.ts's generateQuestionPaperOpenRouter uses the
+// identical wording instead of a hand-copied, driftable duplicate.
+export function questionPaperSystemPrompt(difficulty: QuestionPaperDifficulty): string {
   return `You are writing an original curriculum-aligned practice question paper for a Grade 5 (Cambridge Stage 5) student, from photos of a unit's admin-approved textbook/worksheet/classwork pages.
 
 CRITICAL - originality: Write your OWN questions inspired by what's shown in the photos - do NOT copy questions or passages verbatim from the pages. This becomes original assessment content, not a reproduction of the source material.
@@ -605,6 +607,25 @@ interface RawQuestionPaper {
   questions: TestQuestion[];
 }
 
+// Shared by every question-paper-generating provider (Claude here,
+// OpenRouter in lib/openrouter.ts) - same JSON shape, so the parsing logic
+// only needs to exist once.
+export function parseQuestionPaperResponse(raw: string): ProgressionTestDraft {
+  let parsed: RawQuestionPaper;
+  try {
+    parsed = JSON.parse(raw) as RawQuestionPaper;
+  } catch {
+    throw new Error("Couldn't generate a question paper from that material - please try again.");
+  }
+
+  return {
+    test_id: `generated-${Date.now()}`,
+    covers_concepts: parsed.covers_concepts ?? [],
+    note: parsed.note,
+    questions: parsed.questions ?? [],
+  };
+}
+
 /**
  * Generates a curriculum-aligned practice question paper, at a chosen
  * difficulty tier, from a unit's admin-approved canonical material
@@ -616,7 +637,7 @@ interface RawQuestionPaper {
  * through the Groq fallback tier used for low-stakes interactive answers.
  */
 export async function generateQuestionPaper(
-  images: UploadedPageImage[],
+  images: ExtractionSourceFile[],
   concepts: { concept_id: string; concept_name: string }[],
   difficulty: QuestionPaperDifficulty = "moderate"
 ): Promise<ProgressionTestDraft> {
@@ -635,10 +656,7 @@ export async function generateQuestionPaper(
       {
         role: "user",
         content: [
-          ...images.map((img) => ({
-            type: "image" as const,
-            source: { type: "base64" as const, media_type: img.mediaType, data: img.base64 },
-          })),
+          ...images.map(toExtractionContentBlock),
           {
             type: "text" as const,
             text: `Concepts this unit covers:\n${JSON.stringify(concepts, null, 2)}`,
@@ -651,20 +669,7 @@ export async function generateQuestionPaper(
   logAiCost("question-paper", EXTRACTION_MODEL, response.usage.input_tokens, response.usage.output_tokens);
   const textBlock = response.content.find((block) => block.type === "text");
   const raw = textBlock && textBlock.type === "text" ? textBlock.text : "{}";
-
-  let parsed: RawQuestionPaper;
-  try {
-    parsed = JSON.parse(raw) as RawQuestionPaper;
-  } catch {
-    throw new Error("Couldn't generate a question paper from that material - please try again.");
-  }
-
-  return {
-    test_id: `generated-${Date.now()}`,
-    covers_concepts: parsed.covers_concepts ?? [],
-    note: parsed.note,
-    questions: parsed.questions ?? [],
-  };
+  return parseQuestionPaperResponse(raw);
 }
 
 export interface ExamCoachingResult {

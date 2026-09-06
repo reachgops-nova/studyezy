@@ -167,6 +167,16 @@ export async function getUnitBookletImages(key: string): Promise<BookletPage[]> 
  * than the served /api/uploads/ path - used by the content-pack conversion
  * admin UI, which needs to send storageKeys (not full URLs) to the convert
  * API route.
+ *
+ * Real gap found live 2026-09-06: this only ever read UploadedPage, missing
+ * the same UnitResource half that getUnitBookletImages above already merges
+ * in. A unit whose material came in through /manage's newer "Workbook"
+ * upload flow (which writes UnitResource, not UploadedPage) never appeared
+ * in the Content Packs unit picker at all as a result - not a rejected
+ * conversion, just completely invisible to this list. Approved + image-only,
+ * same reasoning as getUnitBookletImages: content-pack conversion has no PDF
+ * support (Groq/Claude are both called per-page-image here), and an
+ * unapproved upload hasn't been vetted yet.
  */
 export async function getUploadedPageStorageKeys(
   key: string
@@ -174,9 +184,21 @@ export async function getUploadedPageStorageKeys(
   const unit = await db.unit.findUnique({ where: { unitKey: key } });
   if (!unit) return [];
 
-  const pages = await db.uploadedPage.findMany({
-    where: { unitId: unit.id, purpose: "textbook_source" },
-    orderBy: { createdAt: "asc" },
-  });
-  return pages.map((p) => ({ storageKey: p.storageKey, originalFilename: p.originalFilename }));
+  const [pages, resources] = await Promise.all([
+    db.uploadedPage.findMany({
+      where: { unitId: unit.id, purpose: "textbook_source" },
+      orderBy: { createdAt: "asc" },
+    }),
+    db.unitResource.findMany({
+      where: { unitId: unit.id, status: "approved" },
+      orderBy: { createdAt: "asc" },
+    }),
+  ]);
+
+  const entries = [...pages, ...resources]
+    .filter((row) => row.mimeType.startsWith("image/"))
+    .map((row) => ({ storageKey: row.storageKey, originalFilename: row.originalFilename }));
+
+  const seen = new Set<string>();
+  return entries.filter((e) => (seen.has(e.storageKey) ? false : (seen.add(e.storageKey), true)));
 }

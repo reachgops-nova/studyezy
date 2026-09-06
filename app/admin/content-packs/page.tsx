@@ -7,9 +7,14 @@ import { db } from "@/lib/db";
 import AppShell from "@/components/AppShell";
 import ContentPackForm, { type UnitOption } from "./ContentPackForm";
 
-export default async function ContentPacksPage() {
+export default async function ContentPacksPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ unitKey?: string }>;
+}) {
   const admin = await getCurrentAdmin();
   if (!admin) redirect("/select");
+  const { unitKey: initialUnitKey } = await searchParams;
   const profile = await getActiveProfile();
   if (!profile) redirect("/profiles");
 
@@ -74,7 +79,7 @@ export default async function ContentPacksPage() {
         </p>
       </div>
 
-      <ContentPackForm unitOptions={unitOptions} />
+      <ContentPackForm unitOptions={unitOptions} initialUnitKey={initialUnitKey} />
     </AppShell>
   );
 }

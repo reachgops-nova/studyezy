@@ -2,12 +2,14 @@ import "server-only";
 import { logAiCost } from "./aiCost";
 import {
   parseExtractedConcepts,
+  parseQuestionPaperResponse,
+  questionPaperSystemPrompt,
   EXTRACTION_SYSTEM_PROMPT,
   FREEFORM_EXTRACTION_SYSTEM_PROMPT,
   type ExpectedConcept,
   type ExtractionSourceFile,
 } from "./claude";
-import type { Concept } from "./types";
+import type { Concept, ProgressionTestDraft, QuestionPaperDifficulty } from "./types";
 
 // OpenRouter (openrouter.ai) - an OpenAI-compatible proxy in front of many
 // models, added 2026-09-06 specifically to unblock vision extraction: it
@@ -119,4 +121,21 @@ export async function extractFreeformConceptsOpenRouter(images: ExtractionSource
     imageOnly.map(toImageContentPart)
   );
   return parseExtractedConcepts(raw, imageOnly);
+}
+
+/** Same contract as lib/claude.ts's generateQuestionPaper, same PDF caveat as the extraction functions above. */
+export async function generateQuestionPaperOpenRouter(
+  images: ExtractionSourceFile[],
+  concepts: { concept_id: string; concept_name: string }[],
+  difficulty: QuestionPaperDifficulty = "moderate"
+): Promise<ProgressionTestDraft> {
+  const imageOnly = stripNonImageFiles(images);
+  if (imageOnly.length === 0) {
+    throw new Error("OpenRouter extraction only reads image pages, not PDFs - no image pages were provided.");
+  }
+  const raw = await openRouterChat("question-paper-openrouter", questionPaperSystemPrompt(difficulty), [
+    ...imageOnly.map(toImageContentPart),
+    { type: "text", text: `Concepts this unit covers:\n${JSON.stringify(concepts, null, 2)}` },
+  ]);
+  return parseQuestionPaperResponse(raw);
 }

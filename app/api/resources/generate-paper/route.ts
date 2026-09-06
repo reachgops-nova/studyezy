@@ -3,22 +3,58 @@ import { readFile } from "node:fs/promises";
 import path from "node:path";
 import { getCurrentAdmin } from "@/lib/session";
 import { db } from "@/lib/db";
-import { generateQuestionPaper, isConfigured, type UploadedPageImage } from "@/lib/claude";
+import { generateQuestionPaper, isConfigured, type ExtractionSourceFile } from "@/lib/claude";
+import { generateQuestionPaperOpenRouter, isOpenRouterConfigured } from "@/lib/openrouter";
 import { UPLOADS_DIR } from "@/lib/uploads";
 import { FREEZABLE_TYPES } from "@/lib/unitResources";
-import { QUESTION_PAPER_DIFFICULTIES, type QuestionPaperDifficulty } from "@/lib/types";
+import { QUESTION_PAPER_DIFFICULTIES, type ProgressionTestDraft, type QuestionPaperDifficulty } from "@/lib/types";
 import type { Prisma } from "@prisma/client";
 
 export const runtime = "nodejs";
 
 const UNIT_KEY_PATTERN = /^[a-z0-9]+-\d+-[a-z0-9]+-\d+$/i;
-const MEDIA_TYPE_BY_EXT: Record<string, "image/jpeg" | "image/png" | "image/webp"> = {
+const MEDIA_TYPE_BY_EXT: Record<string, "image/jpeg" | "image/png" | "image/webp" | "application/pdf"> = {
   ".jpg": "image/jpeg",
   ".jpeg": "image/jpeg",
   ".png": "image/png",
   ".webp": "image/webp",
+  ".pdf": "application/pdf",
 };
 const MAX_IMAGES = 10;
+
+// Same try-best-fit-then-fallback shape as app/api/pages/extract/route.ts's
+// runExtraction - real gap found live 2026-09-06: this route's own
+// isConfigured() gate meant it 503'd unconditionally whenever
+// ANTHROPIC_API_KEY was unset, even once OpenRouter became a real,
+// configured, vision-capable alternative.
+async function runGeneration(
+  images: ExtractionSourceFile[],
+  concepts: { concept_id: string; concept_name: string }[],
+  difficulty: QuestionPaperDifficulty
+): Promise<ProgressionTestDraft> {
+  const hasPdf = images.some((f) => f.mediaType === "application/pdf");
+  const providers: { name: string; configured: boolean; run: () => Promise<ProgressionTestDraft> }[] = [
+    { name: "claude", configured: isConfigured(), run: () => generateQuestionPaper(images, concepts, difficulty) },
+    {
+      name: "openrouter",
+      configured: isOpenRouterConfigured(),
+      run: () => generateQuestionPaperOpenRouter(images, concepts, difficulty),
+    },
+  ];
+  const ordered = hasPdf ? providers : [...providers].reverse();
+
+  let lastError: unknown;
+  for (const provider of ordered) {
+    if (!provider.configured) continue;
+    try {
+      return await provider.run();
+    } catch (err) {
+      console.error(`${provider.name} question-paper generation failed, trying next provider`, err);
+      lastError = err;
+    }
+  }
+  throw lastError ?? new Error("No question-paper provider is configured.");
+}
 
 function isDifficulty(value: unknown): value is QuestionPaperDifficulty {
   return typeof value === "string" && (QUESTION_PAPER_DIFFICULTIES as string[]).includes(value);
@@ -37,9 +73,9 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Admin only." }, { status: 403 });
   }
 
-  if (!isConfigured()) {
+  if (!isConfigured() && !isOpenRouterConfigured()) {
     return NextResponse.json(
-      { error: "Question-paper generation isn't configured yet - add ANTHROPIC_API_KEY." },
+      { error: "Question-paper generation isn't configured yet - add ANTHROPIC_API_KEY or OPENROUTER_API_KEY." },
       { status: 503 }
     );
   }
@@ -78,7 +114,7 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  const images: UploadedPageImage[] = [];
+  const images: ExtractionSourceFile[] = [];
   for (const resource of approvedResources) {
     const ext = path.extname(resource.storageKey).toLowerCase();
     const mediaType = MEDIA_TYPE_BY_EXT[ext];
@@ -96,7 +132,7 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    const draft = await generateQuestionPaper(
+    const draft = await runGeneration(
       images,
       concepts.map((c) => ({ concept_id: c.conceptKey, concept_name: c.name })),
       difficulty

@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import Link from "next/link";
 import { getCurrentAdmin } from "@/lib/session";
 import { getActiveProfile } from "@/lib/auth";
 import { getCatalog } from "@/lib/catalog";
@@ -132,6 +133,17 @@ export default async function AdminResourcesPage({
       </form>
 
       {unitRow && paperSummaries && <GeneratePaperButton unitKey={unitRow.unitKey} summaries={paperSummaries} />}
+
+      {unitRow && (
+        <p className="text-sm text-slate-500">
+          Want declarative, auto-markable worksheets instead of a generated question paper? Convert this unit&apos;s
+          approved image pages in{" "}
+          <Link href={`/admin/content-packs?unitKey=${unitRow.unitKey}`} className="font-medium text-brand-ink hover:underline">
+            Content packs
+          </Link>
+          .
+        </p>
+      )}
 
       {unitRow && groups && (
         <div className="grid gap-4 sm:grid-cols-2">
