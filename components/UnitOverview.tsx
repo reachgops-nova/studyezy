@@ -7,6 +7,7 @@ import type { CurriculumUnit, MasteryBand } from "@/lib/types";
 import type { ResourceGroup } from "@/lib/queries/unitResources";
 import UnitResources from "./UnitResources";
 import Booklet from "./Booklet";
+import { Illustration, hasIllustration } from "./illustrations";
 
 interface LatestTestAttempt {
   band: MasteryBand;
@@ -232,20 +233,31 @@ export default function UnitOverview({
           {unit.curriculum} - not just yours.
         </p>
         <ul className="mt-3 grid gap-1.5">
-          {unit.concepts.map((c) => (
-            <li key={c.concept_id}>
-              <button
-                type="button"
-                onClick={() => onSkipToTeaching(c.concept_id)}
-                className="flex w-full items-center justify-between rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-left text-sm text-slate-700 transition hover:border-brand-ink-light hover:bg-white"
-              >
-                <span>
-                  {c.concept_id} {c.concept_name}
-                </span>
-                <span className="text-xs font-medium text-green-600">Ready</span>
-              </button>
-            </li>
-          ))}
+          {unit.concepts.map((c) => {
+            const illustrationKey = c.media?.illustration_key;
+            const showIllustration = illustrationKey && hasIllustration(illustrationKey);
+            return (
+              <li key={c.concept_id}>
+                <button
+                  type="button"
+                  onClick={() => onSkipToTeaching(c.concept_id)}
+                  className="flex w-full items-center justify-between gap-3 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-left text-sm text-slate-700 transition hover:border-brand-ink-light hover:bg-white"
+                >
+                  <span className="flex min-w-0 items-center gap-3">
+                    {showIllustration && (
+                      <span className="h-10 w-14 shrink-0 overflow-hidden rounded-lg border border-slate-200 bg-white">
+                        <Illustration illustrationKey={illustrationKey!} />
+                      </span>
+                    )}
+                    <span className="truncate">
+                      {c.concept_id} {c.concept_name}
+                    </span>
+                  </span>
+                  <span className="shrink-0 text-xs font-medium text-green-600">Ready</span>
+                </button>
+              </li>
+            );
+          })}
           {unit.remaining_unit_outline.map((c) => (
             <li
               key={c.concept_id}

@@ -451,6 +451,161 @@ function PizzaFractionSlices() {
   );
 }
 
+// 2026-09-06: Unit 2 (Biography) illustrations - the first animated ones in
+// this file. Real feedback: "graphically animated pictures... make it more
+// inclined for the students". CSS keyframes scoped inside each <svg> via a
+// unique class prefix (u2c1/u2c2/...) so multiple of these can render on
+// the same page without their animations colliding, and gated behind
+// prefers-reduced-motion like the rest of this app's animated UI.
+
+function BiographyFeaturesPortrait() {
+  return (
+    <svg viewBox="0 0 300 180" className="h-full w-full" role="img" aria-label="A framed portrait with a twinkling star and a small dated ribbon, representing the features of a biography">
+      <style>{`
+        @keyframes u2c1-sparkle { 0%,100% { opacity: 0.2; transform: scale(0.7); } 50% { opacity: 1; transform: scale(1.15); } }
+        @keyframes u2c1-frame { to { stroke-dashoffset: 0; } }
+        .u2c1-star { animation: u2c1-sparkle 1.8s ease-in-out infinite; transform-origin: center; }
+        .u2c1-frame { stroke-dasharray: 340; stroke-dashoffset: 340; animation: u2c1-frame 2.2s ease-out forwards; }
+        @media (prefers-reduced-motion: reduce) { .u2c1-star, .u2c1-frame { animation: none; opacity: 1; stroke-dashoffset: 0; } }
+      `}</style>
+      <rect width="300" height="180" fill="#fdf2e9" />
+      <rect x="95" y="30" width="110" height="130" rx="6" fill="#ffffff" stroke="#b45309" strokeWidth="8" className="u2c1-frame" />
+      <circle cx="150" cy="80" r="24" fill="#f59e0b" />
+      <path d="M118 140 Q150 108 182 140 Z" fill="#f59e0b" />
+      <rect x="110" y="150" width="80" height="14" rx="7" fill="#dc2626" />
+      <text x="150" y="161" textAnchor="middle" fontSize="10" fontWeight="700" fill="#ffffff" fontFamily="sans-serif">1990 - 2024</text>
+      <path className="u2c1-star" d="M232 55 L237 68 L251 68 L240 76 L244 90 L232 81 L220 90 L224 76 L213 68 L227 68 Z" fill="#eab308" />
+      <path className="u2c1-star" d="M60 100 L63 108 L71 108 L64 113 L67 121 L60 116 L53 121 L56 113 L49 108 L57 108 Z" fill="#eab308" style={{ animationDelay: "0.6s" }} />
+    </svg>
+  );
+}
+
+function ChronologicalTimeline() {
+  return (
+    <svg viewBox="0 0 300 180" className="h-full w-full" role="img" aria-label="A timeline with four dots lighting up in order, representing chronological order in a biography">
+      <style>{`
+        @keyframes u2c2-light { 0%,20% { opacity: 0.25; r: 8; } 30%,100% { opacity: 1; r: 11; } }
+        .u2c2-dot1 { animation: u2c2-light 3.2s ease-in-out infinite; }
+        .u2c2-dot2 { animation: u2c2-light 3.2s ease-in-out infinite 0.5s; }
+        .u2c2-dot3 { animation: u2c2-light 3.2s ease-in-out infinite 1s; }
+        .u2c2-dot4 { animation: u2c2-light 3.2s ease-in-out infinite 1.5s; }
+        @media (prefers-reduced-motion: reduce) { .u2c2-dot1,.u2c2-dot2,.u2c2-dot3,.u2c2-dot4 { animation: none; opacity: 1; } }
+      `}</style>
+      <rect width="300" height="180" fill="#eef2ff" />
+      <line x1="40" y1="100" x2="260" y2="100" stroke="#6366f1" strokeWidth="4" />
+      <circle className="u2c2-dot1" cx="60" cy="100" r="11" fill="#4f46e5" />
+      <circle className="u2c2-dot2" cx="120" cy="100" r="11" fill="#4f46e5" />
+      <circle className="u2c2-dot3" cx="180" cy="100" r="11" fill="#4f46e5" />
+      <circle className="u2c2-dot4" cx="240" cy="100" r="11" fill="#4f46e5" />
+      <text x="60" y="130" textAnchor="middle" fontSize="10" fontWeight="700" fill="#3730a3" fontFamily="sans-serif">Born</text>
+      <text x="120" y="130" textAnchor="middle" fontSize="10" fontWeight="700" fill="#3730a3" fontFamily="sans-serif">School</text>
+      <text x="180" y="130" textAnchor="middle" fontSize="10" fontWeight="700" fill="#3730a3" fontFamily="sans-serif">Career</text>
+      <text x="240" y="130" textAnchor="middle" fontSize="10" fontWeight="700" fill="#3730a3" fontFamily="sans-serif">Today</text>
+      <path d="M40 100 L52 94 L52 106 Z" fill="#4338ca" />
+    </svg>
+  );
+}
+
+function RegisterFormalInformal() {
+  return (
+    <svg viewBox="0 0 300 180" className="h-full w-full" role="img" aria-label="Two speech bubbles, one formal and one informal, fading in and out to represent register">
+      <style>{`
+        @keyframes u2c3-fade { 0%,45% { opacity: 1; } 50%,95% { opacity: 0.15; } 100% { opacity: 1; } }
+        .u2c3-formal { animation: u2c3-fade 4s ease-in-out infinite; }
+        .u2c3-informal { animation: u2c3-fade 4s ease-in-out infinite 2s; }
+        @media (prefers-reduced-motion: reduce) { .u2c3-formal, .u2c3-informal { animation: none; opacity: 1; } }
+      `}</style>
+      <rect width="300" height="180" fill="#f0fdfa" />
+      <g className="u2c3-formal">
+        <rect x="30" y="35" width="115" height="60" rx="10" fill="#ffffff" stroke="#0f766e" strokeWidth="5" />
+        <path d="M55 95 L40 118 L75 96 Z" fill="#ffffff" stroke="#0f766e" strokeWidth="5" strokeLinejoin="round" />
+        <text x="87" y="58" textAnchor="middle" fontSize="9" fontWeight="700" fill="#134e4a" fontFamily="serif">Good morning,</text>
+        <text x="87" y="75" textAnchor="middle" fontSize="9" fontWeight="700" fill="#134e4a" fontFamily="serif">how are you?</text>
+      </g>
+      <g className="u2c3-informal">
+        <rect x="155" y="90" width="115" height="60" rx="26" fill="#fef08a" stroke="#ca8a04" strokeWidth="5" />
+        <path d="M245 150 L262 170 L228 150 Z" fill="#fef08a" stroke="#ca8a04" strokeWidth="5" strokeLinejoin="round" />
+        <text x="212" y="115" textAnchor="middle" fontSize="10" fontWeight="800" fill="#854d0e" fontFamily="sans-serif">Hey, what&apos;s up?</text>
+      </g>
+    </svg>
+  );
+}
+
+function SynonymThesaurus() {
+  return (
+    <svg viewBox="0 0 300 180" className="h-full w-full" role="img" aria-label="An open thesaurus with an arrow turning a plain word into a stronger synonym">
+      <style>{`
+        @keyframes u2c4-arrow { 0% { stroke-dashoffset: 60; opacity: 0.3; } 60%,100% { stroke-dashoffset: 0; opacity: 1; } }
+        @keyframes u2c4-pop { 0%,55% { opacity: 0; transform: translateY(6px); } 75%,100% { opacity: 1; transform: translateY(0); } }
+        .u2c4-arrow { stroke-dasharray: 60; animation: u2c4-arrow 2.4s ease-out infinite; }
+        .u2c4-new { animation: u2c4-pop 2.4s ease-out infinite; transform-origin: center; }
+        @media (prefers-reduced-motion: reduce) { .u2c4-arrow, .u2c4-new { animation: none; opacity: 1; stroke-dashoffset: 0; transform: none; } }
+      `}</style>
+      <rect width="300" height="180" fill="#fdf4ff" />
+      <path d="M35 45 L150 35 L150 145 L35 155 Z" fill="#ffffff" stroke="#7e22ce" strokeWidth="5" />
+      <path d="M150 35 L265 45 L265 155 L150 145 Z" fill="#f3e8ff" stroke="#7e22ce" strokeWidth="5" />
+      <text x="90" y="90" textAnchor="middle" fontSize="15" fontWeight="700" fill="#6b21a8" fontFamily="sans-serif" textDecoration="line-through">hit</text>
+      <path className="u2c4-arrow" d="M115 95 Q150 115 185 100" stroke="#a855f7" strokeWidth="4" fill="none" strokeLinecap="round" />
+      <path d="M178 92 L188 100 L177 106" stroke="#a855f7" strokeWidth="4" fill="none" strokeLinecap="round" strokeLinejoin="round" />
+      <text className="u2c4-new" x="210" y="95" textAnchor="middle" fontSize="15" fontWeight="800" fill="#86198f" fontFamily="sans-serif">strike</text>
+    </svg>
+  );
+}
+
+function FactOpinionBalanceScale() {
+  return (
+    <svg viewBox="0 0 300 180" className="h-full w-full" role="img" aria-label="A balance scale tilting between a fact checkmark and an opinion thought bubble">
+      <style>{`
+        @keyframes u2c5-tilt { 0%,100% { transform: rotate(-6deg); } 50% { transform: rotate(6deg); } }
+        .u2c5-beam { animation: u2c5-tilt 3s ease-in-out infinite; transform-origin: 150px 70px; }
+        @media (prefers-reduced-motion: reduce) { .u2c5-beam { animation: none; transform: none; } }
+      `}</style>
+      <rect width="300" height="180" fill="#fff7ed" />
+      <rect x="145" y="70" width="10" height="80" fill="#78350f" />
+      <path d="M120 155 L180 155 L170 165 L130 165 Z" fill="#78350f" />
+      <g className="u2c5-beam">
+        <line x1="55" y1="70" x2="245" y2="70" stroke="#78350f" strokeWidth="6" strokeLinecap="round" />
+        <circle cx="150" cy="70" r="8" fill="#92400e" />
+        <line x1="55" y1="70" x2="55" y2="105" stroke="#78350f" strokeWidth="3" />
+        <path d="M30 105 Q55 130 80 105 Z" fill="#dcfce7" stroke="#16a34a" strokeWidth="3" />
+        <path d="M40 108 L48 118 L64 100" stroke="#15803d" strokeWidth="4" fill="none" strokeLinecap="round" strokeLinejoin="round" />
+        <line x1="245" y1="70" x2="245" y2="105" stroke="#78350f" strokeWidth="3" />
+        <path d="M220 105 Q245 130 270 105 Z" fill="#fce7f3" stroke="#db2777" strokeWidth="3" />
+        <circle cx="238" cy="112" r="2.5" fill="#be185d" />
+        <circle cx="245" cy="107" r="3.5" fill="#be185d" />
+        <circle cx="254" cy="110" r="4.5" fill="#be185d" />
+      </g>
+      <text x="63" y="45" textAnchor="middle" fontSize="12" fontWeight="800" fill="#15803d" fontFamily="sans-serif">FACT</text>
+      <text x="237" y="45" textAnchor="middle" fontSize="12" fontWeight="800" fill="#be185d" fontFamily="sans-serif">OPINION</text>
+    </svg>
+  );
+}
+
+function PrefixSuffixBuilder() {
+  return (
+    <svg viewBox="0 0 300 180" className="h-full w-full" role="img" aria-label="A prefix block and a suffix block sliding in to attach to a root word, building a new word">
+      <style>{`
+        @keyframes u2c6-slide-left { 0%,15% { transform: translateX(-40px); opacity: 0; } 45%,100% { transform: translateX(0); opacity: 1; } }
+        @keyframes u2c6-slide-right { 0%,15% { transform: translateX(40px); opacity: 0; } 45%,100% { transform: translateX(0); opacity: 1; } }
+        .u2c6-prefix { animation: u2c6-slide-left 3s ease-out infinite; }
+        .u2c6-suffix { animation: u2c6-slide-right 3s ease-out infinite; }
+        @media (prefers-reduced-motion: reduce) { .u2c6-prefix, .u2c6-suffix { animation: none; transform: none; opacity: 1; } }
+      `}</style>
+      <rect width="300" height="180" fill="#eff6ff" />
+      <rect x="115" y="70" width="70" height="46" rx="8" fill="#1d4ed8" />
+      <text x="150" y="99" textAnchor="middle" fontSize="16" fontWeight="800" fill="#ffffff" fontFamily="sans-serif">happy</text>
+      <g className="u2c6-prefix">
+        <rect x="35" y="70" width="55" height="46" rx="8" fill="#f97316" />
+        <text x="62" y="99" textAnchor="middle" fontSize="16" fontWeight="800" fill="#ffffff" fontFamily="sans-serif">un-</text>
+      </g>
+      <g className="u2c6-suffix">
+        <rect x="210" y="70" width="60" height="46" rx="8" fill="#16a34a" />
+        <text x="240" y="99" textAnchor="middle" fontSize="16" fontWeight="800" fill="#ffffff" fontFamily="sans-serif">-ness</text>
+      </g>
+    </svg>
+  );
+}
+
 const ILLUSTRATIONS: Record<string, () => JSX.Element> = {
   cockerel_hyena_fable: CockerelHyenaFable,
   implicit_meaning_clue: ImplicitMeaningClue,
@@ -473,6 +628,12 @@ const ILLUSTRATIONS: Record<string, () => JSX.Element> = {
   ratio_bar_model: RatioBarModel,
   proportion_scaling: ProportionScaling,
   pizza_fraction_slices: PizzaFractionSlices,
+  biography_features_portrait: BiographyFeaturesPortrait,
+  chronological_timeline: ChronologicalTimeline,
+  register_formal_informal: RegisterFormalInformal,
+  synonym_thesaurus: SynonymThesaurus,
+  fact_opinion_balance_scale: FactOpinionBalanceScale,
+  prefix_suffix_builder: PrefixSuffixBuilder,
 };
 
 // Lets callers check a key is real before rendering a wrapper around it -
