@@ -8,7 +8,12 @@ import { generateQuestionPaperOpenRouter, isOpenRouterConfigured } from "@/lib/o
 import { generateQuestionPaperGemini, isGeminiConfigured } from "@/lib/gemini";
 import { UPLOADS_DIR } from "@/lib/uploads";
 import { FREEZABLE_TYPES } from "@/lib/unitResources";
-import { QUESTION_PAPER_DIFFICULTIES, type ProgressionTestDraft, type QuestionPaperDifficulty } from "@/lib/types";
+import {
+  QUESTION_PAPER_DIFFICULTIES,
+  OLYMPIAD_EXAM_SETS,
+  type ProgressionTestDraft,
+  type QuestionPaperDifficulty,
+} from "@/lib/types";
 import type { Prisma } from "@prisma/client";
 
 export const runtime = "nodejs";
@@ -62,7 +67,7 @@ async function runGeneration(
 }
 
 function isDifficulty(value: unknown): value is QuestionPaperDifficulty {
-  return typeof value === "string" && (QUESTION_PAPER_DIFFICULTIES as string[]).includes(value);
+  return typeof value === "string" && ([...QUESTION_PAPER_DIFFICULTIES, ...OLYMPIAD_EXAM_SETS] as string[]).includes(value);
 }
 
 /**

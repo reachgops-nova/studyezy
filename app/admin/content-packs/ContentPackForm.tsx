@@ -9,6 +9,7 @@ export interface UnitOption {
   board: string;
   stage: string;
   book: string;
+  contentMode: string;
   pages: { storageKey: string; originalFilename: string }[];
   existingPacks: {
     packId: string;
@@ -61,6 +62,7 @@ export default function ContentPackForm({
   const [selectedKeys, setSelectedKeys] = useState<string[]>(
     selectedUnit ? selectedUnit.pages.slice(0, 3).map((p) => p.storageKey) : []
   );
+  const [setNumber, setSetNumber] = useState(1);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<ConvertResponse | null>(null);
@@ -93,6 +95,7 @@ export default function ContentPackForm({
           subject: selectedUnit.subject,
           board: selectedUnit.board,
           stage: selectedUnit.stage,
+          ...(selectedUnit.contentMode === "olympiad" ? { difficulty: `set${setNumber}` } : {}),
         }),
       });
       const data = await res.json();
@@ -152,6 +155,26 @@ export default function ContentPackForm({
           </div>
         )}
 
+        {selectedUnit && selectedUnit.contentMode === "olympiad" && (
+          <label className="grid gap-1 text-sm font-medium text-slate-700">
+            Practice set number
+            <select
+              value={setNumber}
+              onChange={(e) => setSetNumber(Number(e.target.value))}
+              className="w-32 rounded-xl border border-slate-300 px-3 py-2 text-sm font-normal"
+            >
+              {[1, 2, 3, 4].map((n) => (
+                <option key={n} value={n}>
+                  Set {n}
+                </option>
+              ))}
+            </select>
+            <span className="text-xs font-normal text-slate-500">
+              Each set is its own real document - pick the pages/PDF for whichever set this upload is.
+            </span>
+          </label>
+        )}
+
         <div>
           <button
             type="button"
@@ -160,7 +183,9 @@ export default function ContentPackForm({
             className="rounded-full bg-gradient-to-br from-brand-gold-bright to-brand-gold px-5 py-2.5 text-sm font-medium text-white transition active:scale-95 disabled:opacity-50"
           >
             {loading
-              ? `Converting ${selectedKeys.length} page${selectedKeys.length === 1 ? "" : "s"} (~65s+ per page, paced to stay under Groq's rate limit - this will take a few minutes)...`
+              ? selectedKeys.some((k) => k.toLowerCase().endsWith(".pdf"))
+                ? "Converting this document..."
+                : `Converting ${selectedKeys.length} page${selectedKeys.length === 1 ? "" : "s"} (~65s+ per page, paced to stay under Groq's rate limit - this will take a few minutes)...`
               : `Convert ${selectedKeys.length} page${selectedKeys.length === 1 ? "" : "s"}`}
           </button>
         </div>

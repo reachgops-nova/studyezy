@@ -9,18 +9,21 @@ const NEXT_STEP_OPTIONS = [
     emoji: "📖",
     label: "Explanation & coaching content",
     description: "The actual lessons - start here first. Takes any pages you uploaded above straight to the unit page, ready to extract lesson content from.",
+    curriculumOnly: true, // olympiad-mode units skip the Learn/chat phase entirely - see app/learn/[unitId]/page.tsx's redirect.
   },
   {
     value: "resources",
     emoji: "📝",
     label: "Practice workbook",
     description: "Worksheets a student can retry. Takes any pages you uploaded above to Curriculum Materials, ready to convert.",
+    curriculumOnly: false,
   },
   {
     value: "resources",
     emoji: "🎯",
     label: "Final exam papers (1-3 tiers, with hints)",
     description: "Easy/moderate/tough progression tests, each with a hint button built in. Generated on the same Curriculum Materials page, once there's approved material to generate from.",
+    curriculumOnly: true, // olympiad-mode units get exactly 2 exam sets instead - see the "How does this unit teach?" choice above.
   },
 ] as const;
 
@@ -57,6 +60,7 @@ export default function AddUnitForm({
   isAdmin: boolean;
 }) {
   const [nextStep, setNextStep] = useState<"learn" | "resources">("learn");
+  const [contentMode, setContentMode] = useState<"curriculum" | "olympiad">("curriculum");
   const [fileErrors, setFileErrors] = useState<string[]>([]);
   const curriculaWithSubjects = curricula.filter((c) => c.stages.some((s) => s.subjects.length > 0));
 
@@ -215,10 +219,58 @@ export default function AddUnitForm({
       </details>
 
       <fieldset className="grid gap-2">
+        <legend className="text-sm font-medium text-slate-700">How does this unit teach?</legend>
+        <label
+          className={`flex cursor-pointer items-start gap-3 rounded-xl border p-3 text-sm transition ${
+            contentMode === "curriculum" ? "border-brand-ink bg-brand-ink/5" : "border-slate-200 hover:border-brand-ink-light"
+          }`}
+        >
+          <input
+            type="radio"
+            name="contentModeChoice"
+            checked={contentMode === "curriculum"}
+            onChange={() => setContentMode("curriculum")}
+            className="mt-1"
+          />
+          <span>
+            <span className="font-medium text-slate-800">📚 Curriculum teaching</span>
+            <span className="mt-0.5 block text-xs text-slate-500">
+              The full journey: lesson chat, then a workbook, then a tiered (easy/moderate/tough) test. Use this for
+              school-curriculum subjects.
+            </span>
+          </span>
+        </label>
+        <label
+          className={`flex cursor-pointer items-start gap-3 rounded-xl border p-3 text-sm transition ${
+            contentMode === "olympiad" ? "border-brand-ink bg-brand-ink/5" : "border-slate-200 hover:border-brand-ink-light"
+          }`}
+        >
+          <input
+            type="radio"
+            name="contentModeChoice"
+            checked={contentMode === "olympiad"}
+            onChange={() => {
+              setContentMode("olympiad");
+              if (nextStep === "learn") setNextStep("resources");
+            }}
+            className="mt-1"
+          />
+          <span>
+            <span className="font-medium text-slate-800">🏆 Olympiad-style</span>
+            <span className="mt-0.5 block text-xs text-slate-500">
+              No lesson chat - straight to 2-4 fixed practice sets, then 2 exam sets once a set is passed. Use this
+              for Olympiad/competitive-exam prep.
+            </span>
+          </span>
+        </label>
+      </fieldset>
+      <input type="hidden" name="contentMode" value={contentMode} />
+
+      <fieldset className="grid gap-2">
         <legend className="text-sm font-medium text-slate-700">
           What do you want to add for this unit? Choose only what you actually want first.
         </legend>
-        {NEXT_STEP_OPTIONS.map((opt, i) => (
+        {NEXT_STEP_OPTIONS.filter((opt) => contentMode === "curriculum" || !opt.curriculumOnly).map((opt, i) => (
           <label
             key={i}
             className={`flex cursor-pointer items-start gap-3 rounded-xl border p-3 text-sm transition ${

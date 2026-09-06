@@ -574,6 +574,16 @@ const DIFFICULTY_INSTRUCTIONS: Record<QuestionPaperDifficulty, string> = {
     "to apply, compare, or explain reasoning, not just identify a fact. Multiple-choice options (where used) " +
     "should include plausible near-misses, not obviously-wrong distractors. Less scaffolding in the question " +
     "wording - a strong student should have to think, not just pattern-match.",
+  // Olympiad-mode's 2 exam sets (added 2026-09-06) aren't a difficulty
+  // choice - they're two independent, equally-real papers at genuine exam
+  // difficulty, so a student who's done one gets real extra practice from
+  // the other rather than a repeat.
+  set1:
+    "Difficulty: real competitive-exam level, matching the source material's own difficulty. This is Exam Set 1 " +
+    "of 2 independent sets for this unit - write questions distinct from anything Set 2 might cover.",
+  set2:
+    "Difficulty: real competitive-exam level, matching the source material's own difficulty. This is Exam Set 2 " +
+    "of 2 independent sets for this unit - write genuinely different questions from Set 1, not the same ones reworded.",
 };
 
 // Static instructional half of the question-paper prompt, cached the same

@@ -12,16 +12,20 @@ import AppShell from "@/components/AppShell";
 import type { QuestionPaperDifficulty } from "@/lib/types";
 import { startTerminalTest } from "@/app/test/actions";
 
-const DIFFICULTY_LABELS: Record<QuestionPaperDifficulty, string> = {
+const DIFFICULTY_LABELS: Record<string, string> = {
   easy: "Easy",
   moderate: "Moderate",
   tough: "Tough",
+  set1: "Exam Set 1",
+  set2: "Exam Set 2",
 };
 
-const DIFFICULTY_DESCRIPTIONS: Record<QuestionPaperDifficulty, string> = {
+const DIFFICULTY_DESCRIPTIONS: Record<string, string> = {
   easy: "Mostly multiple-choice, simple wording - a confidence-building warm-up.",
   moderate: "The standard mix - a fair check of what you've learned.",
   tough: "More short-answer, less scaffolding - for when you want a real challenge.",
+  set1: "A real, original practice exam for this unit.",
+  set2: "A second, independent practice exam - different questions, same real difficulty.",
 };
 
 export default async function TestPage({ params }: { params: Promise<{ unitId: string }> }) {
@@ -46,8 +50,9 @@ export default async function TestPage({ params }: { params: Promise<{ unitId: s
   // that best matches how far they've progressed past this unit is
   // recommended, not force-selected - a student can still pick any tier.
   const unitRow = await db.unit.findUnique({ where: { unitKey: unitId } });
+  const isOlympiad = unitRow?.contentMode === "olympiad";
   let locked = false;
-  let recommended: QuestionPaperDifficulty = "easy";
+  let recommended: QuestionPaperDifficulty | null = "easy";
   let completedUnitsInSubject = 0;
   if (unitRow) {
     const priorAttempts = await db.testAttempt.count({ where: { studentProfileId: profile.id, unitId: unitRow.id } });
@@ -55,7 +60,11 @@ export default async function TestPage({ params }: { params: Promise<{ unitId: s
       const qualifying = await getQualifyingWorksheetAttempt(profile.id, unitRow.id);
       locked = !qualifying;
     }
-    recommended = await recommendedDifficulty(profile.id, unitRow);
+    // Olympiad's 2 exam sets are independent papers at the same real
+    // difficulty, not a progression - recommendedDifficulty only ever
+    // returns a real difficulty word ("easy"/"moderate"/"tough"), so it has
+    // nothing meaningful to suggest here.
+    recommended = isOlympiad ? null : await recommendedDifficulty(profile.id, unitRow);
 
     // Only worth offering a cumulative terminal test once there's more than
     // one unit to cumulate - with a single tested unit it would just
@@ -112,12 +121,16 @@ export default async function TestPage({ params }: { params: Promise<{ unitId: s
           &larr; Back to unit
         </Link>
         <h1 className="mt-2 text-2xl font-bold">
-          Progression Test - Unit {unit.unit}: {unit.unit_title}
+          {isOlympiad ? "Exam" : "Progression Test"} - Unit {unit.unit}: {unit.unit_title}
         </h1>
-        <p className="mt-1 text-sm text-slate-500">Choose your challenge - you can always try another level later.</p>
+        <p className="mt-1 text-sm text-slate-500">
+          {isOlympiad
+            ? "Two independent exam sets, same real difficulty - try either, or both."
+            : "Choose your challenge - you can always try another level later."}
+        </p>
       </header>
 
-      <div className="grid gap-3 sm:grid-cols-3">
+      <div className={`grid gap-3 ${isOlympiad ? "sm:grid-cols-2" : "sm:grid-cols-3"}`}>
         {summaries.map((s) => (
           <div
             key={s.difficulty}

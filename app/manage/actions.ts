@@ -149,6 +149,11 @@ export async function createUnit(formData: FormData) {
   // pack player) both live on /admin/resources, which is where approved
   // material and GeneratePaperButton already are.
   const nextStep = String(formData.get("nextStep") ?? "learn");
+  // "curriculum" (default - Learn -> workbook -> tiered test) | "olympiad"
+  // (skip Learn, practice sets -> 2 exam sets) - see AddUnitForm's "How does
+  // this unit teach?" choice.
+  const contentModeRaw = String(formData.get("contentMode") ?? "curriculum");
+  const contentMode = contentModeRaw === "olympiad" ? "olympiad" : "curriculum";
 
   if (!subjectId || !title) {
     redirect("/manage?error=missing_unit_fields");
@@ -175,6 +180,7 @@ export async function createUnit(formData: FormData) {
       number,
       title,
       available: true,
+      contentMode,
       createdByUserId: user.id,
       sourcePublisher: publisher || null,
       sourceTitle: bookTitle || null,

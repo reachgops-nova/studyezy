@@ -94,7 +94,14 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ uni
   // for capture group 2's own value (the literal "</script>" tag),
   // corrupting the page. A function receives the match as plain arguments
   // and its return value is used verbatim, immune to this.
-  const attemptPack = sampleWorkbookAttempt(pack.data as unknown as BankPackData);
+  // A "setN" pack (olympiad-mode's fixed practice sets, app/practice/[unitId])
+  // is meant to be a complete, consistent paper every time - sampling would
+  // defeat the point of having distinct sets. Only the pooled curriculum-mode
+  // bank (difficulty: null) gets a fresh random subset per attempt.
+  const isFixedSet = pack.difficulty !== null && /^set\d+$/.test(pack.difficulty);
+  const attemptPack = isFixedSet
+    ? (pack.data as unknown as BankPackData)
+    : sampleWorkbookAttempt(pack.data as unknown as BankPackData);
   const packJson = JSON.stringify(attemptPack);
   const withPack = template.replace(PACK_BLOCK_RE, (_m, open: string, close: string) => `${open}${packJson}${close}`);
 

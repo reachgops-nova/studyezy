@@ -3,22 +3,29 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import type { QuestionPaperDifficulty, QuestionPaperSummary } from "@/lib/types";
+import { OLYMPIAD_EXAM_SETS, OLYMPIAD_EXAM_SET_LABELS } from "@/lib/types";
 
-const DIFFICULTY_LABELS: Record<QuestionPaperDifficulty, string> = {
+const DIFFICULTY_LABELS: Record<string, string> = {
   easy: "Easy",
   moderate: "Moderate",
   tough: "Tough",
+  ...OLYMPIAD_EXAM_SET_LABELS,
 };
+
+const CURRICULUM_TIERS: QuestionPaperDifficulty[] = ["easy", "moderate", "tough"];
 
 export default function GeneratePaperButton({
   unitKey,
   summaries,
+  contentMode = "curriculum",
 }: {
   unitKey: string;
   summaries: QuestionPaperSummary[];
+  contentMode?: string;
 }) {
   const router = useRouter();
-  const [difficulty, setDifficulty] = useState<QuestionPaperDifficulty>("moderate");
+  const tiers = contentMode === "olympiad" ? OLYMPIAD_EXAM_SETS : CURRICULUM_TIERS;
+  const [difficulty, setDifficulty] = useState<QuestionPaperDifficulty>(contentMode === "olympiad" ? "set1" : "moderate");
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [isError, setIsError] = useState(false);
@@ -62,7 +69,7 @@ export default function GeneratePaperButton({
             onChange={(e) => setDifficulty(e.target.value as QuestionPaperDifficulty)}
             className="rounded-xl border border-slate-300 px-3 py-2 text-sm"
           >
-            {(["easy", "moderate", "tough"] as const).map((d) => (
+            {tiers.map((d) => (
               <option key={d} value={d}>
                 {DIFFICULTY_LABELS[d]}
               </option>

@@ -4,13 +4,13 @@ import path from "node:path";
 import { getActiveProfileId } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { getOrCreateProgressionTestPack } from "@/lib/testPacks";
-import { QUESTION_PAPER_DIFFICULTIES, type QuestionPaperDifficulty } from "@/lib/types";
+import { QUESTION_PAPER_DIFFICULTIES, OLYMPIAD_EXAM_SETS, type QuestionPaperDifficulty } from "@/lib/types";
 
 const TEMPLATE_PATH = path.join(process.cwd(), "content", "test-template.html");
 const PACK_BLOCK_RE = /(<script id="pack" type="application\/json">)[\s\S]*?(<\/script>)/;
 
 function isDifficulty(value: string): value is QuestionPaperDifficulty {
-  return (QUESTION_PAPER_DIFFICULTIES as string[]).includes(value);
+  return ([...QUESTION_PAPER_DIFFICULTIES, ...OLYMPIAD_EXAM_SETS] as string[]).includes(value);
 }
 
 // Family-gated: serves content/test-template.html with the unit's

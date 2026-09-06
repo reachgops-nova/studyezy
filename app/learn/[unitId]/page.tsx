@@ -24,6 +24,16 @@ export default async function LearnPage({ params }: { params: Promise<{ unitId: 
   if (parts.length !== 4) notFound();
   const [curriculumId, stageIdStr, subjectId, unitIdStr] = parts;
   const grade = Number(stageIdStr);
+
+  // Olympiad-mode units skip the Learn/chat teaching phase entirely - this is
+  // the one choke point every entry link (CurriculumSelector, UnitSwitcher,
+  // UnitOverview's "next unit", /plan, createUnit's post-create redirect)
+  // already resolves through, so redirecting here covers all of them.
+  const modeRow = await db.unit.findUnique({ where: { unitKey: unitId }, select: { contentMode: true } });
+  if (modeRow?.contentMode === "olympiad") {
+    redirect(`/practice/${unitId}`);
+  }
+
   const unit = await getUnit(curriculumId, grade, subjectId, Number(unitIdStr));
   if (!unit) notFound();
 

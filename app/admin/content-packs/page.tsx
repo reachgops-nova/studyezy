@@ -32,7 +32,7 @@ export default async function ContentPacksPage({
               .filter((u) => u.available)
               .map(async (u) => {
                 const key = buildUnitKey(c.id, s.id, subj.id, u.id);
-                const [pages, existingPacks] = await Promise.all([
+                const [pages, existingPacks, unitRow] = await Promise.all([
                   getUploadedPageStorageKeys(key),
                   db.contentPack.findMany({
                     where: { unit: { unitKey: key } },
@@ -49,14 +49,20 @@ export default async function ContentPacksPage({
                       createdAt: true,
                     },
                   }),
+                  db.unit.findUnique({ where: { unitKey: key }, select: { contentMode: true } }),
                 ]);
                 return {
                   unitKey: key,
                   label: `${c.name} - ${s.label} - ${subj.name} - Unit ${u.id}: ${u.title}`,
                   subject: subj.name,
-                  board: "Cambridge",
+                  // Real gap found live 2026-09-06: this was hardcoded to
+                  // "Cambridge" regardless of the unit's actual curriculum -
+                  // harmless for the English/Math content it was written
+                  // for, wrong for anything else (e.g. Olympiad Computers).
+                  board: c.name,
                   stage: s.label,
                   book: u.title,
+                  contentMode: unitRow?.contentMode ?? "curriculum",
                   pages,
                   existingPacks: existingPacks.map((p) => ({ ...p, createdAt: p.createdAt.toISOString() })),
                 };
@@ -74,8 +80,9 @@ export default async function ContentPacksPage({
         <p className="mt-1 text-slate-600">
           Converts real uploaded pages into <em>markable</em> content - each question carries a declarative check, so
           it can be scored, not just read aloud (see <code className="rounded bg-slate-100 px-1 py-0.5 text-sm">content/HANDOFF.md</code>).
-          This is a research/validation surface: nothing here is shown to students yet. Pick a few pages (3 is a good
-          start), convert, then preview it exactly as a kid would see it.
+          For a curriculum-mode unit this is still a research/validation surface (nothing shown to students yet); for
+          an olympiad-mode unit, a converted pack becomes a real practice set students can reach directly. Pick a few
+          pages (3 is a good start), convert, then preview it exactly as a kid would see it.
         </p>
       </div>
 

@@ -85,10 +85,23 @@ export interface ProgressionTestDraft {
   questions: TestQuestion[];
 }
 
-/** A unit can have up to one stored paper per tier - see prisma QuestionPaper model. */
-export type QuestionPaperDifficulty = "easy" | "moderate" | "tough";
+/**
+ * A unit can have up to one stored paper per tier - see prisma QuestionPaper
+ * model. "set1"/"set2" added 2026-09-06 for olympiad-mode units (Unit.
+ * contentMode === "olympiad") - they replace the 3 difficulty tiers with 2
+ * exam sets there; QuestionPaper.difficulty has no DB-level enum, so this is
+ * purely a TypeScript-side distinction, branched on by Unit.contentMode.
+ */
+export type QuestionPaperDifficulty = "easy" | "moderate" | "tough" | "set1" | "set2";
 
 export const QUESTION_PAPER_DIFFICULTIES: QuestionPaperDifficulty[] = ["easy", "moderate", "tough"];
+
+export const OLYMPIAD_EXAM_SETS: QuestionPaperDifficulty[] = ["set1", "set2"];
+
+export const OLYMPIAD_EXAM_SET_LABELS: Record<string, string> = {
+  set1: "Exam Set 1",
+  set2: "Exam Set 2",
+};
 
 export interface QuestionPaperSummary {
   difficulty: QuestionPaperDifficulty;

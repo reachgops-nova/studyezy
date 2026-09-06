@@ -43,7 +43,10 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Invalid request body." }, { status: 400 });
   }
 
-  const { unitKey, storageKeys, book, subject, board, stage, appendToPackId } = (body ?? {}) as Record<string, unknown>;
+  const { unitKey, storageKeys, book, subject, board, stage, appendToPackId, difficulty } = (body ?? {}) as Record<
+    string,
+    unknown
+  >;
 
   if (
     typeof unitKey !== "string" ||
@@ -54,7 +57,9 @@ export async function POST(req: NextRequest) {
     typeof subject !== "string" ||
     typeof board !== "string" ||
     typeof stage !== "string" ||
-    (appendToPackId !== undefined && typeof appendToPackId !== "string")
+    (appendToPackId !== undefined && typeof appendToPackId !== "string") ||
+    // Olympiad-mode "set" packs only - undefined for a curriculum-mode conversion.
+    (difficulty !== undefined && (typeof difficulty !== "string" || !/^set\d+$/.test(difficulty)))
   ) {
     return NextResponse.json({ error: "Missing or invalid fields." }, { status: 400 });
   }
@@ -97,7 +102,15 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "No readable image files found for the selected pages." }, { status: 400 });
   }
 
-  const packId = existingPack ? (appendToPackId as string) : `${unitKey}-${Date.now()}`;
+  // A "set" pack's id is deterministic (unitKey + set number), not
+  // timestamped - re-converting the same set number (e.g. an updated source
+  // document) overwrites that same pack via upsert below, rather than
+  // piling up duplicate "set1" packs the way a timestamped id would.
+  const packId = existingPack
+    ? (appendToPackId as string)
+    : difficulty
+      ? `${unitKey}-${difficulty as string}`
+      : `${unitKey}-${Date.now()}`;
   const existingData = existingPack?.data as { sheets?: unknown[]; source?: { photoCount?: number } } | undefined;
   const existingArg = existingPack
     ? { sheets: existingData?.sheets ?? [], photoCount: existingData?.source?.photoCount ?? 0 }
@@ -122,6 +135,7 @@ export async function POST(req: NextRequest) {
       create: {
         packId,
         unitId: unit.id,
+        difficulty: (difficulty as string | undefined) ?? null,
         data: result.pack as unknown as Prisma.InputJsonValue,
         sheetsCount: result.validation.counts.sheets,
         questionsCount: result.validation.counts.questions,

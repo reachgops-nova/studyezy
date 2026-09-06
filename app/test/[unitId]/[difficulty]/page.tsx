@@ -3,10 +3,10 @@ import { getActiveProfile } from "@/lib/auth";
 import { getCurrentUser } from "@/lib/session";
 import { getUnit } from "@/lib/content";
 import { getQuestionPaperByKey } from "@/lib/queries/questionPapers";
-import { QUESTION_PAPER_DIFFICULTIES, type QuestionPaperDifficulty } from "@/lib/types";
+import { QUESTION_PAPER_DIFFICULTIES, OLYMPIAD_EXAM_SETS, type QuestionPaperDifficulty } from "@/lib/types";
 
 function isDifficulty(value: string): value is QuestionPaperDifficulty {
-  return (QUESTION_PAPER_DIFFICULTIES as string[]).includes(value);
+  return ([...QUESTION_PAPER_DIFFICULTIES, ...OLYMPIAD_EXAM_SETS] as string[]).includes(value);
 }
 
 // This page no longer renders anything itself - it's just the family-facing

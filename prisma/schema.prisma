@@ -130,6 +130,7 @@ model Unit {
   board                String   @default("Cambridge") // exam board label, e.g. "Cambridge" - independent of the curriculum pathway name
   available            Boolean  @default(false)
   unitStatus           String   @default("in_progress") // "in_progress" | "complete"
+  contentMode          String   @default("curriculum") // "curriculum" (Learn -> workbook -> tiered test) | "olympiad" (skip Learn, practice sets -> 2 exam sets)
   sourcePublisher      String?
   sourceTitle          String?
   sourceAuthors        String[]

@@ -1,25 +1,34 @@
 import "server-only";
 import { db } from "../db";
-import { QUESTION_PAPER_DIFFICULTIES } from "../types";
+import { QUESTION_PAPER_DIFFICULTIES, OLYMPIAD_EXAM_SETS } from "../types";
 import type { QuestionPaperContent, QuestionPaperDifficulty, QuestionPaperSummary, TestQuestion } from "../types";
 
-/** Availability + question count for all 3 tiers, for the student picker and the admin generation panel. */
-export async function getQuestionPaperSummaries(unitId: string): Promise<QuestionPaperSummary[]> {
+/**
+ * Availability + question count for a unit's tiers, for the student picker
+ * and the admin generation panel. Defaults to the 3 curriculum-mode tiers;
+ * pass OLYMPIAD_EXAM_SETS for an olympiad-mode unit (see getQuestionPaperSummariesByKey,
+ * which looks the unit's own contentMode up automatically).
+ */
+export async function getQuestionPaperSummaries(
+  unitId: string,
+  tiers: QuestionPaperDifficulty[] = QUESTION_PAPER_DIFFICULTIES
+): Promise<QuestionPaperSummary[]> {
   const papers = await db.questionPaper.findMany({ where: { unitId } });
   const byDifficulty = new Map(papers.map((p) => [p.difficulty, p]));
 
-  return QUESTION_PAPER_DIFFICULTIES.map((difficulty) => {
+  return tiers.map((difficulty) => {
     const paper = byDifficulty.get(difficulty);
     const questions = (paper?.questions as unknown as TestQuestion[] | undefined) ?? [];
     return { difficulty, available: !!paper, questionCount: questions.length };
   });
 }
 
-/** Same as getQuestionPaperSummaries, but takes the public unitKey. */
+/** Same as getQuestionPaperSummaries, but takes the public unitKey and auto-selects tiers vs. exam sets from the unit's own contentMode. */
 export async function getQuestionPaperSummariesByKey(unitKey: string): Promise<QuestionPaperSummary[]> {
   const unit = await db.unit.findUnique({ where: { unitKey } });
   if (!unit) return [];
-  return getQuestionPaperSummaries(unit.id);
+  const tiers = unit.contentMode === "olympiad" ? OLYMPIAD_EXAM_SETS : QUESTION_PAPER_DIFFICULTIES;
+  return getQuestionPaperSummaries(unit.id, tiers);
 }
 
 export async function getQuestionPaper(

@@ -4,12 +4,12 @@ import { gradeShortAnswer, isConfigured } from "@/lib/claude";
 import { gradeShortAnswerGroq, isGroqConfigured } from "@/lib/groq";
 import { checkRateLimit } from "@/lib/rateLimit";
 import { getQuestionPaperByKey } from "@/lib/queries/questionPapers";
-import { QUESTION_PAPER_DIFFICULTIES, type QuestionPaperDifficulty } from "@/lib/types";
+import { QUESTION_PAPER_DIFFICULTIES, OLYMPIAD_EXAM_SETS, type QuestionPaperDifficulty } from "@/lib/types";
 
 const UNIT_KEY_PATTERN = /^[a-z0-9]+-\d+-[a-z0-9]+-\d+$/i;
 
 function isDifficulty(value: unknown): value is QuestionPaperDifficulty {
-  return typeof value === "string" && (QUESTION_PAPER_DIFFICULTIES as string[]).includes(value);
+  return typeof value === "string" && ([...QUESTION_PAPER_DIFFICULTIES, ...OLYMPIAD_EXAM_SETS] as string[]).includes(value);
 }
 
 export async function POST(req: NextRequest) {

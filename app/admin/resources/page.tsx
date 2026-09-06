@@ -7,6 +7,7 @@ import { unitKey as buildUnitKey } from "@/lib/content";
 import { db } from "@/lib/db";
 import { getUnitResourceGroups, getAllPendingResources, getConceptImageAssignmentData } from "@/lib/queries/unitResources";
 import { getQuestionPaperSummaries } from "@/lib/queries/questionPapers";
+import { OLYMPIAD_EXAM_SETS } from "@/lib/types";
 import { RESOURCE_TYPE_LABELS, isFreezable } from "@/lib/unitResources";
 import AppShell from "@/components/AppShell";
 import ResourceUploadButton from "@/components/ResourceUploadButton";
@@ -41,7 +42,7 @@ export default async function AdminResourcesPage({
   const [groups, paperSummaries, conceptImages, cachedAnswerCount] = unitRow
     ? await Promise.all([
         getUnitResourceGroups(unitRow.id),
-        getQuestionPaperSummaries(unitRow.id),
+        getQuestionPaperSummaries(unitRow.id, unitRow.contentMode === "olympiad" ? OLYMPIAD_EXAM_SETS : undefined),
         getConceptImageAssignmentData(unitRow.id),
         db.answerCache.count({ where: { unitKey: unitRow.unitKey } }),
       ])
@@ -132,7 +133,9 @@ export default async function AdminResourcesPage({
         </button>
       </form>
 
-      {unitRow && paperSummaries && <GeneratePaperButton unitKey={unitRow.unitKey} summaries={paperSummaries} />}
+      {unitRow && paperSummaries && (
+        <GeneratePaperButton unitKey={unitRow.unitKey} summaries={paperSummaries} contentMode={unitRow.contentMode} />
+      )}
 
       {unitRow && (
         <p className="text-sm text-slate-500">
