@@ -3,8 +3,20 @@ import { readFile } from "node:fs/promises";
 import path from "node:path";
 import { getActiveProfileId } from "@/lib/auth";
 import { getUnit, getUploadedPageImages } from "@/lib/content";
-import { extractConceptsFromPages, extractFreeformConcepts, isConfigured, type ExtractionSourceFile } from "@/lib/claude";
+import {
+  extractConceptsFromPages,
+  extractFreeformConcepts,
+  isConfigured,
+  type ExtractionSourceFile,
+  type ExpectedConcept,
+} from "@/lib/claude";
+import {
+  extractConceptsFromPagesOpenRouter,
+  extractFreeformConceptsOpenRouter,
+  isOpenRouterConfigured,
+} from "@/lib/openrouter";
 import { db } from "@/lib/db";
+import type { Concept } from "@/lib/types";
 import { checkRateLimit } from "@/lib/rateLimit";
 import { UPLOADS_DIR } from "@/lib/uploads";
 import type { Prisma } from "@prisma/client";
@@ -23,6 +35,48 @@ const MEDIA_TYPE_BY_EXT: Record<string, "image/jpeg" | "image/png" | "image/webp
 // extraction run sends.
 const MAX_IMAGES_PER_EXTRACTION = 10;
 
+// Tries whichever provider fits best first, falls back to the other on
+// failure or if it's not configured - same try/catch fallback shape as
+// app/api/ask/route.ts's Groq-then-Claude chain. Order depends on whether a
+// PDF was uploaded: only Claude reads one natively (OpenRouter's
+// chat-completions vision input is images-only, see lib/openrouter.ts), so
+// a PDF goes to Claude first; an all-images upload tries OpenRouter first
+// since it's the provider actually confirmed configured/working in
+// production as of 2026-09-06.
+async function runExtraction(
+  images: ExtractionSourceFile[],
+  expected: ExpectedConcept[],
+  isFreeform: boolean
+): Promise<Concept[]> {
+  const hasPdf = images.some((f) => f.mediaType === "application/pdf");
+  const providers: { name: string; configured: boolean; run: () => Promise<Concept[]> }[] = [
+    {
+      name: "claude",
+      configured: isConfigured(),
+      run: () => (isFreeform ? extractFreeformConcepts(images) : extractConceptsFromPages(images, expected)),
+    },
+    {
+      name: "openrouter",
+      configured: isOpenRouterConfigured(),
+      run: () =>
+        isFreeform ? extractFreeformConceptsOpenRouter(images) : extractConceptsFromPagesOpenRouter(images, expected),
+    },
+  ];
+  const ordered = hasPdf ? providers : [...providers].reverse();
+
+  let lastError: unknown;
+  for (const provider of ordered) {
+    if (!provider.configured) continue;
+    try {
+      return await provider.run();
+    } catch (err) {
+      console.error(`${provider.name} extraction failed, trying next provider`, err);
+      lastError = err;
+    }
+  }
+  throw lastError ?? new Error("No extraction provider is configured.");
+}
+
 export async function POST(req: NextRequest) {
   const profileId = await getActiveProfileId();
   if (!profileId) {
@@ -34,9 +88,15 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Too many requests - try again shortly." }, { status: 429 });
   }
 
-  if (!isConfigured()) {
+  // Real gap found live 2026-09-06: ANTHROPIC_API_KEY was never actually set
+  // on the deployed service at all (only locally), so this route had been
+  // completely unusable in production the whole time it existed - not just
+  // short on Claude credit. OpenRouter (openai/gpt-4o) fills the same
+  // vision-capable role Groq can't (no vision model there), so this now
+  // only 503s if genuinely neither provider is configured anywhere.
+  if (!isConfigured() && !isOpenRouterConfigured()) {
     return NextResponse.json(
-      { error: "Extraction isn't configured yet - add ANTHROPIC_API_KEY to .env.local." },
+      { error: "Extraction isn't configured yet - add ANTHROPIC_API_KEY or OPENROUTER_API_KEY." },
       { status: 503 }
     );
   }
@@ -99,9 +159,7 @@ export async function POST(req: NextRequest) {
   }));
 
   try {
-    const extracted = isFreeform
-      ? await extractFreeformConcepts(images)
-      : await extractConceptsFromPages(images, expected);
+    const extracted = await runExtraction(images, expected, isFreeform);
 
     if (extracted.length === 0) {
       return NextResponse.json(

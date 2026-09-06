@@ -403,7 +403,9 @@ export async function extractPackFragmentClaude(
 // call for a given unit, so it's worth a cache_control breakpoint: the
 // per-call variable part (which concepts are still missing) is appended
 // separately in the user turn, after the cached prefix.
-const EXTRACTION_SYSTEM_PROMPT = `You are structuring curriculum content for a voice-led English tutoring app for a Grade 5 (Cambridge Stage 5) student, from photos of their own textbook pages.
+// Exported so lib/openrouter.ts's extraction functions use the identical
+// wording instead of a hand-copied, driftable duplicate.
+export const EXTRACTION_SYSTEM_PROMPT = `You are structuring curriculum content for a voice-led English tutoring app for a Grade 5 (Cambridge Stage 5) student, from photos of their own textbook pages.
 
 CRITICAL - originality: Write your OWN explanations of what's shown in the photos, in your own words, the way a tutor would explain it out loud. Do NOT copy or closely paraphrase sentences directly from the page images - this becomes original teaching content, not a reproduction of the book.
 
@@ -422,7 +424,7 @@ Skip any expected concept the photos don't contain enough material for - do not 
 Respond with ONLY a JSON array matching this shape, no other text, no markdown fences:
 [{"concept_id": string, "concept_name": string, "definition": string, "key_points": string[], "examples": string[], "tips_to_remember": string[], "voice_qa_samples": [{"question": string, "answer": string}], "source_image_index": number}]`;
 
-interface RawExtractedConcept {
+export interface RawExtractedConcept {
   concept_id: string;
   concept_name: string;
   definition: string;
@@ -431,6 +433,37 @@ interface RawExtractedConcept {
   tips_to_remember: string[];
   voice_qa_samples: VoiceQASample[];
   source_image_index: number;
+}
+
+// Shared by every extraction provider (Claude here, OpenRouter in
+// lib/openrouter.ts) - same JSON shape, same originality contract, so the
+// parsing/mapping logic only needs to exist once.
+export function parseExtractedConcepts(raw: string, images: ExtractionSourceFile[]): Concept[] {
+  let parsed: RawExtractedConcept[];
+  try {
+    parsed = JSON.parse(raw) as RawExtractedConcept[];
+  } catch {
+    throw new Error("Couldn't understand the extracted content - please try again.");
+  }
+
+  return parsed
+    .filter((c) => images[c.source_image_index])
+    .map((c): Concept => ({
+      concept_id: c.concept_id,
+      concept_name: c.concept_name,
+      status: "drafted",
+      source: "extracted",
+      definition: c.definition,
+      key_points: c.key_points,
+      examples: c.examples,
+      tips_to_remember: c.tips_to_remember,
+      voice_qa_samples: c.voice_qa_samples,
+      media: {
+        source_image_path: images[c.source_image_index].path,
+        illustration_caption: c.concept_name,
+        video_status: "coming_soon",
+      },
+    }));
 }
 
 /**
@@ -471,35 +504,7 @@ export async function extractConceptsFromPages(
   logAiCost("extract", EXTRACTION_MODEL, response.usage.input_tokens, response.usage.output_tokens);
   const textBlock = response.content.find((block) => block.type === "text");
   const raw = textBlock && textBlock.type === "text" ? textBlock.text : "[]";
-
-  let parsed: RawExtractedConcept[];
-  try {
-    parsed = JSON.parse(raw) as RawExtractedConcept[];
-  } catch {
-    throw new Error("Couldn't understand the extracted content - please try again.");
-  }
-
-  return parsed
-    .filter((c) => images[c.source_image_index])
-    .map((c): Concept => {
-      const media: ConceptMedia = {
-        source_image_path: images[c.source_image_index].path,
-        illustration_caption: c.concept_name,
-        video_status: "coming_soon",
-      };
-      return {
-        concept_id: c.concept_id,
-        concept_name: c.concept_name,
-        status: "drafted",
-        source: "extracted",
-        definition: c.definition,
-        key_points: c.key_points,
-        examples: c.examples,
-        tips_to_remember: c.tips_to_remember,
-        voice_qa_samples: c.voice_qa_samples,
-        media,
-      };
-    });
+  return parseExtractedConcepts(raw, images);
 }
 
 // A brand-new unit with literally no outline yet (real feedback 2026-09-06:
@@ -508,7 +513,7 @@ export async function extractConceptsFromPages(
 // to match against - that function explicitly refuses to invent a concept
 // that isn't already named. This is the from-scratch counterpart: given
 // just the photos (no pre-declared breakdown), it proposes one itself.
-const FREEFORM_EXTRACTION_SYSTEM_PROMPT = `You are structuring curriculum content for a voice-led tutoring app, from photos of a family's own textbook or workbook pages for a subject that has no lesson breakdown yet at all.
+export const FREEFORM_EXTRACTION_SYSTEM_PROMPT = `You are structuring curriculum content for a voice-led tutoring app, from photos of a family's own textbook or workbook pages for a subject that has no lesson breakdown yet at all.
 
 CRITICAL - originality: Write your OWN explanations of what's shown in the photos, in your own words, the way a tutor would explain it out loud. Do NOT copy or closely paraphrase sentences directly from the page images - this becomes original teaching content, not a reproduction of the book.
 
@@ -549,32 +554,7 @@ export async function extractFreeformConcepts(images: ExtractionSourceFile[]): P
   logAiCost("extract-freeform", EXTRACTION_MODEL, response.usage.input_tokens, response.usage.output_tokens);
   const textBlock = response.content.find((block) => block.type === "text");
   const raw = textBlock && textBlock.type === "text" ? textBlock.text : "[]";
-
-  let parsed: RawExtractedConcept[];
-  try {
-    parsed = JSON.parse(raw) as RawExtractedConcept[];
-  } catch {
-    throw new Error("Couldn't understand the extracted content - please try again.");
-  }
-
-  return parsed
-    .filter((c) => images[c.source_image_index])
-    .map((c): Concept => ({
-      concept_id: c.concept_id,
-      concept_name: c.concept_name,
-      status: "drafted",
-      source: "extracted",
-      definition: c.definition,
-      key_points: c.key_points,
-      examples: c.examples,
-      tips_to_remember: c.tips_to_remember,
-      voice_qa_samples: c.voice_qa_samples,
-      media: {
-        source_image_path: images[c.source_image_index].path,
-        illustration_caption: c.concept_name,
-        video_status: "coming_soon",
-      },
-    }));
+  return parseExtractedConcepts(raw, images);
 }
 
 // Per-difficulty instruction appended to the shared prompt below - keeps the

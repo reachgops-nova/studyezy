@@ -15,6 +15,10 @@ const PRICE_PER_MILLION_USD: Record<string, { input: number; output: number }> =
   "openai/gpt-oss-20b": { input: 0.075, output: 0.3 },
   // Verified 2026-08-22 against console.groq.com/docs/model/qwen/qwen3.6-27b
   "qwen/qwen3.6-27b": { input: 0.6, output: 3.0 },
+  // Verified live 2026-09-06 by cross-checking a real OpenRouter response's
+  // own cost_details against this rate (matched exactly: 14 prompt tokens x
+  // $2.50/M + 1 completion token x $10/M = $0.000045).
+  "openai/gpt-4o": { input: 2.5, output: 10.0 },
 };
 
 /** Shared by logAiCost and anything else (e.g. /admin/model-compare) that needs the same real per-call number. */
