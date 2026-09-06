@@ -61,10 +61,15 @@ interface PreviousUnitRecap {
   points: string[];
 }
 
+interface BookletPage {
+  url: string;
+  page: number | null;
+}
+
 interface UnitViewProps {
   unit?: CurriculumUnit;
   unitKey?: string;
-  initialPageImages?: string[];
+  initialPageImages?: BookletPage[];
   resourceGroups?: any[];
   diagnosticQuestions?: any[];
   contentPack?: any;
@@ -120,7 +125,7 @@ export function UnitView({
   // see UnitOverview.tsx/UnitDiagnostic.tsx, which existed already but had
   // gone disconnected from routing entirely.
   const [screen, setScreen] = useState<'overview' | 'diagnostic' | 'lesson' | 'unit_complete'>('overview');
-  const [pageImages, setPageImages] = useState<string[]>(initialPageImages);
+  const [pageImages, setPageImages] = useState<BookletPage[]>(initialPageImages);
 
   const handleStartDiagnostic = () => setScreen('diagnostic');
   const handleSkipToTeaching = (conceptId?: string) => {
@@ -132,7 +137,11 @@ export function UnitView({
     setScreen('lesson');
   };
   const handleAllMastered = () => setScreen('lesson');
-  const handlePageImagesUploaded = (paths: string[]) => setPageImages((prev) => [...prev, ...paths]);
+  // A family's own photo upload (as opposed to the seeded textbook gallery)
+  // has no known page number - null here just means "can't jump straight to
+  // this one from a concept", not that it's missing from the gallery.
+  const handlePageImagesUploaded = (paths: string[]) =>
+    setPageImages((prev) => [...prev, ...paths.map((url) => ({ url, page: null }))]);
 
   const [currentSelection, setCurrentSelection] = useState<'fact' | 'opinion' | null>(null);
   const [isCorrectSelection, setIsCorrectSelection] = useState<boolean | null>(null);
@@ -293,15 +302,26 @@ export function UnitView({
     window.speechSynthesis.speak(utterance);
   };
 
-  const pageIndex = Math.max(0, activePage - 1);
-  const pageImage = pageImages[pageIndex] || null;
+  // Real bug found live 2026-09-06 while seeding Units 2-9's own booklet
+  // galleries: this used to be `pageImages[activePage - 1]`, which silently
+  // assumed the array starts at book page 1 - true for Unit 1 by
+  // coincidence (it starts near page 1), but would have needed 155 leading
+  // placeholder rows for Unit 9 (pages 156+) just to make the arithmetic
+  // land. Looked up by the page's own real number instead.
+  const pageImage = pageImages.find((p) => p.page === activePage)?.url ?? null;
+  const knownPageNumbers = pageImages
+    .map((p) => p.page)
+    .filter((p): p is number => p != null)
+    .sort((a, b) => a - b);
+  const prevPage = [...knownPageNumbers].reverse().find((p) => p < activePage) ?? null;
+  const nextPage = knownPageNumbers.find((p) => p > activePage) ?? null;
 
   if (screen === 'overview' && unit) {
     return (
       <UnitOverview
         unit={unit}
         unitKey={unitKey || ''}
-        pageImages={pageImages}
+        pageImages={pageImages.map((p) => p.url)}
         resourceGroups={resourceGroups || []}
         onPageImagesUploaded={handlePageImagesUploaded}
         onStartDiagnostic={handleStartDiagnostic}
@@ -522,8 +542,8 @@ export function UnitView({
 
             <div className="flex items-center justify-between bg-white p-3 rounded-2xl border border-[#16241f]/5 shadow-sm">
               <button
-                onClick={() => setActivePage(prev => Math.max(1, prev - 1))}
-                disabled={activePage === 1}
+                onClick={() => prevPage !== null && setActivePage(prevPage)}
+                disabled={prevPage === null}
                 className="px-3 py-1.5 rounded-lg border border-[#16241f]/15 hover:bg-[#16241f]/5 font-sans font-bold text-[10px] disabled:opacity-30 transition-all text-[#16241f]"
               >
                 ⬅ Prev Page
@@ -532,8 +552,8 @@ export function UnitView({
                 Ref page: <strong className="text-[#16241f]">{activePage}</strong>
               </span>
               <button
-                onClick={() => setActivePage(prev => prev + 1)}
-                disabled={activePage >= initialPageImages.length}
+                onClick={() => nextPage !== null && setActivePage(nextPage)}
+                disabled={nextPage === null}
                 className="px-3 py-1.5 rounded-lg border border-[#16241f]/15 hover:bg-[#16241f]/5 font-sans font-bold text-[10px] transition-all text-[#16241f] disabled:opacity-30"
               >
                 Next Page ➡

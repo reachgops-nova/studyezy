@@ -103,6 +103,12 @@ export async function getUploadedPageImages(key: string): Promise<string[]> {
   return pages.map((p) => `/api/uploads/${p.storageKey}`);
 }
 
+export interface BookletPage {
+  url: string;
+  /** The real printed page number, when known (UploadedPage.pageNumber - see its schema comment). Null for a family's own photo upload, or a UnitResource row (that table has no page-number column yet). */
+  page: number | null;
+}
+
 /**
  * Every readable textbook page image for a unit, from BOTH places a page can
  * have been stored, in reading order.
@@ -118,8 +124,15 @@ export async function getUploadedPageImages(key: string): Promise<string[]> {
  *
  * Only image/* is included: UnitResource also legitimately holds PDFs, and
  * components/Booklet.tsx renders <img>, which cannot display one.
+ *
+ * Returns {url, page} pairs, not bare strings, since 2026-09-06: UnitView's
+ * "jump to this concept's cited page" used to assume array index N held
+ * book page N+1, which only worked for Unit 1 by accident (it starts near
+ * page 1) - Unit 9 (pages 156+) would have needed 155 leading placeholder
+ * rows just to make that arithmetic land. Real page numbers let UnitView
+ * look a page up directly instead.
  */
-export async function getUnitBookletImages(key: string): Promise<string[]> {
+export async function getUnitBookletImages(key: string): Promise<BookletPage[]> {
   const unit = await db.unit.findUnique({ where: { unitKey: key } });
   if (!unit) return [];
 
@@ -136,13 +149,17 @@ export async function getUnitBookletImages(key: string): Promise<string[]> {
     }),
   ]);
 
-  const paths = [...pages, ...resources]
+  const entries: BookletPage[] = [...pages, ...resources]
     .filter((row) => row.mimeType.startsWith("image/"))
-    .map((row) => `/api/uploads/${row.storageKey}`);
+    .map((row) => ({
+      url: `/api/uploads/${row.storageKey}`,
+      page: "pageNumber" in row ? row.pageNumber : null,
+    }));
 
-  // A page could in principle exist in both tables; dedupe by served path so
-  // it is never shown twice. Set preserves insertion order.
-  return Array.from(new Set(paths));
+  // A page could in principle exist in both tables; dedupe by served url so
+  // it is never shown twice.
+  const seen = new Set<string>();
+  return entries.filter((e) => (seen.has(e.url) ? false : (seen.add(e.url), true)));
 }
 
 /**

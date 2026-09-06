@@ -324,6 +324,15 @@ model UploadedPage {
   mimeType         String
   byteSize         Int
   purpose          String   @default("textbook_source") // "textbook_source" | "exam_page"
+  // The real printed textbook page this image shows, when known (2026-09-06
+  // - real bug found while seeding Units 2-9's galleries: UnitView.tsx's
+  // booklet jumped to a concept's cited page via `pageImages[page - 1]`,
+  // silently assuming this unit's array starts at book page 1. That only
+  // ever worked for Unit 1 by coincidence (it starts near page 1) - Unit 9's
+  // pages (156+) would have needed 155 leading placeholder rows just to
+  // make the arithmetic land correctly. Nullable: a family's own uploaded
+  // photo (the original parent-facing flow) has no known page number.
+  pageNumber       Int?
   examSubmissionId String?
   examSubmission   ExamSubmission? @relation(fields: [examSubmissionId], references: [id], onDelete: SetNull)
   createdAt        DateTime @default(now())
