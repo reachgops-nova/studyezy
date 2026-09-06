@@ -26,7 +26,8 @@ model User {
   state        String?
   district     String?
 
-  sessions          Session[]
+  sessions             Session[]
+  passwordResetTokens  PasswordResetToken[]
   studentProfiles   StudentProfile[]
   uploadedPages     UploadedPage[]
   createdSubjects   Subject[]      @relation("SubjectCreatedBy")
@@ -42,6 +43,19 @@ model Session {
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   expiresAt DateTime
   createdAt DateTime @default(now())
+}
+
+// Admin-triggered "reset this user's password" flow (2026-09-06) - same
+// hash-not-raw-token storage convention as Session above, so a DB leak never
+// exposes a usable token. One-time use (usedAt), short-lived (1h).
+model PasswordResetToken {
+  id        String    @id @default(cuid())
+  tokenHash String    @unique
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
 }
 
 model StudentProfile {

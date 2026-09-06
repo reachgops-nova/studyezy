@@ -5,9 +5,9 @@ import { authenticate } from "./actions";
 export default async function LoginPage({
   searchParams,
 }: {
-  searchParams: Promise<{ error?: string }>;
+  searchParams: Promise<{ error?: string; success?: string }>;
 }) {
-  const { error } = await searchParams;
+  const { error, success } = await searchParams;
 
   return (
     <main className="mx-auto flex min-h-[80vh] w-full max-w-3xl flex-col items-center justify-center gap-8">
@@ -17,6 +17,11 @@ export default async function LoginPage({
       </div>
 
       <form action={authenticate} className="grid w-full max-w-sm gap-4">
+        {success === "password_reset" && (
+          <p className="rounded-xl bg-green-50 px-3 py-2 text-sm text-green-700">
+            Your password has been reset - sign in with your new one.
+          </p>
+        )}
         {error === "invalid_credentials" && (
           <p className="rounded-xl bg-red-50 px-3 py-2 text-sm text-red-600">
             That email and password combination doesn&apos;t match an account.
