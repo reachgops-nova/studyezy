@@ -2,6 +2,16 @@
    SmartIGCSE — player-app.js
    Renders ANY pack that passes engine/validate.mjs.
    Contains no content and no subject knowledge whatsoever.
+
+   WARNING (found live 2026-09-07): this file is NOT what actually ships to
+   students. Both app/learn/[unitId]/worksheet/[packId]/route.ts and
+   app/admin/content-packs/[packId]/preview/route.ts read
+   content/player-template.html directly, which has its OWN independent
+   inlined copy of this exact script (around line ~3375 of that file) - a
+   real fix made only here (as the photo_crop croppedImageUrl renderer once
+   was) silently never reaches production. Change BOTH copies together, or
+   better, treat this file as the copy-from source and paste the whole thing
+   into player-template.html's <script> block after editing here.
    ============================================================ */
 const PACK = JSON.parse(document.getElementById('pack').textContent);
 const STORE_KEY = 'smartigcse:' + PACK.packId;
