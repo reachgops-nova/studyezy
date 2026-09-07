@@ -957,6 +957,26 @@ export default function AvatarChat({
               </span>
             )}
           </div>
+          {/* A generated illustration deliberately carries no text at all
+              (see lib/conceptIllustration.ts - baked-in text came back
+              genuinely misspelled/hallucinated in testing) - the real facts
+              go here instead, as real text straight from the concept, which
+              can't be misspelled or invented the way pixels can. */}
+          {concept.media?.generated_illustration_url && !hideIllustration && (concept.definition || concept.key_points?.length) && (
+            <div className="mt-3 grid gap-2 border-t border-slate-100 pt-3">
+              {concept.definition && <p className="text-sm leading-relaxed text-slate-700">{concept.definition}</p>}
+              {concept.key_points && concept.key_points.length > 0 && (
+                <ul className="grid gap-1 text-sm text-slate-600">
+                  {concept.key_points.map((point, i) => (
+                    <li key={i} className="flex gap-2">
+                      <span className="mt-1 h-1.5 w-1.5 shrink-0 rounded-full bg-brand-gold" aria-hidden="true" />
+                      <span>{point}</span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          )}
         </div>
       )}
 

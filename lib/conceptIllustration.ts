@@ -6,18 +6,34 @@ import { UPLOADS_DIR } from "./uploads";
 import type { Concept as DbConcept } from "@prisma/client";
 
 // Fixed character + palette, sent identically on every call - this is what
-// makes every generated poster look like part of the same product instead
-// of a one-off image. Verified live 2026-09-07: this exact description
-// (asked for on its own, no concept content attached) reproduces the same
-// mascot design call to call.
+// makes every generated illustration look like part of the same product
+// instead of a one-off image. Verified live 2026-09-07: this exact
+// description (asked for on its own, no concept content attached)
+// reproduces the same mascot design call to call.
+//
+// Real pilot finding, same day: the first version of this prompt asked for
+// a dense infographic-style poster with baked-in titles, labels and bullet
+// text (matching the NotebookLM-style reference images the user showed).
+// All 3 pilot images came back with genuinely garbled words ("IDIOMIATIC",
+// "ARRANING", "THROUGHOT", a label that read "NENTS RISE"), and one
+// fabricated an example that was never in the source content at all - a
+// known, real weakness of current image models: dense in-image text is
+// unreliable, and gets *less* reliable the more of it you ask for in one
+// image, no matter how firmly the prompt insists on exact wording. Baking
+// facts into pixels also means there is no way to guarantee they match the
+// concept's real text short of OCR-checking every image, which is far
+// weaker than just not doing it. Real HTML text can't be misspelled or
+// invented, so this prompt no longer asks the model to render any text at
+// all - it draws the SCENE only, and the app renders the actual facts as
+// real text around/under it (see the illustration card in AvatarChat.tsx).
 const HOUSE_STYLE = `House style, follow exactly every time:
-- Mascot: a friendly brown kangaroo named "Ezy" - big round brown eyes, a cream/tan belly patch, thick warm-brown outlines, a simple joeys-book-mascot look (not photorealistic, not scary, not overly detailed). Ezy may appear once, small, reacting to the content (pointing, cheering, curious) - never as the main subject.
-- Palette: warm cream/peach background, warm brown outlines, one or two accent colours per illustration drawn from the content itself (e.g. green for plants, blue for water) - never neon, never harsh.
-- Layout: a rounded card on the background, a short playful all-caps title banner across the top (with one small relevant emoji), thick consistent outlines on every shape, flat vector-style shading (no photorealism, no gradients-heavy 3D render).
-- Typography: bold, rounded, highly legible sans-serif for every label - a 7-year-old must be able to read it.
-- Absolutely no misspelled words in any label.`;
+- Mascot: a friendly brown kangaroo named "Ezy" - big round brown eyes, a cream/tan belly patch, thick warm-brown outlines, a simple joeys-book-mascot look (not photorealistic, not scary, not overly detailed). Ezy may appear once, small, reacting to the scene (pointing, cheering, curious) - never as the main subject.
+- Palette: warm cream/peach background, warm brown outlines, one or two accent colours drawn from the content itself (e.g. green for plants, blue for water) - never neon, never harsh.
+- Flat vector-style shading, thick consistent outlines, no photorealism, no heavy 3D gradients.
+- ABSOLUTELY NO TEXT ANYWHERE IN THE IMAGE - no titles, no labels, no captions, no numbers, no speech-bubble writing, no signage, nothing written at all. This is a pure illustration; every word a student reads about this concept comes from real text elsewhere on the page, never from the picture.
+- Never depict a real, identifiable named public figure (an actual celebrity, athlete, or historical photo likeness) - if an example mentions one, illustrate the general idea/scene instead of a recognizable portrait of that real person.`;
 
-const FACTS_RULE = `The facts below are already correct and already checked - illustrate exactly these facts and nothing else. Do not invent, add, reorder, or embellish any fact, label, step, or number beyond what is given. If the facts describe an ordered sequence (steps, a cycle, a growing pattern), lay it out as clearly-numbered stages with arrows showing the order, like a process diagram. If they don't describe an order (a single definition, a set of unordered examples, a comparison), use a single clear illustration with labeled callouts instead - do not force an unordered fact into a fake sequence.`;
+const FACTS_RULE = `The facts below are already correct and already checked - they tell you WHAT to draw, never what to write (nothing is written - see the no-text rule above). Illustrate the scene these facts describe and nothing beyond it - do not invent extra objects, characters, or events that aren't implied by the facts. If the facts describe an ordered sequence (steps, a cycle, a growing pattern), compose the scene so the stages read left-to-right or as a path/journey (e.g. Ezy walking a path through several moments) - purely visual staging, still with no numbers or labels drawn on it. If they don't describe an order, one clear illustrated scene is enough.`;
 
 function buildPrompt(concept: DbConcept): string {
   const facts: string[] = [];
@@ -26,7 +42,7 @@ function buildPrompt(concept: DbConcept): string {
   if (concept.examples.length) facts.push(`Examples: ${concept.examples.join(" | ")}`);
 
   return [
-    `Create one square educational poster illustration explaining "${concept.name}" to a school student, for a learning app.`,
+    `Create one square illustration (no text) that visually represents "${concept.name}" for a school student, as the cover art for a learning app lesson card.`,
     HOUSE_STYLE,
     FACTS_RULE,
     facts.length ? facts.join("\n") : `No further detail was given beyond the concept name - keep the illustration simple and generic to that name rather than guessing specifics.`,
@@ -41,11 +57,15 @@ function buildPrompt(concept: DbConcept): string {
  * a generated image was rejected for anything answer-bearing, because the
  * image and the marked answer must never be able to disagree. HERE there is
  * no scored answer at stake - this is a Learn-phase teaching aid - so
- * generation is the right tool, not the risky one. The correctness
- * discipline still applies to facts, just applied differently: the prompt
- * is built entirely from the concept's own already-vetted definition/
- * keyPoints/examples (never invented), and the image model is told
- * explicitly to illustrate only those facts, never add new ones.
+ * generation is the right tool, not the risky one. But the pilot found a
+ * real, different risk: asking the model to render exact facts AS TEXT
+ * inside the image produced genuinely garbled words and one fabricated
+ * example on every single pilot image (see HOUSE_STYLE's comment below).
+ * The image model draws the SCENE only now - no text at all - and every
+ * actual fact a student reads still comes from the concept's own real
+ * definition/keyPoints/examples, rendered as real HTML text by the caller
+ * (see AvatarChat.tsx's illustration card), which can't be misspelled or
+ * hallucinated the way pixels can.
  *
  * Caches to `concept.generatedIllustrationUrl` - never regenerates a concept
  * that already has one (same "don't reprocess, don't re-spend tokens"
