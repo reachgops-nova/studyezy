@@ -212,3 +212,59 @@ export async function verifyChoiceAnswer(
     return { isCorrect: true, correctAnswer: recordedAnswer, reasoning: "verification response unparseable" };
   }
 }
+
+const VERIFY_ANSWER_FROM_DATA_SYSTEM = `You are checking one multiple-choice question against the exact declarative diagram data it was generated from (count_grid, square_pattern, number_line, thermometer, spider or matchstick - see content/prompts/extract-worksheet.md). This is not a photograph - it is machine-generated from these exact parameters, so the data given to you IS the diagram, completely and exactly (nothing is hidden or ambiguous the way a real photo can be).
+
+Work out the correct answer yourself from the given parameters - do the arithmetic or reasoning the question actually asks for (e.g. a total, a combination count, or the next term in a growing pattern) - ignoring what the recorded answer claims. Then decide whether the recorded answer is actually correct.
+
+Respond with ONLY a JSON object: {"isCorrect": boolean, "correctAnswer": string, "reasoning": string}
+- correctAnswer: the option text (copied exactly from the given options) that the diagram data actually supports - this is the same as the recorded answer if it's correct, or your own correction if it's wrong.
+- reasoning: one short sentence - the reasoning you did and why that gives this answer.`;
+
+/**
+ * Same purpose as verifyChoiceAnswer, for a question whose "diagram" is one
+ * of the declarative media kinds (see content/prompts/extract-worksheet.md)
+ * instead of a real cropped photograph - there's no image to send, but the
+ * parameters given here ARE the complete, exact ground truth (unlike a
+ * photo, nothing is left to misread), so this is a plain re-derivation
+ * rather than a vision task.
+ */
+export async function verifyChoiceAnswerFromDiagramData(
+  diagram: unknown,
+  questionPrompt: string,
+  options: string[],
+  recordedAnswer: string
+): Promise<AnswerVerification> {
+  const raw = await geminiGenerateRaw(
+    "verify-answer-data-gemini",
+    VERIFY_ANSWER_FROM_DATA_SYSTEM,
+    [
+      {
+        text: `Diagram data: ${JSON.stringify(diagram)}\nQuestion: ${questionPrompt}\nOptions: ${JSON.stringify(options)}\nRecorded answer: ${recordedAnswer}`,
+      },
+    ],
+    2000
+  );
+  try {
+    const parsed = JSON.parse(raw.text) as AnswerVerification;
+    return {
+      isCorrect: Boolean(parsed.isCorrect),
+      correctAnswer: String(parsed.correctAnswer ?? recordedAnswer),
+      reasoning: String(parsed.reasoning ?? ""),
+    };
+  } catch {
+    return { isCorrect: true, correctAnswer: recordedAnswer, reasoning: "verification response unparseable" };
+  }
+}
+
+/**
+ * Text-only generation call (no image/PDF part) - for authoring a fresh
+ * variant question set from an existing validated pack as a blueprint (see
+ * lib/contentPackVariants.ts), not for reading a source document. Same
+ * maxOutputTokens budget as extractPackFragmentGemini for the same reason:
+ * thinking tokens share the cap, and a whole sheet's worth of questions is a
+ * comparable amount of completion.
+ */
+export async function generateVariantFragmentGemini(system: string, userText: string): Promise<GeminiCallResult> {
+  return geminiGenerateRaw("content-pack-variant-gemini", system, [{ text: userText }], 32000);
+}

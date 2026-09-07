@@ -92,6 +92,16 @@ const MEDIA_RENDERERS = {
     });
     return out+'</svg>';
   },
+  count_grid(m){
+    const s=15,gap=5,rowH=42; const rows=m.rows||[];
+    let out=`<svg viewBox="0 0 620 ${20+rows.length*rowH}" role="img" aria-label="${esc(rows.map(r=>r.count+' '+r.label).join(', '))}">`;
+    rows.forEach((r,i)=>{
+      const oy=20+i*rowH;
+      out+=`<text x="0" y="${oy}" font-family="Inter,sans-serif" font-size="13" font-weight="600" fill="#14243A">${esc(r.label)} (${r.count})</text>`;
+      for(let c=0;c<r.count;c++) out+=`<rect x="${c*(s+gap)}" y="${oy+9}" width="${s}" height="${s}" fill="#14243A" rx="2"/>`;
+    });
+    return out+'</svg>';
+  },
   matchstick(m){
     const yT=20,yB=66,roof=6; let out=`<svg viewBox="0 0 560 86" role="img" aria-label="Matchstick pattern in ${m.stages} stages">`;
     for(let stage=1;stage<=m.stages;stage++){

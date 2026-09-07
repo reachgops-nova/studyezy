@@ -3,7 +3,7 @@ import { readFile, mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { extractPackFragmentClaude, isConfigured, type ExtractionSourceFile } from "./claude";
 import { extractPackFragmentGroq, isGroqConfigured } from "./groq";
-import { extractPackFragmentGemini, isGeminiConfigured, verifyChoiceAnswer } from "./gemini";
+import { extractPackFragmentGemini, isGeminiConfigured, verifyChoiceAnswer, verifyChoiceAnswerFromDiagramData } from "./gemini";
 import { renderPdfPageToPng, cropNormalizedBox } from "./pdfCrop";
 import { UPLOADS_DIR } from "./uploads";
 // @ts-ignore - plain JS module (allowJs handles resolution; this silences any type-inference gaps without failing the build if none turn out to exist)
@@ -68,7 +68,7 @@ export interface ContentPackResult {
 // loop's generic "fix this validation error" feedback is unlikely to
 // resolve on its own since it never states the correct key name. Added a
 // second worked example below covering exactly this shape.
-const FIELD_SHAPE_REMINDER = `
+export const FIELD_SHAPE_REMINDER = `
 
 IMPORTANT - exact shape reminder, because this is commonly gotten wrong: every question needs a "fields" array, even for a single blank. Never put "check" directly on the question object. Every sheet needs "title" (a short worksheet title) and "no" (its number) - "label" only belongs on questions and fields, never on a sheet. A choice/multiple-choice field's answer options go under "options" (never "choices"), and its "input" must be exactly "choice" (one answer) or "multi" (several answers) - not "multi_choice". Example of a correctly-shaped multiple-choice question:
 {"id": "q1", "label": "1", "prompt": "Which type of network connects personal devices within a short range?", "fields": [{"key": "ans", "label": "Answer", "input": "choice", "options": ["Personal Area Network", "Local Area Network", "Wide Area Network", "Metropolitan Area Network"], "check": {"kind": "choice", "value": "Personal Area Network"}}], "hint": "Think about the range - a smartwatch talking to a phone, not a whole building.", "explanation": "A Personal Area Network (PAN) connects devices within a few metres of one person, like a phone and a smartwatch."}
@@ -168,7 +168,7 @@ interface RawSheet {
 // would ever be reachable, since ids are used as lookup keys). Renumbered
 // deterministically here, using how many sheets are already in the running
 // pack as the starting index, so ids stay unique across every batch.
-function renumberSheets(sheets: unknown[], startIndex: number): unknown[] {
+export function renumberSheets(sheets: unknown[], startIndex: number): unknown[] {
   return sheets.map((s, i) => {
     const sheet = s as RawSheet;
     const newSheetId = `sheet-${startIndex + i + 1}`;
@@ -181,7 +181,7 @@ function renumberSheets(sheets: unknown[], startIndex: number): unknown[] {
   });
 }
 
-function parsePackJson(raw: string): { error?: string; sheets?: unknown[] } | null {
+export function parsePackJson(raw: string): { error?: string; sheets?: unknown[] } | null {
   const cleaned = raw.replace(/^```(?:json)?/m, "").replace(/```$/m, "").trim();
   try {
     return JSON.parse(cleaned);
@@ -261,6 +261,29 @@ interface CheckableField {
   check?: { kind?: string; value?: string };
 }
 
+// A single-answer "choice" field with real options - the only shape either
+// verification pass below knows how to check. Returns null (not throwing)
+// when a question doesn't qualify, so both call sites can just skip it.
+function singleChoiceField(question: RawQuestion): CheckableField | null {
+  const fields = (question.fields as CheckableField[] | undefined) ?? [];
+  if (fields.length !== 1 || fields[0].check?.kind !== "choice" || !fields[0].options) return null;
+  return fields[0];
+}
+
+function applyCorrection(
+  question: RawQuestion,
+  field: CheckableField,
+  recordedAnswer: string,
+  result: { isCorrect: boolean; correctAnswer: string; reasoning: string }
+): void {
+  if (result.isCorrect || !field.options!.includes(result.correctAnswer)) return;
+  console.log(
+    `Corrected answer for question ${question.id}: "${recordedAnswer}" -> "${result.correctAnswer}" (${result.reasoning})`
+  );
+  field.check!.value = result.correctAnswer;
+  question.explanation = result.reasoning;
+}
+
 /**
  * Real bug caught live 2026-09-07: extraction wrote "5 shirts" and answer 20
  * for a question whose real cropped image shows 4 shirts (correct answer
@@ -273,26 +296,61 @@ interface CheckableField {
  * answer untouched rather than blocking the whole conversion.
  */
 async function verifyAndCorrectAnswer(question: RawQuestion, croppedImage: Buffer): Promise<void> {
-  const fields = (question.fields as CheckableField[] | undefined) ?? [];
-  if (fields.length !== 1 || fields[0].check?.kind !== "choice" || !fields[0].options) return;
-
-  const field = fields[0];
-  const options = field.options!;
+  const field = singleChoiceField(question);
+  if (!field) return;
   const prompt = typeof question.prompt === "string" ? question.prompt : "";
   const recordedAnswer = field.check!.value ?? "";
 
   try {
-    const result = await verifyChoiceAnswer(croppedImage, prompt, options, recordedAnswer);
-    if (!result.isCorrect && options.includes(result.correctAnswer)) {
-      console.log(
-        `Corrected answer for question ${question.id}: "${recordedAnswer}" -> "${result.correctAnswer}" (${result.reasoning})`
-      );
-      field.check!.value = result.correctAnswer;
-      question.explanation = result.reasoning;
-    }
+    const result = await verifyChoiceAnswer(croppedImage, prompt, field.options!, recordedAnswer);
+    applyCorrection(question, field, recordedAnswer, result);
   } catch (err) {
     console.error(`Couldn't verify answer for question ${question.id}`, err);
   }
+}
+
+/**
+ * The declarative-media counterpart of verifyAndCorrectAnswer, above - added
+ * 2026-09-07 alongside the count_grid renderer (see
+ * content/prompts/extract-worksheet.md), which the model now prefers over
+ * photo_crop for any diagram that's really just "count these items"
+ * (including a combinatorics question like the shirts/hangers case that
+ * caught the original bug). There's no photograph to misread here, but the
+ * model can still get its own arithmetic wrong when it first writes the
+ * question - this re-derives the answer from the exact media parameters,
+ * which are already the complete ground truth, so the check is a
+ * re-derivation rather than a vision task.
+ *
+ * Deliberately excludes `photo_crop` (handled by verifyAndCorrectAnswer,
+ * which has the real image) and any question with no media at all (nothing
+ * declarative to re-derive from). Exported for reuse by
+ * lib/contentPackVariants.ts, where it matters even more - an authored
+ * variant's numbers are new, unverified-by-a-human content, not a copy of
+ * something already checked once.
+ */
+export async function verifyDiagramAnswers(sheets: unknown[]): Promise<number> {
+  let verified = 0;
+  for (const s of sheets) {
+    const sheet = s as RawSheet;
+    for (const q of sheet.questions ?? []) {
+      const question = q as RawQuestion;
+      const media = question.media as { kind?: string } | undefined;
+      if (!media || media.kind === "photo_crop") continue;
+      const field = singleChoiceField(question);
+      if (!field) continue;
+      const prompt = typeof question.prompt === "string" ? question.prompt : "";
+      const recordedAnswer = field.check!.value ?? "";
+
+      try {
+        const result = await verifyChoiceAnswerFromDiagramData(media, prompt, field.options!, recordedAnswer);
+        applyCorrection(question, field, recordedAnswer, result);
+        verified++;
+      } catch (err) {
+        console.error(`Couldn't verify diagram answer for question ${question.id}`, err);
+      }
+    }
+  }
+  return verified;
 }
 
 /**
@@ -394,6 +452,10 @@ export async function convertPagesToPack(
     if (isDocument && sheets.length > 0) {
       const filled = await fillPhotoCrops(sheets, Buffer.from(image.base64, "base64"), packId);
       if (filled > 0) console.log(`Filled ${filled} photo_crop image(s) from the source document.`);
+    }
+    if (sheets.length > 0) {
+      const verified = await verifyDiagramAnswers(sheets);
+      if (verified > 0) console.log(`Verified ${verified} declarative-diagram answer(s) against their own data.`);
     }
 
     allSheets.push(...renumberSheets(sheets, allSheets.length));

@@ -14,6 +14,7 @@ export interface UnitOption {
   existingPacks: {
     packId: string;
     status: string;
+    difficulty: string | null;
     sheetsCount: number;
     questionsCount: number;
     needsHumanCount: number;
@@ -31,6 +32,17 @@ interface ConvertResponse {
   errors: string[];
   warnings: string[];
   perPage: { imagePath: string; sheets: number; questions: number; errors: string[]; modelUsed: string }[];
+  inputTokens: number;
+  outputTokens: number;
+  costUsd: number | null;
+}
+
+interface VariantResponse {
+  packId: string;
+  status: string;
+  counts: { sheets: number; questions: number; fields: number; needsHuman: number };
+  errors: string[];
+  warnings: string[];
   inputTokens: number;
   outputTokens: number;
   costUsd: number | null;
@@ -67,12 +79,23 @@ export default function ContentPackForm({
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<ConvertResponse | null>(null);
 
+  const existingSets = (selectedUnit?.existingPacks ?? []).filter((p) => p.difficulty && /^set\d+$/.test(p.difficulty));
+  const [sourceSet, setSourceSet] = useState<string>(existingSets[0]?.difficulty ?? "set1");
+  const [targetSet, setTargetSet] = useState(2);
+  const [variantLoading, setVariantLoading] = useState(false);
+  const [variantError, setVariantError] = useState<string | null>(null);
+  const [variantResult, setVariantResult] = useState<VariantResponse | null>(null);
+
   function handleUnitChange(newUnitKey: string) {
     setUnitKey(newUnitKey);
     const unit = unitOptions.find((u) => u.unitKey === newUnitKey);
     setSelectedKeys(unit ? unit.pages.slice(0, 3).map((p) => p.storageKey) : []);
     setResult(null);
     setError(null);
+    const sets = (unit?.existingPacks ?? []).filter((p) => p.difficulty && /^set\d+$/.test(p.difficulty));
+    setSourceSet(sets[0]?.difficulty ?? "set1");
+    setVariantResult(null);
+    setVariantError(null);
   }
 
   function toggleKey(storageKey: string) {
@@ -108,6 +131,34 @@ export default function ContentPackForm({
       setError("Request failed - check your connection and try again.");
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function handleGenerateVariant() {
+    if (!selectedUnit || variantLoading) return;
+    setVariantLoading(true);
+    setVariantError(null);
+    setVariantResult(null);
+    try {
+      const res = await fetch("/api/admin/content-packs/generate-variant", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          unitKey: selectedUnit.unitKey,
+          sourceDifficulty: sourceSet,
+          targetDifficulty: `set${targetSet}`,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setVariantError(data.error || "Something went wrong.");
+        return;
+      }
+      setVariantResult(data);
+    } catch {
+      setVariantError("Request failed - check your connection and try again.");
+    } finally {
+      setVariantLoading(false);
     }
   }
 
@@ -250,6 +301,100 @@ export default function ContentPackForm({
                   {e}
                 </p>
               ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {selectedUnit && selectedUnit.contentMode === "olympiad" && existingSets.length > 0 && (
+        <div className="grid gap-3 rounded-2xl border border-slate-200/70 bg-white p-4 shadow-soft">
+          <div>
+            <h3 className="font-semibold text-slate-800">Generate a set from an existing one</h3>
+            <p className="mt-1 text-sm text-slate-600">
+              No new document needed - this authors a fresh set with the same skills and format as the one you pick
+              below, with its own new numbers and its own answers checked before it&apos;s saved. Any question tied to
+              a real photograph is carried over unchanged, since there&apos;s no second real photo to draw from.
+            </p>
+          </div>
+          <div className="flex flex-wrap items-end gap-3">
+            <label className="grid gap-1 text-sm font-medium text-slate-700">
+              Base it on
+              <select
+                value={sourceSet}
+                onChange={(e) => setSourceSet(e.target.value)}
+                className="w-40 rounded-xl border border-slate-300 px-3 py-2 text-sm font-normal"
+              >
+                {existingSets.map((p) => (
+                  <option key={p.packId} value={p.difficulty!}>
+                    {p.difficulty} ({p.questionsCount} questions)
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label className="grid gap-1 text-sm font-medium text-slate-700">
+              Generate as
+              <select
+                value={targetSet}
+                onChange={(e) => setTargetSet(Number(e.target.value))}
+                className="w-32 rounded-xl border border-slate-300 px-3 py-2 text-sm font-normal"
+              >
+                {[1, 2, 3, 4].map((n) => (
+                  <option key={n} value={n}>
+                    Set {n}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <button
+              type="button"
+              onClick={handleGenerateVariant}
+              disabled={variantLoading || `set${targetSet}` === sourceSet}
+              className="rounded-full bg-gradient-to-br from-brand-gold-bright to-brand-gold px-5 py-2.5 text-sm font-medium text-white transition active:scale-95 disabled:opacity-50"
+            >
+              {variantLoading ? "Generating..." : `Generate Set ${targetSet} from ${sourceSet}`}
+            </button>
+          </div>
+          {`set${targetSet}` === sourceSet && <p className="text-xs text-amber-700">Pick a different target set number.</p>}
+
+          {variantError && <p className="text-sm text-red-600">{variantError}</p>}
+
+          {variantResult && (
+            <div className="border-t border-slate-100 pt-3">
+              <div className="flex items-center justify-between gap-2">
+                <h4 className="font-semibold text-slate-800">
+                  {variantResult.packId} {statusPill(variantResult.status)}
+                </h4>
+                <a
+                  href={`/admin/content-packs/${variantResult.packId}/preview`}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="text-sm font-medium text-brand-ink underline"
+                >
+                  Preview as a kid would see it →
+                </a>
+              </div>
+              <dl className="mt-3 grid grid-cols-2 gap-x-3 gap-y-1 text-xs text-slate-500 sm:grid-cols-4">
+                <dt>Sheets</dt>
+                <dd className="text-right font-medium text-slate-700">{variantResult.counts.sheets}</dd>
+                <dt>Questions</dt>
+                <dd className="text-right font-medium text-slate-700">{variantResult.counts.questions}</dd>
+                <dt>Needs human</dt>
+                <dd className="text-right font-medium text-slate-700">{variantResult.counts.needsHuman}</dd>
+                <dt>Cost</dt>
+                <dd className="text-right font-medium text-slate-700">
+                  {variantResult.costUsd === null ? "unknown" : `$${variantResult.costUsd.toFixed(6)}`}
+                </dd>
+              </dl>
+              {variantResult.errors.length > 0 && (
+                <div className="mt-3 border-t border-slate-100 pt-3">
+                  <p className="text-xs font-semibold text-red-700">Errors (unresolved after repair attempts)</p>
+                  {variantResult.errors.map((e, i) => (
+                    <p key={i} className="text-xs text-red-700">
+                      {e}
+                    </p>
+                  ))}
+                </div>
+              )}
             </div>
           )}
         </div>

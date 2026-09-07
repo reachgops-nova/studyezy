@@ -61,6 +61,7 @@ answers must not be encoded as `exact_number` — that punishes a child for bein
 
 `number_line` `{min,max,step}` · `thermometer` `{min,max,step,reading}` ·
 `spider` `{centre,around:[]}` · `square_pattern` `{stages:[[top,bottom]]}` ·
+`count_grid` `{rows:[{label,count}]}` ·
 `matchstick` `{shape:"triangle"|"square"|"house",stages}` · `photo_crop` `{note}`
 
 **`square_pattern` is generic, not literally about squares** - it draws `top` count
@@ -68,10 +69,25 @@ markers in a row (and, if given, a second row of `bottom` markers) per stage. Us
 for ANY "Pattern 1 has 3 mugs, Pattern 2 has 6 mugs, Pattern 3 has 9 mugs" style
 growing-count question, whatever the real objects are (mugs, apples, dots, tiles) -
 set `bottom: 0` for a plain single-row count. Example: `{"stages": [[3,0],[6,0],[9,0]]}`
-for exactly that 3/6/9-mugs pattern. Prefer this over `photo_crop` whenever the figure
-is really just "N items, repeated/growing across labeled stages" - `photo_crop` is for
-a genuinely one-off diagram (a mirror-image face, a specific labeled picture) that
-isn't just a count.
+for exactly that 3/6/9-mugs pattern.
+
+**`count_grid` is for one or more independently-labeled counts shown together** -
+each `rows` entry draws its own labeled line of markers. Use it for a *combinatorics*
+question ("N shirts, M hangers - how many outfits?") as `{"rows": [{"label": "Shirts",
+"count": 4}, {"label": "Hangers", "count": 4}]}`, or for a plain single count with a
+label worth naming, e.g. `{"rows": [{"label": "Birds", "count": 7}]}`.
+
+**Prefer `square_pattern` or `count_grid` over `photo_crop` for ANY diagram whose only
+real content is a count of items** - a growing pattern, a single count, or two-or-more
+counted categories shown side by side. This is a strict preference, not a style choice:
+a real photograph of, say, 4 shirts can be misread (the exact bug that once shipped a
+wrong answer to a child - see the shirts/hangers case), while a generated `count_grid`
+with `count: 4` and an answer computed from that same number 4 can never disagree with
+itself. `photo_crop` is for what genuinely cannot be reduced to a count - the visual
+shape of an icon that must be recognized, a real screenshot, a labeled photograph of a
+physical device, a spatial/symmetry figure (e.g. a mirror-image puzzle) - anything
+where the *shape or identity* of what's pictured is the point, not how many of it
+there are.
 
 Use `photo_crop` plus `needsHuman:true` only when a diagram truly can't be expressed by
 one of the kinds above. Add `"redrawn": true` whenever the photograph was too poor to

@@ -40,6 +40,7 @@ export default async function ContentPacksPage({
                     select: {
                       packId: true,
                       status: true,
+                      difficulty: true,
                       sheetsCount: true,
                       questionsCount: true,
                       needsHumanCount: true,
