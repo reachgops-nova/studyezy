@@ -43,13 +43,22 @@ export async function renderPdfPageToPng(pdfBytes: Buffer, pageNumber: number, s
 /**
  * Crops a rendered page PNG to a box_2d region - Gemini's own object-detection
  * convention: [ymin, xmin, ymax, xmax], each normalized 0-1000 regardless of
- * the image's real pixel size. `pad` adds a small margin around the box so a
- * tight box doesn't clip the real figure's edge.
+ * the image's real pixel size.
+ *
+ * Real bug found live 2026-09-07: a fixed 20px pad clipped a real shirt off
+ * a wide "5 shirts and 4 hangers" counting question - a student sees only 4
+ * shirts, the stated correct answer (5x4=20) doesn't match what's shown,
+ * genuinely misleading rather than just imperfect. A fixed pixel margin is
+ * proportionally tiny against a box that already spans most of the page
+ * width; the model's own box_2d estimate has real error on wide/tall boxes
+ * specifically, not just at the edges of small ones. Padding now scales with
+ * the box's own size (15%, minimum 20px) so a wide box gets a
+ * correspondingly wide safety margin instead of the same handful of pixels
+ * as a small icon.
  */
 export async function cropNormalizedBox(
   pageImage: Buffer,
-  box2d: [number, number, number, number],
-  pad = 20
+  box2d: [number, number, number, number]
 ): Promise<Buffer> {
   const meta = await sharp(pageImage).metadata();
   const W = meta.width ?? 0;
@@ -57,10 +66,15 @@ export async function cropNormalizedBox(
   if (!W || !H) throw new Error("Could not read rendered page dimensions.");
 
   const [ymin, xmin, ymax, xmax] = box2d;
-  const left = Math.max(0, Math.round((xmin / 1000) * W) - pad);
-  const top = Math.max(0, Math.round((ymin / 1000) * H) - pad);
-  const rawWidth = Math.round(((xmax - xmin) / 1000) * W) + pad * 2;
-  const rawHeight = Math.round(((ymax - ymin) / 1000) * H) + pad * 2;
+  const boxWidthPx = ((xmax - xmin) / 1000) * W;
+  const boxHeightPx = ((ymax - ymin) / 1000) * H;
+  const padX = Math.max(20, Math.round(boxWidthPx * 0.15));
+  const padY = Math.max(20, Math.round(boxHeightPx * 0.15));
+
+  const left = Math.max(0, Math.round((xmin / 1000) * W) - padX);
+  const top = Math.max(0, Math.round((ymin / 1000) * H) - padY);
+  const rawWidth = Math.round(boxWidthPx) + padX * 2;
+  const rawHeight = Math.round(boxHeightPx) + padY * 2;
   const width = Math.max(1, Math.min(W - left, rawWidth));
   const height = Math.max(1, Math.min(H - top, rawHeight));
 

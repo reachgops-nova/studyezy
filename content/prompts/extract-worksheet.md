@@ -83,8 +83,13 @@ anything that genuinely can't be redrawn) - identify exactly where it is so the 
 image can be cropped from the source, instead of only leaving a text note:
 - `"sourcePage"`: the 1-indexed page number within the document this diagram appears on.
 - `"box_2d"`: `[ymin, xmin, ymax, xmax]`, each normalized 0-1000 relative to that page
-  (the same convention used for image object-detection) - a TIGHT box around just the
-  diagram/photo itself, not the surrounding question text or answer options.
+  (the same convention used for image object-detection) - a box around just the
+  diagram/photo itself, not the surrounding question text or answer options. Err on
+  the generous side, not a pixel-tight fit: if the diagram has multiple repeated items
+  (several shirts, several icons in a row), make sure the box's edges clear ALL of
+  them with room to spare - a box that clips off part of what's being counted turns a
+  real answer into a wrong one for the student, which is worse than a slightly loose
+  crop with a bit of extra whitespace or nearby text in it.
 Only include both fields when you're genuinely confident of the page and region - if
 you're not sure, omit them and rely on `needsHuman`/`note` alone as before. Never guess
 a page number or box you're not confident in; a wrong crop is worse than no crop.
