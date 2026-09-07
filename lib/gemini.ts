@@ -268,3 +268,44 @@ export async function verifyChoiceAnswerFromDiagramData(
 export async function generateVariantFragmentGemini(system: string, userText: string): Promise<GeminiCallResult> {
   return geminiGenerateRaw("content-pack-variant-gemini", system, [{ text: userText }], 32000);
 }
+
+// Nano Banana - Gemini's native image-generation model, verified live
+// 2026-09-07 against the same generateContent endpoint and API key already
+// used everywhere else in this file (no separate provider/credential to
+// configure). A prompt with no image input returns one image part
+// (image/png, 1024x1024, ~1290 output tokens = ~$0.039/image at standard
+// tier - see lib/aiCost.ts) alongside a short text part that this function
+// discards - only the image is ever needed here.
+const IMAGE_MODEL = "gemini-2.5-flash-image";
+const IMAGE_URL = `https://generativelanguage.googleapis.com/v1beta/models/${IMAGE_MODEL}:generateContent`;
+
+export interface GeneratedImage {
+  png: Buffer;
+  inputTokens: number;
+  outputTokens: number;
+}
+
+export async function generateImageGemini(feature: string, prompt: string): Promise<GeneratedImage> {
+  const res = await fetch(IMAGE_URL, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", "X-goog-api-key": process.env.GOOGLE_AI_API_KEY ?? "" },
+    body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] }),
+  });
+  if (!res.ok) {
+    const bodyText = await res.text().catch(() => "");
+    throw new Error(`Gemini image request failed (${res.status}): ${bodyText.slice(0, 500)}`);
+  }
+  const data = (await res.json()) as {
+    candidates?: { content?: { parts?: { inlineData?: { data?: string; mimeType?: string } }[] } }[];
+    usageMetadata?: { promptTokenCount?: number; candidatesTokenCount?: number };
+  };
+  const inputTokens = data.usageMetadata?.promptTokenCount ?? 0;
+  const outputTokens = data.usageMetadata?.candidatesTokenCount ?? 0;
+  logAiCost(feature, IMAGE_MODEL, inputTokens, outputTokens);
+
+  const imagePart = data.candidates?.[0]?.content?.parts?.find((p) => p.inlineData?.data);
+  if (!imagePart?.inlineData?.data) {
+    throw new Error("Gemini image response contained no image part.");
+  }
+  return { png: Buffer.from(imagePart.inlineData.data, "base64"), inputTokens, outputTokens };
+}

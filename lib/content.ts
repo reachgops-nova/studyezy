@@ -26,6 +26,7 @@ function toDrafted(c: DbConcept): Concept {
     reasoning_interview_prompts: c.reasoningInterviewPrompts.length ? c.reasoningInterviewPrompts : undefined,
     media: {
       illustration_key: c.illustrationKey ?? undefined,
+      generated_illustration_url: c.generatedIllustrationUrl ?? undefined,
       source_image_path: c.sourceImagePath ?? undefined,
       source_image_transcript: c.sourceImageTranscript ?? undefined,
       illustration_caption: c.illustrationCaption ?? undefined,

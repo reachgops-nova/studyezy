@@ -904,6 +904,7 @@ export default function AvatarChat({
   return (
     <div className="grid grid-cols-1 gap-4">
       {((concept.media?.source_image_path && !hideSourceImage) ||
+        (concept.media?.generated_illustration_url && !hideIllustration) ||
         (concept.media?.illustration_key && !hideIllustration)) && (
         // max-w-xl + aspect-ratio (matching the illustrations' own 300x180
         // viewBox) gives the artwork real presence instead of a small
@@ -920,13 +921,27 @@ export default function AvatarChat({
               really are 300x180 artwork and keep the landscape box. */}
           <div
             className={`w-full overflow-hidden rounded-xl ${
-              concept.media?.source_image_path && !hideSourceImage ? "aspect-[3/4]" : "aspect-[5/3]"
+              concept.media?.source_image_path && !hideSourceImage
+                ? "aspect-[3/4]"
+                : concept.media?.generated_illustration_url
+                  ? "aspect-square"
+                  : "aspect-[5/3]"
             }`}
           >
             {concept.media?.source_image_path && !hideSourceImage ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img
                 src={concept.media.source_image_path}
+                alt={concept.media.illustration_caption ?? concept.concept_name}
+                className="h-full w-full bg-slate-50 object-contain"
+              />
+            ) : concept.media?.generated_illustration_url ? (
+              // Generated posters are always saved square (1024x1024, see
+              // lib/conceptIllustration.ts) - the built-in SVG set is 5:3,
+              // hence the aspect-square/aspect-[5/3] split above.
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={concept.media.generated_illustration_url}
                 alt={concept.media.illustration_caption ?? concept.concept_name}
                 className="h-full w-full bg-slate-50 object-contain"
               />

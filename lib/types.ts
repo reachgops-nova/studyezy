@@ -27,7 +27,9 @@ export interface MarkScheme {
 export interface ConceptMedia {
   /** Key into the built-in illustration set in components/illustrations.tsx - original artwork, not scanned from the book. */
   illustration_key?: string;
-  /** A real uploaded textbook page photo (/uploads/{unitKey}/...) - takes priority over illustration_key when set, since it's the actual source page. */
+  /** Generated raster "poster" illustration (see lib/conceptIllustration.ts) - ranked above illustration_key (richer, concept-specific) but below source_image_path (the real textbook page, when one exists). */
+  generated_illustration_url?: string;
+  /** A real uploaded textbook page photo (/uploads/{unitKey}/...) - takes priority over illustration_key/generated_illustration_url when set, since it's the actual source page. */
   source_image_path?: string;
   /** Precise transcript of source_image_path's printed content, generated once via Claude vision when the image is linked - lets the AI tutor answer questions about what's specifically on the page, not just the hand-authored concept text. */
   source_image_transcript?: string;

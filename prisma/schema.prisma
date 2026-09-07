@@ -297,6 +297,14 @@ model Concept {
   reasoningInterviewPrompts String[]
   voiceQaSamples            Json?
   illustrationKey           String?
+  // A generated raster "poster" illustration (Gemini image generation, see
+  // lib/conceptIllustration.ts), consistent house style (the Ezy mascot,
+  // fixed warm palette) - richer than illustrationKey's small hand-drawn SVG
+  // set, but still ranked below a real sourceImagePath when one exists (the
+  // real textbook page is always the authentic material). Generated once
+  // per concept from its own already-vetted definition/keyPoints/examples
+  // (never invented facts) and cached here - never regenerated automatically.
+  generatedIllustrationUrl  String?
   sourceImagePath           String?
   // A precise transcript of what's actually printed on sourceImagePath -
   // generated once via Claude vision when the image is linked (see

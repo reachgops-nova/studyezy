@@ -235,7 +235,8 @@ export default function UnitOverview({
         <ul className="mt-3 grid gap-1.5">
           {unit.concepts.map((c) => {
             const illustrationKey = c.media?.illustration_key;
-            const showIllustration = illustrationKey && hasIllustration(illustrationKey);
+            const generatedUrl = c.media?.generated_illustration_url;
+            const showIllustration = generatedUrl || (illustrationKey && hasIllustration(illustrationKey));
             return (
               <li key={c.concept_id}>
                 <button
@@ -246,7 +247,12 @@ export default function UnitOverview({
                   <span className="flex min-w-0 items-center gap-3">
                     {showIllustration && (
                       <span className="h-10 w-14 shrink-0 overflow-hidden rounded-lg border border-slate-200 bg-white">
-                        <Illustration illustrationKey={illustrationKey!} />
+                        {generatedUrl ? (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img src={generatedUrl} alt="" className="h-full w-full object-cover" />
+                        ) : (
+                          <Illustration illustrationKey={illustrationKey!} />
+                        )}
                       </span>
                     )}
                     <span className="truncate">

@@ -22,6 +22,12 @@ const PRICE_PER_MILLION_USD: Record<string, { input: number; output: number }> =
   // Verified 2026-09-06 against ai.google.dev/gemini-api/docs/pricing,
   // standard tier (through 2026-12-31 - doubles to $1.50/$7.50 on 2027-01-01).
   "gemini-flash-latest": { input: 0.75, output: 3.75 },
+  // Verified live 2026-09-07: a real call's usageMetadata showed 1290 image
+  // output tokens for one 1024x1024 image, and ai.google.dev/gemini-api/docs/pricing
+  // states image output is $30/1M tokens ($0.039/image) - 1290 * 30/1e6 =
+  // $0.0387, matching. Input is billed the same "$0.30 (text/image)" rate
+  // whether the input is a text prompt or a reference image.
+  "gemini-2.5-flash-image": { input: 0.3, output: 30.0 },
 };
 
 /** Shared by logAiCost and anything else (e.g. /admin/model-compare) that needs the same real per-call number. */
