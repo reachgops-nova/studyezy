@@ -151,3 +151,64 @@ export async function extractPackFragmentGemini(
 ): Promise<GeminiCallResult> {
   return geminiGenerateRaw("content-pack-gemini", system, [toGeminiPart(file), { text: userText }], 32000);
 }
+
+const VERIFY_ANSWER_SYSTEM = `You are checking one multiple-choice question against the real photograph it was written from. You are given the image, the question, the answer options, and the answer currently on record.
+
+Look ONLY at the image - count/examine it carefully, ignoring what the recorded answer claims. Then decide whether the recorded answer is actually correct.
+
+Respond with ONLY a JSON object: {"isCorrect": boolean, "correctAnswer": string, "reasoning": string}
+- correctAnswer: the option text (copied exactly from the given options) that the image actually supports - this is the same as the recorded answer if it's correct, or your own correction if it's wrong.
+- reasoning: one short sentence - what you see in the image and why that gives this answer.`;
+
+export interface AnswerVerification {
+  isCorrect: boolean;
+  correctAnswer: string;
+  reasoning: string;
+}
+
+/**
+ * Real content-accuracy bug caught live 2026-09-07: extraction wrote "5
+ * shirts" and answer 20 for a question whose real cropped image shows 4
+ * shirts (correct answer 16) - a wrong answer marked against a child, the
+ * one failure this whole pipeline exists to prevent, and the automatic
+ * validator (content/engine/validate.mjs) has no way to catch it since it
+ * only checks structural shape, never whether an answer is factually right.
+ *
+ * This is a focused second look: given ONLY the real cropped image (not the
+ * whole page/document, which is what led to the miscount in the first
+ * place) plus the question and recorded answer, ask the model to actually
+ * re-derive the answer from what it can see and flag a mismatch. Scoped to
+ * single-answer "choice" questions only (the common, easily-verified case,
+ * and what the caught bug was) - matching/multi-select verification is a
+ * reasonable future extension, not attempted here.
+ */
+export async function verifyChoiceAnswer(
+  croppedImagePng: Buffer,
+  questionPrompt: string,
+  options: string[],
+  recordedAnswer: string
+): Promise<AnswerVerification> {
+  const raw = await geminiGenerateRaw(
+    "verify-answer-gemini",
+    VERIFY_ANSWER_SYSTEM,
+    [
+      { inline_data: { mime_type: "image/png", data: croppedImagePng.toString("base64") } },
+      {
+        text: `Question: ${questionPrompt}\nOptions: ${JSON.stringify(options)}\nRecorded answer: ${recordedAnswer}`,
+      },
+    ],
+    2000
+  );
+  try {
+    const parsed = JSON.parse(raw.text) as AnswerVerification;
+    return {
+      isCorrect: Boolean(parsed.isCorrect),
+      correctAnswer: String(parsed.correctAnswer ?? recordedAnswer),
+      reasoning: String(parsed.reasoning ?? ""),
+    };
+  } catch {
+    // A malformed verification response should never block the pack - treat
+    // it as "couldn't verify, leave as recorded" rather than failing loudly.
+    return { isCorrect: true, correctAnswer: recordedAnswer, reasoning: "verification response unparseable" };
+  }
+}

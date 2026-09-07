@@ -3,7 +3,7 @@ import { readFile, mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { extractPackFragmentClaude, isConfigured, type ExtractionSourceFile } from "./claude";
 import { extractPackFragmentGroq, isGroqConfigured } from "./groq";
-import { extractPackFragmentGemini, isGeminiConfigured } from "./gemini";
+import { extractPackFragmentGemini, isGeminiConfigured, verifyChoiceAnswer } from "./gemini";
 import { renderPdfPageToPng, cropNormalizedBox } from "./pdfCrop";
 import { UPLOADS_DIR } from "./uploads";
 // @ts-ignore - plain JS module (allowJs handles resolution; this silences any type-inference gaps without failing the build if none turn out to exist)
@@ -243,6 +243,8 @@ async function fillPhotoCrops(sheets: unknown[], pdfBytes: Buffer, packId: strin
         delete question.needsHuman;
         delete question.reviewReason;
         filled++;
+
+        await verifyAndCorrectAnswer(question, cropped);
       } catch (err) {
         console.error(`Couldn't crop photo for question ${question.id} (page ${media.sourcePage})`, err);
       }
@@ -250,6 +252,47 @@ async function fillPhotoCrops(sheets: unknown[], pdfBytes: Buffer, packId: strin
   }
 
   return filled;
+}
+
+interface CheckableField {
+  key?: string;
+  input?: string;
+  options?: string[];
+  check?: { kind?: string; value?: string };
+}
+
+/**
+ * Real bug caught live 2026-09-07: extraction wrote "5 shirts" and answer 20
+ * for a question whose real cropped image shows 4 shirts (correct answer
+ * 16) - a wrong answer marked against a child, caught only by a human
+ * spot-check after the fact. This is the automated version of that
+ * spot-check: a focused second look at ONLY the real cropped image (see
+ * lib/gemini.ts's verifyChoiceAnswer), scoped to single-answer "choice"
+ * questions - the case that was actually caught, and the easiest to verify
+ * unambiguously. Never throws - a verification failure leaves the recorded
+ * answer untouched rather than blocking the whole conversion.
+ */
+async function verifyAndCorrectAnswer(question: RawQuestion, croppedImage: Buffer): Promise<void> {
+  const fields = (question.fields as CheckableField[] | undefined) ?? [];
+  if (fields.length !== 1 || fields[0].check?.kind !== "choice" || !fields[0].options) return;
+
+  const field = fields[0];
+  const options = field.options!;
+  const prompt = typeof question.prompt === "string" ? question.prompt : "";
+  const recordedAnswer = field.check!.value ?? "";
+
+  try {
+    const result = await verifyChoiceAnswer(croppedImage, prompt, options, recordedAnswer);
+    if (!result.isCorrect && options.includes(result.correctAnswer)) {
+      console.log(
+        `Corrected answer for question ${question.id}: "${recordedAnswer}" -> "${result.correctAnswer}" (${result.reasoning})`
+      );
+      field.check!.value = result.correctAnswer;
+      question.explanation = result.reasoning;
+    }
+  } catch (err) {
+    console.error(`Couldn't verify answer for question ${question.id}`, err);
+  }
 }
 
 /**
