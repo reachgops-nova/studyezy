@@ -20,7 +20,7 @@ export default async function AdminStudentPage({
   const record = await getStudentRecord(profileId);
   if (!record) notFound();
 
-  const { profile, account, unitResults, prepPlan } = record;
+  const { profile, account, subjects, prepPlan } = record;
 
   return (
     <AppShell profile={activeProfile} active="admin" isAdmin>
@@ -61,7 +61,7 @@ export default async function AdminStudentPage({
         <h2 className="text-lg font-semibold text-slate-800">Progress</h2>
         <p className="mt-1 text-sm text-slate-500">Same breakdown the family sees on their own dashboard.</p>
         <div className="mt-3">
-          <Dashboard results={unitResults} />
+          <Dashboard subjects={subjects} />
         </div>
       </div>
 
