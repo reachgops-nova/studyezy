@@ -6,6 +6,7 @@ import path from "node:path";
 import { db } from "@/lib/db";
 import { getCurrentUser } from "@/lib/session";
 import { ALLOWED_IMAGE_TYPES, MAX_UPLOAD_FILE_BYTES, sanitizeFilename, UPLOADS_DIR } from "@/lib/uploads";
+import { extractTextbookUnits } from "@/lib/textbookToc";
 
 // Real bug found live 2026-09-06: this used to collapse non-alphanumeric
 // runs into a single hyphen (e.g. "Olympiad Computers 4th Grade" ->
@@ -291,4 +292,115 @@ export async function createUnit(formData: FormData) {
   }
 
   redirect(nextStep === "resources" ? `/admin/resources?unitKey=${unitKey}` : `/learn/${unitKey}`);
+}
+
+// Real user request 2026-09-08: "give options to add units and textbook
+// upload options. this must be textbook only no individual units. and from
+// TOC all units should populate correctly." - createUnit above still exists
+// for a genuine one-off unit, but this is now the primary way to add a real
+// textbook's worth of units: upload the book once, every unit it actually
+// contains gets created from its own table of contents, instead of an admin
+// re-typing each unit title one at a time.
+//
+// Deliberately scoped: this only creates the Unit rows and hands the whole
+// uploaded book to every one of them as a pending UnitResource - it does
+// NOT attempt to split the PDF's pages across units or extract real lesson
+// content itself. "Follow framework pattern to create learning content"
+// means exactly that: content authoring stays the existing, unchanged
+// Curriculum Materials approve-then-extract flow (see app/admin/resources),
+// now with real units already there waiting for it, for every unit created.
+export async function createUnitsFromTextbook(formData: FormData) {
+  const user = await getCurrentUser();
+  if (!user) redirect("/login");
+
+  const subjectId = String(formData.get("subjectId") ?? "");
+  const publisher = String(formData.get("publisher") ?? "").trim();
+  const bookTitle = String(formData.get("bookTitle") ?? "").trim();
+  const contentModeRaw = String(formData.get("contentMode") ?? "curriculum");
+  const contentMode = contentModeRaw === "olympiad" ? "olympiad" : "curriculum";
+  const file = formData.get("textbook");
+
+  if (!subjectId || !(file instanceof File) || file.size === 0) {
+    redirect("/manage?error=missing_textbook_fields");
+  }
+  // Requires a real PDF specifically (not a single page photo) - detecting
+  // a whole book's unit structure needs its table of contents, which only a
+  // real multi-page document can meaningfully carry.
+  if (file.type !== "application/pdf") {
+    redirect(
+      `/manage?error=file_rejected&detail=${encodeURIComponent(`"${file.name}" isn't a PDF - upload the textbook as one PDF (including its table of contents) so every unit can be detected.`)}`
+    );
+  }
+  if (file.size > MAX_UPLOAD_FILE_BYTES) {
+    const mb = (file.size / (1024 * 1024)).toFixed(1);
+    const maxMb = Math.round(MAX_UPLOAD_FILE_BYTES / (1024 * 1024));
+    redirect(`/manage?error=file_rejected&detail=${encodeURIComponent(`"${file.name}" is ${mb}MB - over the ${maxMb}MB limit.`)}`);
+  }
+
+  const subject = await db.subject.findUnique({
+    where: { id: subjectId },
+    include: { stage: { include: { curriculum: true } }, units: { select: { number: true } } },
+  });
+  if (!subject) {
+    redirect("/manage?error=unknown_subject");
+  }
+
+  const bytes = Buffer.from(await file.arrayBuffer());
+
+  let detected: { title: string }[];
+  try {
+    detected = await extractTextbookUnits({ path: file.name, mediaType: "application/pdf", base64: bytes.toString("base64") });
+  } catch (err) {
+    const message = err instanceof Error ? err.message : "Couldn't read this file.";
+    redirect(`/manage?error=toc_extraction_failed&detail=${encodeURIComponent(message)}`);
+  }
+
+  // Saved once, then the SAME storageKey is attached to every unit created
+  // below - one real file, not N duplicated copies.
+  const targetDir = path.join(UPLOADS_DIR, "resources", "_textbooks");
+  await mkdir(targetDir, { recursive: true });
+  const filename = sanitizeFilename(file.name);
+  const storageKey = `resources/_textbooks/${subject.id}-${filename}`;
+  await writeFile(path.join(UPLOADS_DIR, storageKey), bytes);
+
+  let nextNumber = subject.units.length > 0 ? Math.max(...subject.units.map((u) => u.number)) + 1 : 1;
+  const isAdmin = user.role === "admin";
+  const now = new Date();
+  const createdUnitKeys: string[] = [];
+
+  for (const detectedUnit of detected) {
+    const number = nextNumber++;
+    const unitKey = `${subject.stage.curriculum.slug}-${subject.stage.number}-${subject.slug}-${number}`;
+    const unit = await db.unit.create({
+      data: {
+        subjectId,
+        unitKey,
+        number,
+        title: detectedUnit.title,
+        available: true,
+        contentMode,
+        createdByUserId: user.id,
+        sourcePublisher: publisher || null,
+        sourceTitle: bookTitle || null,
+        masteryChecklist: { source_note: "", items: [] },
+      },
+    });
+    await db.unitResource.create({
+      data: {
+        unitId: unit.id,
+        resourceType: "textbook",
+        storageKey,
+        originalFilename: file.name,
+        mimeType: file.type,
+        byteSize: file.size,
+        uploadedByUserId: user.id,
+        status: isAdmin ? "approved" : "pending",
+        approvedByUserId: isAdmin ? user.id : null,
+        approvedAt: isAdmin ? now : null,
+      },
+    });
+    createdUnitKeys.push(unitKey);
+  }
+
+  redirect(`/manage?success=textbook_units_created&count=${createdUnitKeys.length}`);
 }
