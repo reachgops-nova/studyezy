@@ -49,5 +49,15 @@ export default async function TestDifficultyPage({
   // for this attempt.
   const { mode } = await searchParams;
   const suffix = mode === "practice" ? "?mode=practice" : "";
+
+  // Real user request 2026-09-08: an Olympiad exam set (set1/set2) should
+  // feel interactive - one question at a time, a wrong answer discussed
+  // immediately before moving on - not the traditional submit-everything-
+  // then-grade-once flow. Curriculum progression tests (easy/moderate/
+  // tough) and terminal tests keep going to the existing render path
+  // unchanged - only Olympiad exam sets get the new one.
+  if ((OLYMPIAD_EXAM_SETS as readonly string[]).includes(difficulty)) {
+    redirect(`/test/${unitId}/${difficulty}/interactive${suffix}`);
+  }
   redirect(`/test/${unitId}/${difficulty}/render${suffix}`);
 }
