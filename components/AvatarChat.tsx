@@ -654,7 +654,7 @@ export default function AvatarChat({
   // ahead of playback), so the wait a kid actually feels is roughly one
   // sentence's worth, not the whole reply's - and total spoken duration is
   // unchanged since it's the same audio, just fetched/played in pieces.
-  async function speakViaServerTts(text: string, messageId: string, onDone: () => void, baseOffset: number) {
+  async function speakViaServerTts(text: string, messageId: string, onDone: () => void, baseOffset: number, langCode: string) {
     const sentences = splitIntoSentences(text);
     if (sentences.length === 0) {
       setTimeout(onDone, 400);
@@ -675,7 +675,7 @@ export default function AvatarChat({
         const res = await fetch("/api/tts", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ text: sentences[i].text }),
+          body: JSON.stringify({ text: sentences[i].text, languageCode: langCode }),
         });
         if (!res.ok) throw new Error(`tts request failed (${res.status})`);
         const blob = await res.blob();
@@ -782,7 +782,7 @@ export default function AvatarChat({
     const voice = pickVoice(langCode);
     if (!voice && langCode && !langCode.toLowerCase().startsWith("en")) {
       currentUtteranceRef.current = { text, messageId, onDone, langCode, baseOffset };
-      speakViaServerTts(text, messageId, onDone, baseOffset);
+      speakViaServerTts(text, messageId, onDone, baseOffset, langCode);
       return;
     }
 
