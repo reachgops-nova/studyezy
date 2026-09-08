@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getActiveProfileId } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { groqMicroCheckReaction, isGroqConfigured } from "@/lib/groq";
+import { groqMicroCheckGrade, isGroqConfigured, type MicroCheckVerdict } from "@/lib/groq";
 import { checkRateLimit } from "@/lib/rateLimit";
 
 const UNIT_KEY_PATTERN = /^[a-z0-9]+-\d+-[a-z0-9]+-\d+$/i;
@@ -9,14 +9,16 @@ const MAX_LEN = 2000;
 
 // Same "ok"/"idk"/filler-word list used to catch non-answers before they'd
 // otherwise get praised - kept here (server-side) so it can gate whether a
-// Groq call is even worth making, not just to pick a canned reply.
+// Groq call is even worth making, not just to pick a canned reply. A
+// low-effort answer is graded "incorrect" (see below), the same as any
+// other non-answer - real user request 2026-09-08: a "half/incorrect/
+// negative" answer should be corrected and retried, not waved through.
 const LOW_EFFORT_PATTERN =
   /^(ok(ay)?|k|yes|yeah|yep|no|nope|sure|fine|good|nice|idk|i ?don'?t ?know|dunno|hmm+|maybe|not sure)[.!?]*$/i;
-const LOW_EFFORT_ACKS = [
-  "That's alright - it's a tricky one to put into words. Want to hear it explained again?",
-  "No worries if that one's not clicking yet - we'll come back to it.",
+const LOW_EFFORT_FEEDBACK = [
+  "That's alright - it's a tricky one to put into words. Let's go over it again.",
+  "No worries if that one's not clicking yet - here it is again.",
 ];
-const MICRO_CHECK_ACKS = ["Good effort - thanks for thinking it through!", "Nice, thanks for sharing your thinking!"];
 
 function isLowEffortAnswer(text: string): boolean {
   return text.length < 4 || LOW_EFFORT_PATTERN.test(text);
@@ -40,7 +42,10 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Invalid request body." }, { status: 400 });
   }
 
-  const { unitKey, conceptId, question, answer, index } = (body ?? {}) as Record<string, unknown>;
+  const { unitKey, conceptId, question, expectedAnswer, answer, index, attempt, language } = (body ?? {}) as Record<
+    string,
+    unknown
+  >;
 
   if (
     typeof unitKey !== "string" ||
@@ -51,6 +56,9 @@ export async function POST(req: NextRequest) {
   ) {
     return NextResponse.json({ error: "Missing or invalid fields." }, { status: 400 });
   }
+  const resolvedExpectedAnswer = typeof expectedAnswer === "string" ? expectedAnswer : "";
+  const resolvedAttempt = typeof attempt === "number" && attempt > 0 ? attempt : 1;
+  const resolvedLanguage = typeof language === "string" && language.trim() ? language : "English";
 
   const unit = await db.unit.findUnique({ where: { unitKey } });
   if (!unit) {
@@ -61,9 +69,12 @@ export async function POST(req: NextRequest) {
     where: { unitId_conceptKey: { unitId: unit.id, conceptKey: conceptId } },
   });
 
-  // Ungraded by design - this just logs the exchange for future
-  // adaptive-teaching work (PLATFORM_PLAN.md's InteractionEvent foundation),
-  // not for scoring.
+  // Logged the same way regardless of verdict, for future adaptive-teaching
+  // work (PLATFORM_PLAN.md's InteractionEvent foundation) - the verdict
+  // itself is NOT written into ConceptMastery (that stays fed only by the
+  // real progression-test grading pipeline), only used below to drive the
+  // in-chat retry loop. See lib/groq.ts's groqMicroCheckGrade for why this
+  // is a deliberate, narrower use of grading than mastery-tracking gets.
   await db.interactionEvent.create({
     data: {
       studentProfileId: profileId,
@@ -77,22 +88,28 @@ export async function POST(req: NextRequest) {
   const trimmedAnswer = answer.trim();
   const ackIndex = typeof index === "number" ? index : 0;
 
-  // Obvious non-answers get an honest, warm reply with no AI call needed.
-  // Anything else gets a real, content-aware reaction from Groq's
-  // open-weight model when available - genuinely dynamic understanding
-  // instead of a canned "Nice thinking!" that doesn't know what was said.
+  // Real user request 2026-09-08: a half/incorrect/negative answer must be
+  // corrected with more explanation and NOT let the lesson move on until
+  // the kid actually gets it - see AvatarChat.tsx's inMicroCheck branch,
+  // which re-asks the same question on anything but "correct". An obvious
+  // non-answer is graded "incorrect" the same way, with no AI call needed.
   if (isLowEffortAnswer(trimmedAnswer)) {
-    return NextResponse.json({ ack: LOW_EFFORT_ACKS[ackIndex % LOW_EFFORT_ACKS.length] });
+    const verdict: MicroCheckVerdict = "incorrect";
+    return NextResponse.json({ verdict, feedback: LOW_EFFORT_FEEDBACK[ackIndex % LOW_EFFORT_FEEDBACK.length] });
   }
 
   if (isGroqConfigured()) {
     try {
-      const ack = await groqMicroCheckReaction(question, trimmedAnswer);
-      return NextResponse.json({ ack });
+      const grade = await groqMicroCheckGrade(question, resolvedExpectedAnswer, trimmedAnswer, resolvedLanguage, resolvedAttempt);
+      return NextResponse.json(grade);
     } catch (err) {
-      console.error("groqMicroCheckReaction failed, falling back to generic ack", err);
+      console.error("groqMicroCheckGrade failed, defaulting to a lenient pass", err);
     }
   }
 
-  return NextResponse.json({ ack: MICRO_CHECK_ACKS[ackIndex % MICRO_CHECK_ACKS.length] });
+  // Grading unavailable (Groq not configured, or the call failed) - default
+  // lenient ("correct") rather than trapping a kid in a retry loop because
+  // of an infra problem that has nothing to do with their actual answer.
+  const verdict: MicroCheckVerdict = "correct";
+  return NextResponse.json({ verdict, feedback: "Thanks for sharing your thinking!" });
 }

@@ -504,28 +504,68 @@ export async function generateVocabPracticeGroq(): Promise<VocabItem[]> {
   return items.slice(0, 3);
 }
 
+export type MicroCheckVerdict = "correct" | "partial" | "incorrect";
+export interface MicroCheckGrade {
+  verdict: MicroCheckVerdict;
+  feedback: string;
+}
+
 /**
- * A real, content-aware reaction to a Micro-Check answer - replaces the
- * generic rotating ack with something that actually engages with what the
- * kid said, fixing the "false praise for a non-answer" gap a canned phrase
- * can't catch. Ungraded and low-stakes by design (just a warm acknowledgment,
- * not a classification feeding mastery data), so an open-weight model's
- * occasional imperfection here is a fine tradeoff - unlike grading or
- * Reasoning Interview classification, which stay Claude-only.
+ * Replaces the old ungraded groqMicroCheckReaction (2026-08: "just a warm
+ * acknowledgment, not a classification... unlike grading or Reasoning
+ * Interview classification, which stay Claude-only"). Real user request
+ * 2026-09-08: a half/incorrect/negative micro-check answer should be
+ * corrected on the spot, with more examples, and NOT let the lesson move on
+ * until the kid actually gets it - which needs a real verdict, not just a
+ * warm reaction. Still deliberately Groq-only and still deliberately never
+ * touches ConceptMastery (see app/api/micro-check/route.ts) - this verdict
+ * only drives the in-chat retry loop, it isn't a scored assessment, so the
+ * original caution about an open-weight model's judgment corrupting real
+ * mastery data still holds; it just no longer applies here because nothing
+ * here writes to that data.
  */
-export async function groqMicroCheckReaction(question: string, studentAnswer: string): Promise<string> {
-  const result = await groqChat(
-    "micro-check",
-    REACTION_MODEL,
-    "You are a warm Grade 5 tutor giving a ONE-sentence reaction to a student's spoken answer to a " +
-      "quick check-in question during a lesson. React specifically to what they actually said - if it's " +
-      "on the right track, affirm what's right and add anything missing; if it's off-track or vague, say " +
-      "so kindly and nudge them in the right direction; never praise a non-answer. Never mention marks or " +
-      "scores. Keep it under 30 words, plain text, no markdown.",
-    `Question asked: ${question}\n\nStudent's answer: ${studentAnswer.trim().slice(0, 500)}`,
-    80
+export async function groqMicroCheckGrade(
+  question: string,
+  expectedAnswer: string,
+  studentAnswer: string,
+  language: string,
+  attemptNumber: number
+): Promise<MicroCheckGrade> {
+  const languageInstruction =
+    language !== "English"
+      ? ` Respond in ${language}, not English - the student needs this feedback in ${language} to really ` +
+        `understand it.`
+      : "";
+  const attemptContext =
+    attemptNumber > 1
+      ? ` This is retry attempt ${attemptNumber} - the student already got this same question wrong at least ` +
+        `once, so be extra clear and encouraging, and make your feedback genuinely explain the idea with a ` +
+        `fresh concrete example rather than repeating the same hint again.`
+      : "";
+
+  const parsed = await groqChatJSON<{ verdict: string; feedback: string }>(
+    "micro-check-grade",
+    QA_MODEL,
+    "You are a warm Grade 5 tutor checking a student's spoken answer to a quick check-in question during a " +
+      "lesson, against a reference answer. Classify the student's answer into exactly one of: " +
+      '"correct" (captures the key idea, even in different words - do not require exact wording), ' +
+      '"partial" (on the right track but missing something important, or partly wrong), ' +
+      '"incorrect" (misses the idea entirely, or is not a real answer). ' +
+      "Respond with ONLY a JSON object, no other text: " +
+      '{"verdict": string, "feedback": string}. ' +
+      'feedback: for "correct", a short warm affirmation (under 20 words). For "partial"/"incorrect", a kind, ' +
+      "clear correction that actually explains the right idea with a fresh concrete example (never just the " +
+      "same hint again), so the student can genuinely understand it before trying again - under 60 words, " +
+      "plain text, no markdown, never mention marks or scores." +
+      languageInstruction +
+      attemptContext,
+    `Question asked: ${question}\n\nReference answer: ${expectedAnswer}\n\nStudent's answer: ${studentAnswer.trim().slice(0, 500)}`,
+    250
   );
-  return result.text;
+
+  const verdict: MicroCheckVerdict =
+    parsed.verdict === "correct" || parsed.verdict === "incorrect" ? parsed.verdict : "partial";
+  return { verdict, feedback: parsed.feedback };
 }
 
 // 2026-08-19: extended to grading and Reasoning Interview classification too

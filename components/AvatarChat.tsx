@@ -25,6 +25,8 @@ interface ChatMessage {
   sender: "avatar" | "kid";
   text: string;
   illustrationKey?: string;
+  /** A generated illustration (see lib/conceptIllustration.ts) attached to THIS message, not the legacy hand-drawn set - shown inline in the thread instead of a static header (2026-09-08: moved into the conversation sequence so it can't be scrolled past unread). */
+  generatedIllustrationUrl?: string;
   keyRanges?: [number, number][];
 }
 
@@ -49,24 +51,44 @@ function nextId() {
   return `m${messageCounter}`;
 }
 
+interface CheckpointStep {
+  lines: string[];
+  /** Attached to the first line spoken in this step - see playCheckpoint. */
+  illustrationUrl?: string;
+}
+
 // Teaching content is grouped into small checkpoints - the avatar pauses
 // and waits for the kid to react after each one, rather than reading the
 // whole concept straight through and only checking in once at the very end.
-function buildCheckpoints(concept: Concept): string[][] {
-  const checkpoints: string[][] = [];
+function buildCheckpoints(concept: Concept): CheckpointStep[] {
+  const checkpoints: CheckpointStep[] = [];
 
   const intro: string[] = [`Hi! Let's learn about ${concept.concept_name}.`];
   if (concept.definition) intro.push(concept.definition);
-  checkpoints.push(intro);
+  checkpoints.push({ lines: intro });
+
+  // The generated illustration (lib/conceptIllustration.ts) and ALL of the
+  // concept's examples now form their own paced checkpoint right after the
+  // intro - real feedback 2026-09-08: as a static card above the whole
+  // thread it was easy to scroll past unread, and only the FIRST example
+  // ever got spoken. Putting both in the same sequence as everything else
+  // means a kid genuinely sees and hears them before moving on.
+  const illustrationUrl = concept.media?.generated_illustration_url;
+  const examples = concept.examples ?? [];
+  if (illustrationUrl || examples.length) {
+    const lines = examples.length
+      ? examples.map((e, i) => (examples.length > 1 ? `Example ${i + 1}: ${e}` : `Here's an example: ${e}`))
+      : ["Take a look at this:"];
+    checkpoints.push({ lines, illustrationUrl });
+  }
 
   if (concept.key_points?.length) {
-    checkpoints.push(concept.key_points);
+    checkpoints.push({ lines: concept.key_points });
   }
 
   const closing: string[] = [];
-  if (concept.examples?.length) closing.push(`Here's an example: ${concept.examples[0]}`);
   if (concept.tips_to_remember?.[0]) closing.push(`Quick tip: ${concept.tips_to_remember[0]}`);
-  if (closing.length) checkpoints.push(closing);
+  if (closing.length) checkpoints.push({ lines: closing });
 
   return checkpoints;
 }
@@ -80,19 +102,26 @@ const PAUSE_PROMPTS = [
 const CONTINUE_ACKS = ["Great, let's keep going!", "Awesome, moving on!", "Nice, here we go!"];
 const REPEAT_ACKS = ["No problem, let me explain that again.", "Sure, here it is again."];
 
-// In-Unit Micro-Checks (PLATFORM_PLAN.md §2.2): a couple of short, ungraded
-// questions once teaching finishes, to catch confusion while it's still
-// cheap to fix - before the formal progression test. Reuses the concept's
-// own voice_qa_samples rather than generating new questions, so this works
-// even without Anthropic credit. Answers aren't graded - just logged as an
-// InteractionEvent for future adaptive-teaching work.
+// In-Unit Micro-Checks (PLATFORM_PLAN.md §2.2): a couple of short questions
+// once teaching finishes, to catch confusion while it's still cheap to fix -
+// before the formal progression test. Reuses the concept's own
+// voice_qa_samples rather than generating new questions, so this works even
+// without Anthropic credit.
 //
-// The ack itself is computed server-side (app/api/micro-check/route.ts):
-// obvious non-answers ("ok", "idk") get an honest reply with no AI call,
-// anything else gets a real, content-aware reaction from Groq's open-weight
-// model when configured - so the reply actually reflects what the kid said
-// instead of a canned phrase.
+// Real user request 2026-09-08: a half/incorrect/negative answer must be
+// corrected with more explanation and NOT let the lesson move on until the
+// kid actually gets it (this used to be deliberately ungraded - see
+// lib/groq.ts's groqMicroCheckGrade for why that changed and what didn't).
+// The verdict/feedback is computed server-side (app/api/micro-check/route.ts):
+// obvious non-answers ("ok", "idk") get graded "incorrect" with no AI call,
+// anything else gets a real Groq classification against the sample's own
+// reference answer. MAX_MICRO_CHECK_ATTEMPTS caps the retry loop so a kid
+// isn't trapped forever on one question - after that many tries the lesson
+// moves on regardless, on the theory that by then Ezy has already explained
+// the idea with several fresh examples and further looping would frustrate
+// rather than teach.
 const MICRO_CHECK_COUNT = 2;
+const MAX_MICRO_CHECK_ATTEMPTS = 3;
 const FALLBACK_ACK = "Thanks for sharing your thinking!";
 
 // Recognizes natural replies to a checkpoint pause ("okay", "got it", "again?")
@@ -394,9 +423,10 @@ export default function AvatarChat({
    * worth the vertical space it took from the actual lesson/widget below on
    * a 3-column layout that's already tight on room. Independent of
    * hideSourceImage, which only ever governs the real scanned textbook page.
-   * Only ever applied to the legacy illustration_key SVG set - a generated
-   * illustration (2026-09-07, richer and concept-specific, paired with a
-   * real-facts text panel) is never hidden by this flag.
+   * Only ever applies to the legacy illustration_key SVG set - a generated
+   * illustration (see lib/conceptIllustration.ts) doesn't use this card at
+   * all any more, it's shown inline in the conversation instead (2026-09-08,
+   * see buildCheckpoints), so there's nothing here for this flag to hide.
    */
   hideIllustration?: boolean;
   // Real gap found live 2026-08-27: after finishing a concept's checkpoints
@@ -424,6 +454,7 @@ export default function AvatarChat({
   const [checkpointIndex, setCheckpointIndex] = useState(0);
   const [inMicroCheck, setInMicroCheck] = useState(false);
   const [microCheckIndex, setMicroCheckIndex] = useState(0);
+  const [microCheckAttempt, setMicroCheckAttempt] = useState(1);
   const [speaking, setSpeaking] = useState(false);
   const [speakingMessageId, setSpeakingMessageId] = useState<string | null>(null);
   const [speechPaused, setSpeechPaused] = useState(false);
@@ -442,7 +473,7 @@ export default function AvatarChat({
   const [dynamicFollowUps, setDynamicFollowUps] = useState<string[]>([]);
 
   const playTokenRef = useRef(0);
-  const checkpointsRef = useRef<string[][]>([]);
+  const checkpointsRef = useRef<CheckpointStep[]>([]);
   const recognitionRef = useRef<SpeechRecognitionLike | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -628,6 +659,7 @@ export default function AvatarChat({
     setAwaitingContinue(false);
     setInMicroCheck(true);
     setMicroCheckIndex(index);
+    setMicroCheckAttempt(1);
   }
 
   function playCheckpoint(index: number, token: number) {
@@ -640,7 +672,8 @@ export default function AvatarChat({
     }
 
     const isLast = index === checkpoints.length - 1;
-    const msgs = checkpoints[index];
+    const step = checkpoints[index];
+    const msgs = step.lines;
 
     function speakStep(i: number) {
       if (playTokenRef.current !== token) return;
@@ -659,7 +692,10 @@ export default function AvatarChat({
       }
       const id = nextId();
       const { text: cleanText, keyRanges } = parseFormattedText(msgs[i]);
-      setMessages((prev) => [...prev, { id, sender: "avatar", text: cleanText, keyRanges }]);
+      setMessages((prev) => [
+        ...prev,
+        { id, sender: "avatar", text: cleanText, keyRanges, generatedIllustrationUrl: i === 0 ? step.illustrationUrl : undefined },
+      ]);
       speakText(cleanText, id, () => {
         if (playTokenRef.current !== token) return;
         speakStep(i + 1);
@@ -685,6 +721,7 @@ export default function AvatarChat({
     setCheckpointIndex(0);
     setInMicroCheck(false);
     setMicroCheckIndex(0);
+    setMicroCheckAttempt(1);
     setSpeaking(false);
     setSpeakingMessageId(null);
     setHighlightRange(null);
@@ -798,15 +835,20 @@ export default function AvatarChat({
       return;
     }
 
-    // Micro-check answers aren't graded - just logged, with a genuinely
-    // content-aware reaction computed server-side (see comment above
-    // MICRO_CHECK_COUNT). Awaited (not fire-and-forget) so what's spoken back
-    // actually reflects what the kid said, not a canned line picked before
-    // the server even sees the answer.
+    const languageInfo = LANGUAGES.find((l) => l.code === language);
+
+    // Real user request 2026-09-08: a half/incorrect/negative micro-check
+    // answer must be corrected with more explanation and NOT let the lesson
+    // move on until the kid actually gets it (see lib/groq.ts's
+    // groqMicroCheckGrade and MAX_MICRO_CHECK_ATTEMPTS above for what
+    // changed and why, and the retry cap). Awaited (not fire-and-forget) so
+    // what's spoken back actually reflects what the kid said.
     if (inMicroCheck) {
-      const questionAsked = concept.voice_qa_samples?.[microCheckIndex]?.question ?? "";
+      const sample = concept.voice_qa_samples?.[microCheckIndex];
+      const questionAsked = sample?.question ?? "";
       setLoading(true);
-      let ack = FALLBACK_ACK;
+      let verdict: "correct" | "partial" | "incorrect" = "correct";
+      let feedback = FALLBACK_ACK;
       try {
         const res = await fetch("/api/micro-check", {
           method: "POST",
@@ -815,22 +857,55 @@ export default function AvatarChat({
             unitKey,
             conceptId: concept.concept_id,
             question: questionAsked,
+            expectedAnswer: sample?.answer ?? "",
             answer: trimmed,
             index: microCheckIndex,
+            attempt: microCheckAttempt,
+            language: languageInfo?.label ?? "English",
           }),
         });
         if (res.ok) {
-          const data = (await res.json()) as { ack: string };
-          if (data.ack) ack = stripMarkdown(data.ack);
+          const data = (await res.json()) as { verdict?: string; feedback?: string };
+          if (data.feedback) feedback = stripMarkdown(data.feedback);
+          if (data.verdict === "correct" || data.verdict === "partial" || data.verdict === "incorrect") {
+            verdict = data.verdict;
+          }
         }
       } catch {
-        // keep FALLBACK_ACK
+        // keep the lenient defaults - an infra failure shouldn't trap a kid
+        // in a retry loop over an answer the server never actually saw.
       }
       setLoading(false);
       const ackId = nextId();
-      setMessages((prev) => [...prev, { id: ackId, sender: "avatar", text: ack }]);
+      setMessages((prev) => [...prev, { id: ackId, sender: "avatar", text: feedback }]);
       const token = playTokenRef.current;
-      speakText(ack, ackId, () => askMicroCheck(microCheckIndex + 1, token));
+      const doneWithThisQuestion = verdict === "correct" || microCheckAttempt >= MAX_MICRO_CHECK_ATTEMPTS;
+
+      if (doneWithThisQuestion) {
+        speakText(feedback, ackId, () => askMicroCheck(microCheckIndex + 1, token), languageInfo?.ttsCode);
+      } else {
+        // Same question again, not the next one - re-ask after the
+        // corrective feedback instead of advancing microCheckIndex.
+        setMicroCheckAttempt(microCheckAttempt + 1);
+        speakText(
+          feedback,
+          ackId,
+          () => {
+            if (playTokenRef.current !== token) return;
+            const retryId = nextId();
+            // Unlike the feedback above (AI-generated, genuinely in the
+            // target language), this question text is the hand-authored
+            // English voice_qa_sample verbatim - spoken with the default
+            // English voice, not languageInfo's, since translating it would
+            // need its own AI call and this is just a literal repeat.
+            const retryText = `Let's try that again: ${questionAsked}`;
+            setMessages((prev) => [...prev, { id: retryId, sender: "avatar", text: retryText }]);
+            speakText(retryText, retryId, () => {});
+            setReadyForInput(true);
+          },
+          languageInfo?.ttsCode
+        );
+      }
       return;
     }
 
@@ -838,7 +913,6 @@ export default function AvatarChat({
     setError(null);
 
     try {
-      const languageInfo = LANGUAGES.find((l) => l.code === language);
       const res = await fetch("/api/ask", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -906,14 +980,14 @@ export default function AvatarChat({
 
   return (
     <div className="grid grid-cols-1 gap-4">
+      {/* A generated illustration (lib/conceptIllustration.ts) no longer
+          shows here - 2026-09-08: moved into the conversation itself (see
+          buildCheckpoints/playCheckpoint), spoken right after the intro
+          alongside the concept's examples, instead of a static header a kid
+          could scroll past unread. This card is back to its original two
+          jobs: the real scanned textbook page, and the legacy hand-drawn
+          illustration_key set (still gated by hideIllustration). */}
       {((concept.media?.source_image_path && !hideSourceImage) ||
-        // A generated illustration is deliberately NOT gated on
-        // hideIllustration - that flag was set by UnitView specifically to
-        // drop the old generic hand-drawn illustration_key set (2026-09-05:
-        // "not worth the vertical space"), before this richer,
-        // concept-specific illustration + real-facts panel existed. Always
-        // show it when present.
-        concept.media?.generated_illustration_url ||
         (concept.media?.illustration_key && !hideIllustration)) && (
         // max-w-xl + aspect-ratio (matching the illustrations' own 300x180
         // viewBox) gives the artwork real presence instead of a small
@@ -930,27 +1004,13 @@ export default function AvatarChat({
               really are 300x180 artwork and keep the landscape box. */}
           <div
             className={`w-full overflow-hidden rounded-xl ${
-              concept.media?.source_image_path && !hideSourceImage
-                ? "aspect-[3/4]"
-                : concept.media?.generated_illustration_url
-                  ? "aspect-square"
-                  : "aspect-[5/3]"
+              concept.media?.source_image_path && !hideSourceImage ? "aspect-[3/4]" : "aspect-[5/3]"
             }`}
           >
             {concept.media?.source_image_path && !hideSourceImage ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img
                 src={concept.media.source_image_path}
-                alt={concept.media.illustration_caption ?? concept.concept_name}
-                className="h-full w-full bg-slate-50 object-contain"
-              />
-            ) : concept.media?.generated_illustration_url ? (
-              // Generated posters are always saved square (1024x1024, see
-              // lib/conceptIllustration.ts) - the built-in SVG set is 5:3,
-              // hence the aspect-square/aspect-[5/3] split above.
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                src={concept.media.generated_illustration_url}
                 alt={concept.media.illustration_caption ?? concept.concept_name}
                 className="h-full w-full bg-slate-50 object-contain"
               />
@@ -966,26 +1026,6 @@ export default function AvatarChat({
               </span>
             )}
           </div>
-          {/* A generated illustration deliberately carries no text at all
-              (see lib/conceptIllustration.ts - baked-in text came back
-              genuinely misspelled/hallucinated in testing) - the real facts
-              go here instead, as real text straight from the concept, which
-              can't be misspelled or invented the way pixels can. */}
-          {concept.media?.generated_illustration_url && (concept.definition || concept.key_points?.length) && (
-            <div className="mt-3 grid gap-2 border-t border-slate-100 pt-3">
-              {concept.definition && <p className="text-sm leading-relaxed text-slate-700">{concept.definition}</p>}
-              {concept.key_points && concept.key_points.length > 0 && (
-                <ul className="grid gap-1 text-sm text-slate-600">
-                  {concept.key_points.map((point, i) => (
-                    <li key={i} className="flex gap-2">
-                      <span className="mt-1 h-1.5 w-1.5 shrink-0 rounded-full bg-brand-gold" aria-hidden="true" />
-                      <span>{point}</span>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </div>
-          )}
         </div>
       )}
 
@@ -1004,6 +1044,12 @@ export default function AvatarChat({
                   {m.illustrationKey && (
                     <div className="mt-2 aspect-[5/3] w-64 max-w-full overflow-hidden rounded-xl">
                       <Illustration illustrationKey={m.illustrationKey} />
+                    </div>
+                  )}
+                  {m.generatedIllustrationUrl && (
+                    <div className="mt-2 aspect-square w-64 max-w-full overflow-hidden rounded-xl border border-slate-200/70">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img src={m.generatedIllustrationUrl} alt="" className="h-full w-full bg-slate-50 object-contain" />
                     </div>
                   )}
                 </div>
@@ -1104,7 +1150,7 @@ export default function AvatarChat({
             </div>
           ) : inMicroCheck ? (
             <p className="mb-3 text-xs text-slate-400">
-              Quick check - just for you, no pressure. Type whatever comes to mind.
+              Quick check - take your best shot. Ezy will help you get there if it's not quite right yet.
             </p>
           ) : (
             readyForInput &&
