@@ -109,6 +109,16 @@ export function LayersIcon({ className = base }: IconProps) {
   );
 }
 
+export function CoinIcon({ className = base }: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" className={className} fill="none" stroke="currentColor" strokeWidth="1.75" aria-hidden>
+      <circle cx="12" cy="12" r="9" />
+      <path d="M9.5 15.5c0 1 1.12 1.8 2.5 1.8s2.5-.8 2.5-1.8-1.12-1.5-2.5-1.7c-1.38-.2-2.5-.7-2.5-1.7s1.12-1.8 2.5-1.8 2.5.8 2.5 1.8" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M12 6.5v1.3M12 16.2v1.3" strokeLinecap="round" />
+    </svg>
+  );
+}
+
 export function LogoutIcon({ className = base }: IconProps) {
   return (
     <svg viewBox="0 0 24 24" className={className} fill="none" stroke="currentColor" strokeWidth="1.75" aria-hidden>

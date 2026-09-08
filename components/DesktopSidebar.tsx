@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import Logo, { LogoMark } from "./Logo";
 import UnitSwitcher from "./UnitSwitcher";
-import { BookIcon, ChartIcon, ClipboardIcon, FolderPlusIcon, ShieldIcon, ArchiveIcon, TagIcon, ScaleIcon, LayersIcon } from "./NavIcons";
+import { BookIcon, ChartIcon, ClipboardIcon, FolderPlusIcon, ShieldIcon, ArchiveIcon, TagIcon, ScaleIcon, LayersIcon, CoinIcon } from "./NavIcons";
 import type { SwitcherGroup } from "@/lib/catalog";
 
 type NavKey =
@@ -16,7 +16,8 @@ type NavKey =
   | "admin-resources"
   | "admin-pricing"
   | "admin-compare"
-  | "admin-content-packs";
+  | "admin-content-packs"
+  | "admin-ai-costs";
 
 const STORAGE_KEY = "studyezy_sidebar_collapsed";
 
@@ -127,6 +128,9 @@ export default function DesktopSidebar({
                 collapsed={collapsed}
               >
                 Content packs
+              </SidebarLink>
+              <SidebarLink href="/admin/ai-costs" isActive={active === "admin-ai-costs"} icon={<CoinIcon />} collapsed={collapsed}>
+                AI costs
               </SidebarLink>
             </>
           )}

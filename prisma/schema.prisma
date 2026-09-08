@@ -510,6 +510,25 @@ model AnswerCache {
   @@index([unitKey, conceptKey])
 }
 
+// Persistent version of the `[ai-cost]` lines lib/aiCost.ts already logs to
+// `railway logs` - those work for a one-off grep but can't power a real
+// admin table (which model costs what, broken down by feature, over real
+// traffic). Written fire-and-forget by logAiCost/logCacheHit so a logging
+// write never delays the actual AI response; a failed write is swallowed,
+// not surfaced to the user. See /admin/ai-costs.
+model AiCallLog {
+  id           String   @id @default(cuid())
+  feature      String // call-site tag, e.g. "ask", "grade", "micro-check-grade" - matches logAiCost's existing `feature` param
+  model        String // "cache" for a lib/answerCache.ts hit (see logCacheHit) - never a real model name
+  inputTokens  Int      @default(0)
+  outputTokens Int      @default(0)
+  costUsd      Float? // null when the model isn't in aiCost.ts's price table yet, not when cost is genuinely zero (see costUsd on a cache hit, which IS 0)
+  createdAt    DateTime @default(now())
+
+  @@index([feature, model])
+  @@index([createdAt])
+}
+
 // Foundation for future adaptive personalization - logging only, no adaptive
 // behavior-change logic built on top of this yet (deliberately deferred).
 model InteractionEvent {

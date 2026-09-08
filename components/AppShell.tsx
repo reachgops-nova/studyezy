@@ -15,7 +15,8 @@ type NavKey =
   | "admin-resources"
   | "admin-pricing"
   | "admin-compare"
-  | "admin-content-packs";
+  | "admin-content-packs"
+  | "admin-ai-costs";
 
 // Desktop (lg+): fixed left sidebar for primary nav + a slim top bar holding
 // just the account menu ("topside configurations"), main content to the
@@ -51,7 +52,8 @@ export default async function AppShell({
     active === "admin-resources" ||
     active === "admin-pricing" ||
     active === "admin-compare" ||
-    active === "admin-content-packs"
+    active === "admin-content-packs" ||
+    active === "admin-ai-costs"
       ? active
       : undefined;
 

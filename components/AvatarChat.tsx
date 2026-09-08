@@ -355,6 +355,35 @@ function computeWordSpans(text: string): [number, number][] {
   return spans;
 }
 
+// [text, startOffset, endOffset][] for each sentence - real, measured gap
+// 2026-09-08: server TTS (see speakViaServerTts) has a fixed ~5s floor per
+// call regardless of length, growing further for longer text (measured live:
+// ~5s for one short sentence, ~13s for a real 5-sentence answer) - a kid
+// waiting for the WHOLE answer's audio before anything plays is exactly the
+// "10-20 seconds, not sure why" gap reported live. Splitting by sentence and
+// starting playback as soon as the FIRST one's audio is ready (while later
+// sentences generate in the background, one call ahead) cuts that wait back
+// down to roughly one sentence's worth, not the whole answer's.
+function splitIntoSentences(text: string): { text: string; start: number; end: number }[] {
+  const matches = text.match(/[^.!?]+[.!?]+(\s+|$)|[^.!?]+$/g);
+  if (!matches) return text.trim() ? [{ text: text.trim(), start: 0, end: text.length }] : [];
+  const result: { text: string; start: number; end: number }[] = [];
+  let cursor = 0;
+  for (const raw of matches) {
+    const trimmed = raw.trim();
+    if (!trimmed) {
+      cursor += raw.length;
+      continue;
+    }
+    const start = text.indexOf(trimmed, cursor);
+    const resolvedStart = start === -1 ? cursor : start;
+    const end = resolvedStart + trimmed.length;
+    result.push({ text: trimmed, start: resolvedStart, end });
+    cursor = end;
+  }
+  return result;
+}
+
 // Composes two independent kinds of highlight over the same text: the
 // persistent key-point marks from parseFormattedText's keyRanges (a kid
 // should still see these after speech finishes and while re-reading later),
@@ -513,6 +542,11 @@ export default function AvatarChat({
   const lastBoundaryOffsetRef = useRef(0);
   const isPausingRef = useRef(false);
   const [noVoiceForLanguage, setNoVoiceForLanguage] = useState(false);
+  // Shown only while waiting on server TTS's first sentence (see
+  // speakViaServerTts) - the browser voice path is near-instant and never
+  // sets this. Real gap reported live: with nothing on screen during that
+  // wait, a genuine ~5s+ model latency read as the feature being broken.
+  const [preparingSpeech, setPreparingSpeech] = useState(false);
   // Real, common gap reported live: on plenty of installed voices (most
   // non-"Google" system voices in Chrome, and Safari/Firefox generally),
   // SpeechSynthesisUtterance never fires onboundary at all - speech plays
@@ -535,6 +569,13 @@ export default function AvatarChat({
   const audioElRef = useRef<HTMLAudioElement | null>(null);
   const audioObjectUrlRef = useRef<string | null>(null);
   const audioHighlightIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  // Bumped by every genuine new speakText call and by stopSpeech - lets
+  // speakViaServerTts's multi-chunk async loop (see splitIntoSentences)
+  // detect it's been superseded/stopped and stop scheduling further chunks,
+  // without touching currentUtteranceRef (which the SEPARATE browser-voice
+  // pause/resume flow in togglePauseSpeech depends on staying populated
+  // across a pause, so stopSpeech deliberately never clears it).
+  const speechGenerationRef = useRef(0);
 
   useEffect(() => {
     const SpeechRecognitionCtor = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
@@ -582,10 +623,12 @@ export default function AvatarChat({
   // that was active), and both highlight timers, none of which are stopped
   // by speechSynthesis.cancel() alone.
   function stopSpeech() {
+    speechGenerationRef.current++;
     clearSyntheticHighlighter();
     window.speechSynthesis?.cancel();
     audioElRef.current?.pause();
     cleanupAudio();
+    setPreparingSpeech(false);
   }
 
   // Server-side speech (see lib/gemini.ts's generateSpeechGemini via
@@ -600,21 +643,86 @@ export default function AvatarChat({
   // reliable here - unlike speechSynthesis, HTML <audio> pause()/play() has
   // no equivalent "resume silently does nothing" browser bug to work around
   // (see togglePauseSpeech).
+  //
+  // Real, measured gap reported live 2026-09-08: this model has a fixed
+  // ~5s floor per call, growing for longer text (measured: ~5s for one
+  // short sentence, ~13s for a real 5-sentence answer) - waiting for the
+  // WHOLE answer's audio before anything plays produced exactly the
+  // "10-20 seconds, not sure why" delay. Fixed by splitting into sentences
+  // (splitIntoSentences) and pipelining: play sentence 1 as soon as its
+  // audio is ready while sentence 2 generates in the background (one call
+  // ahead of playback), so the wait a kid actually feels is roughly one
+  // sentence's worth, not the whole reply's - and total spoken duration is
+  // unchanged since it's the same audio, just fetched/played in pieces.
   async function speakViaServerTts(text: string, messageId: string, onDone: () => void, baseOffset: number) {
-    try {
-      const res = await fetch("/api/tts", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ text }),
-      });
-      if (!res.ok) throw new Error(`tts request failed (${res.status})`);
-      const blob = await res.blob();
+    const sentences = splitIntoSentences(text);
+    if (sentences.length === 0) {
+      setTimeout(onDone, 400);
+      return;
+    }
+
+    // Captured here, not passed in - speakText increments speechGenerationRef
+    // immediately before calling this, synchronously, so this always reads
+    // the fresh value for this specific call.
+    const myGeneration = speechGenerationRef.current;
+    const isCurrent = () => speechGenerationRef.current === myGeneration;
+    const audioCache = new Map<number, Blob | null>();
+
+    async function fetchChunk(i: number): Promise<Blob | null> {
+      if (i >= sentences.length) return null;
+      if (audioCache.has(i)) return audioCache.get(i) ?? null;
+      try {
+        const res = await fetch("/api/tts", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ text: sentences[i].text }),
+        });
+        if (!res.ok) throw new Error(`tts request failed (${res.status})`);
+        const blob = await res.blob();
+        audioCache.set(i, blob);
+        return blob;
+      } catch (err) {
+        console.error(`speakViaServerTts chunk ${i} failed`, err);
+        audioCache.set(i, null);
+        return null;
+      }
+    }
+
+    function finish() {
+      cleanupAudio();
+      setPreparingSpeech(false);
+      setSpeaking(false);
+      setSpeakingMessageId(null);
+      setHighlightRange(null);
+      onDone();
+    }
+
+    async function playChunk(i: number) {
+      if (!isCurrent()) return;
+      if (i >= sentences.length) {
+        finish();
+        return;
+      }
+      if (i === 0) setPreparingSpeech(true);
+      const blob = await fetchChunk(i);
+      if (!isCurrent()) return;
+      setPreparingSpeech(false);
+      if (!blob) {
+        setNoVoiceForLanguage(true);
+        playChunk(i + 1);
+        return;
+      }
+      // Pipeline: start fetching the NEXT sentence now, in parallel with
+      // this one playing, so there's no gap waiting between sentences.
+      fetchChunk(i + 1);
+
       const url = URL.createObjectURL(blob);
       audioObjectUrlRef.current = url;
       const audio = new Audio(url);
       audioElRef.current = audio;
 
-      const spans = computeWordSpans(text);
+      const { start: rangeStart, end: rangeEnd } = sentences[i];
+      const spans = computeWordSpans(sentences[i].text);
       audio.onloadedmetadata = () => {
         const durationMs = audio.duration * 1000;
         if (!durationMs || spans.length === 0) return;
@@ -626,40 +734,30 @@ export default function AvatarChat({
           }
           const progress = Math.min(1, (audio.currentTime * 1000) / durationMs);
           const idx = Math.min(spans.length - 1, Math.floor(progress * spans.length));
-          const [start, end] = spans[idx];
-          lastBoundaryOffsetRef.current = baseOffset + start;
-          setHighlightRange([baseOffset + start, baseOffset + end]);
+          const [wordStart, wordEnd] = spans[idx];
+          lastBoundaryOffsetRef.current = baseOffset + rangeStart + wordStart;
+          setHighlightRange([baseOffset + rangeStart + wordStart, baseOffset + rangeStart + wordEnd]);
         }, 90);
       };
       audio.onended = () => {
-        cleanupAudio();
-        setSpeaking(false);
-        setSpeakingMessageId(null);
-        setHighlightRange(null);
-        onDone();
+        URL.revokeObjectURL(url);
+        if (audioObjectUrlRef.current === url) audioObjectUrlRef.current = null;
+        lastBoundaryOffsetRef.current = baseOffset + rangeEnd;
+        playChunk(i + 1);
       };
       audio.onerror = () => {
-        cleanupAudio();
-        setSpeaking(false);
-        setSpeakingMessageId(null);
-        setHighlightRange(null);
+        URL.revokeObjectURL(url);
+        if (audioObjectUrlRef.current === url) audioObjectUrlRef.current = null;
         setNoVoiceForLanguage(true);
-        onDone();
+        playChunk(i + 1);
       };
       setSpeaking(true);
       setSpeakingMessageId(messageId);
       setSpeechPaused(false);
       await audio.play();
-    } catch (err) {
-      console.error("speakViaServerTts failed", err);
-      cleanupAudio();
-      setSpeaking(false);
-      setSpeakingMessageId(null);
-      setNoVoiceForLanguage(true);
-      // Still advance the lesson even though nothing could be spoken - a
-      // TTS failure shouldn't leave the whole conversation stuck.
-      setTimeout(onDone, 800);
     }
+
+    playChunk(0);
   }
 
   // baseOffset is where `text` starts within the "logical" full message -
@@ -669,6 +767,7 @@ export default function AvatarChat({
   // ORIGINAL full text, even when the utterance currently playing is only
   // the remainder after a pause.
   function speakText(text: string, messageId: string, onDone: () => void, langCode?: string, baseOffset = 0) {
+    speechGenerationRef.current++;
     isPausingRef.current = false;
     setNoVoiceForLanguage(false);
     boundaryFiredRef.current = false;
@@ -682,6 +781,7 @@ export default function AvatarChat({
 
     const voice = pickVoice(langCode);
     if (!voice && langCode && !langCode.toLowerCase().startsWith("en")) {
+      currentUtteranceRef.current = { text, messageId, onDone, langCode, baseOffset };
       speakViaServerTts(text, messageId, onDone, baseOffset);
       return;
     }
@@ -932,6 +1032,7 @@ export default function AvatarChat({
     setDynamicFollowUps([]);
     setSpeechPaused(false);
     setActiveIllustrationUrl(undefined);
+    setPreparingSpeech(false);
     /* eslint-enable react-hooks/set-state-in-effect */
     stopSpeech();
 
@@ -1494,6 +1595,14 @@ export default function AvatarChat({
               </button>
             )}
           </div>
+
+          {preparingSpeech && (
+            <p className="mt-1 flex items-center gap-1.5 text-xs text-slate-400">
+              <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-brand-gold" aria-hidden="true" />
+              Getting the {LANGUAGES.find((l) => l.code === language)?.label ?? ""} audio ready - the text above is
+              already correct, sound is just a moment behind...
+            </p>
+          )}
 
           {noVoiceForLanguage && (
             <p className="mt-1 text-xs text-amber-600">

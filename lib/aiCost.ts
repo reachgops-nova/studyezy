@@ -1,4 +1,5 @@
 import "server-only";
+import { db } from "./db";
 
 // Real per-call cost logging, not a guess - every AI call site logs its
 // actual token usage (straight from the provider's response, not an
@@ -34,15 +35,35 @@ const PRICE_PER_MILLION_USD: Record<string, { input: number; output: number }> =
   "gemini-2.5-flash-preview-tts": { input: 0.5, output: 10.0 },
 };
 
+/** Read-only view of the price table for display (see /admin/ai-costs) - the table itself stays private so nothing outside this file can mutate it. */
+export function getModelPricing(): { model: string; inputPerMillion: number; outputPerMillion: number }[] {
+  return Object.entries(PRICE_PER_MILLION_USD).map(([model, price]) => ({
+    model,
+    inputPerMillion: price.input,
+    outputPerMillion: price.output,
+  }));
+}
+
 /** Shared by logAiCost and anything else (e.g. /admin/model-compare) that needs the same real per-call number. */
 export function estimateCostUsd(model: string, inputTokens: number, outputTokens: number): number | null {
   const price = PRICE_PER_MILLION_USD[model];
   return price ? (inputTokens / 1_000_000) * price.input + (outputTokens / 1_000_000) * price.output : null;
 }
 
+// Fire-and-forget - a logging write must never delay or fail the actual AI
+// response it's describing. Errors are swallowed (not surfaced to the
+// user), same as any other best-effort telemetry in this codebase.
+function persistAiCallLog(feature: string, model: string, inputTokens: number, outputTokens: number, costUsd: number | null): void {
+  db.aiCallLog
+    .create({ data: { feature, model, inputTokens, outputTokens, costUsd } })
+    .catch((err) => console.error("[ai-cost] failed to persist AiCallLog row", err));
+}
+
 /**
  * `feature` identifies the call site (e.g. "ask", "grade", "vocab-practice")
  * so cost can later be broken down by feature, not just totalled blindly.
+ * Logs to both `railway logs` (a real-time grep) and the AiCallLog table
+ * (a real queryable history - see /admin/ai-costs).
  */
 export function logAiCost(feature: string, model: string, inputTokens: number, outputTokens: number): void {
   const costUsd = estimateCostUsd(model, inputTokens, outputTokens);
@@ -50,14 +71,17 @@ export function logAiCost(feature: string, model: string, inputTokens: number, o
     `[ai-cost] feature=${feature} model=${model} in_tokens=${inputTokens} out_tokens=${outputTokens} ` +
       `cost_usd=${costUsd !== null ? costUsd.toFixed(6) : "unknown"}`
   );
+  persistAiCallLog(feature, model, inputTokens, outputTokens, costUsd);
 }
 
 /**
  * Same log line shape as logAiCost, for a request served from
  * lib/answerCache.ts instead of a real model call - so cache savings show
- * up in the exact same `railway logs` grep as real cost, not a separate
- * metric nobody looks at.
+ * up in the exact same `railway logs` grep AND the same AiCallLog table
+ * (model="cache", 0 tokens, $0 cost) as real cost, not a separate metric
+ * nobody looks at.
  */
 export function logCacheHit(feature: string): void {
   console.log(`[ai-cost] feature=${feature} model=cache in_tokens=0 out_tokens=0 cost_usd=0.000000`);
+  persistAiCallLog(feature, "cache", 0, 0, 0);
 }
