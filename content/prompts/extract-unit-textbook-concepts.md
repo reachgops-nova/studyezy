@@ -36,8 +36,12 @@ really there. For each concept, produce:
 - voice_qa_samples: 2 short original question+answer pairs a curious kid might ask, with simple
   grade-appropriate answers
 
+Also report page_start and page_end: the actual PDF page numbers (this file's own page position,
+counting the very first page of the file as page 1 - NOT any printed page number in the book,
+which may differ) where this unit's section begins and ends.
+
 Respond with ONLY a JSON object, no markdown fences, no commentary:
-{"concepts": [{"concept_id": string, "concept_name": string, "definition": string, "key_points": string[], "examples": string[], "tips_to_remember": string[], "voice_qa_samples": [{"question": string, "answer": string}]}]}
+{"page_start": number, "page_end": number, "concepts": [{"concept_id": string, "concept_name": string, "definition": string, "key_points": string[], "examples": string[], "tips_to_remember": string[], "voice_qa_samples": [{"question": string, "answer": string}]}]}
 
 If you cannot clearly find this unit's own section in the book (title doesn't match anything, or
 the position doesn't line up with what's actually printed), do not guess or borrow another unit's
@@ -52,3 +56,10 @@ content - respond with {"error": "..."} explaining what's missing instead.
 image for a whole-book extraction - `lib/conceptIllustration.ts`'s generated illustrations are the
 picture these concepts get instead, exactly as they already are for AI-generated concepts with no
 source photo).
+
+`page_start`/`page_end` let the caller render a few real pages from this unit's own section
+(`lib/pdfCrop.ts`'s `renderPdfPageToPng`, already used for diagram cropping) and save them as
+`UploadedPage` rows - real feedback 2026-09-08: a parent testing the first textbook-sourced unit
+could see the lesson content but not the actual book pages it came from. This is what makes the
+existing "pages we're working from" booklet (already built for the photo-upload flow) show real
+pages for a textbook-sourced unit too, without needing the whole book rendered.

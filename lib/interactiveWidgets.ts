@@ -927,6 +927,29 @@ export const WIDGETS_BY_CONCEPT: Record<string, InteractiveWidget> = {
   },
 };
 
-export function getWidgetForConcept(conceptId: string): InteractiveWidget | undefined {
+// WIDGETS_BY_CONCEPT is keyed by bare concept_id ("1.1", "1.2", ...), but
+// EVERY subject's concepts are numbered the same "unit.concept" way (see
+// lib/claude.ts's extraction prompts, lib/textbookConceptExtraction.ts) - so
+// a Math or Science concept can genuinely share an id with one of these,
+// e.g. both an English and a Math unit 1 have a concept "1.1". These widgets
+// were hand-authored ONLY against studyezy-p1-interactive-specs.json's real
+// English Stage 5 units (idioms, fables, prefixes, biography - all English
+// Language Arts skills), so a bare-id match with no subject check silently
+// hands a Math lesson an English widget whenever the ids happen to collide -
+// a real bug reported live 2026-09-08 (Math's "Understanding Tenths and
+// Decimals" got a fables Trait Matcher). unitKey scopes the lookup to the
+// exact subject these widgets were built for; every other subject correctly
+// gets "no widget yet" (WidgetDispatcher's built-in fallback) instead of a
+// wrong-subject one, until that subject gets its own authored widgets.
+const AUTHORED_WIDGET_SUBJECT_SLUG = "english";
+
+function subjectSlugFromUnitKey(unitKey: string | undefined): string | null {
+  if (!unitKey) return null;
+  const parts = unitKey.split("-");
+  return parts.length === 4 ? parts[2] : null;
+}
+
+export function getWidgetForConcept(conceptId: string, unitKey?: string): InteractiveWidget | undefined {
+  if (subjectSlugFromUnitKey(unitKey) !== AUTHORED_WIDGET_SUBJECT_SLUG) return undefined;
   return WIDGETS_BY_CONCEPT[conceptId];
 }

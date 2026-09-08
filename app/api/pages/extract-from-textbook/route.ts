@@ -1,7 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
-import { readFile } from "node:fs/promises";
+import { readFile, mkdir, writeFile } from "node:fs/promises";
 import { getActiveProfileId } from "@/lib/auth";
-import { extractUnitConceptsFromTextbook } from "@/lib/textbookConceptExtraction";
+import { getCurrentUser } from "@/lib/session";
+import { extractUnitConceptsFromTextbook, sampleUnitPageNumbers } from "@/lib/textbookConceptExtraction";
+import { generateConceptIllustration } from "@/lib/conceptIllustration";
+import { renderPdfPageToPng } from "@/lib/pdfCrop";
 import { isGeminiConfigured } from "@/lib/gemini";
 import { db } from "@/lib/db";
 import { checkRateLimit } from "@/lib/rateLimit";
@@ -23,8 +26,8 @@ const UNIT_KEY_PATTERN = /^[a-z0-9]+-\d+-[a-z0-9]+-\d+$/i;
  * the full gap this fills.
  */
 export async function POST(req: NextRequest) {
-  const profileId = await getActiveProfileId();
-  if (!profileId) {
+  const [profileId, user] = await Promise.all([getActiveProfileId(), getCurrentUser()]);
+  if (!profileId || !user) {
     return NextResponse.json({ error: "Not signed in." }, { status: 401 });
   }
 
@@ -75,11 +78,12 @@ export async function POST(req: NextRequest) {
       base64: bytes.toString("base64"),
     };
 
-    const extracted = await extractUnitConceptsFromTextbook(file, unitRow.title, unitRow.number, totalUnits);
+    const { concepts, pageStart, pageEnd } = await extractUnitConceptsFromTextbook(file, unitRow.title, unitRow.number, totalUnits);
 
     let orderIndex = 0;
-    for (const c of extracted) {
-      await db.concept.create({
+    const createdIds: string[] = [];
+    for (const c of concepts) {
+      const created = await db.concept.create({
         data: {
           unitId: unitRow.id,
           conceptKey: c.concept_id,
@@ -95,10 +99,49 @@ export async function POST(req: NextRequest) {
           videoStatus: "coming_soon",
         },
       });
+      createdIds.push(created.id);
+    }
+
+    // Best-effort extras - a concept/unit with real lesson text but no
+    // picture or visible source pages is still usable, so neither failure
+    // should turn the whole extraction into an error the family sees.
+    await Promise.allSettled(
+      createdIds.map(async (id) => {
+        const concept = await db.concept.findUnique({ where: { id } });
+        if (!concept) return;
+        const { url } = await generateConceptIllustration(concept);
+        await db.concept.update({ where: { id }, data: { generatedIllustrationUrl: url } });
+      })
+    );
+
+    if (pageStart && pageEnd && pageEnd >= pageStart) {
+      const pageNumbers = sampleUnitPageNumbers(pageStart, pageEnd);
+      const targetDir = path.join(UPLOADS_DIR, unitKey);
+      await mkdir(targetDir, { recursive: true });
+      await Promise.allSettled(
+        pageNumbers.map(async (pageNumber) => {
+          const png = await renderPdfPageToPng(bytes, pageNumber);
+          const filename = `textbook-p${pageNumber}.png`;
+          const storageKey = `${unitKey}/${filename}`;
+          await writeFile(path.join(UPLOADS_DIR, storageKey), png);
+          await db.uploadedPage.create({
+            data: {
+              unitId: unitRow.id,
+              uploadedByUserId: user.id,
+              storageKey,
+              originalFilename: filename,
+              mimeType: "image/png",
+              byteSize: png.length,
+              purpose: "textbook_source",
+              pageNumber,
+            },
+          });
+        })
+      );
     }
 
     return NextResponse.json({
-      extracted: extracted.map((c) => ({ concept_id: c.concept_id, concept_name: c.concept_name })),
+      extracted: concepts.map((c) => ({ concept_id: c.concept_id, concept_name: c.concept_name })),
     });
   } catch (err) {
     console.error("extractUnitConceptsFromTextbook failed", err);

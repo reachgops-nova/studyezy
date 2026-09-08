@@ -36,7 +36,7 @@ export const WidgetDispatcher: React.FC<WidgetDispatcherProps> = ({
   onAttempt,
 }) => {
   const id = conceptId || conceptTested || '';
-  const widget = getWidgetForConcept(id);
+  const widget = getWidgetForConcept(id, unitKey);
 
   if (!widget) {
     return (

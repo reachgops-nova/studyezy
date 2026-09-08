@@ -160,7 +160,7 @@ export function UnitView({
   // which only fires once the explanation/checkpoints are actually done.
   const [readyForPractice, setReadyForPractice] = useState(false);
 
-  const currentWidget = getWidgetForConcept(activeConceptId);
+  const currentWidget = getWidgetForConcept(activeConceptId, unitKey);
   const currentConcept = concepts.find((c) => c.concept_id === activeConceptId);
   const activeIdx = activeConcepts.findIndex((c) => c.id === activeConceptId);
   const hasNextConcept = activeIdx >= 0 && activeIdx < activeConcepts.length - 1;
