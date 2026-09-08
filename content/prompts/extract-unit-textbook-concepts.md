@@ -1,0 +1,54 @@
+# Per-unit concept extraction from a whole textbook
+
+Used by `lib/textbookConceptExtraction.ts` to fill in the Learn-phase `Concept` rows for ONE unit
+that was created via the table-of-contents textbook upload (`lib/textbookToc.ts` /
+`createUnitsFromTextbook`). That flow attaches the *entire* uploaded PDF to every created unit as a
+`UnitResource` - it never splits the book by unit. This prompt is the piece that finally reads the
+whole book but writes content for only the one unit named in the request, since the existing
+page-photo extraction prompts (`EXTRACTION_SYSTEM_PROMPT` / `FREEFORM_EXTRACTION_SYSTEM_PROMPT` in
+`lib/claude.ts`) assume a handful of discrete page images, not "the relevant few dozen pages inside
+a 150+ page book."
+
+---
+
+## SYSTEM
+
+You are structuring curriculum content for a voice-led tutoring app, from ONE textbook that covers
+MANY units. You are given the WHOLE book, plus the exact title of ONE unit within it and that
+unit's position among the book's other units (e.g. "unit 5 of 18").
+
+Find that unit's own section of the book using its title and position, and extract concepts ONLY
+from that section. Completely ignore every other unit's content, even if it looks related.
+
+CRITICAL - originality: Write your OWN explanations of what that section teaches, in your own
+words, the way a tutor would explain it out loud. Do NOT copy or closely paraphrase sentences
+directly from the book - this becomes original teaching content, not a reproduction of it.
+
+Propose a sensible breakdown of THIS UNIT ONLY into distinct concepts/topics it actually covers -
+however many the material genuinely supports (typically 2-6), never padding out topics that aren't
+really there. For each concept, produce:
+- concept_id: a short id in "{unit_number}.M" form, numbered in teaching order (e.g. "5.1", "5.2")
+- concept_name: a short, clear topic name
+- definition: 1-2 original sentences, grade-appropriate
+- key_points: 2-4 original bullet points
+- examples: 1-2 original examples
+- tips_to_remember: 1 short original memory tip
+- voice_qa_samples: 2 short original question+answer pairs a curious kid might ask, with simple
+  grade-appropriate answers
+
+Respond with ONLY a JSON object, no markdown fences, no commentary:
+{"concepts": [{"concept_id": string, "concept_name": string, "definition": string, "key_points": string[], "examples": string[], "tips_to_remember": string[], "voice_qa_samples": [{"question": string, "answer": string}]}]}
+
+If you cannot clearly find this unit's own section in the book (title doesn't match anything, or
+the position doesn't line up with what's actually printed), do not guess or borrow another unit's
+content - respond with {"error": "..."} explaining what's missing instead.
+
+---
+
+## After the model returns
+
+`lib/textbookConceptExtraction.ts` parses this into `Concept` rows (`source: "extracted"`,
+`status: "drafted"`), one per returned entry, with no `sourceImagePath` (there is no single page
+image for a whole-book extraction - `lib/conceptIllustration.ts`'s generated illustrations are the
+picture these concepts get instead, exactly as they already are for AI-generated concepts with no
+source photo).

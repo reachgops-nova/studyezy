@@ -64,6 +64,9 @@ export default function UnitOverview({
   const [extracting, setExtracting] = useState(false);
   const [extractError, setExtractError] = useState<string | null>(null);
   const [extractSuccess, setExtractSuccess] = useState<string | null>(null);
+  const [extractingTextbook, setExtractingTextbook] = useState(false);
+  const [extractTextbookError, setExtractTextbookError] = useState<string | null>(null);
+  const [extractTextbookSuccess, setExtractTextbookSuccess] = useState<string | null>(null);
   const [taughtUpTo, setTaughtUpTo] = useState(taughtUpToConceptKey ?? "");
   const [savingTaughtUpTo, setSavingTaughtUpTo] = useState(false);
 
@@ -113,6 +116,40 @@ export default function UnitOverview({
       setExtractError(e instanceof Error ? e.message : "Couldn't extract content - please try again.");
     } finally {
       setExtracting(false);
+    }
+  }
+
+  // Counterpart to handleExtract, for units created from a whole-textbook
+  // upload (lib/textbookToc.ts) - those have the book attached as a
+  // UnitResource instead of individual UploadedPage photos, so they need
+  // /api/pages/extract-from-textbook (reads the book directly, targeting
+  // just this unit's own section) instead of the photo-based route.
+  async function handleExtractFromTextbook() {
+    setExtractingTextbook(true);
+    setExtractTextbookError(null);
+    setExtractTextbookSuccess(null);
+
+    try {
+      const res = await fetch("/api/pages/extract-from-textbook", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ unitKey }),
+      });
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        throw new Error(body.error || "Couldn't extract content - please try again.");
+      }
+      const data = (await res.json()) as { extracted: { concept_id: string; concept_name: string }[] };
+      setExtractTextbookSuccess(
+        data.extracted.length === 1
+          ? `Added "${data.extracted[0].concept_name}".`
+          : `Added ${data.extracted.length} new concepts.`
+      );
+      router.refresh();
+    } catch (e) {
+      setExtractTextbookError(e instanceof Error ? e.message : "Couldn't extract content - please try again.");
+    } finally {
+      setExtractingTextbook(false);
     }
   }
 
@@ -303,6 +340,29 @@ export default function UnitOverview({
           </div>
         )}
       </div>
+
+      {unit.concepts.length === 0 &&
+        unit.remaining_unit_outline.length === 0 &&
+        resourceGroups.some((g) => g.type === "textbook" && g.approved.length > 0) && (
+          <div className="rounded-2xl border border-slate-200/70 bg-white p-5 shadow-soft">
+            <h2 className="text-lg font-semibold">Start this unit&apos;s lessons</h2>
+            <p className="mt-1 text-sm text-slate-600">
+              This unit&apos;s textbook is attached below, but no lesson content has been written from it yet -
+              Ezy can read this unit&apos;s own section of the book and write the lesson content directly, no
+              page photos needed.
+            </p>
+            <button
+              type="button"
+              onClick={handleExtractFromTextbook}
+              disabled={extractingTextbook}
+              className="mt-3 rounded-full bg-gradient-to-br from-brand-gold-bright to-brand-gold px-5 py-2.5 text-sm font-medium text-white transition active:scale-95 disabled:opacity-50"
+            >
+              {extractingTextbook ? "Reading the textbook..." : "Extract lesson content from the textbook"}
+            </button>
+            {extractTextbookError && <p className="mt-2 text-sm text-red-600">{extractTextbookError}</p>}
+            {extractTextbookSuccess && <p className="mt-2 text-sm text-green-600">✓ {extractTextbookSuccess}</p>}
+          </div>
+        )}
 
       <UnitResources unitKey={unitKey} groups={resourceGroups} />
 
