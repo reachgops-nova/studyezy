@@ -524,6 +524,17 @@ export default function AvatarChat({
   // speakText below. A real boundary event always wins if one does arrive.
   const boundaryFiredRef = useRef(false);
   const syntheticHighlightTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  // Real gap reported live 2026-09-08: Chrome on plenty of real devices has
+  // NO installed Tamil (or other Indian language) voice at all - a
+  // correctly-translated /api/ask reply had nothing able to speak it back,
+  // so "local language support" silently only worked for reading, not
+  // listening. When pickVoice finds nothing for a non-English language,
+  // speakText falls back to server-side TTS (lib/gemini.ts's
+  // generateSpeechGemini, via /api/tts) and plays it through this <audio>
+  // element instead of a SpeechSynthesisUtterance - see speakViaServerTts.
+  const audioElRef = useRef<HTMLAudioElement | null>(null);
+  const audioObjectUrlRef = useRef<string | null>(null);
+  const audioHighlightIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
     const SpeechRecognitionCtor = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
@@ -543,12 +554,6 @@ export default function AvatarChat({
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
   }, [messages]);
 
-  // baseOffset is where `text` starts within the "logical" full message -
-  // 0 for a normal from-scratch call, or a mid-message offset when resuming
-  // after a pause (see togglePauseSpeech). Keeping highlight math relative
-  // to baseOffset means the highlight range is always correct against the
-  // ORIGINAL full text, even when the utterance currently playing is only
-  // the remainder after a pause.
   function clearSyntheticHighlighter() {
     if (syntheticHighlightTimerRef.current !== null) {
       clearInterval(syntheticHighlightTimerRef.current);
@@ -556,37 +561,136 @@ export default function AvatarChat({
     }
   }
 
-  // Every real stop-speech call site needs both halves - cancelling the
-  // utterance itself AND the fallback highlight timer, which keeps running
-  // on its own clock and isn't stopped by speechSynthesis.cancel().
+  function clearAudioHighlightInterval() {
+    if (audioHighlightIntervalRef.current !== null) {
+      clearInterval(audioHighlightIntervalRef.current);
+      audioHighlightIntervalRef.current = null;
+    }
+  }
+
+  function cleanupAudio() {
+    clearAudioHighlightInterval();
+    if (audioObjectUrlRef.current) {
+      URL.revokeObjectURL(audioObjectUrlRef.current);
+      audioObjectUrlRef.current = null;
+    }
+    audioElRef.current = null;
+  }
+
+  // Every real stop-speech call site needs every half - cancelling the
+  // browser utterance, the server-TTS <audio> element (if that's the path
+  // that was active), and both highlight timers, none of which are stopped
+  // by speechSynthesis.cancel() alone.
   function stopSpeech() {
     clearSyntheticHighlighter();
     window.speechSynthesis?.cancel();
+    audioElRef.current?.pause();
+    cleanupAudio();
   }
 
+  // Server-side speech (see lib/gemini.ts's generateSpeechGemini via
+  // /api/tts) - the fallback speakText reaches for when pickVoice finds no
+  // browser voice for a non-English language (real gap reported live
+  // 2026-09-08: Chrome commonly has zero installed Tamil/Indian-language
+  // voices). Highlighting here is even more accurate than the synthetic
+  // word-timer fallback used for browser TTS: a real <audio> element knows
+  // its own total duration once loaded, so each word's highlight timing is
+  // computed as a proportion of actual playback progress instead of a
+  // guessed words-per-minute rate. Pause/resume also gets simpler and more
+  // reliable here - unlike speechSynthesis, HTML <audio> pause()/play() has
+  // no equivalent "resume silently does nothing" browser bug to work around
+  // (see togglePauseSpeech).
+  async function speakViaServerTts(text: string, messageId: string, onDone: () => void, baseOffset: number) {
+    try {
+      const res = await fetch("/api/tts", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text }),
+      });
+      if (!res.ok) throw new Error(`tts request failed (${res.status})`);
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      audioObjectUrlRef.current = url;
+      const audio = new Audio(url);
+      audioElRef.current = audio;
+
+      const spans = computeWordSpans(text);
+      audio.onloadedmetadata = () => {
+        const durationMs = audio.duration * 1000;
+        if (!durationMs || spans.length === 0) return;
+        clearAudioHighlightInterval();
+        audioHighlightIntervalRef.current = setInterval(() => {
+          if (audioElRef.current !== audio) {
+            clearAudioHighlightInterval();
+            return;
+          }
+          const progress = Math.min(1, (audio.currentTime * 1000) / durationMs);
+          const idx = Math.min(spans.length - 1, Math.floor(progress * spans.length));
+          const [start, end] = spans[idx];
+          lastBoundaryOffsetRef.current = baseOffset + start;
+          setHighlightRange([baseOffset + start, baseOffset + end]);
+        }, 90);
+      };
+      audio.onended = () => {
+        cleanupAudio();
+        setSpeaking(false);
+        setSpeakingMessageId(null);
+        setHighlightRange(null);
+        onDone();
+      };
+      audio.onerror = () => {
+        cleanupAudio();
+        setSpeaking(false);
+        setSpeakingMessageId(null);
+        setHighlightRange(null);
+        setNoVoiceForLanguage(true);
+        onDone();
+      };
+      setSpeaking(true);
+      setSpeakingMessageId(messageId);
+      setSpeechPaused(false);
+      await audio.play();
+    } catch (err) {
+      console.error("speakViaServerTts failed", err);
+      cleanupAudio();
+      setSpeaking(false);
+      setSpeakingMessageId(null);
+      setNoVoiceForLanguage(true);
+      // Still advance the lesson even though nothing could be spoken - a
+      // TTS failure shouldn't leave the whole conversation stuck.
+      setTimeout(onDone, 800);
+    }
+  }
+
+  // baseOffset is where `text` starts within the "logical" full message -
+  // 0 for a normal from-scratch call, or a mid-message offset when resuming
+  // after a pause (see togglePauseSpeech). Keeping highlight math relative
+  // to baseOffset means the highlight range is always correct against the
+  // ORIGINAL full text, even when the utterance currently playing is only
+  // the remainder after a pause.
   function speakText(text: string, messageId: string, onDone: () => void, langCode?: string, baseOffset = 0) {
     isPausingRef.current = false;
     setNoVoiceForLanguage(false);
     boundaryFiredRef.current = false;
     clearSyntheticHighlighter();
+    cleanupAudio();
 
     if (!(readAloud && "speechSynthesis" in window)) {
       setTimeout(onDone, 1400);
       return;
     }
+
+    const voice = pickVoice(langCode);
+    if (!voice && langCode && !langCode.toLowerCase().startsWith("en")) {
+      speakViaServerTts(text, messageId, onDone, baseOffset);
+      return;
+    }
+
     const utterance = new SpeechSynthesisUtterance(text);
     utterance.lang = langCode ?? SPEECH_LANG;
     utterance.rate = getSavedRate();
-    const voice = pickVoice(langCode);
     if (voice) {
       utterance.voice = voice;
-    } else if (langCode && !langCode.toLowerCase().startsWith("en")) {
-      // No installed voice actually speaks this language - most default
-      // (English) voices can't render non-Latin scripts like Tamil/Hindi at
-      // all and just produce silence, which looks like a broken feature
-      // rather than a device limitation. Still attempt it (some devices
-      // genuinely do have a multi-lingual default voice), but say so.
-      setNoVoiceForLanguage(true);
     }
     lastBoundaryOffsetRef.current = baseOffset;
     currentUtteranceRef.current = { text, messageId, onDone, langCode, baseOffset };
@@ -661,6 +765,22 @@ export default function AvatarChat({
   // would otherwise incorrectly advance the lesson as if speech had
   // finished naturally).
   function togglePauseSpeech() {
+    // Server-TTS playback (see speakViaServerTts) - real <audio>
+    // pause()/play() is reliable, unlike speechSynthesis's resume() (see
+    // the comment below), so this doesn't need the cancel-and-reconstruct
+    // workaround the browser-voice path below uses.
+    const audio = audioElRef.current;
+    if (audio) {
+      if (speechPaused) {
+        audio.play();
+        setSpeechPaused(false);
+      } else {
+        audio.pause();
+        setSpeechPaused(true);
+      }
+      return;
+    }
+
     if (!("speechSynthesis" in window)) return;
 
     if (speechPaused) {
@@ -1377,8 +1497,8 @@ export default function AvatarChat({
 
           {noVoiceForLanguage && (
             <p className="mt-1 text-xs text-amber-600">
-              This device doesn&apos;t have a {LANGUAGES.find((l) => l.code === language)?.label ?? "matching"} voice
-              installed, so read-aloud may be silent for this answer - the text above is still correct.
+              Couldn&apos;t read this one aloud in {LANGUAGES.find((l) => l.code === language)?.label ?? "this language"}{" "}
+              right now - the text above is still correct.
             </p>
           )}
 

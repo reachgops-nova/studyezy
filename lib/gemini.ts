@@ -309,3 +309,85 @@ export async function generateImageGemini(feature: string, prompt: string): Prom
   }
   return { png: Buffer.from(imagePart.inlineData.data, "base64"), inputTokens, outputTokens };
 }
+
+// Real gap reported live 2026-09-08: the browser's own speechSynthesis has
+// no installed voice for Tamil (or, in practice, most Indian languages) on
+// plenty of real devices - Chrome in particular ships with essentially no
+// non-English voices on many desktop OSes. AvatarChat.tsx's /api/ask replies
+// were already correctly translated as TEXT, but with nothing able to speak
+// them, "local language support" silently only worked for reading, not
+// listening - the actual point of it for a parent/kid who isn't fluent
+// enough to read the translation themselves.
+//
+// Verified live: gemini-2.5-flash-preview-tts, same endpoint/API key as
+// everything else in this file, genuinely speaks Tamil script correctly
+// when given Tamil text (no separate language parameter needed - it reads
+// whatever script/language the text itself is in). Real cost is trivial
+// (~137 audio tokens for two sentences, $10/1M audio tokens - see
+// lib/aiCost.ts) so this is safe to call per-response, not something to
+// cache or ration.
+const TTS_MODEL = "gemini-2.5-flash-preview-tts";
+const TTS_URL = `https://generativelanguage.googleapis.com/v1beta/models/${TTS_MODEL}:generateContent`;
+
+// Returns raw 16-bit PCM mono @ 24kHz, undocumented anywhere but the actual
+// response's mimeType ("audio/L16;codec=pcm;rate=24000") - confirmed live,
+// not assumed. Wrapped into a standard WAV container here (not shipped to
+// the client raw) since a <audio> element can't play bare PCM without a
+// container telling it the sample rate/format.
+function pcmToWav(pcm: Buffer, sampleRate = 24000, numChannels = 1, bitsPerSample = 16): Buffer {
+  const blockAlign = numChannels * (bitsPerSample / 8);
+  const byteRate = sampleRate * blockAlign;
+  const header = Buffer.alloc(44);
+  header.write("RIFF", 0);
+  header.writeUInt32LE(36 + pcm.length, 4);
+  header.write("WAVE", 8);
+  header.write("fmt ", 12);
+  header.writeUInt32LE(16, 16);
+  header.writeUInt16LE(1, 20); // PCM
+  header.writeUInt16LE(numChannels, 22);
+  header.writeUInt32LE(sampleRate, 24);
+  header.writeUInt32LE(byteRate, 28);
+  header.writeUInt16LE(blockAlign, 32);
+  header.writeUInt16LE(bitsPerSample, 34);
+  header.write("data", 36);
+  header.writeUInt32LE(pcm.length, 40);
+  return Buffer.concat([header, pcm]);
+}
+
+export interface GeneratedSpeech {
+  wav: Buffer;
+  inputTokens: number;
+  outputTokens: number;
+}
+
+export async function generateSpeechGemini(feature: string, text: string): Promise<GeneratedSpeech> {
+  const res = await fetch(TTS_URL, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", "X-goog-api-key": process.env.GOOGLE_AI_API_KEY ?? "" },
+    body: JSON.stringify({
+      contents: [{ parts: [{ text }] }],
+      generationConfig: {
+        responseModalities: ["AUDIO"],
+        speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName: "Kore" } } },
+      },
+    }),
+  });
+  if (!res.ok) {
+    const bodyText = await res.text().catch(() => "");
+    throw new Error(`Gemini TTS request failed (${res.status}): ${bodyText.slice(0, 500)}`);
+  }
+  const data = (await res.json()) as {
+    candidates?: { content?: { parts?: { inlineData?: { data?: string; mimeType?: string } }[] } }[];
+    usageMetadata?: { promptTokenCount?: number; candidatesTokenCount?: number };
+  };
+  const inputTokens = data.usageMetadata?.promptTokenCount ?? 0;
+  const outputTokens = data.usageMetadata?.candidatesTokenCount ?? 0;
+  logAiCost(feature, TTS_MODEL, inputTokens, outputTokens);
+
+  const audioPart = data.candidates?.[0]?.content?.parts?.find((p) => p.inlineData?.data);
+  if (!audioPart?.inlineData?.data) {
+    throw new Error("Gemini TTS response contained no audio part.");
+  }
+  const pcm = Buffer.from(audioPart.inlineData.data, "base64");
+  return { wav: pcmToWav(pcm), inputTokens, outputTokens };
+}

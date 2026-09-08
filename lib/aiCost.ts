@@ -28,6 +28,10 @@ const PRICE_PER_MILLION_USD: Record<string, { input: number; output: number }> =
   // $0.0387, matching. Input is billed the same "$0.30 (text/image)" rate
   // whether the input is a text prompt or a reference image.
   "gemini-2.5-flash-image": { input: 0.3, output: 30.0 },
+  // Verified live 2026-09-08 against ai.google.dev/gemini-api/docs/pricing -
+  // a real call's usageMetadata showed 137 audio output tokens for a short
+  // two-sentence Tamil utterance ($10/1M audio tokens = ~$0.0014, trivial).
+  "gemini-2.5-flash-preview-tts": { input: 0.5, output: 10.0 },
 };
 
 /** Shared by logAiCost and anything else (e.g. /admin/model-compare) that needs the same real per-call number. */

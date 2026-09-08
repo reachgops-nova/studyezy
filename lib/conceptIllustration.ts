@@ -33,13 +33,34 @@ const HOUSE_STYLE = `House style, follow exactly every time:
 - ABSOLUTELY NO TEXT ANYWHERE IN THE IMAGE - no titles, no labels, no captions, no numbers, no speech-bubble writing, no signage, nothing written at all. This is a pure illustration; every word a student reads about this concept comes from real text elsewhere on the page, never from the picture.
 - Never depict a real, identifiable named public figure (an actual celebrity, athlete, or historical photo likeness) - if an example mentions one, illustrate the general idea/scene instead of a recognizable portrait of that real person.`;
 
-const FACTS_RULE = `The facts below are already correct and already checked - they tell you WHAT to draw, never what to write (nothing is written - see the no-text rule above). Illustrate the scene these facts describe and nothing beyond it - do not invent extra objects, characters, or events that aren't implied by the facts. If the facts describe an ordered sequence (steps, a cycle, a growing pattern), compose the scene so the stages read left-to-right or as a path/journey (e.g. Ezy walking a path through several moments) - purely visual staging, still with no numbers or labels drawn on it. If they don't describe an order, one clear illustrated scene is enough.`;
+const FACTS_RULE = `The facts below are already correct and already checked - they tell you WHAT to draw, never what to write (nothing is written - see the no-text rule above). Illustrate the scene these facts describe and nothing beyond it - do not invent extra objects, characters, or events that aren't implied by the facts.`;
 
+// Real gap reported live 2026-09-08: this used to combine definition +
+// keyPoints + examples into ONE image, which worked fine as a standalone
+// poster but broke once the picture was anchored to a specific moment in
+// the conversation (see AvatarChat.tsx's buildCheckpoints, 2026-09-08
+// earlier) - the illustration is only shown/spoken during the EXAMPLES
+// checkpoint, but its content came from all three fields combined, so a
+// panel could depict a key point ("raining cats and dogs") that gets
+// spoken later, in a different checkpoint, while the panel actually being
+// discussed right now (an example) was drawn in the wrong position or not
+// at all. The image's content must exactly match what's spoken at the one
+// point in the lesson it's actually shown - so this is scoped to `examples`
+// only now, in the same order they're read aloud, with an explicit
+// left-to-right instruction so a multi-panel scene can't be reordered
+// relative to the speech. Falls back to the definition only when a concept
+// genuinely has no examples (illustrating something more general, since
+// there's no per-example moment for it to stay in sync with anyway).
 function buildPrompt(concept: DbConcept): string {
-  const facts: string[] = [];
-  if (concept.definition) facts.push(`Definition: ${concept.definition}`);
-  if (concept.keyPoints.length) facts.push(`Key points, in this order: ${concept.keyPoints.join(" | ")}`);
-  if (concept.examples.length) facts.push(`Examples: ${concept.examples.join(" | ")}`);
+  const examples = concept.examples ?? [];
+  const facts = examples.length
+    ? [
+        `Examples, as ${examples.length > 1 ? "separate scenes" : "one scene"} arranged left-to-right in EXACTLY this order (never reorder, merge, or swap them - each is spoken aloud in this order right when this picture is shown):`,
+        ...examples.map((e, i) => `Scene ${i + 1}: ${e}`),
+      ]
+    : concept.definition
+      ? [`Definition: ${concept.definition}`]
+      : [];
 
   return [
     `Create one square illustration (no text) that visually represents "${concept.name}" for a school student, as the cover art for a learning app lesson card.`,
