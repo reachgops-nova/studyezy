@@ -94,6 +94,7 @@ model StudentProfile {
   examSubmissions   ExamSubmission[]
   worksheetAttempts WorksheetAttempt[]
   unitProgress      UnitProgress[]
+  worksheetProgress WorksheetProgress[]
 }
 
 // --- curriculum hierarchy ---
@@ -256,6 +257,28 @@ model WorksheetAttempt {
   attemptedAt      DateTime @default(now())
 
   @@index([studentProfileId, unitId])
+}
+
+// Real, server-backed partial-save/resume for practice worksheets - fixes a
+// real gap found live 2026-09-08: content/player-template.html already
+// called a window.storage.get/set API to save progress mid-worksheet, but
+// nothing anywhere in this app ever actually defined window.storage, so
+// every "save" silently did nothing and a reload always lost all answers.
+// One row per student+pack (not per-attempt like WorksheetAttempt above,
+// which is a completion record) - upserted on every autosave, overwritten
+// by the next one, no history kept. Deliberately NOT used by terminal tests
+// or real exams (content/test-template.html has no equivalent call at all)
+// - those must never be resumable, by explicit user decision.
+model WorksheetProgress {
+  id               String         @id @default(cuid())
+  studentProfileId String
+  studentProfile   StudentProfile @relation(fields: [studentProfileId], references: [id], onDelete: Cascade)
+  packId           String // ContentPack.packId (the human-readable string key, not its cuid id) - matches what the player already has as PACK.packId
+  state            Json // {answers, results, hints, i18n, lang} - the exact shape the player already keeps client-side as STATE
+  updatedAt        DateTime       @updatedAt
+  createdAt        DateTime       @default(now())
+
+  @@unique([studentProfileId, packId])
 }
 
 // Up to 3 self-test papers per unit, one per difficulty (2026-08-20 decision:

@@ -14,21 +14,28 @@
    into player-template.html's <script> block after editing here.
    ============================================================ */
 const PACK = JSON.parse(document.getElementById('pack').textContent);
-const STORE_KEY = 'smartigcse:' + PACK.packId;
 
 let STATE = { answers:{}, results:{}, hints:{}, i18n:{}, lang:'en' };
-const hasStorage = typeof window!=='undefined' && window.storage && typeof window.storage.get==='function';
 
+// Real, server-backed partial-save/resume (see app/api/worksheet-progress
+// and prisma/schema.prisma's WorksheetProgress) - fixes a real gap found
+// live 2026-09-08: this used to call a window.storage.get/set API that
+// nothing anywhere in the app ever actually defined, so every "save"
+// silently did nothing and a reload always lost all answers. Scoped to
+// this player only - content/test-template.html (terminal tests, real
+// exams) has no equivalent call, by explicit decision: those must never be
+// resumable.
 async function loadState(){
-  if(!hasStorage) return;
-  try{ const r=await window.storage.get(STORE_KEY);
-       if(r&&r.value) STATE=Object.assign(STATE, JSON.parse(r.value)); }catch(e){}
+  try{ const res=await fetch('/api/worksheet-progress?packId='+encodeURIComponent(PACK.packId));
+       if(res.ok){ const data=await res.json(); if(data.state) STATE=Object.assign(STATE, data.state); } }catch(e){}
 }
 let saveTimer=null;
 function saveState(){
-  if(!hasStorage) return;
   clearTimeout(saveTimer);
-  saveTimer=setTimeout(async()=>{ try{ await window.storage.set(STORE_KEY, JSON.stringify(STATE)); }catch(e){} },400);
+  saveTimer=setTimeout(async()=>{ try{
+    await fetch('/api/worksheet-progress',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({packId:PACK.packId,state:STATE})});
+  }catch(e){} },400);
 }
 function toast(m){ const t=document.getElementById('toast'); t.textContent=m; t.classList.add('show');
   clearTimeout(t._h); t._h=setTimeout(()=>t.classList.remove('show'),2400); }
