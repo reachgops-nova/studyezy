@@ -151,6 +151,16 @@ model Unit {
   sourceAuthors        String[]
   sourceSeriesEditors  String[]
   sourceNote           String?
+  // This unit's own page range within its attached whole-textbook
+  // UnitResource (lib/textbookToc.ts's upload flow attaches ONE shared PDF
+  // to every unit in the subject) - set once during Learn-phase concept
+  // extraction (lib/textbookConceptExtraction.ts) and reused by
+  // lib/textbookQuestionPaperExtraction.ts so question-paper generation
+  // doesn't need its own separate page-range detection call every time.
+  // Null for a unit that was never textbook-sourced, or whose extraction
+  // couldn't determine a clear range.
+  textbookPageStart    Int?
+  textbookPageEnd      Int?
   masteryChecklist     Json? // UnitMasteryChecklist passthrough
   createdByUserId      String?
   createdBy            User?    @relation("UnitCreatedBy", fields: [createdByUserId], references: [id])
@@ -344,6 +354,18 @@ model Concept {
   // AI tutor insert a matching picture into the chat itself when a student
   // asks to see one mid-conversation. Array of {illustration_key, caption}.
   alternateIllustrations    Json?
+  // An AI-generated practice widget for THIS concept's own subject/content
+  // (lib/conceptWidgetGeneration.ts) - real feedback 2026-09-08: the
+  // hand-authored WIDGETS_BY_CONCEPT bank (lib/interactiveWidgets.ts) only
+  // ever covers English, so every other subject had nothing here at all
+  // once the subject-scoping fix (same date) correctly stopped it from
+  // borrowing a wrong-subject widget. Stores one InteractiveWidget
+  // (lib/interactiveWidgets.ts's type) - only ever "trait_matcher" or
+  // "predictive_brancher" kinds, the two generic enough to hold real
+  // content from any subject; see that file's generation prompt for why
+  // the other 7 kinds stay English-only. Null if generation hasn't run yet
+  // or found neither kind to be a genuine fit for this concept.
+  generatedWidget           Json?
   videoStatus               String   @default("not_planned")
   source                    String   @default("hand_authored") // "hand_authored" | "extracted"
   orderIndex                Int      @default(0)

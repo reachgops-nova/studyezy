@@ -10,6 +10,13 @@ import {
   type ExtractionSourceFile,
 } from "./claude";
 import type { Concept, ProgressionTestDraft, QuestionPaperDifficulty } from "./types";
+import {
+  loadTextbookConceptExtractionSystem,
+  textbookConceptExtractionUserText,
+  parseTextbookUnitExtraction,
+  type TextbookUnitExtraction,
+} from "./textbookConceptExtraction";
+import { textbookQuestionPaperUserText } from "./textbookQuestionPaperExtraction";
 
 // OpenRouter (openrouter.ai) - an OpenAI-compatible proxy in front of many
 // models, added 2026-09-06 specifically to unblock vision extraction: it
@@ -139,6 +146,42 @@ export async function extractFreeformConceptsOpenRouter(images: ExtractionSource
     hasPdf(images)
   );
   return parseExtractedConcepts(raw, images);
+}
+
+/** Same contract as lib/textbookConceptExtraction.ts's extractUnitConceptsFromTextbook - the fallback used when Gemini's account hits its spend cap (real 429 hit live 2026-09-08, see app/api/pages/extract-from-textbook/route.ts). */
+export async function extractUnitConceptsFromTextbookOpenRouter(
+  file: ExtractionSourceFile,
+  unitTitle: string,
+  unitNumber: number,
+  totalUnits: number
+): Promise<TextbookUnitExtraction> {
+  const system = await loadTextbookConceptExtractionSystem();
+  const raw = await openRouterChat(
+    "extract-textbook-openrouter",
+    system,
+    [toContentPart(file), { type: "text", text: textbookConceptExtractionUserText(unitTitle, unitNumber, totalUnits) }],
+    true
+  );
+  return parseTextbookUnitExtraction(raw, unitTitle);
+}
+
+/** Same contract as lib/textbookQuestionPaperExtraction.ts's generateUnitQuestionPaperFromTextbook - the fallback used when Gemini's account hits its spend cap. */
+export async function generateUnitQuestionPaperFromTextbookOpenRouter(
+  file: ExtractionSourceFile,
+  unitTitle: string,
+  unitNumber: number,
+  totalUnits: number,
+  concepts: { concept_id: string; concept_name: string }[],
+  difficulty: QuestionPaperDifficulty,
+  pageRange?: { start: number; end: number } | null
+): Promise<ProgressionTestDraft> {
+  const raw = await openRouterChat(
+    "question-paper-textbook-openrouter",
+    questionPaperSystemPrompt(difficulty),
+    [toContentPart(file), { type: "text", text: textbookQuestionPaperUserText(unitTitle, unitNumber, totalUnits, concepts, pageRange) }],
+    true
+  );
+  return parseQuestionPaperResponse(raw);
 }
 
 /** Same contract as lib/claude.ts's generateQuestionPaper. */

@@ -8,11 +8,17 @@ import type { Concept, VoiceQASample } from "./types";
 const PROMPT_PATH = path.join(process.cwd(), "content", "prompts", "extract-unit-textbook-concepts.md");
 
 let cachedSystem: string | null = null;
-async function loadSystem(): Promise<string> {
+/** Exported so lib/openrouter.ts's fallback path uses the identical wording instead of a hand-copied, driftable duplicate. */
+export async function loadTextbookConceptExtractionSystem(): Promise<string> {
   if (cachedSystem) return cachedSystem;
   const raw = await readFile(PROMPT_PATH, "utf8");
   cachedSystem = raw.split("## SYSTEM")[1].split("## After the model returns")[0].trim();
   return cachedSystem;
+}
+
+/** Same targeting instruction for every provider - kept in one place so Gemini and OpenRouter can never drift apart on how they're told to scope the extraction. */
+export function textbookConceptExtractionUserText(unitTitle: string, unitNumber: number, totalUnits: number): string {
+  return `Extract concepts for unit ${unitNumber} of ${totalUnits}: "${unitTitle}". Find this unit's own section of the book using its title and position among the other units, and extract only from that section.`;
 }
 
 interface RawTextbookConcept {
@@ -44,36 +50,9 @@ export interface TextbookUnitExtraction {
   pageEnd: number | null;
 }
 
-/**
- * Fills in Learn-phase Concepts for ONE unit that was created via the
- * table-of-contents textbook upload (lib/textbookToc.ts) - that flow attaches
- * the whole book to every created unit as a UnitResource, but never splits it
- * by unit, and the existing page-photo extraction (lib/claude.ts's
- * EXTRACTION_SYSTEM_PROMPT/FREEFORM_EXTRACTION_SYSTEM_PROMPT, driven by
- * app/api/pages/extract/route.ts) only ever reads discrete UploadedPage
- * photos - a completely separate table this flow never populates. This is
- * the missing piece: read the whole book once per unit, targeting only that
- * unit's own section by title+position.
- *
- * Gemini-only, same reason as lib/textbookToc.ts - it's the only provider
- * here with real native PDF support at this file size.
- */
-export async function extractUnitConceptsFromTextbook(
-  file: ExtractionSourceFile,
-  unitTitle: string,
-  unitNumber: number,
-  totalUnits: number
-): Promise<TextbookUnitExtraction> {
-  if (!isGeminiConfigured()) {
-    throw new Error("Gemini isn't configured - textbook concept extraction has no other capable provider right now.");
-  }
-  const system = await loadSystem();
-  const result = await extractPackFragmentGemini(
-    file,
-    system,
-    `Extract concepts for unit ${unitNumber} of ${totalUnits}: "${unitTitle}". Find this unit's own section of the book using its title and position among the other units, and extract only from that section.`
-  );
-  const cleaned = result.text.replace(/^```(?:json)?/m, "").replace(/```$/m, "").trim();
+/** Shared by every provider - parses the raw JSON text into the same TextbookUnitExtraction shape regardless of which model produced it. Exported so lib/openrouter.ts's fallback path reuses this instead of a hand-copied, driftable duplicate. */
+export function parseTextbookUnitExtraction(rawText: string, unitTitle: string): TextbookUnitExtraction {
+  const cleaned = rawText.replace(/^```(?:json)?/m, "").replace(/```$/m, "").trim();
 
   let parsed: { concepts?: RawTextbookConcept[]; page_start?: number; page_end?: number; error?: string };
   try {
@@ -106,4 +85,34 @@ export async function extractUnitConceptsFromTextbook(
     pageStart: typeof parsed.page_start === "number" && parsed.page_start > 0 ? parsed.page_start : null,
     pageEnd: typeof parsed.page_end === "number" && parsed.page_end > 0 ? parsed.page_end : null,
   };
+}
+
+/**
+ * Fills in Learn-phase Concepts for ONE unit that was created via the
+ * table-of-contents textbook upload (lib/textbookToc.ts) - that flow attaches
+ * the whole book to every created unit as a UnitResource, but never splits it
+ * by unit, and the existing page-photo extraction (lib/claude.ts's
+ * EXTRACTION_SYSTEM_PROMPT/FREEFORM_EXTRACTION_SYSTEM_PROMPT, driven by
+ * app/api/pages/extract/route.ts) only ever reads discrete UploadedPage
+ * photos - a completely separate table this flow never populates. This is
+ * the missing piece: read the whole book once per unit, targeting only that
+ * unit's own section by title+position.
+ *
+ * Gemini first (native PDF support, no per-call floor) - see
+ * app/api/pages/extract-from-textbook/route.ts for the OpenRouter fallback
+ * used when Gemini's account hits its spend cap (real 429 hit live
+ * 2026-09-08).
+ */
+export async function extractUnitConceptsFromTextbook(
+  file: ExtractionSourceFile,
+  unitTitle: string,
+  unitNumber: number,
+  totalUnits: number
+): Promise<TextbookUnitExtraction> {
+  if (!isGeminiConfigured()) {
+    throw new Error("Gemini isn't configured - textbook concept extraction has no other capable provider right now.");
+  }
+  const system = await loadTextbookConceptExtractionSystem();
+  const result = await extractPackFragmentGemini(file, system, textbookConceptExtractionUserText(unitTitle, unitNumber, totalUnits));
+  return parseTextbookUnitExtraction(result.text, unitTitle);
 }

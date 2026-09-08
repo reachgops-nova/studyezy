@@ -35,6 +35,7 @@ function toDrafted(c: DbConcept): Concept {
         (c.alternateIllustrations as { illustration_key: string; caption: string }[] | null) ?? undefined,
     },
     source: c.source as "hand_authored" | "extracted",
+    generated_widget: (c.generatedWidget as unknown as Concept["generated_widget"]) ?? undefined,
   };
 }
 

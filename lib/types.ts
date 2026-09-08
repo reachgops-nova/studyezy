@@ -1,3 +1,5 @@
+import type { TraitMatcherSpec, PredictiveBrancherSpec } from "./interactiveWidgets";
+
 export type ConceptStatus = "drafted" | "outline";
 
 /** One multiple-choice vocabulary practice item (synonym, antonym, or idiom meaning) - see lib/vocabPractice.ts. */
@@ -56,6 +58,8 @@ export interface Concept {
   media?: ConceptMedia;
   /** True for concepts filled in by the page-extraction pipeline rather than hand-authored. */
   source?: "hand_authored" | "extracted";
+  /** AI-generated practice widget (lib/conceptWidgetGeneration.ts) for a subject with no hand-authored WIDGETS_BY_CONCEPT match (see lib/interactiveWidgets.ts's subject-scoping comment) - only ever a trait_matcher or predictive_brancher, the two kinds generic enough for real content from any subject. */
+  generated_widget?: (TraitMatcherSpec | PredictiveBrancherSpec) & { instruction?: string };
 }
 
 export interface OutlineConcept {

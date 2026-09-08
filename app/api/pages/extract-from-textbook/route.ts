@@ -2,8 +2,10 @@ import { NextRequest, NextResponse } from "next/server";
 import { readFile, mkdir, writeFile } from "node:fs/promises";
 import { getActiveProfileId } from "@/lib/auth";
 import { getCurrentUser } from "@/lib/session";
-import { extractUnitConceptsFromTextbook, sampleUnitPageNumbers } from "@/lib/textbookConceptExtraction";
+import { extractUnitConceptsFromTextbook, sampleUnitPageNumbers, type TextbookUnitExtraction } from "@/lib/textbookConceptExtraction";
+import { extractUnitConceptsFromTextbookOpenRouter, isOpenRouterConfigured } from "@/lib/openrouter";
 import { generateConceptIllustration } from "@/lib/conceptIllustration";
+import { generateConceptWidget } from "@/lib/conceptWidgetGeneration";
 import { renderPdfPageToPng } from "@/lib/pdfCrop";
 import { isGeminiConfigured } from "@/lib/gemini";
 import { db } from "@/lib/db";
@@ -36,8 +38,8 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Too many requests - try again shortly." }, { status: 429 });
   }
 
-  if (!isGeminiConfigured()) {
-    return NextResponse.json({ error: "Textbook extraction isn't configured yet - add GOOGLE_AI_API_KEY." }, { status: 503 });
+  if (!isGeminiConfigured() && !isOpenRouterConfigured()) {
+    return NextResponse.json({ error: "Textbook extraction isn't configured yet - add GOOGLE_AI_API_KEY or OPENROUTER_API_KEY." }, { status: 503 });
   }
 
   let body: unknown;
@@ -78,7 +80,34 @@ export async function POST(req: NextRequest) {
       base64: bytes.toString("base64"),
     };
 
-    const { concepts, pageStart, pageEnd } = await extractUnitConceptsFromTextbook(file, unitRow.title, unitRow.number, totalUnits);
+    // Gemini first (native PDF support, no per-call floor), OpenRouter as a
+    // real fallback - not just a config check - for when Gemini's account
+    // hits its spend cap (a real, non-retriable 429 hit live 2026-09-08,
+    // confirmed to block every Gemini call, text or image, for the rest of
+    // that billing cycle - waiting it out does nothing, a different provider
+    // is the only way to keep going in the meantime).
+    let extraction: TextbookUnitExtraction | null = null;
+    let lastError: unknown;
+    if (isGeminiConfigured()) {
+      try {
+        extraction = await extractUnitConceptsFromTextbook(file, unitRow.title, unitRow.number, totalUnits);
+      } catch (err) {
+        console.error("Gemini textbook extraction failed, trying OpenRouter", err);
+        lastError = err;
+      }
+    }
+    if (!extraction && isOpenRouterConfigured()) {
+      try {
+        extraction = await extractUnitConceptsFromTextbookOpenRouter(file, unitRow.title, unitRow.number, totalUnits);
+      } catch (err) {
+        console.error("OpenRouter textbook extraction failed", err);
+        lastError = err;
+      }
+    }
+    if (!extraction) {
+      throw lastError ?? new Error("No textbook extraction provider is configured.");
+    }
+    const { concepts, pageStart, pageEnd } = extraction;
 
     let orderIndex = 0;
     const createdIds: string[] = [];
@@ -113,8 +142,17 @@ export async function POST(req: NextRequest) {
         await db.concept.update({ where: { id }, data: { generatedIllustrationUrl: url } });
       })
     );
+    await Promise.allSettled(
+      createdIds.map(async (id) => {
+        const concept = await db.concept.findUnique({ where: { id } });
+        if (!concept) return;
+        const widget = await generateConceptWidget(concept);
+        if (widget) await db.concept.update({ where: { id }, data: { generatedWidget: widget as unknown as Prisma.InputJsonValue } });
+      })
+    );
 
     if (pageStart && pageEnd && pageEnd >= pageStart) {
+      await db.unit.update({ where: { id: unitRow.id }, data: { textbookPageStart: pageStart, textbookPageEnd: pageEnd } });
       const pageNumbers = sampleUnitPageNumbers(pageStart, pageEnd);
       const targetDir = path.join(UPLOADS_DIR, unitKey);
       await mkdir(targetDir, { recursive: true });

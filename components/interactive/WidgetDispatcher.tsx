@@ -10,7 +10,7 @@ import { IdiomConnector } from './IdiomConnector';
 import { BiographyScanner } from './BiographyScanner';
 import { LifeMountain } from './LifeMountain';
 import { PrefixMachine } from './PrefixMachine';
-import { getWidgetForConcept } from '@/lib/interactiveWidgets';
+import { getWidgetForConcept, type InteractiveWidget, type TraitMatcherSpec, type PredictiveBrancherSpec } from '@/lib/interactiveWidgets';
 
 interface WidgetDispatcherProps {
   conceptId: string;
@@ -22,6 +22,8 @@ interface WidgetDispatcherProps {
   onSelect?: (val: any) => void;
   onSuccess?: () => void;
   onAttempt?: (correct: boolean) => void;
+  /** AI-generated fallback (lib/conceptWidgetGeneration.ts) for a concept with no hand-authored English widget - see lib/interactiveWidgets.ts's subject-scoping comment. */
+  generatedWidget?: ((TraitMatcherSpec | PredictiveBrancherSpec) & { instruction?: string }) | null;
 }
 
 export const WidgetDispatcher: React.FC<WidgetDispatcherProps> = ({
@@ -34,9 +36,15 @@ export const WidgetDispatcher: React.FC<WidgetDispatcherProps> = ({
   onSelect,
   onSuccess,
   onAttempt,
+  generatedWidget,
 }) => {
   const id = conceptId || conceptTested || '';
-  const widget = getWidgetForConcept(id, unitKey);
+  const authoredWidget = getWidgetForConcept(id, unitKey);
+  const widget: InteractiveWidget | undefined =
+    authoredWidget ??
+    (generatedWidget
+      ? { id: `generated-${id}`, title: generatedWidget.kind, instruction: generatedWidget.instruction ?? '', spec: generatedWidget }
+      : undefined);
 
   if (!widget) {
     return (

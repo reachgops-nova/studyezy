@@ -66,3 +66,62 @@ export async function getOrCreateProgressionTestPack(unitKey: string, difficulty
   }
   return packId;
 }
+
+/**
+ * Same deterministic, zero-AI-cost conversion as getOrCreateProgressionTestPack,
+ * but for the practice workbook (purpose "worksheet", the
+ * /learn/[unitId]/worksheet/[packId] "read a hint, try it, see the
+ * explanation" flow) instead of a timed progression test - reuses the
+ * unit's "moderate" QuestionPaper as the source rather than generating
+ * separate workbook content, since questionPaperToPack already carries a
+ * real hint + explanation per question. Built for textbook-sourced units
+ * (lib/textbookQuestionPaperExtraction.ts), which have no curated worksheet
+ * pages to transcribe via the usual convertPagesToPack path - see
+ * app/api/pages/extract-from-textbook/route.ts's sibling routes for the
+ * full pipeline this completes.
+ */
+export async function getOrCreateWorkbookPackFromQuestionPaper(unitKey: string): Promise<string | null> {
+  const unit = await db.unit.findUnique({ where: { unitKey } });
+  if (!unit) return null;
+
+  const packId = `${unitKey}-workbook`;
+  const existing = await db.contentPack.findUnique({ where: { packId } });
+  if (existing) return existing.packId;
+
+  const paper = await getQuestionPaperByKey(unitKey, "moderate");
+  if (!paper || paper.questions.length === 0) return null;
+
+  const pack = questionPaperToPack(
+    paper,
+    { book: unit.sourceTitle || unit.title, subject: unit.title, board: unit.board, stage: unitKey.split("-")[1] },
+    unit.title,
+    packId
+  );
+
+  const validation = validatePack(pack) as { errors: string[]; warnings: string[]; counts: { sheets: number; questions: number; needsHuman: number } };
+  const status = validation.errors.length > 0 ? "failed" : "clean";
+
+  await db.contentPack.create({
+    data: {
+      packId,
+      unitId: unit.id,
+      purpose: "worksheet",
+      difficulty: null,
+      data: pack as unknown as Prisma.InputJsonValue,
+      sheetsCount: validation.counts.sheets,
+      questionsCount: validation.counts.questions,
+      needsHumanCount: validation.counts.needsHuman,
+      errorsCount: validation.errors.length,
+      warningsCount: validation.warnings.length,
+      status,
+      sourceImageKeys: [],
+      model: "converted-from-question-paper",
+    },
+  });
+
+  if (status === "failed") {
+    console.error(`questionPaperToPack produced an invalid workbook pack for ${unitKey}`, validation.errors);
+    return null;
+  }
+  return packId;
+}

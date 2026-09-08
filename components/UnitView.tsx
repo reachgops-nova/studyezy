@@ -160,8 +160,17 @@ export function UnitView({
   // which only fires once the explanation/checkpoints are actually done.
   const [readyForPractice, setReadyForPractice] = useState(false);
 
-  const currentWidget = getWidgetForConcept(activeConceptId, unitKey);
   const currentConcept = concepts.find((c) => c.concept_id === activeConceptId);
+  // Hand-authored English widget first, then this concept's own AI-generated
+  // one (lib/conceptWidgetGeneration.ts) - see lib/interactiveWidgets.ts's
+  // subject-scoping comment for why the hand-authored bank alone returns
+  // nothing for any other subject.
+  const generatedWidget = currentConcept?.generated_widget;
+  const currentWidget: InteractiveWidget | undefined =
+    getWidgetForConcept(activeConceptId, unitKey) ??
+    (generatedWidget
+      ? { id: `generated-${activeConceptId}`, title: generatedWidget.kind, instruction: generatedWidget.instruction ?? '', spec: generatedWidget }
+      : undefined);
   const activeIdx = activeConcepts.findIndex((c) => c.id === activeConceptId);
   const hasNextConcept = activeIdx >= 0 && activeIdx < activeConcepts.length - 1;
 
@@ -639,6 +648,7 @@ export function UnitView({
                           conceptId={activeConceptId}
                           unitKey={unitKey || ""}
                           conceptTested={activeConceptId}
+                          generatedWidget={generatedWidget}
                           isCorrect={isCorrectSelection}
                           currentSelection={currentSelection}
                           onAttempt={handleWidgetAttempt}
