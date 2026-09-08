@@ -18,6 +18,12 @@ import {
 } from "./textbookConceptExtraction";
 import { textbookQuestionPaperUserText } from "./textbookQuestionPaperExtraction";
 import { conceptWidgetSystem, conceptWidgetUserText, parseConceptWidget, type GeneratedConceptWidget } from "./conceptWidgetGeneration";
+import {
+  conceptPracticeProblemsSystem,
+  conceptPracticeProblemsUserText,
+  parseConceptPracticeProblems,
+} from "./conceptPracticeProblems";
+import type { VoiceQASample } from "./types";
 import type { Concept as DbConcept } from "@prisma/client";
 
 // OpenRouter (openrouter.ai) - an OpenAI-compatible proxy in front of many
@@ -195,6 +201,17 @@ export async function generateConceptWidgetOpenRouter(concept: DbConcept): Promi
     false
   );
   return parseConceptWidget(raw, concept.name);
+}
+
+/** Same contract as lib/conceptPracticeProblems.ts's generateConceptPracticeProblems - the fallback used when Gemini's account hits its spend cap. Text-only, no PDF/file part needed. */
+export async function generateConceptPracticeProblemsOpenRouter(concept: DbConcept): Promise<VoiceQASample[]> {
+  const raw = await openRouterChat(
+    "concept-practice-problems-openrouter",
+    conceptPracticeProblemsSystem(),
+    [{ type: "text", text: conceptPracticeProblemsUserText(concept) }],
+    false
+  );
+  return parseConceptPracticeProblems(raw, concept.name);
 }
 
 /** Same contract as lib/claude.ts's generateQuestionPaper. */

@@ -33,8 +33,16 @@ really there. For each concept, produce:
 - key_points: 2-4 original bullet points
 - examples: 1-2 original examples
 - tips_to_remember: 1 short original memory tip
-- voice_qa_samples: 2 short original question+answer pairs a curious kid might ask, with simple
-  grade-appropriate answers
+- voice_qa_samples: 3-4 short PRACTICE PROBLEMS the student solves, not curiosity trivia - real
+  feedback 2026-09-08: "Math unit 1 is more like conversation, not making much sense... this is not
+  a language... give example exercises, 2-4 sums per topic so they are clear and answer correctly."
+  If the concept involves calculation or problem-solving (most Math concepts, and many Science
+  ones), each "question" must be a real, specific, solvable problem in that concept's own
+  vocabulary/numbers (e.g. "What is 0.5 + 0.3?", not "What does the tenths place mean?"), and
+  "answer" the specific correct result, stated plainly (e.g. "0.8"). If the concept genuinely has no
+  solvable-problem shape (e.g. a purely descriptive/reading concept), fall back to a real
+  comprehension question with one clear correct answer instead of a made-up problem - never invent
+  a problem that doesn't actually fit the concept just to force this shape.
 
 Also report page_start and page_end: the actual PDF page numbers (this file's own page position,
 counting the very first page of the file as page 1 - NOT any printed page number in the book,

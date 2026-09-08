@@ -120,7 +120,13 @@ const REPEAT_ACKS = ["No problem, let me explain that again.", "Sure, here it is
 // moves on regardless, on the theory that by then Ezy has already explained
 // the idea with several fresh examples and further looping would frustrate
 // rather than teach.
-const MICRO_CHECK_COUNT = 2;
+// Real feedback 2026-09-08: Math's lesson felt "more like conversation, not
+// making much sense... give example exercises, 2-4 sums per topic" - raised
+// from 2 so a concept whose extraction now provides 3-4 real practice
+// problems (content/prompts/extract-unit-textbook-concepts.md) actually
+// asks all of them. Harmless for existing English content, which still only
+// ever provides 2 samples per concept (Math.min below leaves it unchanged).
+const MICRO_CHECK_COUNT = 4;
 const MAX_MICRO_CHECK_ATTEMPTS = 3;
 const FALLBACK_ACK = "Thanks for sharing your thinking!";
 
