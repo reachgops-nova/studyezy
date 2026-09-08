@@ -3,7 +3,7 @@ import { readFile, mkdir, writeFile } from "node:fs/promises";
 import { getActiveProfileId } from "@/lib/auth";
 import { getCurrentUser } from "@/lib/session";
 import { extractUnitConceptsFromTextbook, sampleUnitPageNumbers, type TextbookUnitExtraction } from "@/lib/textbookConceptExtraction";
-import { extractUnitConceptsFromTextbookOpenRouter, isOpenRouterConfigured } from "@/lib/openrouter";
+import { extractUnitConceptsFromTextbookOpenRouter, generateConceptWidgetOpenRouter, isOpenRouterConfigured } from "@/lib/openrouter";
 import { generateConceptIllustration } from "@/lib/conceptIllustration";
 import { generateConceptWidget } from "@/lib/conceptWidgetGeneration";
 import { renderPdfPageToPng } from "@/lib/pdfCrop";
@@ -146,7 +146,13 @@ export async function POST(req: NextRequest) {
       createdIds.map(async (id) => {
         const concept = await db.concept.findUnique({ where: { id } });
         if (!concept) return;
-        const widget = await generateConceptWidget(concept);
+        let widget = null;
+        try {
+          widget = await generateConceptWidget(concept);
+        } catch (err) {
+          console.error("Gemini widget generation failed, trying OpenRouter", err);
+          if (isOpenRouterConfigured()) widget = await generateConceptWidgetOpenRouter(concept);
+        }
         if (widget) await db.concept.update({ where: { id }, data: { generatedWidget: widget as unknown as Prisma.InputJsonValue } });
       })
     );

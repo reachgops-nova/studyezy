@@ -38,7 +38,12 @@ If NEITHER shape can be built with only strictly-correct, ungrounded-in-nothing-
 
 Respond with ONLY the JSON object, no markdown fences, no commentary.`;
 
-function buildUserText(concept: DbConcept): string {
+/** Exported so lib/openrouter.ts's fallback path uses the identical wording instead of a hand-copied, driftable duplicate. */
+export function conceptWidgetSystem(): string {
+  return SYSTEM;
+}
+
+export function conceptWidgetUserText(concept: DbConcept): string {
   const parts = [`Concept: ${concept.name}`];
   if (concept.definition) parts.push(`Definition: ${concept.definition}`);
   if (concept.keyPoints.length) parts.push(`Key points:\n${concept.keyPoints.map((p) => `- ${p}`).join("\n")}`);
@@ -49,40 +54,15 @@ function buildUserText(concept: DbConcept): string {
 
 export type GeneratedConceptWidget = ((TraitMatcherSpec | PredictiveBrancherSpec) & { instruction: string }) | null;
 
-/**
- * Generates one subject-agnostic practice widget for a concept - see the
- * SYSTEM prompt above for why only trait_matcher/predictive_brancher are
- * ever produced. Returns null (not an error) when the model itself decides
- * neither shape genuinely fits, which the caller should treat the same as
- * "no widget yet" rather than retrying.
- */
-export async function generateConceptWidget(concept: DbConcept): Promise<GeneratedConceptWidget> {
-  const res = await fetch(URL, {
-    method: "POST",
-    headers: { "Content-Type": "application/json", "X-goog-api-key": process.env.GOOGLE_AI_API_KEY ?? "" },
-    body: JSON.stringify({
-      contents: [{ parts: [{ text: buildUserText(concept) }] }],
-      systemInstruction: { parts: [{ text: SYSTEM }] },
-      generationConfig: { responseMimeType: "application/json", maxOutputTokens: 2000 },
-    }),
-  });
-  if (!res.ok) {
-    const bodyText = await res.text().catch(() => "");
-    throw new Error(`Gemini widget-generation request failed (${res.status}): ${bodyText.slice(0, 500)}`);
-  }
-  const data = (await res.json()) as {
-    candidates?: { content?: { parts?: { text?: string }[] } }[];
-    usageMetadata?: { promptTokenCount?: number; candidatesTokenCount?: number };
-  };
-  logAiCost("concept-widget-gemini", MODEL, data.usageMetadata?.promptTokenCount ?? 0, data.usageMetadata?.candidatesTokenCount ?? 0);
-  const text = data.candidates?.[0]?.content?.parts?.map((p) => p.text ?? "").join("") || "{}";
-  const cleaned = text.replace(/^```(?:json)?/m, "").replace(/```$/m, "").trim();
+/** Shared by every provider - parses the raw JSON text into the same GeneratedConceptWidget shape regardless of which model produced it. Exported so lib/openrouter.ts's fallback path reuses this instead of a hand-copied, driftable duplicate. */
+export function parseConceptWidget(rawText: string, conceptName: string): GeneratedConceptWidget {
+  const cleaned = rawText.replace(/^```(?:json)?/m, "").replace(/```$/m, "").trim();
 
   let parsed: { kind?: string; instruction?: string; pairs?: { character: string; trait: string }[]; scenario?: string; choices?: { text: string; correct: boolean; feedback: string }[]; error?: string };
   try {
     parsed = JSON.parse(cleaned);
   } catch {
-    throw new Error(`Couldn't read a clear widget for "${concept.name}".`);
+    throw new Error(`Couldn't read a clear widget for "${conceptName}".`);
   }
   if (parsed.error || !parsed.kind) return null;
 
@@ -98,4 +78,37 @@ export async function generateConceptWidget(concept: DbConcept): Promise<Generat
     };
   }
   return null;
+}
+
+/**
+ * Generates one subject-agnostic practice widget for a concept - see the
+ * SYSTEM prompt above for why only trait_matcher/predictive_brancher are
+ * ever produced. Returns null (not an error) when the model itself decides
+ * neither shape genuinely fits, which the caller should treat the same as
+ * "no widget yet" rather than retrying.
+ *
+ * Gemini path - see app/api/pages/extract-from-textbook/route.ts callers
+ * for the OpenRouter fallback used when Gemini's account hits its spend cap.
+ */
+export async function generateConceptWidget(concept: DbConcept): Promise<GeneratedConceptWidget> {
+  const res = await fetch(URL, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", "X-goog-api-key": process.env.GOOGLE_AI_API_KEY ?? "" },
+    body: JSON.stringify({
+      contents: [{ parts: [{ text: conceptWidgetUserText(concept) }] }],
+      systemInstruction: { parts: [{ text: SYSTEM }] },
+      generationConfig: { responseMimeType: "application/json", maxOutputTokens: 2000 },
+    }),
+  });
+  if (!res.ok) {
+    const bodyText = await res.text().catch(() => "");
+    throw new Error(`Gemini widget-generation request failed (${res.status}): ${bodyText.slice(0, 500)}`);
+  }
+  const data = (await res.json()) as {
+    candidates?: { content?: { parts?: { text?: string }[] } }[];
+    usageMetadata?: { promptTokenCount?: number; candidatesTokenCount?: number };
+  };
+  logAiCost("concept-widget-gemini", MODEL, data.usageMetadata?.promptTokenCount ?? 0, data.usageMetadata?.candidatesTokenCount ?? 0);
+  const text = data.candidates?.[0]?.content?.parts?.map((p) => p.text ?? "").join("") || "{}";
+  return parseConceptWidget(text, concept.name);
 }

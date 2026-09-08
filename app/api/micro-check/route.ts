@@ -20,7 +20,20 @@ const LOW_EFFORT_FEEDBACK = [
   "No worries if that one's not clicking yet - here it is again.",
 ];
 
+// Real bug reported live 2026-09-08: "Which is larger, zero point nine or
+// one whole?" answered "1" (the correct, complete answer) was graded as a
+// non-answer purely because it's under 4 characters - the length<4
+// heuristic was written for filler words in an English-answer context
+// ("ok", "k", "no") and never accounted for a short NUMBER being a
+// perfectly complete, correct answer, which is the normal shape of a real
+// answer in Math (or any subject with numeric micro-check questions). A
+// numeric-looking answer skips the length check entirely; it can still be
+// graded incorrect by groqMicroCheckGrade below on its actual content, just
+// never auto-rejected for being short.
+const NUMERIC_ANSWER_PATTERN = /^-?\d+(\.\d+)?(\s*\/\s*-?\d+(\.\d+)?)?%?$/;
+
 function isLowEffortAnswer(text: string): boolean {
+  if (NUMERIC_ANSWER_PATTERN.test(text)) return false;
   return text.length < 4 || LOW_EFFORT_PATTERN.test(text);
 }
 

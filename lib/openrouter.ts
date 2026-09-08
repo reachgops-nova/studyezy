@@ -17,6 +17,8 @@ import {
   type TextbookUnitExtraction,
 } from "./textbookConceptExtraction";
 import { textbookQuestionPaperUserText } from "./textbookQuestionPaperExtraction";
+import { conceptWidgetSystem, conceptWidgetUserText, parseConceptWidget, type GeneratedConceptWidget } from "./conceptWidgetGeneration";
+import type { Concept as DbConcept } from "@prisma/client";
 
 // OpenRouter (openrouter.ai) - an OpenAI-compatible proxy in front of many
 // models, added 2026-09-06 specifically to unblock vision extraction: it
@@ -182,6 +184,17 @@ export async function generateUnitQuestionPaperFromTextbookOpenRouter(
     true
   );
   return parseQuestionPaperResponse(raw);
+}
+
+/** Same contract as lib/conceptWidgetGeneration.ts's generateConceptWidget - the fallback used when Gemini's account hits its spend cap. Text-only, no PDF/file part needed. */
+export async function generateConceptWidgetOpenRouter(concept: DbConcept): Promise<GeneratedConceptWidget> {
+  const raw = await openRouterChat(
+    "concept-widget-openrouter",
+    conceptWidgetSystem(),
+    [{ type: "text", text: conceptWidgetUserText(concept) }],
+    false
+  );
+  return parseConceptWidget(raw, concept.name);
 }
 
 /** Same contract as lib/claude.ts's generateQuestionPaper. */
