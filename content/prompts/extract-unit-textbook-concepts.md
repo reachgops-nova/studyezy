@@ -24,6 +24,12 @@ CRITICAL - originality: Write your OWN explanations of what that section teaches
 words, the way a tutor would explain it out loud. Do NOT copy or closely paraphrase sentences
 directly from the book - this becomes original teaching content, not a reproduction of it.
 
+CRITICAL - notation: write numbers using standard mathematical notation (-4, 0.5, 3/4, 50%), not
+spelled out in words (never "negative four", "zero point five") - real feedback 2026-09-08: "it can
+be called as -4 and -9 instead of negative... context of usage is also to be noted, this is Math."
+Spell out a number in words only when the sentence is genuinely about the word itself (e.g.
+introducing what the word "negative" means), never as the normal way of writing a value.
+
 Propose a sensible breakdown of THIS UNIT ONLY into distinct concepts/topics it actually covers -
 however many the material genuinely supports (typically 2-6), never padding out topics that aren't
 really there. For each concept, produce:

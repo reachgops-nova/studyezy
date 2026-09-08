@@ -24,6 +24,8 @@ CRITICAL - correctness: every question and answer must be strictly correct accor
 
 CRITICAL - originality: write your own problems, don't just copy the concept's own example sentences verbatim.
 
+CRITICAL - notation: write numbers using standard mathematical notation (-4, 0.5, 3/4, 50%), not spelled out in words (never "negative four", "zero point five").
+
 Write 3-4 of these. Respond with ONLY a JSON object, no markdown fences, no commentary:
 {"samples": [{"question": string, "answer": string}, ...]}`;
 
