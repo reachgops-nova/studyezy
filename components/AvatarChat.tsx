@@ -394,6 +394,9 @@ export default function AvatarChat({
    * worth the vertical space it took from the actual lesson/widget below on
    * a 3-column layout that's already tight on room. Independent of
    * hideSourceImage, which only ever governs the real scanned textbook page.
+   * Only ever applied to the legacy illustration_key SVG set - a generated
+   * illustration (2026-09-07, richer and concept-specific, paired with a
+   * real-facts text panel) is never hidden by this flag.
    */
   hideIllustration?: boolean;
   // Real gap found live 2026-08-27: after finishing a concept's checkpoints
@@ -904,7 +907,13 @@ export default function AvatarChat({
   return (
     <div className="grid grid-cols-1 gap-4">
       {((concept.media?.source_image_path && !hideSourceImage) ||
-        (concept.media?.generated_illustration_url && !hideIllustration) ||
+        // A generated illustration is deliberately NOT gated on
+        // hideIllustration - that flag was set by UnitView specifically to
+        // drop the old generic hand-drawn illustration_key set (2026-09-05:
+        // "not worth the vertical space"), before this richer,
+        // concept-specific illustration + real-facts panel existed. Always
+        // show it when present.
+        concept.media?.generated_illustration_url ||
         (concept.media?.illustration_key && !hideIllustration)) && (
         // max-w-xl + aspect-ratio (matching the illustrations' own 300x180
         // viewBox) gives the artwork real presence instead of a small
@@ -962,7 +971,7 @@ export default function AvatarChat({
               genuinely misspelled/hallucinated in testing) - the real facts
               go here instead, as real text straight from the concept, which
               can't be misspelled or invented the way pixels can. */}
-          {concept.media?.generated_illustration_url && !hideIllustration && (concept.definition || concept.key_points?.length) && (
+          {concept.media?.generated_illustration_url && (concept.definition || concept.key_points?.length) && (
             <div className="mt-3 grid gap-2 border-t border-slate-100 pt-3">
               {concept.definition && <p className="text-sm leading-relaxed text-slate-700">{concept.definition}</p>}
               {concept.key_points && concept.key_points.length > 0 && (
