@@ -450,6 +450,7 @@ export default function AvatarChat({
   onReachedPractice,
   hideSourceImage = false,
   hideIllustration = false,
+  practiceSlot,
 }: {
   unitKey: string;
   concept: Concept;
@@ -489,6 +490,17 @@ export default function AvatarChat({
    * there's actually something to practise.
    */
   onReachedPractice?: () => void;
+  /**
+   * The concept's practice widget (see components/interactive/
+   * WidgetDispatcher.tsx), rendered by the caller and handed in rather than
+   * built here - AvatarChat has no idea what a "widget" is, it just gives
+   * this a place to live. Real feedback 2026-09-08: it used to render as a
+   * separate block below this whole component, which read as a different,
+   * disconnected part of the page rather than part of the same
+   * conversation - now it's placed inside the same scrolling thread as
+   * every other message, right after whatever Ezy last said.
+   */
+  practiceSlot?: React.ReactNode;
 }) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [readyForInput, setReadyForInput] = useState(false);
@@ -1421,6 +1433,7 @@ export default function AvatarChat({
               </div>
             </div>
           )}
+          {practiceSlot && <div className="message-enter flex items-start gap-2">{practiceSlot}</div>}
         </div>
 
         <div className="border-t border-practice-border p-4">

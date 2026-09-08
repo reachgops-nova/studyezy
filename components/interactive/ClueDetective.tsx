@@ -49,25 +49,25 @@ export const ClueDetective: React.FC<ClueDetectiveProps> = ({
   const expression = activeClue?.reveals ?? null;
 
   return (
-    <div className="flex flex-col items-center justify-between w-full h-full p-4 bg-[#f4f6f1] rounded-3xl border-3 border-[#16241f] shadow-[8px_8px_0px_0px_rgba(22,36,31,1)] max-w-lg mx-auto overflow-y-auto">
+    <div className="mx-auto flex h-full w-full max-w-lg flex-col items-center justify-between overflow-y-auto rounded-2xl border border-slate-200/70 bg-white p-4 shadow-soft">
       {/* Title bar */}
-      <div className="text-center mb-2 relative w-full shrink-0">
+      <div className="relative mb-2 w-full shrink-0 text-center">
         <div className="absolute -top-2 left-2 animate-bounce delay-100 text-2xl">🔍</div>
         <div className="absolute -top-2 right-2 animate-bounce delay-300 text-2xl">✨</div>
-        <span className="inline-block px-3 py-1 rounded-full text-xs font-sans font-extrabold uppercase tracking-widest bg-[#9c6f1f]/10 text-[#9c6f1f] border-2 border-[#9c6f1f]/20">
-          Unit 1.2 Lesson Sandbox
+        <span className="inline-block rounded-full border border-brand-gold/20 bg-brand-gold-bright/10 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-brand-ink">
+          Unit 1.2 lesson sandbox
         </span>
-        <h3 className="font-serif text-[#16241f] text-xl font-black mt-1.5 tracking-tight">
-          Ezy's Clue Detective
+        <h3 className="mt-1.5 text-lg font-bold tracking-tight text-slate-800">
+          Ezy's clue detective
         </h3>
-        <p className="text-xs text-[#16241f]/75 font-sans font-medium mt-0.5 max-w-xs mx-auto">
+        <p className="mx-auto mt-0.5 max-w-xs text-xs font-medium text-slate-500">
           Tap the glowing clue words to see what Jo's face is really telling us!
         </p>
       </div>
 
       {/* Jo's face scene */}
-      <div className="relative w-full h-32 shrink-0 flex items-center justify-center bg-white rounded-2xl border-3 border-[#16241f] shadow-inner overflow-hidden">
-        <div className="absolute inset-0 opacity-40 bg-gradient-to-b from-[#fde68a]/30 to-transparent pointer-events-none" />
+      <div className="relative flex h-32 w-full shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-slate-200/70 bg-slate-50">
+        <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-brand-gold-bright/15 to-transparent" />
         <svg viewBox="0 0 200 200" className="w-24 h-24 z-10" fill="none" xmlns="http://www.w3.org/2000/svg">
           <circle cx="100" cy="100" r="70" fill="#ffe0b2" stroke="#16241f" strokeWidth="4" />
 
@@ -96,8 +96,8 @@ export const ClueDetective: React.FC<ClueDetectiveProps> = ({
         </svg>
 
         {allFound && (
-          <div className="absolute top-3 left-4 right-4 bg-green-100 border-2 border-[#16241f] rounded-xl px-4 py-2 text-center animate-bounce shadow-md">
-            <p className="text-xs font-sans font-extrabold text-[#16241f]">
+          <div className="absolute left-4 right-4 top-3 rounded-xl border border-emerald-300 bg-emerald-50 px-4 py-2 text-center shadow-sm animate-bounce">
+            <p className="text-xs font-semibold text-emerald-800">
               🎉 You cracked the case! Jo is being mischievous!
             </p>
           </div>
@@ -105,11 +105,11 @@ export const ClueDetective: React.FC<ClueDetectiveProps> = ({
       </div>
 
       {/* Clue sentence */}
-      <div className="w-full p-3 rounded-2xl border-3 border-[#16241f] bg-white shadow-[4px_4px_0px_0px_rgba(22,36,31,1)] my-2 text-center relative shrink-0">
-        <span className="absolute -top-3 left-6 px-2.5 py-0.5 rounded-md text-[9px] font-sans font-extrabold uppercase bg-[#16241f] text-white">
-          Clue Sentence
+      <div className="relative my-2 w-full shrink-0 rounded-2xl border border-slate-200/70 bg-slate-50 p-3 text-center">
+        <span className="absolute -top-3 left-6 rounded-full bg-brand-ink px-2.5 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-white">
+          Clue sentence
         </span>
-        <p className="font-sans text-[#16241f] text-sm md:text-base leading-relaxed font-bold pt-1">
+        <p className="pt-1 text-sm font-medium leading-relaxed text-slate-800 md:text-base">
           {sentenceParts.map((part, i) => {
             const clue = clues.find((c) => c.word.toLowerCase() === part.toLowerCase());
             if (!clue) return <span key={i}>{part}</span>;
@@ -118,10 +118,10 @@ export const ClueDetective: React.FC<ClueDetectiveProps> = ({
               <button
                 key={i}
                 onClick={() => handleClueTap(clue)}
-                className={`inline font-black underline decoration-wavy decoration-2 underline-offset-4 rounded px-0.5 transition-all ${
+                className={`inline rounded px-0.5 font-semibold underline decoration-wavy decoration-2 underline-offset-4 transition-all ${
                   found
-                    ? 'bg-[#9c6f1f]/20 text-[#9c6f1f] decoration-[#9c6f1f]'
-                    : 'text-[#16241f] decoration-[#9c6f1f]/60 hover:bg-[#9c6f1f]/10 animate-pulse'
+                    ? 'bg-brand-gold-bright/20 text-brand-ink decoration-brand-gold'
+                    : 'text-slate-800 decoration-brand-gold/60 hover:bg-brand-gold-bright/10 animate-pulse'
                 }`}
               >
                 {part}
@@ -132,23 +132,22 @@ export const ClueDetective: React.FC<ClueDetectiveProps> = ({
       </div>
 
       {/* Mascot Ezy clue reveal */}
-      <div className="w-full shrink-0 border-t-2 border-dashed border-[#16241f]/20 pt-2 flex items-start gap-3">
-        <div className="w-12 h-10 rounded-2xl bg-[#9c6f1f]/15 border-2 border-[#16241f] flex items-center justify-center flex-shrink-0 text-xl font-bold shadow-sm">
+      <div className="flex w-full shrink-0 items-start gap-3 border-t border-dashed border-slate-200 pt-2">
+        <div className="flex h-10 w-12 shrink-0 items-center justify-center rounded-2xl border border-brand-gold/20 bg-brand-gold-bright/10 text-xl font-bold">
           🦘
         </div>
-        <div className="flex-1 bg-white p-2.5 rounded-2xl border-3 border-[#16241f] relative shadow-[3px_3px_0px_0px_rgba(22,36,31,1)]">
-          <div className="absolute -left-2 top-3.5 w-0 h-0 border-t-6 border-t-transparent border-r-8 border-r-[#16241f] border-b-6 border-b-transparent" />
-          <p className="text-xs font-sans text-[#16241f] leading-relaxed font-bold">
+        <div className="relative flex-1 rounded-2xl border border-slate-200/70 bg-white p-2.5 shadow-sm">
+          <p className="text-xs font-medium leading-relaxed text-slate-700">
             {activeClue ? (
               <span>
-                💡 <span className="text-[#9c6f1f]">Ezy's Clue:</span> {activeClue.ezySays}
+                💡 <span className="text-brand-ink">Ezy's clue:</span> {activeClue.ezySays}
               </span>
             ) : (
               "Tap a glowing word in the sentence above to see what it really means!"
             )}
           </p>
           {clues.length > 0 && (
-            <p className="text-[10px] text-[#16241f]/50 font-sans font-bold mt-2">
+            <p className="mt-2 text-[10px] font-semibold text-slate-400">
               {foundWords.size} of {clues.length} clues found
             </p>
           )}

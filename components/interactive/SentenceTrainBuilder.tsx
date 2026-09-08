@@ -91,23 +91,27 @@ export const SentenceTrainBuilder: React.FC<SentenceTrainProps> = ({
   };
 
   return (
-    <div className="flex flex-col items-center justify-between w-full h-full p-6 bg-[#f4f6f1] rounded-3xl border-3 border-[#16241f] shadow-[8px_8px_0px_0px_rgba(22,36,31,1)] max-w-lg mx-auto overflow-hidden">
-      
+    <div className="flex flex-col items-center justify-between w-full h-full p-6 rounded-2xl border border-slate-200/70 bg-white shadow-soft max-w-lg mx-auto overflow-hidden">
+
       {/* Header Info */}
       <div className="text-center mb-4 w-full">
-        <span className="inline-block px-3 py-1 rounded-full text-[10px] font-sans font-extrabold uppercase tracking-widest bg-[#9c6f1f]/15 text-[#9c6f1f] border-2 border-[#9c6f1f]/20">
+        <span className="inline-block rounded-full border border-brand-gold/20 bg-brand-gold-bright/10 px-3 py-1 text-[10px] font-semibold uppercase tracking-wide text-brand-ink">
           {currentPuzzle.sentenceType}
         </span>
-        <h3 className="font-serif text-[#16241f] text-2xl font-black mt-2 tracking-tight">
-          The Sentence Train Coupler
+        <h3 className="mt-2 text-2xl font-bold tracking-tight text-slate-800">
+          The sentence train coupler
         </h3>
-        <p className="text-xs text-[#16241f]/75 font-sans font-bold">
+        <p className="text-xs font-semibold text-slate-500">
           Pick the correct linking word to snap the carriages together!
         </p>
       </div>
 
-      {/* SVG ANIMATED TRAIN TRACK WORKBENCH */}
-      <div className="relative w-full h-48 flex items-center justify-center bg-white rounded-2xl border-3 border-[#16241f] shadow-inner overflow-hidden px-4">
+      {/* SVG ANIMATED TRAIN TRACK WORKBENCH - the bold, solid carriage blocks
+          below are a deliberate part of the train metaphor (a real train car
+          reads as solid/blocky, not soft/pastel), so only this outer
+          workbench frame is softened to match the rest of the app - the
+          carriages themselves keep their bolder styling. */}
+      <div className="relative w-full h-48 flex items-center justify-center bg-slate-50 rounded-2xl border border-slate-200/70 overflow-hidden px-4">
         
         {/* Sky gradient background */}
         <div className="absolute inset-0 bg-gradient-to-b from-[#bae6fd]/30 to-transparent pointer-events-none" />
@@ -239,26 +243,26 @@ export const SentenceTrainBuilder: React.FC<SentenceTrainProps> = ({
       <div className="w-full my-4">
         {isCoupled ? (
           // Success State Feedback
-          <div className="bg-[#16241f]/5 border-3 border-[#16241f] rounded-2xl p-4 text-center animate-bounce shadow-sm">
-            <p className="text-base font-sans font-black text-[#16241f]">
-              🎉 CHUGGA CHUGGA, CHOO CHOO! 🚂
+          <div className="rounded-2xl border border-emerald-300 bg-emerald-50 p-4 text-center shadow-sm animate-bounce">
+            <p className="text-base font-bold text-emerald-800">
+              🎉 Chugga chugga, choo choo! 🚂
             </p>
-            <p className="text-xs text-[#16241f]/80 mt-1 font-bold">
+            <p className="mt-1 text-xs font-medium text-emerald-700">
               {currentPuzzle.explanation}
             </p>
           </div>
         ) : (
           // Action Buttons
           <div className="flex flex-col items-center">
-            <p className="text-xs font-sans text-[#16241f]/60 mb-2.5 uppercase tracking-widest font-black">
-              Select the Connector to Couple:
+            <p className="mb-2.5 text-xs font-semibold uppercase tracking-wide text-slate-400">
+              Select the connector to couple:
             </p>
             <div className="flex gap-3 w-full justify-center">
               {currentPuzzle.options.map((option) => (
                 <button
                   key={option}
                   onClick={() => handleSelectConnector(option)}
-                  className="py-3 px-6 rounded-2xl font-sans font-black text-sm bg-white text-[#16241f] border-3 border-[#16241f] shadow-[3px_3px_0px_0px_rgba(22,36,31,1)] hover:-translate-y-0.5 hover:shadow-[5px_5px_0px_0px_rgba(22,36,31,1)] active:translate-y-0 active:shadow-none transition-all duration-200"
+                  className="rounded-2xl border border-slate-200 bg-white px-6 py-3 text-sm font-bold text-slate-800 transition-all duration-200 hover:border-brand-ink-light hover:bg-slate-50"
                 >
                   {option}
                 </button>
@@ -269,24 +273,23 @@ export const SentenceTrainBuilder: React.FC<SentenceTrainProps> = ({
       </div>
 
       {/* HELP & MASCOT ASSISTANT */}
-      <div className="w-full border-t-3 border-dashed border-[#16241f]/20 pt-4 flex items-start gap-3">
+      <div className="w-full border-t border-dashed border-slate-200 pt-4 flex items-start gap-3">
         {/* Kangaroo Head Avatar */}
-        <div className="w-12 h-10 rounded-2xl bg-[#9c6f1f]/15 border-2 border-[#16241f] flex items-center justify-center flex-shrink-0 text-xl font-bold shadow-sm">
+        <div className="w-12 h-10 rounded-2xl bg-brand-gold-bright/10 border border-brand-gold/20 flex items-center justify-center flex-shrink-0 text-xl font-bold">
           🦘
         </div>
 
         {/* Balloon chat */}
-        <div className="flex-1 bg-white p-3 rounded-2xl border-3 border-[#16241f] relative shadow-[3px_3px_0px_0px_rgba(22,36,31,1)]">
-          <div className="absolute -left-2 top-3.5 w-0 h-0 border-t-6 border-t-transparent border-r-8 border-r-[#16241f] border-b-6 border-b-transparent" />
-          <p className="text-xs font-sans text-[#16241f] leading-relaxed font-bold">
+        <div className="flex-1 bg-white p-3 rounded-2xl border border-slate-200/70 relative shadow-sm">
+          <p className="text-xs font-medium leading-relaxed text-slate-700">
             {hint ? hint : "Need some help coupling these sentences together? I'm right here!"}
           </p>
           {!isCoupled && !hint && (
             <button
               onClick={() => setHint(currentPuzzle.hint)}
-              className="text-[10px] font-sans font-black text-[#9c6f1f] hover:underline mt-1.5 block"
+              className="text-[10px] font-semibold text-brand-ink hover:underline mt-1.5 block"
             >
-              💡 Ask Ezy for a Clue!
+              💡 Ask Ezy for a clue!
             </button>
           )}
         </div>
@@ -296,7 +299,7 @@ export const SentenceTrainBuilder: React.FC<SentenceTrainProps> = ({
       {isCoupled && (
         <button
           onClick={handleNext}
-          className="w-full mt-4 py-3.5 bg-[#9c6f1f] hover:bg-[#9c6f1f]/90 text-white font-sans font-black text-xs uppercase tracking-widest rounded-2xl transition-all duration-200 shadow-[4px_4px_0px_0px_rgba(22,36,31,1)] border-3 border-[#16241f] animate-bounce"
+          className="w-full mt-4 rounded-2xl bg-gradient-to-br from-brand-gold-bright to-brand-gold px-4 py-3.5 text-xs font-semibold uppercase tracking-wide text-white shadow-sm transition-all duration-200 animate-bounce"
         >
           Next Puzzle ➡️
         </button>

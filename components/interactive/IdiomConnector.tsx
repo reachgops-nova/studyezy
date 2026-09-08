@@ -42,18 +42,18 @@ export const IdiomConnector: React.FC<IdiomConnectorProps> = ({ instruction, ite
   };
 
   return (
-    <div className="flex flex-col items-center w-full h-full p-5 bg-[#f4f6f1] rounded-3xl border-3 border-[#16241f] shadow-[8px_8px_0px_0px_rgba(22,36,31,1)] max-w-lg mx-auto overflow-y-auto">
-      <div className="text-center mb-3 w-full">
-        <span className="inline-block px-3 py-1 rounded-full text-xs font-sans font-extrabold uppercase tracking-widest bg-[#9c6f1f]/10 text-[#9c6f1f] border-2 border-[#9c6f1f]/20">
-          Idiom Connector
+    <div className="mx-auto flex h-full w-full max-w-lg flex-col items-center overflow-y-auto rounded-2xl border border-slate-200/70 bg-white p-5 shadow-soft">
+      <div className="mb-3 w-full text-center">
+        <span className="inline-block rounded-full border border-brand-gold/20 bg-brand-gold-bright/10 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-brand-ink">
+          Idiom connector
         </span>
-        <h3 className="font-serif text-[#16241f] text-xl font-black mt-1.5 tracking-tight">🔗 Not What It Sounds Like!</h3>
-        <p className="text-xs text-[#16241f]/75 font-sans font-medium mt-0.5">
+        <h3 className="mt-1.5 text-lg font-bold tracking-tight text-slate-800">🔗 Not what it sounds like!</h3>
+        <p className="mt-0.5 text-xs font-medium text-slate-500">
           {instruction || "Tap an idiom, then tap what it really means."}
         </p>
       </div>
 
-      <div className="grid grid-cols-2 gap-3 w-full">
+      <div className="grid w-full grid-cols-2 gap-3">
         <div className="flex flex-col gap-2">
           {items.map((it) => {
             const isMatched = !!matched[it.idiom];
@@ -63,12 +63,12 @@ export const IdiomConnector: React.FC<IdiomConnectorProps> = ({ instruction, ite
                 key={it.idiom}
                 disabled={isMatched}
                 onClick={() => setSelectedIdiom(it.idiom)}
-                className={`p-3 rounded-xl border-3 font-sans font-black text-xs italic text-left transition-all ${
+                className={`rounded-xl border p-3 text-left text-xs font-semibold italic transition-all ${
                   isMatched
-                    ? 'bg-[#9c6f1f]/10 border-[#9c6f1f]/30 text-[#9c6f1f]'
+                    ? 'border-brand-gold/30 bg-brand-gold-bright/10 text-brand-ink'
                     : isSelected
-                    ? 'bg-[#16241f] border-[#16241f] text-white -translate-y-0.5 shadow-md'
-                    : 'bg-white border-[#16241f] text-[#16241f] hover:-translate-y-0.5'
+                    ? 'border-brand-ink bg-brand-ink text-white shadow-sm'
+                    : 'border-slate-200 bg-white text-slate-800 hover:border-brand-ink-light hover:bg-slate-50'
                 }`}
               >
                 "{it.idiom}" {isMatched && '✓'}
@@ -84,12 +84,12 @@ export const IdiomConnector: React.FC<IdiomConnectorProps> = ({ instruction, ite
                 key={meaning}
                 disabled={isMatched}
                 onClick={() => handleMeaningTap(meaning)}
-                className={`p-3 rounded-xl border-3 font-sans text-xs text-left transition-all ${
+                className={`rounded-xl border p-3 text-left text-xs font-medium transition-all ${
                   isMatched
-                    ? 'bg-[#9c6f1f]/10 border-[#9c6f1f]/30 text-[#9c6f1f]'
+                    ? 'border-brand-gold/30 bg-brand-gold-bright/10 text-brand-ink'
                     : wrongFlash === meaning
-                    ? 'animate-shake bg-red-100 border-red-400 text-red-700'
-                    : 'bg-white border-[#16241f]/40 text-[#16241f] hover:border-[#16241f]'
+                    ? 'animate-shake border-red-300 bg-red-50 text-red-700'
+                    : 'border-slate-200 bg-white text-slate-700 hover:border-brand-ink-light hover:bg-slate-50'
                 }`}
               >
                 {meaning} {isMatched && '✓'}
@@ -100,8 +100,8 @@ export const IdiomConnector: React.FC<IdiomConnectorProps> = ({ instruction, ite
       </div>
 
       {allMatched && (
-        <div className="mt-3 bg-green-100 border-2 border-[#16241f] rounded-xl px-4 py-2 text-center animate-bounce shadow-md w-full">
-          <p className="text-xs font-sans font-extrabold text-[#16241f]">🎉 You cracked every idiom!</p>
+        <div className="mt-3 w-full rounded-xl border border-emerald-300 bg-emerald-50 px-4 py-2 text-center shadow-sm animate-bounce">
+          <p className="text-xs font-semibold text-emerald-800">🎉 You cracked every idiom!</p>
         </div>
       )}
     </div>

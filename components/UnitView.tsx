@@ -8,6 +8,7 @@ import type { CurriculumUnit, Concept, MasteryBand, TestQuestion } from '@/lib/t
 import UnitOverview from './UnitOverview';
 import UnitDiagnostic from './UnitDiagnostic';
 import AvatarChat from './AvatarChat';
+import Avatar from './Avatar';
 import { getSavedRate, getSavedVoiceName } from './VoicePicker';
 
 // Builds one spoken string for a widget's instructions + main content, since
@@ -606,60 +607,64 @@ export function UnitView({
               onReachedPractice={() => setReadyForPractice(true)}
               hideSourceImage={!isBookletCollapsed}
               hideIllustration
+              // The widget is Ezy's practice activity for this concept -
+              // only shown once AvatarChat says it's actually reached that
+              // point (onReachedPractice), not the whole time. Real
+              // feedback (2026-09-05): it used to render unconditionally
+              // and "hang separately at the bottom" while Ezy was still
+              // mid-explanation. Real feedback (2026-09-08): even gated
+              // correctly, it still rendered as its own block BELOW the
+              // whole chat instead of inside it, reading as a disconnected
+              // part of the page - now passed in as AvatarChat's own
+              // practiceSlot, landing inside the same scrolling thread as
+              // every other message.
+              practiceSlot={
+                currentWidget && readyForPractice ? (
+                  <>
+                    <Avatar speaking={false} />
+                    <div className="min-w-0 flex-1">
+                      <div className="rounded-2xl rounded-tl-sm bg-white px-4 py-3 text-sm leading-relaxed text-slate-800 shadow-sm">
+                        <p className="font-medium text-slate-800">
+                          🎯 Time to practise! Read it aloud if that helps, then give it a try.
+                        </p>
+                        <button
+                          onClick={speakWidgetAloud}
+                          className="mt-1 flex items-center gap-1 text-xs font-medium text-brand-ink hover:underline"
+                        >
+                          🔊 Hear this activity
+                        </button>
+                      </div>
+                      <div className="mt-2 flex min-h-[280px] w-full items-center justify-center rounded-2xl border border-slate-200/70 bg-white p-4 shadow-sm">
+                        <WidgetDispatcher
+                          conceptId={activeConceptId}
+                          unitKey={unitKey || ""}
+                          conceptTested={activeConceptId}
+                          isCorrect={isCorrectSelection}
+                          currentSelection={currentSelection}
+                          onAttempt={handleWidgetAttempt}
+                          onSuccess={() => {
+                            setStarCount((prev) => prev + 10);
+                            setWidgetCompleted(true);
+                          }}
+                        />
+                      </div>
+                      {widgetCompleted && (
+                        <button
+                          onClick={handleNextConcept}
+                          className="mt-2 w-full rounded-full bg-gradient-to-br from-brand-gold-bright to-brand-gold px-5 py-2.5 text-sm font-medium text-white shadow-sm transition active:scale-95"
+                        >
+                          ✅ Mark finished &amp; continue
+                        </button>
+                      )}
+                    </div>
+                  </>
+                ) : undefined
+              }
             />
           ) : (
             <div className="flex flex-col items-center justify-center p-8 text-[#16241f]/40">
               <span className="text-4xl mb-2">🦘</span>
               <p className="text-xs font-bold">Ezy is preparing this lesson...</p>
-            </div>
-          )}
-
-          {/* The widget is Ezy's practice activity for this concept - only
-              shown once AvatarChat says it's actually reached that point
-              (onReachedPractice), not the whole time. Real feedback
-              (2026-09-05): it used to render unconditionally and "hang
-              separately at the bottom" while Ezy was still mid-explanation. */}
-          {currentWidget && readyForPractice && (
-            <div className="flex gap-3 max-w-[92%] mr-auto w-full animate-fade-in">
-              <div className="w-8 h-8 rounded-full bg-[#9c6f1f]/15 flex items-center justify-center text-md flex-shrink-0 border border-[#9c6f1f]/10 shadow-sm">
-                🦘
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="mb-1.5 text-xs font-sans font-bold text-[#16241f]">
-                  🎯 Time to practise! Read it aloud if that helps, then give it a try.
-                </p>
-                <button
-                  onClick={speakWidgetAloud}
-                  className="mb-1.5 flex items-center gap-1 text-[10px] font-sans font-bold text-[#9c6f1f] hover:underline"
-                >
-                  🔊 Hear this activity
-                </button>
-                <div className="w-full min-h-[280px] flex items-center justify-center">
-                  <WidgetDispatcher
-                    conceptId={activeConceptId}
-                    unitKey={unitKey || ""}
-                    conceptTested={activeConceptId}
-                    isCorrect={isCorrectSelection}
-                    currentSelection={currentSelection}
-                    onAttempt={handleWidgetAttempt}
-                    onSuccess={() => {
-                      setStarCount((prev) => prev + 10);
-                      setWidgetCompleted(true);
-                    }}
-                  />
-                </div>
-
-                {widgetCompleted && (
-                  <div className="w-full max-w-md mx-auto mt-2 animate-bounce">
-                    <button
-                      onClick={handleNextConcept}
-                      className="w-full py-3 bg-[#9c6f1f] hover:bg-[#9c6f1f]/90 text-white font-sans font-bold text-xs uppercase tracking-wider rounded-xl transition-all duration-200 shadow-md flex items-center justify-center gap-2"
-                    >
-                      ✅ Mark finished &amp; continue
-                    </button>
-                  </div>
-                )}
-              </div>
             </div>
           )}
         </div>

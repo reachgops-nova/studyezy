@@ -24,19 +24,19 @@ export const BiographyScanner: React.FC<BiographyScannerProps> = ({ instruction,
   };
 
   return (
-    <div className="flex flex-col items-center w-full h-full p-5 bg-[#f4f6f1] rounded-3xl border-3 border-[#16241f] shadow-[8px_8px_0px_0px_rgba(22,36,31,1)] max-w-lg mx-auto overflow-y-auto">
-      <div className="text-center mb-3 w-full">
-        <span className="inline-block px-3 py-1 rounded-full text-xs font-sans font-extrabold uppercase tracking-widest bg-[#9c6f1f]/10 text-[#9c6f1f] border-2 border-[#9c6f1f]/20">
-          Biography Feature Scanner
+    <div className="mx-auto flex h-full w-full max-w-lg flex-col items-center overflow-y-auto rounded-2xl border border-slate-200/70 bg-white p-5 shadow-soft">
+      <div className="mb-3 w-full text-center">
+        <span className="inline-block rounded-full border border-brand-gold/20 bg-brand-gold-bright/10 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-brand-ink">
+          Biography feature scanner
         </span>
-        <h3 className="font-serif text-[#16241f] text-xl font-black mt-1.5 tracking-tight">🔍 Scan the Biography</h3>
-        <p className="text-xs text-[#16241f]/75 font-sans font-medium mt-0.5">
+        <h3 className="mt-1.5 text-lg font-bold tracking-tight text-slate-800">🔍 Scan the biography</h3>
+        <p className="mt-0.5 text-xs font-medium text-slate-500">
           {instruction || "Tap the highlighted parts to see which biography feature each one is."}
         </p>
       </div>
 
-      <div className="w-full p-4 rounded-2xl border-3 border-[#16241f] bg-white shadow-[4px_4px_0px_0px_rgba(22,36,31,1)] mb-3">
-        <p className="font-sans text-[#16241f] text-sm leading-loose">
+      <div className="mb-3 w-full rounded-2xl border border-slate-200/70 bg-slate-50 p-4">
+        <p className="text-sm leading-loose text-slate-800">
           {passage.map((seg, i) => {
             if (!seg.feature) return <span key={i}>{seg.text}</span>;
             const isFound = found.has(i);
@@ -44,10 +44,10 @@ export const BiographyScanner: React.FC<BiographyScannerProps> = ({ instruction,
               <button
                 key={i}
                 onClick={() => handleTap(i, seg.feature!)}
-                className={`inline font-black underline decoration-wavy decoration-2 underline-offset-4 rounded px-0.5 transition-all ${
+                className={`inline rounded px-0.5 font-semibold underline decoration-wavy decoration-2 underline-offset-4 transition-all ${
                   isFound
-                    ? 'bg-[#9c6f1f]/20 text-[#9c6f1f] decoration-[#9c6f1f]'
-                    : 'text-[#16241f] decoration-[#9c6f1f]/60 hover:bg-[#9c6f1f]/10 animate-pulse'
+                    ? 'bg-brand-gold-bright/20 text-brand-ink decoration-brand-gold'
+                    : 'text-slate-800 decoration-brand-gold/60 hover:bg-brand-gold-bright/10 animate-pulse'
                 }`}
               >
                 {seg.text}
@@ -57,21 +57,21 @@ export const BiographyScanner: React.FC<BiographyScannerProps> = ({ instruction,
         </p>
       </div>
 
-      <div className="w-full border-t-2 border-dashed border-[#16241f]/20 pt-3 flex items-start gap-3">
-        <div className="w-12 h-10 rounded-2xl bg-[#9c6f1f]/15 border-2 border-[#16241f] flex items-center justify-center flex-shrink-0 text-xl shadow-sm">🦘</div>
-        <div className="flex-1 bg-white p-2.5 rounded-2xl border-3 border-[#16241f] shadow-[3px_3px_0px_0px_rgba(22,36,31,1)]">
-          <p className="text-xs font-sans text-[#16241f] leading-relaxed font-bold">
+      <div className="flex w-full items-start gap-3 border-t border-dashed border-slate-200 pt-3">
+        <div className="flex h-10 w-12 shrink-0 items-center justify-center rounded-2xl border border-brand-gold/20 bg-brand-gold-bright/10 text-xl">🦘</div>
+        <div className="flex-1 rounded-2xl border border-slate-200/70 bg-white p-2.5 shadow-sm">
+          <p className="text-xs font-medium leading-relaxed text-slate-700">
             {activeFeature || 'Tap a highlighted phrase above to reveal which biography feature it is!'}
           </p>
-          <p className="text-[10px] text-[#16241f]/50 font-sans font-bold mt-2">
+          <p className="mt-2 text-[10px] font-semibold text-slate-400">
             {found.size} of {taggedCount} features found
           </p>
         </div>
       </div>
 
       {allFound && (
-        <div className="mt-3 bg-green-100 border-2 border-[#16241f] rounded-xl px-4 py-2 text-center animate-bounce shadow-md w-full">
-          <p className="text-xs font-sans font-extrabold text-[#16241f]">🎉 You found every biography feature!</p>
+        <div className="mt-3 w-full rounded-xl border border-emerald-300 bg-emerald-50 px-4 py-2 text-center shadow-sm animate-bounce">
+          <p className="text-xs font-semibold text-emerald-800">🎉 You found every biography feature!</p>
         </div>
       )}
     </div>

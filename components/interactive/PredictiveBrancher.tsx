@@ -26,25 +26,25 @@ export const PredictiveBrancher: React.FC<PredictiveBrancherProps> = ({
   };
 
   return (
-    <div className="flex flex-col items-center w-full h-full p-5 bg-[#f4f6f1] rounded-3xl border-3 border-[#16241f] shadow-[8px_8px_0px_0px_rgba(22,36,31,1)] max-w-lg mx-auto overflow-y-auto">
-      <div className="text-center mb-3 w-full">
-        <span className="inline-block px-3 py-1 rounded-full text-xs font-sans font-extrabold uppercase tracking-widest bg-[#9c6f1f]/10 text-[#9c6f1f] border-2 border-[#9c6f1f]/20">
-          Predict What Happens Next
+    <div className="flex h-full w-full max-w-lg flex-col items-center overflow-y-auto rounded-2xl border border-slate-200/70 bg-white p-5 shadow-soft mx-auto">
+      <div className="mb-3 w-full text-center">
+        <span className="inline-block rounded-full border border-brand-gold/20 bg-brand-gold-bright/10 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-brand-ink">
+          Predict what happens next
         </span>
-        <h3 className="font-serif text-[#16241f] text-xl font-black mt-1.5 tracking-tight">🔮 What Happens Next?</h3>
-        <p className="text-xs text-[#16241f]/75 font-sans font-medium mt-0.5">
+        <h3 className="mt-1.5 text-lg font-bold tracking-tight text-slate-800">🔮 What happens next?</h3>
+        <p className="mt-0.5 text-xs font-medium text-slate-500">
           {instruction || "Read the moment, then choose the most logical prediction."}
         </p>
       </div>
 
-      <div className="w-full p-4 rounded-2xl border-3 border-[#16241f] bg-white shadow-[4px_4px_0px_0px_rgba(22,36,31,1)] mb-3 relative">
-        <span className="absolute -top-3 left-6 px-2.5 py-0.5 rounded-md text-[9px] font-sans font-extrabold uppercase bg-[#16241f] text-white">
-          The Scene
+      <div className="relative mb-3 w-full rounded-2xl border border-slate-200/70 bg-slate-50 p-4">
+        <span className="absolute -top-3 left-6 rounded-full bg-brand-ink px-2.5 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-white">
+          The scene
         </span>
-        <p className="font-sans text-[#16241f] text-sm leading-relaxed font-bold pt-1">{scenario}</p>
+        <p className="pt-1 text-sm font-medium leading-relaxed text-slate-800">{scenario}</p>
       </div>
 
-      <div className="flex flex-col gap-2.5 w-full">
+      <div className="flex w-full flex-col gap-2.5">
         {choices.map((choice, i) => {
           const isPicked = picked === i;
           const showResult = picked !== null && isPicked;
@@ -53,18 +53,18 @@ export const PredictiveBrancher: React.FC<PredictiveBrancherProps> = ({
               key={i}
               onClick={() => handlePick(i)}
               disabled={picked !== null}
-              className={`p-3 rounded-xl border-3 font-sans font-bold text-xs text-left transition-all ${
+              className={`rounded-xl border p-3 text-left text-sm font-medium transition-all ${
                 showResult
                   ? choice.correct
-                    ? 'bg-green-100 border-[#16241f] shadow-none'
-                    : 'animate-shake bg-red-100 border-red-500'
+                    ? 'border-emerald-300 bg-emerald-50'
+                    : 'animate-shake border-red-300 bg-red-50'
                   : picked !== null
-                  ? 'opacity-40 border-[#16241f]/20 bg-white'
-                  : 'bg-white border-[#16241f] hover:-translate-y-0.5 hover:shadow-[3px_3px_0px_0px_rgba(22,36,31,1)]'
+                  ? 'border-slate-100 bg-white opacity-40'
+                  : 'border-slate-200 bg-white hover:border-brand-ink-light hover:bg-slate-50'
               }`}
             >
               {choice.text}
-              {showResult && <span className="block mt-1.5 font-medium text-[11px] text-[#16241f]/80">{choice.feedback}</span>}
+              {showResult && <span className="mt-1.5 block text-xs font-normal text-slate-500">{choice.feedback}</span>}
             </button>
           );
         })}

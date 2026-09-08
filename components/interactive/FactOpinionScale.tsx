@@ -38,25 +38,25 @@ export const FactOpinionScale: React.FC<FactOpinionScaleProps> = ({
   }, [isCorrect]);
 
   return (
-    <div className={`flex flex-col items-center justify-between w-full h-full p-6 bg-[#f4f6f1] rounded-3xl border-3 border-[#16241f] shadow-[8px_8px_0px_0px_rgba(22,36,31,1)] max-w-lg mx-auto overflow-hidden transition-all duration-300 ${wiggle ? 'animate-bounce' : ''}`}>
-      
+    <div className={`flex flex-col items-center justify-between w-full h-full p-6 rounded-2xl border border-slate-200/70 bg-white shadow-soft max-w-lg mx-auto overflow-hidden transition-all duration-300 ${wiggle ? 'animate-bounce' : ''}`}>
+
       {/* 1. Playful Cartoon Title Bar */}
       <div className="text-center mb-4 relative w-full">
         <div className="absolute -top-2 left-2 animate-bounce delay-100 text-2xl">✨</div>
         <div className="absolute -top-2 right-2 animate-bounce delay-300 text-2xl">💡</div>
-        <span className="inline-block px-3 py-1 rounded-full text-xs font-sans font-extrabold uppercase tracking-widest bg-[#9c6f1f]/10 text-[#9c6f1f] border-2 border-[#9c6f1f]/20">
-          Unit 1.7 Lesson Sandbox
+        <span className="inline-block rounded-full border border-brand-gold/20 bg-brand-gold-bright/10 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-brand-ink">
+          Unit 1.7 lesson sandbox
         </span>
-        <h3 className="font-serif text-[#16241f] text-2xl font-black mt-1.5 tracking-tight">
-          Ezy's Fact vs. Opinion Scale
+        <h3 className="mt-1.5 text-2xl font-bold tracking-tight text-slate-800">
+          Ezy's fact vs. opinion scale
         </h3>
-        <p className="text-sm text-[#16241f]/75 font-sans font-medium mt-0.5 max-w-xs mx-auto">
-          Help Ezy sort the textbook stories! Is it a heavy, solid Fact or a light, floating Opinion?
+        <p className="mx-auto mt-0.5 max-w-xs text-sm font-medium text-slate-500">
+          Help Ezy sort the textbook stories! Is it a heavy, solid fact or a light, floating opinion?
         </p>
       </div>
 
       {/* 2. Visual Sandbox Canvas - Fully Styled Cute SVG Balance Scale */}
-      <div className="relative w-full h-64 flex items-center justify-center my-1 bg-white rounded-2xl border-3 border-[#16241f] shadow-inner overflow-visible">
+      <div className="relative w-full h-64 flex items-center justify-center my-1 bg-slate-50 rounded-2xl border border-slate-200/70 overflow-visible">
         
         {/* Soft cartoon sky backdrop */}
         <div className="absolute inset-0 opacity-40 bg-gradient-to-b from-[#bae6fd]/30 to-transparent pointer-events-none rounded-xl" />
@@ -305,9 +305,9 @@ export const FactOpinionScale: React.FC<FactOpinionScaleProps> = ({
 
         {/* Dynamic Interactive Hint Banner */}
         {isCorrect === true && (
-          <div className="absolute top-4 left-4 right-4 bg-green-100 border-2 border-[#16241f] rounded-xl px-4 py-2 text-center animate-bounce shadow-md">
-            <p className="text-xs font-sans font-extrabold text-[#16241f]">
-              🎉 AMAZING JOB! You weighed the concept correctly!
+          <div className="absolute top-4 left-4 right-4 rounded-xl border border-emerald-300 bg-emerald-50 px-4 py-2 text-center shadow-sm animate-bounce">
+            <p className="text-xs font-semibold text-emerald-800">
+              🎉 Amazing job! You weighed the concept correctly!
             </p>
           </div>
         )}
@@ -315,18 +315,18 @@ export const FactOpinionScale: React.FC<FactOpinionScaleProps> = ({
 
       {/* 3. The Active Textbook Statement Box */}
       <div
-        className={`w-full p-5 rounded-2xl border-3 transition-all duration-300 my-4 text-center relative ${
+        className={`w-full p-5 rounded-2xl border transition-all duration-300 my-4 text-center relative ${
           isCorrect === true
-            ? 'bg-green-100/50 border-[#16241f] shadow-[4px_4px_0px_0px_rgba(22,36,31,1)]'
+            ? 'border-emerald-300 bg-emerald-50'
             : isCorrect === false
-            ? 'animate-shake bg-red-100 border-red-500 shadow-[4px_4px_0px_0px_rgba(239,68,68,1)]'
-            : 'bg-white border-[#16241f] shadow-[4px_4px_0px_0px_rgba(22,36,31,1)]'
+            ? 'animate-shake border-red-300 bg-red-50'
+            : 'border-slate-200/70 bg-slate-50'
         }`}
       >
-        <span className="absolute -top-3 left-6 px-2.5 py-0.5 rounded-md text-[9px] font-sans font-extrabold uppercase bg-[#16241f] text-white">
-          Active Concept Statement
+        <span className="absolute -top-3 left-6 rounded-full bg-brand-ink px-2.5 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-white">
+          Active concept statement
         </span>
-        <p className="font-sans text-[#16241f] text-base md:text-lg leading-relaxed font-bold italic pt-1">
+        <p className="pt-1 text-base font-semibold italic leading-relaxed text-slate-800 md:text-lg">
           "{statement}"
         </p>
       </div>
@@ -335,37 +335,36 @@ export const FactOpinionScale: React.FC<FactOpinionScaleProps> = ({
       <div className="flex gap-4 w-full mt-1.5 z-20">
         <button
           onClick={() => onSelect('fact')}
-          className={`flex-1 py-4 px-4 rounded-2xl font-sans font-black text-sm uppercase tracking-wider border-3 border-[#16241f] transition-all duration-200 active:translate-y-0 active:shadow-none ${
+          className={`flex-1 rounded-2xl border px-4 py-4 text-sm font-bold uppercase tracking-wide transition-all duration-200 ${
             currentSelection === 'fact'
-              ? 'bg-[#16241f] text-[#f4f6f1] shadow-none translate-y-1'
-              : 'bg-white text-[#16241f] shadow-[4px_4px_0px_0px_rgba(22,36,31,1)] hover:-translate-y-0.5 hover:shadow-[6px_6px_0px_0px_rgba(22,36,31,1)]'
+              ? 'border-brand-ink bg-brand-ink text-white'
+              : 'border-slate-200 bg-white text-slate-800 hover:border-brand-ink-light hover:bg-slate-50'
           }`}
         >
-          🔍 Prove as Fact
+          🔍 Prove as fact
         </button>
         <button
           onClick={() => onSelect('opinion')}
-          className={`flex-1 py-4 px-4 rounded-2xl font-sans font-black text-sm uppercase tracking-wider border-3 border-[#16241f] transition-all duration-200 active:translate-y-0 active:shadow-none ${
+          className={`flex-1 rounded-2xl border px-4 py-4 text-sm font-bold uppercase tracking-wide transition-all duration-200 ${
             currentSelection === 'opinion'
-              ? 'bg-[#9c6f1f] text-white shadow-none translate-y-1'
-              : 'bg-white text-[#16241f] shadow-[4px_4px_0px_0px_rgba(22,36,31,1)] hover:-translate-y-0.5 hover:shadow-[6px_6px_0px_0px_rgba(22,36,31,1)]'
+              ? 'border-brand-gold bg-brand-gold text-white'
+              : 'border-slate-200 bg-white text-slate-800 hover:border-brand-ink-light hover:bg-slate-50'
           }`}
         >
-          💭 Feel as Opinion
+          💭 Feel as opinion
         </button>
       </div>
 
       {/* 5. Mascot Assistant Box */}
-      <div className="w-full border-t-3 border-dashed border-[#16241f]/20 pt-4 mt-4 flex items-start gap-3">
-        <div className="w-12 h-10 rounded-2xl bg-[#9c6f1f]/15 border-2 border-[#16241f] flex items-center justify-center flex-shrink-0 text-xl font-bold shadow-sm">
+      <div className="w-full border-t border-dashed border-slate-200 pt-4 mt-4 flex items-start gap-3">
+        <div className="w-12 h-10 rounded-2xl bg-brand-gold-bright/10 border border-brand-gold/20 flex items-center justify-center flex-shrink-0 text-xl font-bold">
           🦘
         </div>
-        <div className="flex-1 bg-white p-3.5 rounded-2xl border-3 border-[#16241f] relative shadow-[3px_3px_0px_0px_rgba(22,36,31,1)]">
-          <div className="absolute -left-2 top-3.5 w-0 h-0 border-t-6 border-t-transparent border-r-8 border-r-[#16241f] border-b-6 border-b-transparent" />
-          <p className="text-xs font-sans text-[#16241f] leading-relaxed font-bold">
+        <div className="flex-1 bg-white p-3.5 rounded-2xl border border-slate-200/70 relative shadow-sm">
+          <p className="text-xs font-medium leading-relaxed text-slate-700">
             {showHint ? (
               <span>
-                💡 <span className="text-[#9c6f1f]">Ezy's Clue:</span> Ask yourself, can we measure, test, or check clocks or dates to see if this statement is 100% true for everyone? If yes, it's a Fact! If it is just how someone feels or believes, it's an Opinion!
+                💡 <span className="text-brand-ink">Ezy's clue:</span> Ask yourself, can we measure, test, or check clocks or dates to see if this statement is 100% true for everyone? If yes, it's a fact! If it is just how someone feels or believes, it's an opinion!
               </span>
             ) : (
               "Need a helper clue from your buddy Ezy? Tap the button below!"
@@ -374,9 +373,9 @@ export const FactOpinionScale: React.FC<FactOpinionScaleProps> = ({
           {!showHint && (
             <button
               onClick={() => setShowHint(true)}
-              className="text-[10px] font-sans font-black text-[#9c6f1f] hover:underline mt-2 flex items-center gap-1"
+              className="text-[10px] font-semibold text-brand-ink hover:underline mt-2 flex items-center gap-1"
             >
-              💡 Ask Ezy for a Clue!
+              💡 Ask Ezy for a clue!
             </button>
           )}
         </div>
