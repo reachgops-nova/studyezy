@@ -18,33 +18,43 @@ it and not to invent something unrelated.
 
 ### Absolute rules
 
-1. **One blueprint question -> one new question, same slot.** For every question in the
-   blueprint, write exactly one replacement in the same position, with the same `label`,
-   same `check.kind`, same `layout`, and the same `media.kind` if the blueprint question
-   has media. Do not add, remove, or reorder questions.
-2. **`photo_crop` questions are the one exception - copy them through completely
-   unchanged.** A `photo_crop` question is tied to one real, specific photograph that
-   cannot be regenerated or substituted. Reproduce that question object byte-for-byte
-   (prompt, fields, options, check, media including `croppedImageUrl`, hint, explanation,
-   everything) - do not reword, rescale, or "freshen" it in any way.
-3. **Every other question must be genuinely new**, not the blueprint with cosmetic
-   changes: change the underlying numbers, labels, names or wording enough that a
-   student who has seen the blueprint set gets no advantage. Then **solve your own new
-   version yourself** - work out the real answer from your new numbers, do not reuse or
-   pattern-match the blueprint's answer. This is exactly where mistakes happen: getting
-   this wrong ships a wrong answer to a real student, so re-check your own arithmetic
-   before writing the final `check` value.
-4. **Declarative media parameters must match what you actually wrote.** If you change a
+1. **Same total question count, same overall topic/skill coverage, same difficulty
+   spread - NOT the same shape question-by-question.** Real user feedback: an earlier
+   version of this prompt forced each new question into the exact position, type and
+   media of its blueprint counterpart, which meant every generated set mechanically
+   mirrored the blueprint's structure (e.g. always opening with a picture question,
+   because the blueprint happened to). That defeats the actual goal - genuine variety
+   that makes a student think, not pattern-match the blueprint's shape. Write the same
+   NUMBER of questions covering the same spread of topics/skills and difficulty as the
+   blueprint as a whole, but vary question TYPES and patterns freely across the set:
+   some plain text, some with a declarative diagram where it genuinely fits the topic,
+   different `check.kind`s than the blueprint used in that position, different question
+   styles (definition recall, applied reasoning, a short scenario, a diagram, a pattern
+   to extend). A set that "looks like" the blueprint at a glance - same question 1 shape,
+   same rough layout - has failed this rule even if every individual answer is correct.
+2. **`photo_crop` questions may be reused, but you choose how many and don't have to
+   keep them in the same slot.** A `photo_crop` question is tied to one real, specific
+   photograph that cannot be regenerated or substituted - you may carry forward any of
+   the blueprint's `photo_crop` questions completely unchanged (byte-for-byte: prompt,
+   fields, options, check, media including `croppedImageUrl`, hint, explanation) if doing
+   so still fits naturally in your new set, at whatever position makes sense - never
+   invent a new one, and never edit a reused one in any way.
+3. **Every question that ISN'T a reused `photo_crop` must be genuinely new**, not the
+   blueprint with cosmetic changes: change the underlying numbers, labels, names or
+   wording enough that a student who has seen the blueprint set gets no advantage. Then
+   **solve your own new version yourself** - work out the real answer from your new
+   numbers, do not reuse or pattern-match the blueprint's answer. This is exactly where
+   mistakes happen: getting this wrong ships a wrong answer to a real student, so
+   re-check your own arithmetic before writing the final `check` value.
+4. **Declarative media parameters must match what you actually wrote.** If you write a
    `count_grid`'s counts, `square_pattern`'s stages, or any other media's numbers, the
-   `check` and `explanation` must be freshly derived from those exact new numbers - never
-   left over from the blueprint's numbers.
-5. **Never output code.** Same fixed `check` vocabulary as before (see below). If a
-   faithful variant genuinely cannot be built for one question, keep that one question
-   identical to the blueprint (like a `photo_crop`) rather than guessing.
-6. **Preserve sheet-level and question-level structure exactly**: same sheet `id`/`no`
-   pattern, same `skill`, same `objective`, same `strategy` (a strategy is a technique,
-   not tied to specific numbers, so it usually still applies unchanged - only reword it
-   if the new questions genuinely need a different nudge).
+   `check` and `explanation` must be freshly derived from those exact numbers - never
+   guessed or left inconsistent with what the diagram will actually show.
+5. **Never output code.** Same fixed `check` vocabulary as before (see below).
+6. **Preserve sheet-level structure**: same sheet `id`/`no` pattern, same `skill`, same
+   `objective`. A sheet's `strategy` (a transferable technique, not tied to specific
+   numbers) usually still applies unchanged - only reword it if the new mix of questions
+   genuinely needs a different nudge.
 
 ### Check vocabulary — the only permitted values of `check.kind`
 
@@ -86,9 +96,10 @@ aloud, and an optional `misconception` names the likely wrong answer and why.
 
 ### Output
 
-Return one JSON object: `{"sheets": [...]}`, matching the blueprint's own sheet/question
-shape exactly (same number of sheets, same questions-per-sheet, same order). No markdown
-fences, no commentary before or after.
+Return one JSON object: `{"sheets": [...]}`, with the same number of sheets and the same
+number of questions per sheet as the blueprint - order and each question's own type/media
+are yours to vary per the rules above, not fixed to the blueprint's. No markdown fences,
+no commentary before or after.
 
 ---
 
