@@ -341,6 +341,20 @@ function getWordRange(text: string, charIndex: number, charLength?: number): [nu
   return [start, end];
 }
 
+// [start,end] character spans for each whitespace-delimited word in text -
+// the same "word" unit a real onboundary event's charIndex/charLength
+// normally gives us, computed up front so the synthetic fallback highlighter
+// (see speakText) can step through them on a timer instead.
+function computeWordSpans(text: string): [number, number][] {
+  const spans: [number, number][] = [];
+  const re = /\S+/g;
+  let match: RegExpExecArray | null;
+  while ((match = re.exec(text)) !== null) {
+    spans.push([match.index, match.index + match[0].length]);
+  }
+  return spans;
+}
+
 // Composes two independent kinds of highlight over the same text: the
 // persistent key-point marks from parseFormattedText's keyRanges (a kid
 // should still see these after speech finishes and while re-reading later),
@@ -471,6 +485,16 @@ export default function AvatarChat({
   // least one question - keeps evolving after every answer instead of
   // staying frozen on the same list for the whole conversation.
   const [dynamicFollowUps, setDynamicFollowUps] = useState<string[]>([]);
+  // Real feedback 2026-09-08: once the illustration checkpoint scrolls past,
+  // a LATER checkpoint (e.g. a key point) can reference the same scene the
+  // picture showed (the "raining cats and dogs" idiom is drawn in the
+  // illustration but only spoken during the key-points step, not the
+  // examples step the picture is attached to) with no way to see it again.
+  // Keeps a small recap of the current concept's illustration pinned within
+  // the chat pane (not the whole page - it's still "inside the
+  // conversation", just persistent instead of a single scrolled-past
+  // bubble) from the moment it's introduced through the rest of the lesson.
+  const [activeIllustrationUrl, setActiveIllustrationUrl] = useState<string | undefined>(undefined);
 
   const playTokenRef = useRef(0);
   const checkpointsRef = useRef<CheckpointStep[]>([]);
@@ -489,6 +513,17 @@ export default function AvatarChat({
   const lastBoundaryOffsetRef = useRef(0);
   const isPausingRef = useRef(false);
   const [noVoiceForLanguage, setNoVoiceForLanguage] = useState(false);
+  // Real, common gap reported live: on plenty of installed voices (most
+  // non-"Google" system voices in Chrome, and Safari/Firefox generally),
+  // SpeechSynthesisUtterance never fires onboundary at all - speech plays
+  // fine but the read-along highlight silently never appears, which looks
+  // broken rather than like a voice limitation. boundaryFiredRef tracks
+  // whether a REAL boundary event has arrived for the current utterance;
+  // syntheticHighlightTimerRef holds the fallback timer that steps through
+  // the text's own words on an estimated clock when it hasn't - see
+  // speakText below. A real boundary event always wins if one does arrive.
+  const boundaryFiredRef = useRef(false);
+  const syntheticHighlightTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
     const SpeechRecognitionCtor = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
@@ -514,9 +549,26 @@ export default function AvatarChat({
   // to baseOffset means the highlight range is always correct against the
   // ORIGINAL full text, even when the utterance currently playing is only
   // the remainder after a pause.
+  function clearSyntheticHighlighter() {
+    if (syntheticHighlightTimerRef.current !== null) {
+      clearInterval(syntheticHighlightTimerRef.current);
+      syntheticHighlightTimerRef.current = null;
+    }
+  }
+
+  // Every real stop-speech call site needs both halves - cancelling the
+  // utterance itself AND the fallback highlight timer, which keeps running
+  // on its own clock and isn't stopped by speechSynthesis.cancel().
+  function stopSpeech() {
+    clearSyntheticHighlighter();
+    window.speechSynthesis?.cancel();
+  }
+
   function speakText(text: string, messageId: string, onDone: () => void, langCode?: string, baseOffset = 0) {
     isPausingRef.current = false;
     setNoVoiceForLanguage(false);
+    boundaryFiredRef.current = false;
+    clearSyntheticHighlighter();
 
     if (!(readAloud && "speechSynthesis" in window)) {
       setTimeout(onDone, 1400);
@@ -540,12 +592,15 @@ export default function AvatarChat({
     currentUtteranceRef.current = { text, messageId, onDone, langCode, baseOffset };
     utterance.onboundary = (event) => {
       if (event.name === "sentence") return;
+      boundaryFiredRef.current = true;
+      clearSyntheticHighlighter();
       const charLength = (event as unknown as { charLength?: number }).charLength;
       const [start, end] = getWordRange(text, event.charIndex, charLength);
       lastBoundaryOffsetRef.current = baseOffset + start;
       setHighlightRange([baseOffset + start, baseOffset + end]);
     };
     utterance.onend = () => {
+      clearSyntheticHighlighter();
       if (isPausingRef.current) return;
       currentUtteranceRef.current = null;
       setSpeaking(false);
@@ -554,6 +609,7 @@ export default function AvatarChat({
       onDone();
     };
     utterance.onerror = () => {
+      clearSyntheticHighlighter();
       if (isPausingRef.current) return;
       currentUtteranceRef.current = null;
       setSpeaking(false);
@@ -565,6 +621,32 @@ export default function AvatarChat({
     setSpeakingMessageId(messageId);
     setSpeechPaused(false);
     window.speechSynthesis.speak(utterance);
+
+    // Real, common gap (see boundaryFiredRef's comment above): plenty of
+    // installed voices never fire onboundary at all, so the read-along
+    // highlight silently never appears even though speech plays fine. If no
+    // real boundary event has arrived shortly after starting, approximate
+    // one instead - step through the text's own words on a timer at an
+    // estimated speaking pace (165 wpm at rate 1, the usual ballpark for
+    // plain narration, scaled by the actual utterance rate). A real
+    // boundary event, if one does eventually arrive, always wins - see
+    // boundaryFiredRef's check inside onboundary and the interval below.
+    const spans = computeWordSpans(text);
+    const msPerWord = Math.max(120, 60000 / (165 * utterance.rate));
+    setTimeout(() => {
+      if (boundaryFiredRef.current || currentUtteranceRef.current?.messageId !== messageId || spans.length === 0) return;
+      let wordIndex = 0;
+      syntheticHighlightTimerRef.current = setInterval(() => {
+        if (boundaryFiredRef.current || currentUtteranceRef.current?.messageId !== messageId || wordIndex >= spans.length) {
+          clearSyntheticHighlighter();
+          return;
+        }
+        const [start, end] = spans[wordIndex];
+        lastBoundaryOffsetRef.current = baseOffset + start;
+        setHighlightRange([baseOffset + start, baseOffset + end]);
+        wordIndex++;
+      }, msPerWord);
+    }, 350);
   }
 
   // Deliberately does NOT rely on speechSynthesis.pause()/resume() for the
@@ -590,6 +672,7 @@ export default function AvatarChat({
       const consumed = Math.max(0, lastBoundaryOffsetRef.current - paused.baseOffset);
       const remaining = paused.text.slice(consumed);
       if (!remaining.trim()) {
+        clearSyntheticHighlighter();
         setSpeechPaused(false);
         setSpeaking(false);
         setSpeakingMessageId(null);
@@ -601,7 +684,7 @@ export default function AvatarChat({
       speakText(remaining, paused.messageId, paused.onDone, paused.langCode, lastBoundaryOffsetRef.current);
     } else if (window.speechSynthesis.speaking) {
       isPausingRef.current = true;
-      window.speechSynthesis.cancel();
+      stopSpeech();
       setSpeechPaused(true);
       // Leave speaking/speakingMessageId/highlightRange as-is - paused
       // should freeze the display, not clear it.
@@ -692,6 +775,7 @@ export default function AvatarChat({
       }
       const id = nextId();
       const { text: cleanText, keyRanges } = parseFormattedText(msgs[i]);
+      if (i === 0 && step.illustrationUrl) setActiveIllustrationUrl(step.illustrationUrl);
       setMessages((prev) => [
         ...prev,
         { id, sender: "avatar", text: cleanText, keyRanges, generatedIllustrationUrl: i === 0 ? step.illustrationUrl : undefined },
@@ -727,8 +811,9 @@ export default function AvatarChat({
     setHighlightRange(null);
     setDynamicFollowUps([]);
     setSpeechPaused(false);
+    setActiveIllustrationUrl(undefined);
     /* eslint-enable react-hooks/set-state-in-effect */
-    window.speechSynthesis?.cancel();
+    stopSpeech();
 
     checkpointsRef.current = buildCheckpoints(concept);
 
@@ -748,13 +833,13 @@ export default function AvatarChat({
 
     return () => {
       clearTimeout(startTimer);
-      window.speechSynthesis?.cancel();
+      stopSpeech();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [concept.concept_id, readAloud]);
 
   function handleContinueCheckpoint() {
-    window.speechSynthesis?.cancel();
+    stopSpeech();
     setAwaitingContinue(false);
     const ack = CONTINUE_ACKS[checkpointIndex % CONTINUE_ACKS.length];
     const ackId = nextId();
@@ -766,7 +851,7 @@ export default function AvatarChat({
   }
 
   function handleRepeatCheckpoint() {
-    window.speechSynthesis?.cancel();
+    stopSpeech();
     setAwaitingContinue(false);
     const ack = REPEAT_ACKS[checkpointIndex % REPEAT_ACKS.length];
     const ackId = nextId();
@@ -776,7 +861,7 @@ export default function AvatarChat({
   }
 
   function handleAdvanceConcept() {
-    window.speechSynthesis?.cancel();
+    stopSpeech();
     setAwaitingConceptAdvance(false);
     onAdvanceConcept?.();
   }
@@ -1030,6 +1115,23 @@ export default function AvatarChat({
       )}
 
       <div className="rounded-xl border border-practice-border bg-practice-bg">
+        {activeIllustrationUrl && (
+          // Real feedback 2026-09-08: a later checkpoint's text can refer
+          // back to something the illustration showed (e.g. a key point
+          // naming an idiom the picture already drew) after the message
+          // that introduced it has scrolled out of view. This small recap
+          // stays pinned for the rest of the concept so the conversation
+          // keeps "connecting" to the picture instead of only showing it once.
+          <div className="flex items-center gap-2 border-b border-practice-border bg-white/70 px-4 py-2">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={activeIllustrationUrl}
+              alt=""
+              className="h-10 w-10 shrink-0 rounded-lg border border-slate-200 object-cover"
+            />
+            <p className="text-xs text-slate-500">This lesson&apos;s picture - scroll up to see it full size</p>
+          </div>
+        )}
         <div ref={scrollRef} className="flex max-h-[420px] flex-col gap-3 overflow-y-auto p-4">
           {messages.map((m) =>
             m.sender === "avatar" ? (
