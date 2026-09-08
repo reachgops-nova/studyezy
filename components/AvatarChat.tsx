@@ -654,6 +654,19 @@ export default function AvatarChat({
   // ahead of playback), so the wait a kid actually feels is roughly one
   // sentence's worth, not the whole reply's - and total spoken duration is
   // unchanged since it's the same audio, just fetched/played in pieces.
+  //
+  // Real gap reported live 2026-09-08: playback stopped partway through a
+  // longer reply ("reads them incomplete") with no error visible anywhere.
+  // Root cause: each chunk created a BRAND NEW Audio() element, and Chrome's
+  // autoplay policy only reliably keeps allowing programmatic play() on the
+  // SAME element that was blessed by the original user action - a fresh
+  // element created later inside an async chain (after an await fetch)
+  // can get silently blocked, and an unhandled play() rejection on top of
+  // that meant the chunk chain just stopped dead with no next-chunk call
+  // and no onDone(), which could also hang the whole lesson waiting on a
+  // callback that would never fire. Fixed by (1) reusing ONE Audio element
+  // across every chunk of a single reply, and (2) wrapping play() so a
+  // rejection always still advances the chain instead of freezing it.
   async function speakViaServerTts(text: string, messageId: string, onDone: () => void, baseOffset: number, langCode: string) {
     const sentences = splitIntoSentences(text);
     if (sentences.length === 0) {
@@ -697,6 +710,11 @@ export default function AvatarChat({
       onDone();
     }
 
+    // Created ONCE, reused for every chunk - see the function-level comment
+    // above for why a fresh Audio() per chunk was the real bug.
+    const audio = new Audio();
+    audioElRef.current = audio;
+
     async function playChunk(i: number) {
       if (!isCurrent()) return;
       if (i >= sentences.length) {
@@ -716,10 +734,10 @@ export default function AvatarChat({
       // this one playing, so there's no gap waiting between sentences.
       fetchChunk(i + 1);
 
+      if (audioObjectUrlRef.current) URL.revokeObjectURL(audioObjectUrlRef.current);
       const url = URL.createObjectURL(blob);
       audioObjectUrlRef.current = url;
-      const audio = new Audio(url);
-      audioElRef.current = audio;
+      audio.src = url;
 
       const { start: rangeStart, end: rangeEnd } = sentences[i];
       const spans = computeWordSpans(sentences[i].text);
@@ -728,7 +746,7 @@ export default function AvatarChat({
         if (!durationMs || spans.length === 0) return;
         clearAudioHighlightInterval();
         audioHighlightIntervalRef.current = setInterval(() => {
-          if (audioElRef.current !== audio) {
+          if (audioElRef.current !== audio || !isCurrent()) {
             clearAudioHighlightInterval();
             return;
           }
@@ -740,21 +758,31 @@ export default function AvatarChat({
         }, 90);
       };
       audio.onended = () => {
-        URL.revokeObjectURL(url);
-        if (audioObjectUrlRef.current === url) audioObjectUrlRef.current = null;
         lastBoundaryOffsetRef.current = baseOffset + rangeEnd;
         playChunk(i + 1);
       };
       audio.onerror = () => {
-        URL.revokeObjectURL(url);
-        if (audioObjectUrlRef.current === url) audioObjectUrlRef.current = null;
+        console.error(`speakViaServerTts: playback error on chunk ${i}`);
         setNoVoiceForLanguage(true);
         playChunk(i + 1);
       };
       setSpeaking(true);
       setSpeakingMessageId(messageId);
       setSpeechPaused(false);
-      await audio.play();
+      try {
+        await audio.play();
+      } catch (err) {
+        // A rejected play() (e.g. the browser's autoplay policy blocking a
+        // later chunk) must never silently stop the chain here - that's
+        // exactly what produced "reads them incomplete" with no visible
+        // error, and could leave the whole lesson waiting on an onDone()
+        // that would never come. Advance instead: the rest of the reply is
+        // still fully visible as text even if audio can't continue.
+        console.error(`speakViaServerTts: play() rejected on chunk ${i}`, err);
+        if (!isCurrent()) return;
+        setNoVoiceForLanguage(true);
+        playChunk(i + 1);
+      }
     }
 
     playChunk(0);
