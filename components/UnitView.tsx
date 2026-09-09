@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import WidgetDispatcher, { DECIMAL_PILOT_UNIT_KEY, DECIMAL_PILOT_CONCEPT_ID } from './interactive/WidgetDispatcher';
+import { UNIT1_CONCEPT_SCENES } from '@/lib/unit1SceneSpecs';
 import { getWidgetForConcept, type InteractiveWidget } from '@/lib/interactiveWidgets';
 import type { CurriculumUnit, Concept, MasteryBand, TestQuestion } from '@/lib/types';
 import UnitOverview from './UnitOverview';
@@ -174,6 +175,14 @@ export function UnitView({
 
   const currentConcept = concepts.find((c) => c.concept_id === activeConceptId);
   const isDecimalPilot = unitKey === DECIMAL_PILOT_UNIT_KEY && activeConceptId === DECIMAL_PILOT_CONCEPT_ID;
+  // Real user request 2026-09-09: "Rest of Math Unit 1 (recommended)" -
+  // reuse the scene-synced-checkpoint pattern proven on the 1.1 pilot for
+  // concepts 1.2-1.5, but via the generic AI-generated practice widget
+  // (WidgetDispatcher's normal getWidgetForConcept/generatedWidget path)
+  // rather than a bespoke component per concept - only the visual scenes are
+  // hand-specified (lib/unit1SceneSpecs.ts), everything else (micro-check,
+  // practice banner, widget dispatch) stays the same as any other concept.
+  const unit1SceneSpecs = unitKey === DECIMAL_PILOT_UNIT_KEY ? UNIT1_CONCEPT_SCENES[activeConceptId] : undefined;
   // Hand-authored English widget first, then this concept's own AI-generated
   // one (lib/conceptWidgetGeneration.ts) - see lib/interactiveWidgets.ts's
   // subject-scoping comment for why the hand-authored bank alone returns
@@ -641,6 +650,7 @@ export function UnitView({
               // points, tip - see buildCheckpoints in AvatarChat.tsx),
               // replacing the earlier standalone pre-roll video.
               checkpointScenes={isDecimalPilot ? ['split', 'rodExample', 'placeValue', 'doorway'] : undefined}
+              checkpointSceneSpecs={unit1SceneSpecs}
               // The widget is Ezy's practice activity for this concept -
               // only shown once AvatarChat says it's actually reached that
               // point (onReachedPractice), not the whole time. Real
