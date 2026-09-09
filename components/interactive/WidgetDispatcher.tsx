@@ -11,17 +11,40 @@ import { BiographyScanner } from './BiographyScanner';
 import { LifeMountain } from './LifeMountain';
 import { PrefixMachine } from './PrefixMachine';
 import { DecimalPlaceValuePlayer } from './DecimalPlaceValuePlayer';
+import { ComposingDecomposingPlayer } from './ComposingDecomposingPlayer';
+import { MultiplyDivideShiftPlayer } from './MultiplyDivideShiftPlayer';
+import { NegativeNumberLinePlayer } from './NegativeNumberLinePlayer';
+import { LinearSequencePlayer } from './LinearSequencePlayer';
 import { getWidgetForConcept, type InteractiveWidget, type TraitMatcherSpec, type PredictiveBrancherSpec } from '@/lib/interactiveWidgets';
 
-// Pilot for ONE real concept only - real user request 2026-09-09: "test this
-// visual appealing graphical session along with our chat, in a separate link
-// first." A hand-built richer alternative to the generic generated widgets,
-// checked here (not via the WidgetSpec/getWidgetForConcept data path) since
-// it's a bespoke multi-phase component, not a generic spec renderer. Remove
-// this special case (and decide whether to build more like it) once the
-// pilot's been reviewed.
+// Bespoke, richer widgets for the whole of Unit 1 (Number) - started as a
+// pilot for just concept 1.1 ("test this visual appealing graphical session
+// along with our chat, in a separate link first", 2026-09-09), then
+// extended to 1.2-1.5 ("Rest of Math Unit 1 (recommended)"). Real user
+// request 2026-09-09: "please do not use gemini / openroute now.. use
+// NotebookLLM for all of these as it generates intuitive images / screens
+// and quiz as well" - these four (plus DecimalPlaceValuePlayer for 1.1) were
+// generated via NotebookLM's chat (grounded in this unit's real content,
+// same house style: phases visual_intro -> demo -> checkpoint_quiz ->
+// passed, brand colors, onNarrate reporting the exact on-screen text)
+// instead of the generic Gemini/OpenRouter widget-generation pipeline
+// (lib/conceptWidgetGeneration.ts), which stays in place for every other
+// subject/unit. Checked here (not via the WidgetSpec/getWidgetForConcept
+// data path) since these are bespoke multi-phase components, not generic
+// spec renderers.
 export const DECIMAL_PILOT_UNIT_KEY = 'cambridge-4-math-1';
 export const DECIMAL_PILOT_CONCEPT_ID = '1.1';
+
+const UNIT1_PLAYERS: Record<string, React.FC<{ onSuccess?: () => void; onAttempt?: (correct: boolean) => void; onNarrate?: (text: string) => void }>> = {
+  '1.1': DecimalPlaceValuePlayer,
+  '1.2': ComposingDecomposingPlayer,
+  '1.3': MultiplyDivideShiftPlayer,
+  '1.4': NegativeNumberLinePlayer,
+  '1.5': LinearSequencePlayer,
+};
+
+/** Every concept ID with a bespoke Unit1 player - lets UnitView.tsx check membership without duplicating this list. */
+export const UNIT1_PLAYER_CONCEPT_IDS = Object.keys(UNIT1_PLAYERS);
 
 interface WidgetDispatcherProps {
   conceptId: string;
@@ -54,12 +77,11 @@ export const WidgetDispatcher: React.FC<WidgetDispatcherProps> = ({
 }) => {
   const id = conceptId || conceptTested || '';
 
-  if (unitKey === DECIMAL_PILOT_UNIT_KEY && id === DECIMAL_PILOT_CONCEPT_ID) {
+  if (unitKey === DECIMAL_PILOT_UNIT_KEY && UNIT1_PLAYERS[id]) {
+    const Player = UNIT1_PLAYERS[id];
     return (
       <div className="w-full h-full p-2 flex items-center justify-center animate-fade-in">
-        <DecimalPlaceValuePlayer
-          conceptName="Understanding Tenths and Decimals"
-          unitTitle="Unit 1: Number"
+        <Player
           onAttempt={onAttempt}
           onSuccess={onSuccess}
           onNarrate={(text) => onWidgetPhase?.(text)}

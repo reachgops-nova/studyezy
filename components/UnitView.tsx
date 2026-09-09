@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
-import WidgetDispatcher, { DECIMAL_PILOT_UNIT_KEY, DECIMAL_PILOT_CONCEPT_ID } from './interactive/WidgetDispatcher';
+import WidgetDispatcher, { DECIMAL_PILOT_UNIT_KEY, DECIMAL_PILOT_CONCEPT_ID, UNIT1_PLAYER_CONCEPT_IDS } from './interactive/WidgetDispatcher';
 import { UNIT1_CONCEPT_SCENES } from '@/lib/unit1SceneSpecs';
 import { getWidgetForConcept, type InteractiveWidget } from '@/lib/interactiveWidgets';
 import type { CurriculumUnit, Concept, MasteryBand, TestQuestion } from '@/lib/types';
@@ -174,25 +174,32 @@ export function UnitView({
   const [readyForPractice, setReadyForPractice] = useState(false);
 
   const currentConcept = concepts.find((c) => c.concept_id === activeConceptId);
-  const isDecimalPilot = unitKey === DECIMAL_PILOT_UNIT_KEY && activeConceptId === DECIMAL_PILOT_CONCEPT_ID;
-  // Real user request 2026-09-09: "Rest of Math Unit 1 (recommended)" -
-  // reuse the scene-synced-checkpoint pattern proven on the 1.1 pilot for
-  // concepts 1.2-1.5, but via the generic AI-generated practice widget
-  // (WidgetDispatcher's normal getWidgetForConcept/generatedWidget path)
-  // rather than a bespoke component per concept - only the visual scenes are
-  // hand-specified (lib/unit1SceneSpecs.ts), everything else (micro-check,
-  // practice banner, widget dispatch) stays the same as any other concept.
-  const unit1SceneSpecs = unitKey === DECIMAL_PILOT_UNIT_KEY ? UNIT1_CONCEPT_SCENES[activeConceptId] : undefined;
+  // Started as a pilot for just concept 1.1 ("test this visual appealing
+  // graphical session along with our chat, in a separate link first",
+  // 2026-09-09), then extended to the rest of Unit 1's concepts (1.2-1.5,
+  // "Rest of Math Unit 1 (recommended)"). Each of these 5 concepts has its
+  // own bespoke, NotebookLM-generated practice widget (see
+  // WidgetDispatcher.tsx's UNIT1_PLAYERS) with its own built-in quiz, so all
+  // of skipMicroCheck/banner-hiding/currentWidget-placeholder below applies
+  // to the whole set, not just 1.1.
+  const isDecimalPilot = unitKey === DECIMAL_PILOT_UNIT_KEY && UNIT1_PLAYER_CONCEPT_IDS.includes(activeConceptId);
+  // The decimal-specific scene set stays scoped to exactly 1.1 (its own
+  // hand-picked DecimalConceptScene variants); 1.2-1.5 use the generalized,
+  // data-driven NumberConceptScene specs instead (lib/unit1SceneSpecs.ts).
+  const unit1SceneSpecs =
+    unitKey === DECIMAL_PILOT_UNIT_KEY && activeConceptId !== DECIMAL_PILOT_CONCEPT_ID
+      ? UNIT1_CONCEPT_SCENES[activeConceptId]
+      : undefined;
   // Hand-authored English widget first, then this concept's own AI-generated
   // one (lib/conceptWidgetGeneration.ts) - see lib/interactiveWidgets.ts's
   // subject-scoping comment for why the hand-authored bank alone returns
-  // nothing for any other subject. The decimal pilot is a bespoke component,
-  // not a WidgetSpec, so it gets a placeholder here purely to open this gate
-  // and give getWidgetSpokenText something to read - WidgetDispatcher.tsx
-  // intercepts and renders the real component before ever looking at .spec.
+  // nothing for any other subject. Unit 1's bespoke players aren't a
+  // WidgetSpec, so this gets a placeholder here purely to open this gate -
+  // WidgetDispatcher.tsx intercepts and renders the real component before
+  // ever looking at .spec.
   const generatedWidget = currentConcept?.generated_widget;
   const currentWidget: InteractiveWidget | undefined = isDecimalPilot
-    ? { id: 'decimal-pilot', title: 'Understanding Tenths and Decimals', instruction: 'Try the interactive tenths explorer!', spec: { kind: 'trait_matcher', pairs: [] } }
+    ? { id: 'unit1-pilot', title: 'Interactive Practice Activity', instruction: 'Try the interactive activity!', spec: { kind: 'trait_matcher', pairs: [] } }
     : (getWidgetForConcept(activeConceptId, unitKey) ??
       (generatedWidget
         ? { id: `generated-${activeConceptId}`, title: generatedWidget.kind, instruction: generatedWidget.instruction ?? '', spec: generatedWidget }
@@ -649,7 +656,7 @@ export function UnitView({
               // flow." One scene per checkpoint (intro, examples, key
               // points, tip - see buildCheckpoints in AvatarChat.tsx),
               // replacing the earlier standalone pre-roll video.
-              checkpointScenes={isDecimalPilot ? ['split', 'rodExample', 'placeValue', 'doorway'] : undefined}
+              checkpointScenes={activeConceptId === DECIMAL_PILOT_CONCEPT_ID ? ['split', 'rodExample', 'placeValue', 'doorway'] : undefined}
               checkpointSceneSpecs={unit1SceneSpecs}
               // The widget is Ezy's practice activity for this concept -
               // only shown once AvatarChat says it's actually reached that
