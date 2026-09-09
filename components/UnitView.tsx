@@ -174,6 +174,17 @@ export function UnitView({
 
   const currentConcept = concepts.find((c) => c.concept_id === activeConceptId);
   const isDecimalPilot = unitKey === DECIMAL_PILOT_UNIT_KEY && activeConceptId === DECIMAL_PILOT_CONCEPT_ID;
+  // Real user request 2026-09-09: "video presentation for the explanation is
+  // missing." A real explainer video (generated via NotebookLM from this
+  // exact concept's own text, manually reviewed before use) plays before
+  // Ezy's voice-led checkpoints for this one pilot concept - gates the chat
+  // area until it's watched (or skipped), instead of running both at once.
+  // Resets whenever the concept changes so returning to it later replays it,
+  // same as the chat itself (which remounts via key={activeConceptId}).
+  const [pilotVideoWatched, setPilotVideoWatched] = useState(false);
+  useEffect(() => {
+    setPilotVideoWatched(false);
+  }, [activeConceptId]);
   // Hand-authored English widget first, then this concept's own AI-generated
   // one (lib/conceptWidgetGeneration.ts) - see lib/interactiveWidgets.ts's
   // subject-scoping comment for why the hand-authored bank alone returns
@@ -624,7 +635,25 @@ export function UnitView({
             would stretch edge-to-edge across 1000+px of column 3. */}
         <div className="flex-1 overflow-y-auto p-4">
         <div className="mx-auto max-w-3xl space-y-4">
-          {currentConcept ? (
+          {isDecimalPilot && !pilotVideoWatched ? (
+            <div className="rounded-2xl border border-slate-200/70 bg-white p-4 shadow-sm">
+              <p className="mb-2 font-medium text-slate-800">🎬 Watch this first: Understanding Tenths and Decimals</p>
+              <video
+                controls
+                autoPlay
+                className="w-full rounded-xl bg-black"
+                src="/api/concept-videos/cmtsrk34b0001ow58qrj23lm0.mp4"
+                onEnded={() => setPilotVideoWatched(true)}
+              />
+              <button
+                type="button"
+                onClick={() => setPilotVideoWatched(true)}
+                className="mt-3 text-xs font-medium text-brand-ink hover:underline"
+              >
+                Skip video, go straight to the lesson →
+              </button>
+            </div>
+          ) : currentConcept ? (
             <AvatarChat
               key={activeConceptId}
               unitKey={unitKey || ''}
