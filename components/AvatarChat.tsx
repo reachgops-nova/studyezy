@@ -595,6 +595,14 @@ export default function AvatarChat({
   const [activeIllustrationUrl, setActiveIllustrationUrl] = useState<string | undefined>(undefined);
 
   const playTokenRef = useRef(0);
+  // Synchronous guard against a double-fired "Got it, keep going" click -
+  // awaitingContinue (the state that hides the button) only flips false on
+  // the NEXT render, so two clicks landing before that commits would both
+  // read the same checkpointIndex closure and each advance one step,
+  // silently skipping a checkpoint. A ref updates instantly, so the second
+  // click within the same tick is a genuine no-op. Cleared once the next
+  // pause prompt (or the final check-in) makes another continue valid.
+  const continueLockRef = useRef(false);
   const checkpointsRef = useRef<CheckpointStep[]>([]);
   const recognitionRef = useRef<SpeechRecognitionLike | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -1105,6 +1113,7 @@ export default function AvatarChat({
           speakText(prompt, id, () => {});
           setReadyForInput(true);
           setAwaitingContinue(true);
+          continueLockRef.current = false;
         }
         return;
       }
@@ -1135,6 +1144,7 @@ export default function AvatarChat({
   useEffect(() => {
     const myToken = playTokenRef.current + 1;
     playTokenRef.current = myToken;
+    continueLockRef.current = false;
 
     // Resetting chat state here is synchronizing with an external system
     // (speechSynthesis playback) that has to restart whenever the concept
@@ -1209,6 +1219,8 @@ export default function AvatarChat({
   }, [widgetSignal?.id]);
 
   function handleContinueCheckpoint() {
+    if (continueLockRef.current) return;
+    continueLockRef.current = true;
     stopSpeech();
     setAwaitingContinue(false);
     const ack = CONTINUE_ACKS[checkpointIndex % CONTINUE_ACKS.length];
@@ -1221,6 +1233,8 @@ export default function AvatarChat({
   }
 
   function handleRepeatCheckpoint() {
+    if (continueLockRef.current) return;
+    continueLockRef.current = true;
     stopSpeech();
     setAwaitingContinue(false);
     const ack = REPEAT_ACKS[checkpointIndex % REPEAT_ACKS.length];
