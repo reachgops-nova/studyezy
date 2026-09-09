@@ -39,18 +39,6 @@ interface WidgetDispatcherProps {
   onWidgetPhase?: (message: string) => void;
 }
 
-// checkpoint_quiz deliberately has no entry here - real user request
-// 2026-09-09: "the question are not read by the avatar which makes it
-// silent." A generic "time for a quiz" line here would either collide with
-// or get silently dropped by DecimalPlaceValuePlayer's own onQuestionChange
-// firing in the same render (both would bump AvatarChat's widgetSignal id
-// almost simultaneously - only the later one actually gets spoken), so the
-// real question text below is the one and only announcement for that
-// transition, not a generic lead-in plus the question.
-const DECIMAL_PHASE_ANNOUNCEMENTS: Record<string, string> = {
-  place_value_demo: "Nice! Now let's see this on a real place value chart.",
-};
-
 export const WidgetDispatcher: React.FC<WidgetDispatcherProps> = ({
   conceptId,
   conceptTested,
@@ -74,11 +62,7 @@ export const WidgetDispatcher: React.FC<WidgetDispatcherProps> = ({
           unitTitle="Unit 1: Number"
           onAttempt={onAttempt}
           onSuccess={onSuccess}
-          onPhaseChange={(phase) => {
-            const message = DECIMAL_PHASE_ANNOUNCEMENTS[phase];
-            if (message) onWidgetPhase?.(message);
-          }}
-          onQuestionChange={(text) => onWidgetPhase?.(text)}
+          onNarrate={(text) => onWidgetPhase?.(text)}
         />
       </div>
     );

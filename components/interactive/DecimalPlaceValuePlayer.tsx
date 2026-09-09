@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 
 type Phase = 'visual_intro' | 'place_value_demo' | 'checkpoint_quiz' | 'passed';
 
@@ -7,10 +7,19 @@ interface DecimalPlaceValuePlayerProps {
   unitTitle?: string;
   onSuccess?: () => void;
   onAttempt?: (correct: boolean) => void;
-  /** Fired whenever the widget moves to a new phase, after the first render - real user request 2026-09-09: Ezy's voice should narrate what's happening in here, not leave it as a silent island next to the chat. */
-  onPhaseChange?: (phase: Phase) => void;
-  /** Fired with the full question text (including choices) whenever the quiz shows a new question - real user request 2026-09-09: "the question are not read by the avatar which makes it silent and not sure what to do." A phase-change announcement alone said "time for a quiz" but never the actual question. */
-  onQuestionChange?: (text: string) => void;
+  /**
+   * Fired with the exact text Ezy should speak, at every meaningful moment
+   * in the widget - real user request 2026-09-09: first "the question are
+   * not read by the avatar", then "it should also read the widget text and
+   * explain or ask the student... not just says try next nice and moving
+   * on without getting into the widget detail." A generic per-phase lookup
+   * (a static "here's the chart!" line, hand-copied from this component's
+   * own on-screen text) drifted from what's actually shown and missed the
+   * quiz question, the "We read X.Y as..." explanation, and wrong-answer
+   * hints entirely - this fires with the REAL displayed text instead, so
+   * spoken and on-screen content can never diverge.
+   */
+  onNarrate?: (text: string) => void;
 }
 
 /**
@@ -28,20 +37,9 @@ export const DecimalPlaceValuePlayer: React.FC<DecimalPlaceValuePlayerProps> = (
   unitTitle = 'Unit 1: Number',
   onSuccess,
   onAttempt,
-  onPhaseChange,
-  onQuestionChange,
+  onNarrate,
 }) => {
   const [phase, setPhase] = useState<Phase>('visual_intro');
-  const isFirstRender = useRef(true);
-
-  useEffect(() => {
-    if (isFirstRender.current) {
-      isFirstRender.current = false;
-      return;
-    }
-    onPhaseChange?.(phase);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [phase]);
 
   const [tenthsCount, setTenthsCount] = useState<number>(3); // 0.3
   const [selectedWhole] = useState<number>(1); // 1.3
@@ -66,10 +64,26 @@ export const DecimalPlaceValuePlayer: React.FC<DecimalPlaceValuePlayerProps> = (
     },
   ];
 
+  // The intro's own explanation - narrated once on mount, after a short
+  // delay so it doesn't talk over AvatarChat's "time to try it yourself"
+  // hand-off line (both would otherwise fire within the same beat).
   useEffect(() => {
-    if (phase !== 'checkpoint_quiz') return;
-    const q = quizQuestions[quizQuestionIndex];
-    if (q) onQuestionChange?.(`${q.question} Your choices are: ${q.choices.join(', ')}.`);
+    const timer = setTimeout(() => {
+      onNarrate?.("When we split 1 whole into 10 equal parts, each part is 1/10 or 0.1!");
+    }, 3500);
+    return () => clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
+    if (phase === 'place_value_demo') {
+      onNarrate?.(
+        `We read ${selectedWhole}.${tenthsCount} as "${selectedWhole} point ${tenthsCount}". It has ${selectedWhole} whole and ${tenthsCount} tenths.`
+      );
+    } else if (phase === 'checkpoint_quiz') {
+      const q = quizQuestions[quizQuestionIndex];
+      if (q) onNarrate?.(`${q.question} Your choices are: ${q.choices.join(', ')}.`);
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [phase, quizQuestionIndex]);
 
@@ -94,6 +108,7 @@ export const DecimalPlaceValuePlayer: React.FC<DecimalPlaceValuePlayerProps> = (
     } else {
       setIsQuizCorrect(false);
       setQuizError(currentQ.hint);
+      onNarrate?.(`Not quite - ${currentQ.hint}`);
       onAttempt?.(false);
     }
   };
