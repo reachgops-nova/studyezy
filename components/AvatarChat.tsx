@@ -1184,7 +1184,7 @@ export default function AvatarChat({
       stopSpeech();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [concept.concept_id, readAloud]);
+  }, [concept.concept_id]);
 
   // Real user request 2026-09-09: "the voice is watching and reading the
   // flow... once widget comes, it talks about it." UnitView bumps
