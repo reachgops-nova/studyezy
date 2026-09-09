@@ -10,7 +10,18 @@ import { IdiomConnector } from './IdiomConnector';
 import { BiographyScanner } from './BiographyScanner';
 import { LifeMountain } from './LifeMountain';
 import { PrefixMachine } from './PrefixMachine';
+import { DecimalPlaceValuePlayer } from './DecimalPlaceValuePlayer';
 import { getWidgetForConcept, type InteractiveWidget, type TraitMatcherSpec, type PredictiveBrancherSpec } from '@/lib/interactiveWidgets';
+
+// Pilot for ONE real concept only - real user request 2026-09-09: "test this
+// visual appealing graphical session along with our chat, in a separate link
+// first." A hand-built richer alternative to the generic generated widgets,
+// checked here (not via the WidgetSpec/getWidgetForConcept data path) since
+// it's a bespoke multi-phase component, not a generic spec renderer. Remove
+// this special case (and decide whether to build more like it) once the
+// pilot's been reviewed.
+const DECIMAL_PILOT_UNIT_KEY = 'cambridge-4-math-1';
+const DECIMAL_PILOT_CONCEPT_ID = '1.1';
 
 interface WidgetDispatcherProps {
   conceptId: string;
@@ -39,6 +50,20 @@ export const WidgetDispatcher: React.FC<WidgetDispatcherProps> = ({
   generatedWidget,
 }) => {
   const id = conceptId || conceptTested || '';
+
+  if (unitKey === DECIMAL_PILOT_UNIT_KEY && id === DECIMAL_PILOT_CONCEPT_ID) {
+    return (
+      <div className="w-full h-full p-2 flex items-center justify-center animate-fade-in">
+        <DecimalPlaceValuePlayer
+          conceptName="Understanding Tenths and Decimals"
+          unitTitle="Unit 1: Number"
+          onAttempt={onAttempt}
+          onSuccess={onSuccess}
+        />
+      </div>
+    );
+  }
+
   const authoredWidget = getWidgetForConcept(id, unitKey);
   const widget: InteractiveWidget | undefined =
     authoredWidget ??
