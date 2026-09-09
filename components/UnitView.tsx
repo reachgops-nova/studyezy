@@ -1,8 +1,8 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
-import WidgetDispatcher from './interactive/WidgetDispatcher';
+import WidgetDispatcher, { DECIMAL_PILOT_UNIT_KEY, DECIMAL_PILOT_CONCEPT_ID } from './interactive/WidgetDispatcher';
 import { getWidgetForConcept, type InteractiveWidget } from '@/lib/interactiveWidgets';
 import type { CurriculumUnit, Concept, MasteryBand, TestQuestion } from '@/lib/types';
 import UnitOverview from './UnitOverview';
@@ -152,6 +152,18 @@ export function UnitView({
   // never appeared for 8 of the app's 9 widget kinds and a kid could not
   // advance past them at all. This is set from onSuccess directly instead.
   const [widgetCompleted, setWidgetCompleted] = useState(false);
+  // Real user request 2026-09-09: "the voice is watching and reading the
+  // flow... once widget comes, it talks about it... after each concept
+  // pause and ask all ok and proceed." Bumping the id triggers AvatarChat to
+  // speak the given text (see its widgetSignal prop); awaitConfirm opens the
+  // chat for a typed "yes" to advance, the same way the end of a normal
+  // checkpoint sequence already works.
+  const [widgetSignal, setWidgetSignal] = useState<{ id: number; text: string; awaitConfirm?: boolean } | null>(null);
+  const widgetSignalIdRef = useRef(0);
+  const announceWidget = (text: string, awaitConfirm?: boolean) => {
+    widgetSignalIdRef.current += 1;
+    setWidgetSignal({ id: widgetSignalIdRef.current, text, awaitConfirm });
+  };
   const [masteredConcepts, setMasteredConcepts] = useState<Record<string, boolean>>({});
   // Real feedback (2026-09-05): the practice widget used to render the whole
   // time, "hanging separately at the bottom" even while Ezy was still
@@ -161,16 +173,21 @@ export function UnitView({
   const [readyForPractice, setReadyForPractice] = useState(false);
 
   const currentConcept = concepts.find((c) => c.concept_id === activeConceptId);
+  const isDecimalPilot = unitKey === DECIMAL_PILOT_UNIT_KEY && activeConceptId === DECIMAL_PILOT_CONCEPT_ID;
   // Hand-authored English widget first, then this concept's own AI-generated
   // one (lib/conceptWidgetGeneration.ts) - see lib/interactiveWidgets.ts's
   // subject-scoping comment for why the hand-authored bank alone returns
-  // nothing for any other subject.
+  // nothing for any other subject. The decimal pilot is a bespoke component,
+  // not a WidgetSpec, so it gets a placeholder here purely to open this gate
+  // and give getWidgetSpokenText something to read - WidgetDispatcher.tsx
+  // intercepts and renders the real component before ever looking at .spec.
   const generatedWidget = currentConcept?.generated_widget;
-  const currentWidget: InteractiveWidget | undefined =
-    getWidgetForConcept(activeConceptId, unitKey) ??
-    (generatedWidget
-      ? { id: `generated-${activeConceptId}`, title: generatedWidget.kind, instruction: generatedWidget.instruction ?? '', spec: generatedWidget }
-      : undefined);
+  const currentWidget: InteractiveWidget | undefined = isDecimalPilot
+    ? { id: 'decimal-pilot', title: 'Understanding Tenths and Decimals', instruction: 'Try the interactive tenths explorer!', spec: { kind: 'trait_matcher', pairs: [] } }
+    : (getWidgetForConcept(activeConceptId, unitKey) ??
+      (generatedWidget
+        ? { id: `generated-${activeConceptId}`, title: generatedWidget.kind, instruction: generatedWidget.instruction ?? '', spec: generatedWidget }
+        : undefined));
   const activeIdx = activeConcepts.findIndex((c) => c.id === activeConceptId);
   const hasNextConcept = activeIdx >= 0 && activeIdx < activeConcepts.length - 1;
 
@@ -616,6 +633,8 @@ export function UnitView({
               onReachedPractice={() => setReadyForPractice(true)}
               hideSourceImage={!isBookletCollapsed}
               hideIllustration
+              skipMicroCheck={isDecimalPilot}
+              widgetSignal={widgetSignal}
               // The widget is Ezy's practice activity for this concept -
               // only shown once AvatarChat says it's actually reached that
               // point (onReachedPractice), not the whole time. Real
@@ -632,18 +651,24 @@ export function UnitView({
                   <>
                     <Avatar speaking={false} />
                     <div className="min-w-0 flex-1">
-                      <div className="rounded-2xl rounded-tl-sm bg-white px-4 py-3 text-sm leading-relaxed text-slate-800 shadow-sm">
-                        <p className="font-medium text-slate-800">
-                          🎯 Time to practise! Read it aloud if that helps, then give it a try.
-                        </p>
-                        <button
-                          onClick={speakWidgetAloud}
-                          className="mt-1 flex items-center gap-1 text-xs font-medium text-brand-ink hover:underline"
-                        >
-                          🔊 Hear this activity
-                        </button>
-                      </div>
-                      <div className="mt-2 flex min-h-[280px] w-full items-center justify-center rounded-2xl border border-slate-200/70 bg-white p-4 shadow-sm">
+                      {/* For the decimal pilot, Ezy's own spoken "time to try
+                          it yourself" line (skipMicroCheck) already covers
+                          this - a second static banner here would talk over
+                          it. Every other widget keeps the original banner. */}
+                      {!isDecimalPilot && (
+                        <div className="rounded-2xl rounded-tl-sm bg-white px-4 py-3 text-sm leading-relaxed text-slate-800 shadow-sm">
+                          <p className="font-medium text-slate-800">
+                            🎯 Time to practise! Read it aloud if that helps, then give it a try.
+                          </p>
+                          <button
+                            onClick={speakWidgetAloud}
+                            className="mt-1 flex items-center gap-1 text-xs font-medium text-brand-ink hover:underline"
+                          >
+                            🔊 Hear this activity
+                          </button>
+                        </div>
+                      )}
+                      <div className={`${isDecimalPilot ? "" : "mt-2"} flex min-h-[280px] w-full items-center justify-center rounded-2xl border border-slate-200/70 bg-white p-4 shadow-sm`}>
                         <WidgetDispatcher
                           conceptId={activeConceptId}
                           unitKey={unitKey || ""}
@@ -652,9 +677,18 @@ export function UnitView({
                           isCorrect={isCorrectSelection}
                           currentSelection={currentSelection}
                           onAttempt={handleWidgetAttempt}
+                          onWidgetPhase={(message) => announceWidget(message)}
                           onSuccess={() => {
                             setStarCount((prev) => prev + 10);
                             setWidgetCompleted(true);
+                            if (isDecimalPilot) {
+                              announceWidget(
+                                hasNextConcept
+                                  ? "All done - nice work! Ready to move on to the next part?"
+                                  : "All done - nice work! That's everything in this unit.",
+                                true
+                              );
+                            }
                           }}
                         />
                       </div>

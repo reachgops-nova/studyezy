@@ -20,8 +20,8 @@ import { getWidgetForConcept, type InteractiveWidget, type TraitMatcherSpec, typ
 // it's a bespoke multi-phase component, not a generic spec renderer. Remove
 // this special case (and decide whether to build more like it) once the
 // pilot's been reviewed.
-const DECIMAL_PILOT_UNIT_KEY = 'cambridge-4-math-1';
-const DECIMAL_PILOT_CONCEPT_ID = '1.1';
+export const DECIMAL_PILOT_UNIT_KEY = 'cambridge-4-math-1';
+export const DECIMAL_PILOT_CONCEPT_ID = '1.1';
 
 interface WidgetDispatcherProps {
   conceptId: string;
@@ -35,7 +35,14 @@ interface WidgetDispatcherProps {
   onAttempt?: (correct: boolean) => void;
   /** AI-generated fallback (lib/conceptWidgetGeneration.ts) for a concept with no hand-authored English widget - see lib/interactiveWidgets.ts's subject-scoping comment. */
   generatedWidget?: ((TraitMatcherSpec | PredictiveBrancherSpec) & { instruction?: string }) | null;
+  /** Real user request 2026-09-09: Ezy's voice should narrate the widget's own phase transitions, not leave it as a silent island. Only DecimalPlaceValuePlayer reports phases today. */
+  onWidgetPhase?: (message: string) => void;
 }
+
+const DECIMAL_PHASE_ANNOUNCEMENTS: Record<string, string> = {
+  place_value_demo: "Nice! Now let's see this on a real place value chart.",
+  checkpoint_quiz: "Time for a couple of quick questions - let's see what you've got!",
+};
 
 export const WidgetDispatcher: React.FC<WidgetDispatcherProps> = ({
   conceptId,
@@ -48,6 +55,7 @@ export const WidgetDispatcher: React.FC<WidgetDispatcherProps> = ({
   onSuccess,
   onAttempt,
   generatedWidget,
+  onWidgetPhase,
 }) => {
   const id = conceptId || conceptTested || '';
 
@@ -59,6 +67,10 @@ export const WidgetDispatcher: React.FC<WidgetDispatcherProps> = ({
           unitTitle="Unit 1: Number"
           onAttempt={onAttempt}
           onSuccess={onSuccess}
+          onPhaseChange={(phase) => {
+            const message = DECIMAL_PHASE_ANNOUNCEMENTS[phase];
+            if (message) onWidgetPhase?.(message);
+          }}
         />
       </div>
     );

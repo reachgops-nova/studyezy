@@ -1,10 +1,14 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+
+type Phase = 'visual_intro' | 'place_value_demo' | 'checkpoint_quiz' | 'passed';
 
 interface DecimalPlaceValuePlayerProps {
   conceptName?: string;
   unitTitle?: string;
   onSuccess?: () => void;
   onAttempt?: (correct: boolean) => void;
+  /** Fired whenever the widget moves to a new phase, after the first render - real user request 2026-09-09: Ezy's voice should narrate what's happening in here, not leave it as a silent island next to the chat. */
+  onPhaseChange?: (phase: Phase) => void;
 }
 
 /**
@@ -22,8 +26,19 @@ export const DecimalPlaceValuePlayer: React.FC<DecimalPlaceValuePlayerProps> = (
   unitTitle = 'Unit 1: Number',
   onSuccess,
   onAttempt,
+  onPhaseChange,
 }) => {
-  const [phase, setPhase] = useState<'visual_intro' | 'place_value_demo' | 'checkpoint_quiz' | 'passed'>('visual_intro');
+  const [phase, setPhase] = useState<Phase>('visual_intro');
+  const isFirstRender = useRef(true);
+
+  useEffect(() => {
+    if (isFirstRender.current) {
+      isFirstRender.current = false;
+      return;
+    }
+    onPhaseChange?.(phase);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [phase]);
 
   const [tenthsCount, setTenthsCount] = useState<number>(3); // 0.3
   const [selectedWhole] = useState<number>(1); // 1.3

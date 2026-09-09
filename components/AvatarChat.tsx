@@ -457,6 +457,8 @@ export default function AvatarChat({
   hideSourceImage = false,
   hideIllustration = false,
   practiceSlot,
+  skipMicroCheck = false,
+  widgetSignal,
 }: {
   unitKey: string;
   concept: Concept;
@@ -507,6 +509,25 @@ export default function AvatarChat({
    * every other message, right after whatever Ezy last said.
    */
   practiceSlot?: React.ReactNode;
+  /**
+   * Skips the voice_qa_samples micro-check loop and reveals the practice
+   * widget right after the intro/examples checkpoints finish, instead of
+   * after 2-4 more spoken Q&A - for a concept whose widget already has its
+   * own real quiz (see WidgetDispatcher.tsx's DECIMAL_PILOT case). Real
+   * user request 2026-09-09: sitting through the voice questions before
+   * ever reaching a richer widget read as "still just a dry voice chat."
+   */
+  skipMicroCheck?: boolean;
+  /**
+   * Lets the caller (UnitView, watching the widget it rendered into
+   * practiceSlot) have Ezy speak about what's happening in that widget -
+   * real user request 2026-09-09: "the voice is watching and reading the
+   * flow... once widget comes, it talks about it." Bump `id` to trigger a
+   * new spoken line; `awaitConfirm` additionally opens the chat input and
+   * arms onAdvanceConcept the way the end of a normal checkpoint does, for
+   * "all ok, ready to move on?" after the widget's own quiz is passed.
+   */
+  widgetSignal?: { id: number; text: string; awaitConfirm?: boolean } | null;
 }) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [readyForInput, setReadyForInput] = useState(false);
@@ -959,6 +980,24 @@ export default function AvatarChat({
 
   function startFinalCheckIn(token: number) {
     if (playTokenRef.current !== token) return;
+    // Real user request 2026-09-09: for a concept with its own bespoke
+    // interactive widget (see WidgetDispatcher.tsx's DECIMAL_PILOT case),
+    // the widget's own quiz already checks understanding - sitting through
+    // 4 more voice questions before ever reaching it read as "still just a
+    // dry voice chat." Skips straight to revealing the widget once the
+    // intro/examples checkpoints finish, same as the "no voice_qa_samples"
+    // path below, just with copy that points at the widget instead.
+    if (skipMicroCheck) {
+      const checkIn = "Time to try it yourself - give the activity below a go!";
+      const id = nextId();
+      setMessages((prev) => [...prev, { id, sender: "avatar", text: checkIn }]);
+      speakText(checkIn, id, () => {});
+      setReadyForInput(true);
+      setAwaitingContinue(false);
+      setAwaitingConceptAdvance(Boolean(onAdvanceConcept));
+      onReachedPractice?.();
+      return;
+    }
     const samples = concept.voice_qa_samples ?? [];
     if (samples.length > 0) {
       askMicroCheck(0, token);
@@ -1104,6 +1143,28 @@ export default function AvatarChat({
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [concept.concept_id, readAloud]);
+
+  // Real user request 2026-09-09: "the voice is watching and reading the
+  // flow... once widget comes, it talks about it." UnitView bumps
+  // widgetSignal.id whenever the practice widget it rendered moves to a new
+  // phase (or finishes), so Ezy narrates it instead of the widget being a
+  // silent island next to the chat. awaitConfirm additionally opens the
+  // chat input and arms onAdvanceConcept, for "all ok, ready to move on?"
+  // after the widget's own quiz is passed - a typed "yes" advances the same
+  // way it already does at the end of a normal checkpoint sequence.
+  useEffect(() => {
+    if (!widgetSignal) return;
+    const id = nextId();
+    setMessages((prev) => [...prev, { id, sender: "avatar", text: widgetSignal.text }]);
+    speakText(widgetSignal.text, id, () => {
+      if (widgetSignal.awaitConfirm) {
+        setReadyForInput(true);
+        setAwaitingContinue(false);
+        setAwaitingConceptAdvance(Boolean(onAdvanceConcept));
+      }
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [widgetSignal?.id]);
 
   function handleContinueCheckpoint() {
     stopSpeech();
