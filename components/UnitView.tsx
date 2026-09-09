@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import WidgetDispatcher, { DECIMAL_PILOT_UNIT_KEY, DECIMAL_PILOT_CONCEPT_ID } from './interactive/WidgetDispatcher';
+import DecimalVideoCheckpointPlayer from './interactive/DecimalVideoCheckpointPlayer';
 import { getWidgetForConcept, type InteractiveWidget } from '@/lib/interactiveWidgets';
 import type { CurriculumUnit, Concept, MasteryBand, TestQuestion } from '@/lib/types';
 import UnitOverview from './UnitOverview';
@@ -636,23 +637,20 @@ export function UnitView({
         <div className="flex-1 overflow-y-auto p-4">
         <div className="mx-auto max-w-3xl space-y-4">
           {isDecimalPilot && !pilotVideoWatched ? (
-            <div className="rounded-2xl border border-slate-200/70 bg-white p-4 shadow-sm">
-              <p className="mb-2 font-medium text-slate-800">🎬 Watch this first: Understanding Tenths and Decimals</p>
-              <video
-                controls
-                autoPlay
-                className="w-full rounded-xl bg-black"
-                src="/api/concept-videos/cmtsrk34b0001ow58qrj23lm0.mp4"
-                onEnded={() => setPilotVideoWatched(true)}
+            <>
+              <DecimalVideoCheckpointPlayer
+                unitKey={unitKey || ''}
+                conceptId={activeConceptId}
+                onComplete={() => setPilotVideoWatched(true)}
               />
               <button
                 type="button"
                 onClick={() => setPilotVideoWatched(true)}
-                className="mt-3 text-xs font-medium text-brand-ink hover:underline"
+                className="text-xs font-medium text-brand-ink hover:underline"
               >
-                Skip video, go straight to the lesson →
+                Already watched this? Continue to the lesson →
               </button>
-            </div>
+            </>
           ) : currentConcept ? (
             <AvatarChat
               key={activeConceptId}
