@@ -5,6 +5,7 @@ import type { Concept } from "@/lib/types";
 import Avatar from "./Avatar";
 import { Illustration, hasIllustration } from "./illustrations";
 import VoicePicker, { getSavedRate, getSavedVoiceName } from "./VoicePicker";
+import DecimalConceptScene, { type DecimalSceneVariant } from "./interactive/DecimalConceptScene";
 
 interface SpeechRecognitionResultLike {
   results: { [index: number]: { [index: number]: { transcript: string } } };
@@ -27,6 +28,8 @@ interface ChatMessage {
   illustrationKey?: string;
   /** A generated illustration (see lib/conceptIllustration.ts) attached to THIS message, not the legacy hand-drawn set - shown inline in the thread instead of a static header (2026-09-08: moved into the conversation sequence so it can't be scrolled past unread). */
   generatedIllustrationUrl?: string;
+  /** A small scene component (components/interactive/DecimalConceptScene.tsx) attached to THIS message via the caller's checkpointScenes prop - real user request 2026-09-09: a visual synced to exactly the statement being spoken, not a separate pre-roll video with guessed timing. */
+  sceneKey?: string;
   keyRanges?: [number, number][];
 }
 
@@ -55,6 +58,8 @@ interface CheckpointStep {
   lines: string[];
   /** Attached to the first line spoken in this step - see playCheckpoint. */
   illustrationUrl?: string;
+  /** Same attach point as illustrationUrl, for a small scene component instead of an image - set by the caller (see AvatarChat's checkpointScenes prop), never by buildCheckpoints itself, which stays concept-generic. */
+  sceneKey?: string;
 }
 
 // Teaching content is grouped into small checkpoints - the avatar pauses
@@ -459,9 +464,20 @@ export default function AvatarChat({
   practiceSlot,
   skipMicroCheck = false,
   widgetSignal,
+  checkpointScenes,
 }: {
   unitKey: string;
   concept: Concept;
+  /**
+   * A scene component key per checkpoint index (see
+   * components/interactive/DecimalConceptScene.tsx), merged onto
+   * buildCheckpoints' generic output - real user request 2026-09-09: a
+   * visual synced to exactly the statement being spoken (attached at the
+   * same point as a generated illustration would be), replacing a separate
+   * pre-roll video with guessed pause timing. undefined/omitted entries get
+   * no scene, same as any concept without this prop at all.
+   */
+  checkpointScenes?: (string | undefined)[];
   /**
    * Set by UnitView when the lesson's textbook pane is open AND already
    * showing this concept's own page - in that case the small copy in here is
@@ -1083,7 +1099,14 @@ export default function AvatarChat({
       if (i === 0 && step.illustrationUrl) setActiveIllustrationUrl(step.illustrationUrl);
       setMessages((prev) => [
         ...prev,
-        { id, sender: "avatar", text: cleanText, keyRanges, generatedIllustrationUrl: i === 0 ? step.illustrationUrl : undefined },
+        {
+          id,
+          sender: "avatar",
+          text: cleanText,
+          keyRanges,
+          generatedIllustrationUrl: i === 0 ? step.illustrationUrl : undefined,
+          sceneKey: i === 0 ? step.sceneKey : undefined,
+        },
       ]);
       speakText(cleanText, id, () => {
         if (playTokenRef.current !== token) return;
@@ -1121,7 +1144,7 @@ export default function AvatarChat({
     /* eslint-enable react-hooks/set-state-in-effect */
     stopSpeech();
 
-    checkpointsRef.current = buildCheckpoints(concept);
+    checkpointsRef.current = buildCheckpoints(concept).map((step, i) => ({ ...step, sceneKey: checkpointScenes?.[i] }));
 
     // AvatarChat is remounted (not just re-rendered) on every concept
     // change - see UnitView.tsx's key={selected.concept_id}. React flushes
@@ -1480,6 +1503,11 @@ export default function AvatarChat({
                     <div className="mt-2 aspect-square w-64 max-w-full overflow-hidden rounded-xl border border-slate-200/70">
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img src={m.generatedIllustrationUrl} alt="" className="h-full w-full bg-slate-50 object-contain" />
+                    </div>
+                  )}
+                  {m.sceneKey && (
+                    <div className="mt-2 w-64 max-w-full">
+                      <DecimalConceptScene variant={m.sceneKey as DecimalSceneVariant} />
                     </div>
                   )}
                 </div>
