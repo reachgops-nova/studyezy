@@ -36,19 +36,29 @@ export async function POST(req: NextRequest) {
 
   let widget = null;
   let source: "gemini" | "openrouter" | null = null;
+  let lastError: unknown = null;
   try {
     widget = await generateConceptWidget(concept);
     source = "gemini";
   } catch (err) {
     console.error("Gemini widget generation failed, trying OpenRouter", err);
+    lastError = err;
     if (isOpenRouterConfigured()) {
-      widget = await generateConceptWidgetOpenRouter(concept);
-      source = "openrouter";
+      try {
+        widget = await generateConceptWidgetOpenRouter(concept);
+        source = "openrouter";
+      } catch (err2) {
+        console.error("OpenRouter widget generation also failed", err2);
+        lastError = err2;
+      }
     }
   }
 
   if (!widget) {
-    return NextResponse.json({ error: "Widget generation failed on all providers." }, { status: 502 });
+    return NextResponse.json(
+      { error: "Widget generation failed on all providers.", detail: lastError instanceof Error ? lastError.message : String(lastError) },
+      { status: 502 }
+    );
   }
 
   await db.concept.update({
