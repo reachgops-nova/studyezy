@@ -9,6 +9,8 @@ interface DecimalPlaceValuePlayerProps {
   onAttempt?: (correct: boolean) => void;
   /** Fired whenever the widget moves to a new phase, after the first render - real user request 2026-09-09: Ezy's voice should narrate what's happening in here, not leave it as a silent island next to the chat. */
   onPhaseChange?: (phase: Phase) => void;
+  /** Fired with the full question text (including choices) whenever the quiz shows a new question - real user request 2026-09-09: "the question are not read by the avatar which makes it silent and not sure what to do." A phase-change announcement alone said "time for a quiz" but never the actual question. */
+  onQuestionChange?: (text: string) => void;
 }
 
 /**
@@ -27,6 +29,7 @@ export const DecimalPlaceValuePlayer: React.FC<DecimalPlaceValuePlayerProps> = (
   onSuccess,
   onAttempt,
   onPhaseChange,
+  onQuestionChange,
 }) => {
   const [phase, setPhase] = useState<Phase>('visual_intro');
   const isFirstRender = useRef(true);
@@ -62,6 +65,13 @@ export const DecimalPlaceValuePlayer: React.FC<DecimalPlaceValuePlayerProps> = (
       hint: 'The digit right after the decimal point (.) is in the tenths column!',
     },
   ];
+
+  useEffect(() => {
+    if (phase !== 'checkpoint_quiz') return;
+    const q = quizQuestions[quizQuestionIndex];
+    if (q) onQuestionChange?.(`${q.question} Your choices are: ${q.choices.join(', ')}.`);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [phase, quizQuestionIndex]);
 
   const handleQuizAnswer = (choiceIdx: number) => {
     setSelectedQuizChoice(choiceIdx);
