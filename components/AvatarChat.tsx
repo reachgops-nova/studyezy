@@ -6,6 +6,7 @@ import Avatar from "./Avatar";
 import { Illustration, hasIllustration } from "./illustrations";
 import VoicePicker, { getSavedRate, getSavedVoiceName } from "./VoicePicker";
 import DecimalConceptScene, { type DecimalSceneVariant } from "./interactive/DecimalConceptScene";
+import NumberConceptScene, { type NumberSceneSpec } from "./interactive/NumberConceptScene";
 
 interface SpeechRecognitionResultLike {
   results: { [index: number]: { [index: number]: { transcript: string } } };
@@ -30,6 +31,8 @@ interface ChatMessage {
   generatedIllustrationUrl?: string;
   /** A small scene component (components/interactive/DecimalConceptScene.tsx) attached to THIS message via the caller's checkpointScenes prop - real user request 2026-09-09: a visual synced to exactly the statement being spoken, not a separate pre-roll video with guessed timing. */
   sceneKey?: string;
+  /** Same attach point as sceneKey, but for the generalized data-driven scene shapes (components/interactive/NumberConceptScene.tsx) used by concepts 1.2-1.5 - see the checkpointSceneSpecs prop. sceneKey and sceneSpec are never both set on the same message. */
+  sceneSpec?: NumberSceneSpec;
   keyRanges?: [number, number][];
 }
 
@@ -60,6 +63,8 @@ interface CheckpointStep {
   illustrationUrl?: string;
   /** Same attach point as illustrationUrl, for a small scene component instead of an image - set by the caller (see AvatarChat's checkpointScenes prop), never by buildCheckpoints itself, which stays concept-generic. */
   sceneKey?: string;
+  /** Same attach point as sceneKey, for the generalized data-driven scene shapes - see checkpointSceneSpecs. */
+  sceneSpec?: NumberSceneSpec;
 }
 
 // Teaching content is grouped into small checkpoints - the avatar pauses
@@ -465,6 +470,7 @@ export default function AvatarChat({
   skipMicroCheck = false,
   widgetSignal,
   checkpointScenes,
+  checkpointSceneSpecs,
 }: {
   unitKey: string;
   concept: Concept;
@@ -478,6 +484,14 @@ export default function AvatarChat({
    * no scene, same as any concept without this prop at all.
    */
   checkpointScenes?: (string | undefined)[];
+  /**
+   * Same attach point as checkpointScenes, for the generalized data-driven
+   * scene shapes (components/interactive/NumberConceptScene.tsx) used by
+   * concepts 1.2-1.5 - real user request 2026-09-09: "Rest of Math Unit 1"
+   * reusing the pattern proven on 1.1. A concept passes one or the other,
+   * never both.
+   */
+  checkpointSceneSpecs?: (NumberSceneSpec | undefined)[];
   /**
    * Set by UnitView when the lesson's textbook pane is open AND already
    * showing this concept's own page - in that case the small copy in here is
@@ -1106,6 +1120,7 @@ export default function AvatarChat({
           keyRanges,
           generatedIllustrationUrl: i === 0 ? step.illustrationUrl : undefined,
           sceneKey: i === 0 ? step.sceneKey : undefined,
+          sceneSpec: i === 0 ? step.sceneSpec : undefined,
         },
       ]);
       speakText(cleanText, id, () => {
@@ -1144,7 +1159,11 @@ export default function AvatarChat({
     /* eslint-enable react-hooks/set-state-in-effect */
     stopSpeech();
 
-    checkpointsRef.current = buildCheckpoints(concept).map((step, i) => ({ ...step, sceneKey: checkpointScenes?.[i] }));
+    checkpointsRef.current = buildCheckpoints(concept).map((step, i) => ({
+      ...step,
+      sceneKey: checkpointScenes?.[i],
+      sceneSpec: checkpointSceneSpecs?.[i],
+    }));
 
     // AvatarChat is remounted (not just re-rendered) on every concept
     // change - see UnitView.tsx's key={selected.concept_id}. React flushes
@@ -1508,6 +1527,11 @@ export default function AvatarChat({
                   {m.sceneKey && (
                     <div className="mt-2 w-64 max-w-full">
                       <DecimalConceptScene variant={m.sceneKey as DecimalSceneVariant} />
+                    </div>
+                  )}
+                  {m.sceneSpec && (
+                    <div className="mt-2 w-64 max-w-full">
+                      <NumberConceptScene spec={m.sceneSpec} />
                     </div>
                   )}
                 </div>
