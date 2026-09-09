@@ -23,14 +23,15 @@ export async function POST(req: NextRequest) {
   } catch {
     return NextResponse.json({ error: "Invalid request body." }, { status: 400 });
   }
-  const conceptId = (body as { conceptId?: string })?.conceptId;
-  if (!conceptId || typeof conceptId !== "string") {
-    return NextResponse.json({ error: "conceptId is required." }, { status: 400 });
-  }
+  const { conceptId, unitKey, conceptKey } = body as { conceptId?: string; unitKey?: string; conceptKey?: string };
 
-  const concept = await db.concept.findUnique({ where: { id: conceptId } });
+  const concept = conceptId
+    ? await db.concept.findUnique({ where: { id: conceptId } })
+    : unitKey && conceptKey
+      ? await db.concept.findFirst({ where: { conceptKey, unit: { unitKey } } })
+      : null;
   if (!concept) {
-    return NextResponse.json({ error: "Concept not found." }, { status: 404 });
+    return NextResponse.json({ error: "Concept not found. Pass conceptId, or unitKey+conceptKey." }, { status: 404 });
   }
 
   let widget = null;
