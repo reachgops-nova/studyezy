@@ -32,12 +32,13 @@ function QuotedExcerpt({ quote, tag, caption }: Extract<LiteracySceneSpec, { typ
 function NarrativeMountain({ stages, peakIndex, caption }: Extract<LiteracySceneSpec, { type: 'narrativeMountain' }>) {
   const w = 320;
   const h = 100;
+  const pad = 30;
   const n = stages.length;
   const stepX = w / (n - 1);
   const peakY = 16;
   const baseY = 80;
   const points = stages.map((_, i) => {
-    const x = i * stepX;
+    const x = pad + i * stepX;
     const dist = Math.abs(i - peakIndex);
     const maxDist = Math.max(peakIndex, n - 1 - peakIndex) || 1;
     const y = peakY + (baseY - peakY) * (dist / maxDist);
@@ -47,7 +48,7 @@ function NarrativeMountain({ stages, peakIndex, caption }: Extract<LiteracyScene
   return (
     <>
       <div className="flex justify-center overflow-x-auto">
-        <svg width={w} height={h + 30} viewBox={`0 0 ${w} ${h + 30}`}>
+        <svg width={w + pad * 2} height={h + 30} viewBox={`0 0 ${w + pad * 2} ${h + 30}`}>
           <path d={pathD} fill="none" stroke="#16241f" strokeWidth={2} />
           {points.map(([x, y], i) => (
             <circle key={i} cx={x} cy={y} r={i === peakIndex ? 5 : 3.5} fill={i === peakIndex ? '#9c6f1f' : '#16241f'} />
