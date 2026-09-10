@@ -18,6 +18,11 @@ import { LinearSequencePlayer } from './LinearSequencePlayer';
 import { SymmetryPatternPlayer } from './SymmetryPatternPlayer';
 import { AngleLinePlayer } from './AngleLinePlayer';
 import { TriangleClassifyPlayer } from './TriangleClassifyPlayer';
+import { NegativeCalcPlayer } from './NegativeCalcPlayer';
+import { MentalMathPlayer } from './MentalMathPlayer';
+import { EquationSolvePlayer } from './EquationSolvePlayer';
+import { MentalMultiplyPlayer } from './MentalMultiplyPlayer';
+import { PartialProductsPlayer } from './PartialProductsPlayer';
 import { getWidgetForConcept, type InteractiveWidget, type TraitMatcherSpec, type PredictiveBrancherSpec } from '@/lib/interactiveWidgets';
 
 type BespokePlayer = React.FC<{ onSuccess?: () => void; onAttempt?: (correct: boolean) => void; onNarrate?: (text: string) => void }>;
@@ -51,6 +56,13 @@ const BESPOKE_PLAYERS: Record<string, Record<string, BespokePlayer>> = {
     '2.1': SymmetryPatternPlayer,
     '2.2': AngleLinePlayer,
     '2.3': TriangleClassifyPlayer,
+  },
+  'cambridge-4-math-3': {
+    '3.1': NegativeCalcPlayer,
+    '3.2': MentalMathPlayer,
+    '3.3': EquationSolvePlayer,
+    '3.4': MentalMultiplyPlayer,
+    '3.5': PartialProductsPlayer,
   },
 };
 

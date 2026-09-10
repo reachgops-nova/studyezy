@@ -15,7 +15,10 @@ export type NumberSceneSpec =
   | { type: 'regroup'; from: string; to: string; caption: string }
   | { type: 'digitShift'; before: string; after: string; direction: 'left' | 'right'; places: number; caption: string }
   | { type: 'numberLine'; from: number; to: number; marker: number; path?: number[]; caption: string }
-  | { type: 'sequenceSteps'; terms: (number | string)[]; rule: string; caption: string };
+  | { type: 'sequenceSteps'; terms: (number | string)[]; rule: string; caption: string }
+  | { type: 'expressionSteps'; steps: string[]; caption: string }
+  | { type: 'equationSolve'; equation: string; operation: string; answer: string; caption: string }
+  | { type: 'partialProducts'; factors: [number, number]; parts: { label: string; value: number }[]; total: number; caption: string };
 
 function PlaceValueChart({ columns, values, caption }: Extract<NumberSceneSpec, { type: 'placeValueChart' }>) {
   return (
@@ -170,6 +173,57 @@ function SequenceSteps({ terms, rule, caption }: Extract<NumberSceneSpec, { type
   );
 }
 
+function ExpressionSteps({ steps, caption }: Extract<NumberSceneSpec, { type: 'expressionSteps' }>) {
+  return (
+    <>
+      <div className="flex flex-col items-center gap-1.5">
+        {steps.map((s, i) => (
+          <React.Fragment key={i}>
+            <div className="rounded-lg border-2 border-[#16241f]/15 bg-white px-3 py-1.5 text-sm font-bold text-[#16241f]">{s}</div>
+            {i < steps.length - 1 && <span className="text-[#9c6f1f]">&#8595;</span>}
+          </React.Fragment>
+        ))}
+      </div>
+      <p className="mt-1.5 text-center text-[10px] font-medium text-[#16241f]/60">{caption}</p>
+    </>
+  );
+}
+
+function EquationSolve({ equation, operation, answer, caption }: Extract<NumberSceneSpec, { type: 'equationSolve' }>) {
+  return (
+    <>
+      <div className="flex flex-col items-center gap-1.5">
+        <div className="rounded-lg border-2 border-[#16241f] bg-white px-4 py-2 text-base font-black text-[#16241f]">{equation}</div>
+        {operation && (
+          <span className="rounded-full bg-[#9c6f1f]/10 px-2.5 py-0.5 text-[10px] font-bold text-[#9c6f1f]">{operation}</span>
+        )}
+        {answer && (
+          <div className="rounded-lg border-2 border-[#9c6f1f] bg-[#9c6f1f]/10 px-4 py-1.5 text-sm font-black text-[#9c6f1f]">{answer}</div>
+        )}
+      </div>
+      <p className="mt-1.5 text-center text-[10px] font-medium text-[#16241f]/60">{caption}</p>
+    </>
+  );
+}
+
+function PartialProducts({ factors, parts, total, caption }: Extract<NumberSceneSpec, { type: 'partialProducts' }>) {
+  return (
+    <>
+      <p className="mb-2 text-center text-xs font-bold text-[#16241f]">{factors[0]} &times; {factors[1]}</p>
+      <div className="flex flex-wrap justify-center gap-1.5">
+        {parts.map((p, i) => (
+          <div key={i} className="rounded-lg border border-[#16241f]/15 bg-white px-2 py-1.5 text-center">
+            <div className="text-[9px] font-bold text-[#16241f]/60">{p.label}</div>
+            <div className="text-sm font-black text-[#9c6f1f]">{p.value}</div>
+          </div>
+        ))}
+      </div>
+      <p className="mt-2 text-center text-lg font-black text-[#16241f]">= {total}</p>
+      <p className="mt-1.5 text-center text-[10px] font-medium text-[#16241f]/60">{caption}</p>
+    </>
+  );
+}
+
 export const NumberConceptScene: React.FC<{ spec: NumberSceneSpec }> = ({ spec }) => {
   return (
     <div className="rounded-xl border border-[#16241f]/10 bg-[#f4f6f1] p-3">
@@ -179,6 +233,9 @@ export const NumberConceptScene: React.FC<{ spec: NumberSceneSpec }> = ({ spec }
       {spec.type === 'digitShift' && <DigitShift {...spec} />}
       {spec.type === 'numberLine' && <NumberLine {...spec} />}
       {spec.type === 'sequenceSteps' && <SequenceSteps {...spec} />}
+      {spec.type === 'expressionSteps' && <ExpressionSteps {...spec} />}
+      {spec.type === 'equationSolve' && <EquationSolve {...spec} />}
+      {spec.type === 'partialProducts' && <PartialProducts {...spec} />}
     </div>
   );
 };
