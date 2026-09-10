@@ -98,14 +98,31 @@ export function UnitView({
   taughtUpToConceptKey = null,
 }: UnitViewProps) {
   const concepts = unit?.concepts || [];
+  // Real bug found live 2026-09-10: every concept across all 18 Math units
+  // has an empty book_pages array in production (a gap in the original
+  // whole-textbook extraction pipeline - English units are unaffected).
+  // The old `|| 1` fallback then looked for a page numbered exactly 1,
+  // which was never one of the unit's real uploaded pages (e.g. Unit 1's
+  // are 5/10/14/19), so the booklet showed "No page image uploaded yet"
+  // for every concept even though real pages existed for the unit.
+  // Falling back to the unit's own first real uploaded page instead means
+  // the booklet always shows something genuinely from this unit's
+  // textbook rather than nothing - not a precise per-concept match (that
+  // needs the underlying book_pages data fixed), but a real page beats a
+  // blank placeholder.
+  const firstAvailablePage =
+    initialPageImages
+      .map((p) => p.page)
+      .filter((p): p is number => p != null)
+      .sort((a, b) => a - b)[0] ?? 1;
   const activeConcepts = concepts.map((c: Concept) => ({
     id: c.concept_id,
     title: c.concept_name,
-    page: c.book_pages?.[0] || 1,
+    page: c.book_pages?.[0] || firstAvailablePage,
   }));
 
   const [activeConceptId, setActiveConceptId] = useState<string>(activeConcepts[0]?.id || '1.1');
-  const [activePage, setActivePage] = useState(activeConcepts[0]?.page || 1);
+  const [activePage, setActivePage] = useState(activeConcepts[0]?.page || firstAvailablePage);
   const [isBookletCollapsed, setIsBookletCollapsed] = useState(false);
 
   // Defaults collapsed on phone/tablet widths (checked once, client-side
@@ -282,7 +299,7 @@ export function UnitView({
   // internally and resets that itself when its `concept` prop changes.
   useEffect(() => {
     const concept = concepts.find((c) => c.concept_id === activeConceptId);
-    setActivePage(concept?.book_pages?.[0] || 1);
+    setActivePage(concept?.book_pages?.[0] || firstAvailablePage);
     setCurrentSelection(null);
     setIsCorrectSelection(null);
     setWidgetCompleted(false);
