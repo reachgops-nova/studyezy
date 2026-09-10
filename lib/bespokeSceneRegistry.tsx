@@ -20,6 +20,7 @@ import { UNIT15_CONCEPT_SCENES } from "@/lib/unit15SceneSpecs";
 import { getEnglishUnit1ConceptScenes } from "@/lib/englishUnit1SceneSpecs";
 import { getEnglishUnit2ConceptScenes } from "@/lib/englishUnit2SceneSpecs";
 import { getEnglishUnit3ConceptScenes } from "@/lib/englishUnit3SceneSpecs";
+import { getEnglishUnit4ConceptScenes } from "@/lib/englishUnit4SceneSpecs";
 import { getUnit16ConceptScenes } from "@/lib/unit16SceneSpecs";
 import { UNIT17_CONCEPT_SCENES } from "@/lib/unit17SceneSpecs";
 import { UNIT18_CONCEPT_SCENES } from "@/lib/unit18SceneSpecs";
@@ -125,6 +126,10 @@ export function getCheckpointSceneNodes(unitKey: string | undefined, conceptId: 
 
   if (unitKey === 'cambridge-5-english-3') {
     return getEnglishUnit3ConceptScenes(conceptId);
+  }
+
+  if (unitKey === 'cambridge-5-english-4') {
+    return getEnglishUnit4ConceptScenes(conceptId);
   }
 
   if (unitKey === 'cambridge-4-math-16') {
