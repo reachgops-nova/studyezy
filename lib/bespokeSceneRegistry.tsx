@@ -1,10 +1,12 @@
 import DecimalConceptScene, { type DecimalSceneVariant } from "@/components/interactive/DecimalConceptScene";
 import NumberConceptScene from "@/components/interactive/NumberConceptScene";
 import GeometryConceptScene from "@/components/interactive/GeometryConceptScene";
+import StatisticsConceptScene from "@/components/interactive/StatisticsConceptScene";
 import { UNIT1_CONCEPT_SCENES } from "@/lib/unit1SceneSpecs";
 import { UNIT2_CONCEPT_SCENES } from "@/lib/unit2SceneSpecs";
 import { UNIT3_CONCEPT_SCENES } from "@/lib/unit3SceneSpecs";
 import { UNIT4_CONCEPT_SCENES } from "@/lib/unit4SceneSpecs";
+import { UNIT5_CONCEPT_SCENES } from "@/lib/unit5SceneSpecs";
 import type { ReactNode } from "react";
 
 // Central place to look up "what should Ezy show on screen while narrating
@@ -42,6 +44,11 @@ export function getCheckpointSceneNodes(unitKey: string | undefined, conceptId: 
   if (unitKey === 'cambridge-4-math-4') {
     const specs = UNIT4_CONCEPT_SCENES[conceptId];
     if (specs) return specs.map((spec, i) => <NumberConceptScene key={i} spec={spec} />);
+  }
+
+  if (unitKey === 'cambridge-4-math-5') {
+    const specs = UNIT5_CONCEPT_SCENES[conceptId];
+    if (specs) return specs.map((spec, i) => <StatisticsConceptScene key={i} spec={spec} />);
   }
 
   return undefined;
