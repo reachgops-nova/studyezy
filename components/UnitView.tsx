@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import Link from 'next/link';
 import WidgetDispatcher, { hasBespokePlayer } from './interactive/WidgetDispatcher';
 import { getCheckpointSceneNodes } from '@/lib/bespokeSceneRegistry';
@@ -178,10 +178,22 @@ export function UnitView({
   // checkpoint sequence already works.
   const [widgetSignal, setWidgetSignal] = useState<{ id: number; text: string; awaitConfirm?: boolean } | null>(null);
   const widgetSignalIdRef = useRef(0);
-  const announceWidget = (text: string, awaitConfirm?: boolean) => {
+  // Real bug found live 2026-09-10 testing Unit 2's widgets: this was a
+  // plain inline function, recreated on every render. WidgetDispatcher
+  // wraps it again in its own inline onNarrate arrow before handing it to
+  // the bespoke player, whose own useEffect depends on that callback's
+  // identity (via a useCallback wrapper) - so a fresh identity on every
+  // render re-fired that effect every render, which called announceWidget
+  // again, which set new state, which re-rendered everything, which made a
+  // fresh identity again: an infinite re-narration loop that kept
+  // appending duplicate chat messages and yanking the scroll position
+  // (reported live as "its scrolling up repeatedly"). useCallback with an
+  // empty dep array keeps the identity stable across renders (it only
+  // touches a ref and a stable setState setter), breaking the loop.
+  const announceWidget = useCallback((text: string, awaitConfirm?: boolean) => {
     widgetSignalIdRef.current += 1;
     setWidgetSignal({ id: widgetSignalIdRef.current, text, awaitConfirm });
-  };
+  }, []);
   const [masteredConcepts, setMasteredConcepts] = useState<Record<string, boolean>>({});
   // Real feedback (2026-09-05): the practice widget used to render the whole
   // time, "hanging separately at the bottom" even while Ezy was still
@@ -716,7 +728,7 @@ export function UnitView({
                           isCorrect={isCorrectSelection}
                           currentSelection={currentSelection}
                           onAttempt={handleWidgetAttempt}
-                          onWidgetPhase={(message) => announceWidget(message)}
+                          onWidgetPhase={announceWidget}
                           onSuccess={() => {
                             setStarCount((prev) => prev + 10);
                             setWidgetCompleted(true);

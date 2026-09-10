@@ -103,7 +103,7 @@ export const WidgetDispatcher: React.FC<WidgetDispatcherProps> = ({
         <Player
           onAttempt={onAttempt}
           onSuccess={onSuccess}
-          onNarrate={(text) => onWidgetPhase?.(text)}
+          onNarrate={onWidgetPhase}
         />
       </div>
     );
