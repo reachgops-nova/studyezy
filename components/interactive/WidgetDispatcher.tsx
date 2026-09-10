@@ -45,6 +45,8 @@ import { DecimalAdditionPlayer } from './DecimalAdditionPlayer';
 import { TwoDigitMultiplicationPlayer } from './TwoDigitMultiplicationPlayer';
 import { DivisionRemaindersPlayer } from './DivisionRemaindersPlayer';
 import { OrderOfOperationsPlayer } from './OrderOfOperationsPlayer';
+import { TranslatingShapesPlayer } from './TranslatingShapesPlayer';
+import { CoordinateShapesPlayer } from './CoordinateShapesPlayer';
 import { getWidgetForConcept, type InteractiveWidget, type TraitMatcherSpec, type PredictiveBrancherSpec } from '@/lib/interactiveWidgets';
 
 type BespokePlayer = React.FC<{ onSuccess?: () => void; onAttempt?: (correct: boolean) => void; onNarrate?: (text: string) => void }>;
@@ -119,6 +121,10 @@ const BESPOKE_PLAYERS: Record<string, Record<string, BespokePlayer>> = {
     '9.3': TwoDigitMultiplicationPlayer,
     '9.4': DivisionRemaindersPlayer,
     '9.5': OrderOfOperationsPlayer,
+  },
+  'cambridge-4-math-10': {
+    '10.1': TranslatingShapesPlayer,
+    '10.2': CoordinateShapesPlayer,
   },
 };
 

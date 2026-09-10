@@ -11,7 +11,15 @@ export type GeometrySceneSpec =
   | { type: 'symmetryGrid'; axis: 'vertical' | 'horizontal' | 'both'; shaded: [number, number][]; cols: number; rows: number; caption: string }
   | { type: 'angleArc'; degrees: number; label: string; kind: 'acute' | 'obtuse' | 'reflex' | 'right'; caption: string }
   | { type: 'straightLineSplit'; known: number; missing: number; caption: string }
-  | { type: 'triangleClassify'; kind: 'equilateral' | 'isosceles' | 'scalene'; sides: [number, number, number]; caption: string };
+  | { type: 'triangleClassify'; kind: 'equilateral' | 'isosceles' | 'scalene'; sides: [number, number, number]; caption: string }
+  | {
+      type: 'coordinateGrid';
+      gridSize: number;
+      shapes: { points: [number, number][]; color: 'accent' | 'ink'; dashed?: boolean }[];
+      arrows?: { from: [number, number]; to: [number, number] }[];
+      labels?: { at: [number, number]; text: string }[];
+      caption: string;
+    };
 
 function SymmetryGrid({ axis, shaded, cols, rows, caption }: Extract<GeometrySceneSpec, { type: 'symmetryGrid' }>) {
   const cellSize = 22;
@@ -121,6 +129,74 @@ function TriangleClassify({ kind, sides, caption }: Extract<GeometrySceneSpec, {
   );
 }
 
+function CoordinateGrid({ gridSize, shapes, arrows, labels, caption }: Extract<GeometrySceneSpec, { type: 'coordinateGrid' }>) {
+  const cell = 22;
+  const pad = 16;
+  const size = gridSize * cell;
+  const px = (v: number) => pad + v * cell;
+  const py = (v: number) => pad + (gridSize - v) * cell;
+  const colorOf = (c: 'accent' | 'ink') => (c === 'accent' ? '#9c6f1f' : '#16241f');
+  const toPolyPoints = (pts: [number, number][]) => pts.map(([x, y]) => `${px(x)},${py(y)}`).join(' ');
+  return (
+    <>
+      <div className="flex justify-center overflow-x-auto">
+        <svg width={size + pad * 2} height={size + pad * 2} viewBox={`0 0 ${size + pad * 2} ${size + pad * 2}`}>
+          {Array.from({ length: gridSize + 1 }).map((_, i) => (
+            <React.Fragment key={`grid-${i}`}>
+              <line x1={px(i)} y1={py(0)} x2={px(i)} y2={py(gridSize)} stroke="#16241f22" strokeWidth={1} />
+              <line x1={px(0)} y1={py(i)} x2={px(gridSize)} y2={py(i)} stroke="#16241f22" strokeWidth={1} />
+            </React.Fragment>
+          ))}
+          <line x1={px(0)} y1={py(0)} x2={px(gridSize)} y2={py(0)} stroke="#16241f" strokeWidth={2} />
+          <line x1={px(0)} y1={py(0)} x2={px(0)} y2={py(gridSize)} stroke="#16241f" strokeWidth={2} />
+
+          {arrows?.map((a, i) => (
+            <g key={`arrow-${i}`}>
+              <line
+                x1={px(a.from[0])}
+                y1={py(a.from[1])}
+                x2={px(a.to[0])}
+                y2={py(a.to[1])}
+                stroke="#9c6f1f"
+                strokeWidth={1.5}
+                strokeDasharray="3 2"
+                markerEnd="url(#coord-arrow)"
+              />
+            </g>
+          ))}
+          <defs>
+            <marker id="coord-arrow" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
+              <path d="M0,0 L6,3 L0,6 Z" fill="#9c6f1f" />
+            </marker>
+          </defs>
+
+          {shapes.map((s, i) => (
+            <g key={`shape-${i}`}>
+              <polygon
+                points={toPolyPoints(s.points)}
+                fill={`${colorOf(s.color)}1a`}
+                stroke={colorOf(s.color)}
+                strokeWidth={2}
+                strokeDasharray={s.dashed ? '4 3' : undefined}
+              />
+              {s.points.map(([x, y], vi) => (
+                <circle key={vi} cx={px(x)} cy={py(y)} r={3} fill={colorOf(s.color)} />
+              ))}
+            </g>
+          ))}
+
+          {labels?.map((l, i) => (
+            <text key={`label-${i}`} x={px(l.at[0]) + 4} y={py(l.at[1]) - 4} fontSize="10" fontWeight="bold" fill="#16241f">
+              {l.text}
+            </text>
+          ))}
+        </svg>
+      </div>
+      <p className="mt-1.5 text-center text-[10px] font-medium text-[#16241f]/60">{caption}</p>
+    </>
+  );
+}
+
 export const GeometryConceptScene: React.FC<{ spec: GeometrySceneSpec }> = ({ spec }) => {
   return (
     <div className="rounded-xl border border-[#16241f]/10 bg-[#f4f6f1] p-3">
@@ -128,6 +204,7 @@ export const GeometryConceptScene: React.FC<{ spec: GeometrySceneSpec }> = ({ sp
       {spec.type === 'angleArc' && <AngleArc {...spec} />}
       {spec.type === 'straightLineSplit' && <StraightLineSplit {...spec} />}
       {spec.type === 'triangleClassify' && <TriangleClassify {...spec} />}
+      {spec.type === 'coordinateGrid' && <CoordinateGrid {...spec} />}
     </div>
   );
 };
