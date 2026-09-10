@@ -2,8 +2,8 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
-import WidgetDispatcher, { DECIMAL_PILOT_UNIT_KEY, DECIMAL_PILOT_CONCEPT_ID, UNIT1_PLAYER_CONCEPT_IDS } from './interactive/WidgetDispatcher';
-import { UNIT1_CONCEPT_SCENES } from '@/lib/unit1SceneSpecs';
+import WidgetDispatcher, { hasBespokePlayer } from './interactive/WidgetDispatcher';
+import { getCheckpointSceneNodes } from '@/lib/bespokeSceneRegistry';
 import { getWidgetForConcept, type InteractiveWidget } from '@/lib/interactiveWidgets';
 import type { CurriculumUnit, Concept, MasteryBand, TestQuestion } from '@/lib/types';
 import UnitOverview from './UnitOverview';
@@ -193,20 +193,20 @@ export function UnitView({
   const currentConcept = concepts.find((c) => c.concept_id === activeConceptId);
   // Started as a pilot for just concept 1.1 ("test this visual appealing
   // graphical session along with our chat, in a separate link first",
-  // 2026-09-09), then extended to the rest of Unit 1's concepts (1.2-1.5,
-  // "Rest of Math Unit 1 (recommended)"). Each of these 5 concepts has its
-  // own bespoke, NotebookLM-generated practice widget (see
-  // WidgetDispatcher.tsx's UNIT1_PLAYERS) with its own built-in quiz, so all
-  // of skipMicroCheck/banner-hiding/currentWidget-placeholder below applies
-  // to the whole set, not just 1.1.
-  const isDecimalPilot = unitKey === DECIMAL_PILOT_UNIT_KEY && UNIT1_PLAYER_CONCEPT_IDS.includes(activeConceptId);
-  // The decimal-specific scene set stays scoped to exactly 1.1 (its own
-  // hand-picked DecimalConceptScene variants); 1.2-1.5 use the generalized,
-  // data-driven NumberConceptScene specs instead (lib/unit1SceneSpecs.ts).
-  const unit1SceneSpecs =
-    unitKey === DECIMAL_PILOT_UNIT_KEY && activeConceptId !== DECIMAL_PILOT_CONCEPT_ID
-      ? UNIT1_CONCEPT_SCENES[activeConceptId]
-      : undefined;
+  // 2026-09-09), then extended to the rest of Unit 1's concepts ("Rest of
+  // Math Unit 1 (recommended)"), then to Unit 2 and beyond ("start working
+  // on the other units... prepare those lessons for english and math
+  // cambridge", 2026-09-10). Every concept in the registry has its own
+  // bespoke, NotebookLM-generated practice widget (see
+  // WidgetDispatcher.tsx's BESPOKE_PLAYERS) with its own built-in quiz, so
+  // all of skipMicroCheck/banner-hiding/currentWidget-placeholder below
+  // applies to the whole set.
+  const isDecimalPilot = hasBespokePlayer(unitKey, activeConceptId);
+  // Scene visuals for the same units/concepts - see
+  // lib/bespokeSceneRegistry.tsx for the per-unit lookup (1.1 keeps its own
+  // hand-picked DecimalConceptScene variants; every other bespoke concept
+  // uses a data-driven scene spec instead).
+  const checkpointSceneNodes = getCheckpointSceneNodes(unitKey, activeConceptId);
   // Hand-authored English widget first, then this concept's own AI-generated
   // one (lib/conceptWidgetGeneration.ts) - see lib/interactiveWidgets.ts's
   // subject-scoping comment for why the hand-authored bank alone returns
@@ -673,8 +673,7 @@ export function UnitView({
               // flow." One scene per checkpoint (intro, examples, key
               // points, tip - see buildCheckpoints in AvatarChat.tsx),
               // replacing the earlier standalone pre-roll video.
-              checkpointScenes={activeConceptId === DECIMAL_PILOT_CONCEPT_ID ? ['split', 'rodExample', 'placeValue', 'doorway'] : undefined}
-              checkpointSceneSpecs={unit1SceneSpecs}
+              checkpointSceneNodes={checkpointSceneNodes}
               // The widget is Ezy's practice activity for this concept -
               // only shown once AvatarChat says it's actually reached that
               // point (onReachedPractice), not the whole time. Real

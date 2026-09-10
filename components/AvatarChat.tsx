@@ -1,12 +1,10 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import type { Concept } from "@/lib/types";
 import Avatar from "./Avatar";
 import { Illustration, hasIllustration } from "./illustrations";
 import VoicePicker, { getSavedRate, getSavedVoiceName } from "./VoicePicker";
-import DecimalConceptScene, { type DecimalSceneVariant } from "./interactive/DecimalConceptScene";
-import NumberConceptScene, { type NumberSceneSpec } from "./interactive/NumberConceptScene";
 
 interface SpeechRecognitionResultLike {
   results: { [index: number]: { [index: number]: { transcript: string } } };
@@ -29,10 +27,8 @@ interface ChatMessage {
   illustrationKey?: string;
   /** A generated illustration (see lib/conceptIllustration.ts) attached to THIS message, not the legacy hand-drawn set - shown inline in the thread instead of a static header (2026-09-08: moved into the conversation sequence so it can't be scrolled past unread). */
   generatedIllustrationUrl?: string;
-  /** A small scene component (components/interactive/DecimalConceptScene.tsx) attached to THIS message via the caller's checkpointScenes prop - real user request 2026-09-09: a visual synced to exactly the statement being spoken, not a separate pre-roll video with guessed timing. */
-  sceneKey?: string;
-  /** Same attach point as sceneKey, but for the generalized data-driven scene shapes (components/interactive/NumberConceptScene.tsx) used by concepts 1.2-1.5 - see the checkpointSceneSpecs prop. sceneKey and sceneSpec are never both set on the same message. */
-  sceneSpec?: NumberSceneSpec;
+  /** A small scene visual (e.g. components/interactive/NumberConceptScene.tsx, GeometryConceptScene.tsx) attached to THIS message via the caller's checkpointSceneNodes prop - real user request 2026-09-09: a visual synced to exactly the statement being spoken, not a separate pre-roll video with guessed timing. The caller builds the actual element (whichever scene component/spec fits this unit's subject), so AvatarChat itself never needs to know about a specific scene type. */
+  sceneNode?: ReactNode;
   keyRanges?: [number, number][];
 }
 
@@ -61,10 +57,8 @@ interface CheckpointStep {
   lines: string[];
   /** Attached to the first line spoken in this step - see playCheckpoint. */
   illustrationUrl?: string;
-  /** Same attach point as illustrationUrl, for a small scene component instead of an image - set by the caller (see AvatarChat's checkpointScenes prop), never by buildCheckpoints itself, which stays concept-generic. */
-  sceneKey?: string;
-  /** Same attach point as sceneKey, for the generalized data-driven scene shapes - see checkpointSceneSpecs. */
-  sceneSpec?: NumberSceneSpec;
+  /** Same attach point as illustrationUrl, for a small scene visual instead of an image - set by the caller (see AvatarChat's checkpointSceneNodes prop), never by buildCheckpoints itself, which stays concept-generic. */
+  sceneNode?: ReactNode;
 }
 
 // Teaching content is grouped into small checkpoints - the avatar pauses
@@ -469,29 +463,26 @@ export default function AvatarChat({
   practiceSlot,
   skipMicroCheck = false,
   widgetSignal,
-  checkpointScenes,
-  checkpointSceneSpecs,
+  checkpointSceneNodes,
 }: {
   unitKey: string;
   concept: Concept;
   /**
-   * A scene component key per checkpoint index (see
-   * components/interactive/DecimalConceptScene.tsx), merged onto
+   * A rendered scene element per checkpoint index, merged onto
    * buildCheckpoints' generic output - real user request 2026-09-09: a
    * visual synced to exactly the statement being spoken (attached at the
    * same point as a generated illustration would be), replacing a separate
-   * pre-roll video with guessed pause timing. undefined/omitted entries get
-   * no scene, same as any concept without this prop at all.
+   * pre-roll video with guessed pause timing. Generalized 2026-09-10 from
+   * two separate type-specific props (one per scene-spec shape) into a
+   * single ReactNode slot per checkpoint, since this now needs to scale
+   * across many units/subjects each with their own scene component
+   * (NumberConceptScene, GeometryConceptScene, ...) - the caller (UnitView)
+   * builds the actual element for whichever scene type fits this unit, so
+   * AvatarChat never needs to know about a specific scene shape.
+   * undefined/omitted entries get no scene, same as any concept without
+   * this prop at all.
    */
-  checkpointScenes?: (string | undefined)[];
-  /**
-   * Same attach point as checkpointScenes, for the generalized data-driven
-   * scene shapes (components/interactive/NumberConceptScene.tsx) used by
-   * concepts 1.2-1.5 - real user request 2026-09-09: "Rest of Math Unit 1"
-   * reusing the pattern proven on 1.1. A concept passes one or the other,
-   * never both.
-   */
-  checkpointSceneSpecs?: (NumberSceneSpec | undefined)[];
+  checkpointSceneNodes?: (ReactNode | undefined)[];
   /**
    * Set by UnitView when the lesson's textbook pane is open AND already
    * showing this concept's own page - in that case the small copy in here is
@@ -1128,8 +1119,7 @@ export default function AvatarChat({
           text: cleanText,
           keyRanges,
           generatedIllustrationUrl: i === 0 ? step.illustrationUrl : undefined,
-          sceneKey: i === 0 ? step.sceneKey : undefined,
-          sceneSpec: i === 0 ? step.sceneSpec : undefined,
+          sceneNode: i === 0 ? step.sceneNode : undefined,
         },
       ]);
       speakText(cleanText, id, () => {
@@ -1171,8 +1161,7 @@ export default function AvatarChat({
 
     checkpointsRef.current = buildCheckpoints(concept).map((step, i) => ({
       ...step,
-      sceneKey: checkpointScenes?.[i],
-      sceneSpec: checkpointSceneSpecs?.[i],
+      sceneNode: checkpointSceneNodes?.[i],
     }));
 
     // AvatarChat is remounted (not just re-rendered) on every concept
@@ -1538,14 +1527,9 @@ export default function AvatarChat({
                       <img src={m.generatedIllustrationUrl} alt="" className="h-full w-full bg-slate-50 object-contain" />
                     </div>
                   )}
-                  {m.sceneKey && (
+                  {m.sceneNode && (
                     <div className="mt-2 w-64 max-w-full">
-                      <DecimalConceptScene variant={m.sceneKey as DecimalSceneVariant} />
-                    </div>
-                  )}
-                  {m.sceneSpec && (
-                    <div className="mt-2 w-64 max-w-full">
-                      <NumberConceptScene spec={m.sceneSpec} />
+                      {m.sceneNode}
                     </div>
                   )}
                 </div>
