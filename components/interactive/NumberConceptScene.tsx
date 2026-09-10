@@ -18,7 +18,8 @@ export type NumberSceneSpec =
   | { type: 'sequenceSteps'; terms: (number | string)[]; rule: string; caption: string }
   | { type: 'expressionSteps'; steps: string[]; caption: string }
   | { type: 'equationSolve'; equation: string; operation: string; answer: string; caption: string }
-  | { type: 'partialProducts'; factors: [number, number]; parts: { label: string; value: number }[]; total: number; caption: string };
+  | { type: 'partialProducts'; factors: [number, number]; parts: { label: string; value: number }[]; total: number; caption: string }
+  | { type: 'dotArray'; rows: number[]; caption: string };
 
 function PlaceValueChart({ columns, values, caption }: Extract<NumberSceneSpec, { type: 'placeValueChart' }>) {
   return (
@@ -224,6 +225,25 @@ function PartialProducts({ factors, parts, total, caption }: Extract<NumberScene
   );
 }
 
+function DotArray({ rows, caption }: Extract<NumberSceneSpec, { type: 'dotArray' }>) {
+  const total = rows.reduce((sum, n) => sum + n, 0);
+  return (
+    <>
+      <div className="flex flex-col items-center gap-1">
+        {rows.map((n, r) => (
+          <div key={r} className="flex gap-1">
+            {Array.from({ length: n }).map((_, c) => (
+              <span key={c} className="block h-3 w-3 rounded-full bg-[#9c6f1f]" />
+            ))}
+          </div>
+        ))}
+        <span className="mt-1 text-[11px] font-bold text-[#16241f]">{total}</span>
+      </div>
+      <p className="mt-1.5 text-center text-[10px] font-medium text-[#16241f]/60">{caption}</p>
+    </>
+  );
+}
+
 export const NumberConceptScene: React.FC<{ spec: NumberSceneSpec }> = ({ spec }) => {
   return (
     <div className="rounded-xl border border-[#16241f]/10 bg-[#f4f6f1] p-3">
@@ -236,6 +256,7 @@ export const NumberConceptScene: React.FC<{ spec: NumberSceneSpec }> = ({ spec }
       {spec.type === 'expressionSteps' && <ExpressionSteps {...spec} />}
       {spec.type === 'equationSolve' && <EquationSolve {...spec} />}
       {spec.type === 'partialProducts' && <PartialProducts {...spec} />}
+      {spec.type === 'dotArray' && <DotArray {...spec} />}
     </div>
   );
 };
