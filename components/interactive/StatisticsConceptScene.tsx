@@ -10,7 +10,8 @@ export type StatisticsSceneSpec =
   | { type: 'barChart'; labels: string[]; values: number[]; unit?: string; caption: string }
   | { type: 'dotPlot'; labels: string[]; counts: number[]; caption: string }
   | { type: 'frequencyChart'; intervals: string[]; values: number[]; caption: string }
-  | { type: 'lineGraph'; xLabels: string[]; values: number[]; unit?: string; highlightIndex?: number; caption: string };
+  | { type: 'lineGraph'; xLabels: string[]; values: number[]; unit?: string; highlightIndex?: number; caption: string }
+  | { type: 'likelihoodScale'; event: string; position: 'impossible' | 'unlikely' | 'equally likely' | 'likely' | 'certain'; caption: string };
 
 function BarChart({ labels, values, unit, caption }: Extract<StatisticsSceneSpec, { type: 'barChart' }>) {
   const max = Math.max(...values, 1);
@@ -131,6 +132,40 @@ function LineGraph({ xLabels, values, unit, highlightIndex, caption }: Extract<S
   );
 }
 
+type LikelihoodPosition = Extract<StatisticsSceneSpec, { type: 'likelihoodScale' }>['position'];
+const LIKELIHOOD_STEPS: LikelihoodPosition[] = ['impossible', 'unlikely', 'equally likely', 'likely', 'certain'];
+
+function LikelihoodScale({ event, position, caption }: Extract<StatisticsSceneSpec, { type: 'likelihoodScale' }>) {
+  const activeIndex = LIKELIHOOD_STEPS.indexOf(position);
+  return (
+    <>
+      <p className="mb-3 text-center text-xs font-bold text-[#16241f]">{event}</p>
+      <div className="relative px-2">
+        <div className="absolute left-2 right-2 top-1/2 h-1 -translate-y-1/2 rounded bg-[#16241f]/15" />
+        <div className="relative flex justify-between">
+          {LIKELIHOOD_STEPS.map((step, i) => (
+            <div key={step} className="flex flex-col items-center" style={{ width: '20%' }}>
+              <div
+                className={`h-4 w-4 rounded-full border-2 ${
+                  i === activeIndex ? 'scale-125 border-[#16241f] bg-[#9c6f1f]' : 'border-[#16241f]/20 bg-white'
+                }`}
+              />
+              <span
+                className={`mt-1.5 text-center text-[9px] font-bold uppercase leading-tight ${
+                  i === activeIndex ? 'text-[#9c6f1f]' : 'text-[#16241f]/50'
+                }`}
+              >
+                {step}
+              </span>
+            </div>
+          ))}
+        </div>
+      </div>
+      <p className="mt-2 text-center text-[10px] font-medium text-[#16241f]/60">{caption}</p>
+    </>
+  );
+}
+
 export const StatisticsConceptScene: React.FC<{ spec: StatisticsSceneSpec }> = ({ spec }) => {
   return (
     <div className="rounded-xl border border-[#16241f]/10 bg-[#f4f6f1] p-3">
@@ -138,6 +173,7 @@ export const StatisticsConceptScene: React.FC<{ spec: StatisticsSceneSpec }> = (
       {spec.type === 'dotPlot' && <DotPlot {...spec} />}
       {spec.type === 'frequencyChart' && <FrequencyChart {...spec} />}
       {spec.type === 'lineGraph' && <LineGraph {...spec} />}
+      {spec.type === 'likelihoodScale' && <LikelihoodScale {...spec} />}
     </div>
   );
 };

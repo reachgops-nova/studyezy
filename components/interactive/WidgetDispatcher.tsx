@@ -38,6 +38,8 @@ import { DecomposeRegroupPlayer } from './DecomposeRegroupPlayer';
 import { RoundingDecimalsPlayer } from './RoundingDecimalsPlayer';
 import { ScalingDecimalsPlayer } from './ScalingDecimalsPlayer';
 import { LinearSequencesRulesPlayer } from './LinearSequencesRulesPlayer';
+import { LikelihoodScalePlayer } from './LikelihoodScalePlayer';
+import { ProbabilityExperimentPlayer } from './ProbabilityExperimentPlayer';
 import { getWidgetForConcept, type InteractiveWidget, type TraitMatcherSpec, type PredictiveBrancherSpec } from '@/lib/interactiveWidgets';
 
 type BespokePlayer = React.FC<{ onSuccess?: () => void; onAttempt?: (correct: boolean) => void; onNarrate?: (text: string) => void }>;
@@ -101,6 +103,10 @@ const BESPOKE_PLAYERS: Record<string, Record<string, BespokePlayer>> = {
     '7.3': RoundingDecimalsPlayer,
     '7.4': ScalingDecimalsPlayer,
     '7.5': LinearSequencesRulesPlayer,
+  },
+  'cambridge-4-math-8': {
+    '8.1': LikelihoodScalePlayer,
+    '8.2': ProbabilityExperimentPlayer,
   },
 };
 
