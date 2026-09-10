@@ -23,6 +23,8 @@ import { MentalMathPlayer } from './MentalMathPlayer';
 import { EquationSolvePlayer } from './EquationSolvePlayer';
 import { MentalMultiplyPlayer } from './MentalMultiplyPlayer';
 import { PartialProductsPlayer } from './PartialProductsPlayer';
+import { TimeDecimalPlayer } from './TimeDecimalPlayer';
+import { TimeIntervalPlayer } from './TimeIntervalPlayer';
 import { getWidgetForConcept, type InteractiveWidget, type TraitMatcherSpec, type PredictiveBrancherSpec } from '@/lib/interactiveWidgets';
 
 type BespokePlayer = React.FC<{ onSuccess?: () => void; onAttempt?: (correct: boolean) => void; onNarrate?: (text: string) => void }>;
@@ -63,6 +65,10 @@ const BESPOKE_PLAYERS: Record<string, Record<string, BespokePlayer>> = {
     '3.3': EquationSolvePlayer,
     '3.4': MentalMultiplyPlayer,
     '3.5': PartialProductsPlayer,
+  },
+  'cambridge-4-math-4': {
+    '4.1': TimeDecimalPlayer,
+    '4.2': TimeIntervalPlayer,
   },
 };
 
