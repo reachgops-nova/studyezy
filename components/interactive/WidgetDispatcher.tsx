@@ -47,6 +47,8 @@ import { DivisionRemaindersPlayer } from './DivisionRemaindersPlayer';
 import { OrderOfOperationsPlayer } from './OrderOfOperationsPlayer';
 import { TranslatingShapesPlayer } from './TranslatingShapesPlayer';
 import { CoordinateShapesPlayer } from './CoordinateShapesPlayer';
+import { PercentageGridPlayer } from './PercentageGridPlayer';
+import { FractionDecimalPercentPlayer } from './FractionDecimalPercentPlayer';
 import { getWidgetForConcept, type InteractiveWidget, type TraitMatcherSpec, type PredictiveBrancherSpec } from '@/lib/interactiveWidgets';
 
 type BespokePlayer = React.FC<{ onSuccess?: () => void; onAttempt?: (correct: boolean) => void; onNarrate?: (text: string) => void }>;
@@ -125,6 +127,12 @@ const BESPOKE_PLAYERS: Record<string, Record<string, BespokePlayer>> = {
   'cambridge-4-math-10': {
     '10.1': TranslatingShapesPlayer,
     '10.2': CoordinateShapesPlayer,
+  },
+  // 11.3-11.5 pending - NotebookLM generation was interrupted by a service
+  // outage; wire up the rest once it recovers.
+  'cambridge-4-math-11': {
+    '11.1': PercentageGridPlayer,
+    '11.2': FractionDecimalPercentPlayer,
   },
 };
 
