@@ -40,6 +40,11 @@ import { ScalingDecimalsPlayer } from './ScalingDecimalsPlayer';
 import { LinearSequencesRulesPlayer } from './LinearSequencesRulesPlayer';
 import { LikelihoodScalePlayer } from './LikelihoodScalePlayer';
 import { ProbabilityExperimentPlayer } from './ProbabilityExperimentPlayer';
+import { MentalAdditionStrategiesPlayer } from './MentalAdditionStrategiesPlayer';
+import { DecimalAdditionPlayer } from './DecimalAdditionPlayer';
+import { TwoDigitMultiplicationPlayer } from './TwoDigitMultiplicationPlayer';
+import { DivisionRemaindersPlayer } from './DivisionRemaindersPlayer';
+import { OrderOfOperationsPlayer } from './OrderOfOperationsPlayer';
 import { getWidgetForConcept, type InteractiveWidget, type TraitMatcherSpec, type PredictiveBrancherSpec } from '@/lib/interactiveWidgets';
 
 type BespokePlayer = React.FC<{ onSuccess?: () => void; onAttempt?: (correct: boolean) => void; onNarrate?: (text: string) => void }>;
@@ -107,6 +112,13 @@ const BESPOKE_PLAYERS: Record<string, Record<string, BespokePlayer>> = {
   'cambridge-4-math-8': {
     '8.1': LikelihoodScalePlayer,
     '8.2': ProbabilityExperimentPlayer,
+  },
+  'cambridge-4-math-9': {
+    '9.1': MentalAdditionStrategiesPlayer,
+    '9.2': DecimalAdditionPlayer,
+    '9.3': TwoDigitMultiplicationPlayer,
+    '9.4': DivisionRemaindersPlayer,
+    '9.5': OrderOfOperationsPlayer,
   },
 };
 
