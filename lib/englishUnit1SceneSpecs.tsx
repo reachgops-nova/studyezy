@@ -7,41 +7,31 @@ import type { ReactNode } from "react";
 // cultures). Every value below is grounded in this unit's real,
 // production content (fetched via railway ssh), never invented.
 //
-// IMPORTANT layout rule, found live 2026-09-10 ("voice is not reading
-// this as a point to be noted" - the checklist shown didn't match what
-// Ezy was actually saying): AvatarChat.tsx's buildCheckpoints() pairs
-// scene nodes to checkpoints by FIXED INDEX, not by topic -
-//   [0] intro (definition spoken)
-//   [1] examples (concept.examples spoken verbatim, only if any exist)
-//   [2] key_points (concept.key_points spoken verbatim, only if any exist)
-//   [3] tip (concept.tips_to_remember[0] only, if any exist)
-// checkpointSceneNodes[i] must therefore show the SAME content that's
-// being spoken at that index, not just "a" relevant visual - so every
-// concept below follows: [0] definition quote, [1] first real example
-// quote, [2] key points as a checklist, [3] tips_to_remember[0] (omitted
-// entirely when a concept has no tips, since that checkpoint never
-// fires).
+// Two real bugs found live 2026-09-10, both from the same root cause -
+// AvatarChat.tsx's buildCheckpoints() pairs checkpointSceneNodes[i] to a
+// FIXED checkpoint index ([0] definition, [1] examples, [2] key_points,
+// [3] tips_to_remember[0] - each spoken/rendered verbatim as its own chat
+// bubble, only if that field exists on the concept):
+//   1. "voice is not reading this as a point to be noted" - a scene's
+//      visual didn't match what was actually being spoken at that index
+//      (fixed by aligning content to the right index).
+//   2. "repeated sentence to narrate it separately instead of using the
+//      image text itself" - even once aligned, a quotedExcerpt card showing
+//      the SAME sentence AvatarChat already renders as a full chat bubble
+//      is pure duplication, not a genuine visual - a card only earns its
+//      place when it's a real FORMAT change (checklistCard turns a
+//      paragraph into scannable checkmarks; narrativeMountain/timeline are
+//      real diagrams), never just prose re-boxed as a "quote."
+// So: index 0 (definition) and index 3 (tip) are almost always undefined
+// below - plain text prose with no format transformation available -
+// index 1 (examples) only gets a scene where the example is itself a real
+// diagram, and index 2 (key_points) always gets a checklistCard, the one
+// universal case where restructuring genuinely helps.
 export function getEnglishUnit1ConceptScenes(conceptId: string): ReactNode[] | undefined {
   if (conceptId === "1.1") {
     return [
-      <LiteracyConceptScene
-        key={0}
-        spec={{
-          type: "quotedExcerpt",
-          quote: "A fable is a short, fictional story that teaches a moral lesson on how to treat others. In fables, characters are often animals who behave and speak like humans.",
-          tag: "Definition",
-          caption: "What a fable is",
-        }}
-      />,
-      <LiteracyConceptScene
-        key={1}
-        spec={{
-          type: "quotedExcerpt",
-          quote: "In the Malawian fable 'Why Cockerels Crow', Cockerel has a red spiky comb that looks like flames. Hyena believes it is real fire. Moral: Do not take advantage of a friend's helpfulness, and do not let greed blind you to the truth.",
-          tag: "Example",
-          caption: "A real fable and its moral",
-        }}
-      />,
+      undefined,
+      undefined,
       <LiteracyConceptScene
         key={2}
         spec={{
@@ -55,24 +45,8 @@ export function getEnglishUnit1ConceptScenes(conceptId: string): ReactNode[] | u
 
   if (conceptId === "1.2") {
     return [
-      <LiteracyConceptScene
-        key={0}
-        spec={{
-          type: "quotedExcerpt",
-          quote: "Implicit meaning is a 'hidden meaning' in a text. Writers show us clues, and we must 'read between the lines' like a detective to figure out the truth.",
-          tag: "Definition",
-          caption: "What implicit meaning is",
-        }}
-      />,
-      <LiteracyConceptScene
-        key={1}
-        spec={{
-          type: "quotedExcerpt",
-          quote: "Jo winked at Charlie and grinned as she placed the chewing gum on the teacher's chair.",
-          tag: "Example",
-          caption: "The explicit clues (winked, grinned) let us infer Jo is playing a mischievous joke",
-        }}
-      />,
+      undefined,
+      undefined,
       <LiteracyConceptScene
         key={2}
         spec={{ type: "checklistCard", items: ["Actions", "Facial expressions", "Speech"], caption: "Implicit meaning is shown through these three kinds of clues, not stated directly" }}
@@ -82,19 +56,8 @@ export function getEnglishUnit1ConceptScenes(conceptId: string): ReactNode[] | u
 
   if (conceptId === "1.3") {
     return [
-      <LiteracyConceptScene
-        key={0}
-        spec={{
-          type: "quotedExcerpt",
-          quote: "Explicit meaning is information a writer states directly and plainly in the text - you don't need to infer or guess anything.",
-          tag: "Definition",
-          caption: "What explicit meaning is",
-        }}
-      />,
-      <LiteracyConceptScene
-        key={1}
-        spec={{ type: "quotedExcerpt", quote: "Cockerel had a red, spiky comb on his head.", tag: "Example", caption: "This states a fact directly - nothing to infer" }}
-      />,
+      undefined,
+      undefined,
       <LiteracyConceptScene
         key={2}
         spec={{
@@ -103,38 +66,14 @@ export function getEnglishUnit1ConceptScenes(conceptId: string): ReactNode[] | u
           caption: "How explicit meaning works",
         }}
       />,
-      <LiteracyConceptScene
-        key={3}
-        spec={{
-          type: "quotedExcerpt",
-          quote: "Did the writer just TELL me this, or did I have to figure it out myself? 'Told directly' = explicit.",
-          tag: "Tip",
-          caption: "Ask yourself this to tell the two apart",
-        }}
-      />,
+      undefined,
     ];
   }
 
   if (conceptId === "1.4") {
     return [
-      <LiteracyConceptScene
-        key={0}
-        spec={{
-          type: "quotedExcerpt",
-          quote: "Predicting means using what you already know - from the story so far, the title, or the pictures - to make a sensible guess about what might happen next.",
-          tag: "Definition",
-          caption: "What predicting is",
-        }}
-      />,
-      <LiteracyConceptScene
-        key={1}
-        spec={{
-          type: "quotedExcerpt",
-          quote: "If a story is called The Boy Who Cried Wolf, you can predict the boy will pretend danger is coming when it isn't, because that's what the title hints at.",
-          tag: "Example",
-          caption: "A prediction based on the title",
-        }}
-      />,
+      undefined,
+      undefined,
       <LiteracyConceptScene
         key={2}
         spec={{
@@ -143,33 +82,14 @@ export function getEnglishUnit1ConceptScenes(conceptId: string): ReactNode[] | u
           caption: "How to make a good prediction",
         }}
       />,
-      <LiteracyConceptScene
-        key={3}
-        spec={{ type: "quotedExcerpt", quote: "I think ___ will happen because ___", tag: "Tip", caption: "Say your prediction this way - the 'because' is the important part" }}
-      />,
+      undefined,
     ];
   }
 
   if (conceptId === "1.5") {
     return [
-      <LiteracyConceptScene
-        key={0}
-        spec={{
-          type: "quotedExcerpt",
-          quote: "Perspective is whose eyes a story is being seen through - the same events can feel completely different depending on which character's thoughts and feelings you're following.",
-          tag: "Definition",
-          caption: "What perspective is",
-        }}
-      />,
-      <LiteracyConceptScene
-        key={1}
-        spec={{
-          type: "quotedExcerpt",
-          quote: "A story about a lost dog might feel worrying told from the owner's perspective, but exciting told from the dog's own perspective.",
-          tag: "Example",
-          caption: "Same event, two very different feelings",
-        }}
-      />,
+      undefined,
+      undefined,
       <LiteracyConceptScene
         key={2}
         spec={{
@@ -178,33 +98,14 @@ export function getEnglishUnit1ConceptScenes(conceptId: string): ReactNode[] | u
           caption: "How perspective works",
         }}
       />,
-      <LiteracyConceptScene
-        key={3}
-        spec={{
-          type: "quotedExcerpt",
-          quote: "Whose thoughts and feelings am I being told about right now?",
-          tag: "Tip",
-          caption: "Ask this to work out whose perspective you're in",
-        }}
-      />,
+      undefined,
     ];
   }
 
   if (conceptId === "1.6") {
     return [
-      <LiteracyConceptScene
-        key={0}
-        spec={{
-          type: "quotedExcerpt",
-          quote: "Proofreading means carefully checking your own writing after you've finished a draft, to fix small mistakes before it's a finished piece.",
-          tag: "Definition",
-          caption: "What proofreading is",
-        }}
-      />,
-      <LiteracyConceptScene
-        key={1}
-        spec={{ type: "quotedExcerpt", quote: "she walked to the shop", tag: "Example", caption: "Missing its capital letter - proofreading catches this" }}
-      />,
+      undefined,
+      undefined,
       <LiteracyConceptScene
         key={2}
         spec={{
@@ -213,33 +114,14 @@ export function getEnglishUnit1ConceptScenes(conceptId: string): ReactNode[] | u
           caption: "A good proofreading checklist",
         }}
       />,
-      <LiteracyConceptScene
-        key={3}
-        spec={{
-          type: "quotedExcerpt",
-          quote: "Check one thing at a time - read once just for capital letters and full stops, then again just for spelling.",
-          tag: "Tip",
-          caption: "Don't try to catch everything at once",
-        }}
-      />,
+      undefined,
     ];
   }
 
   if (conceptId === "1.7") {
     return [
-      <LiteracyConceptScene
-        key={0}
-        spec={{
-          type: "quotedExcerpt",
-          quote: "A fact is something that can be proven true or false with evidence. An opinion is what someone personally thinks or feels.",
-          tag: "Definition",
-          caption: "Fact vs. opinion",
-        }}
-      />,
-      <LiteracyConceptScene
-        key={1}
-        spec={{ type: "quotedExcerpt", quote: "The rooster has red feathers on its head.", tag: "Example", caption: "A fact - you could look and check this" }}
-      />,
+      undefined,
+      undefined,
       <LiteracyConceptScene
         key={2}
         spec={{
@@ -248,33 +130,14 @@ export function getEnglishUnit1ConceptScenes(conceptId: string): ReactNode[] | u
           caption: "How to tell fact from opinion",
         }}
       />,
-      <LiteracyConceptScene
-        key={3}
-        spec={{
-          type: "quotedExcerpt",
-          quote: "Could two reasonable people disagree about this? If yes, it's probably an opinion, not a fact.",
-          tag: "Tip",
-          caption: "A quick test for fact vs. opinion",
-        }}
-      />,
+      undefined,
     ];
   }
 
   if (conceptId === "1.8") {
     return [
-      <LiteracyConceptScene
-        key={0}
-        spec={{
-          type: "quotedExcerpt",
-          quote: "An idiomatic phrase (or idiom) is a group of words that means something different from what the individual words literally say.",
-          tag: "Definition",
-          caption: "What an idiom is",
-        }}
-      />,
-      <LiteracyConceptScene
-        key={1}
-        spec={{ type: "quotedExcerpt", quote: "Break a leg!", tag: "Example", caption: "Doesn't mean an actual injury - it's an idiom meaning 'good luck'" }}
-      />,
+      undefined,
+      undefined,
       <LiteracyConceptScene
         key={2}
         spec={{
@@ -283,38 +146,14 @@ export function getEnglishUnit1ConceptScenes(conceptId: string): ReactNode[] | u
           caption: "How idioms work",
         }}
       />,
-      <LiteracyConceptScene
-        key={3}
-        spec={{
-          type: "quotedExcerpt",
-          quote: "If a phrase makes no literal sense in context, that's a strong sign it's an idiom, not a literal statement.",
-          tag: "Tip",
-          caption: "How to spot a new idiom",
-        }}
-      />,
+      undefined,
     ];
   }
 
   if (conceptId === "1.9") {
     return [
-      <LiteracyConceptScene
-        key={0}
-        spec={{
-          type: "quotedExcerpt",
-          quote: "Sentences can be simple (one idea), compound (two equal ideas joined by 'and', 'but', or 'or'), or complex (a main idea joined to a dependent clause).",
-          tag: "Definition",
-          caption: "Sentence types",
-        }}
-      />,
-      <LiteracyConceptScene
-        key={1}
-        spec={{
-          type: "quotedExcerpt",
-          quote: "Simple: 'The kangaroo jumped.' Compound: 'The kangaroo jumped, but it missed the branch.' Complex: 'Although it was tired, the kangaroo kept jumping.'",
-          tag: "Example",
-          caption: "All three sentence types compared",
-        }}
-      />,
+      undefined,
+      undefined,
       <LiteracyConceptScene
         key={2}
         spec={{
@@ -323,15 +162,7 @@ export function getEnglishUnit1ConceptScenes(conceptId: string): ReactNode[] | u
           caption: "The three sentence types",
         }}
       />,
-      <LiteracyConceptScene
-        key={3}
-        spec={{
-          type: "quotedExcerpt",
-          quote: "Split a compound sentence at 'and'/'but'/'or' - if both halves make sense alone, it's compound.",
-          tag: "Tip",
-          caption: "A quick test to tell compound from complex",
-        }}
-      />,
+      undefined,
     ];
   }
 
@@ -353,15 +184,7 @@ export function getEnglishUnit1ConceptScenes(conceptId: string): ReactNode[] | u
           caption: "The 'problem' sits at the top of the mountain - everything before builds up, everything after resolves",
         }}
       />,
-      <LiteracyConceptScene
-        key={1}
-        spec={{
-          type: "quotedExcerpt",
-          quote: "In a fable about a clever ant who tricks a lion, the build up shows the lion boasting, the challenge is the ant deciding to teach him a lesson, the problem is the trick going wrong, and the ending shows what the lion learned.",
-          tag: "Example",
-          caption: "The narrative mountain applied to a real fable",
-        }}
-      />,
+      undefined,
       <LiteracyConceptScene
         key={2}
         spec={{
@@ -370,38 +193,14 @@ export function getEnglishUnit1ConceptScenes(conceptId: string): ReactNode[] | u
           caption: "How story structure works",
         }}
       />,
-      <LiteracyConceptScene
-        key={3}
-        spec={{
-          type: "quotedExcerpt",
-          quote: "Before writing your own story, sketch the six stages first - even just one phrase each.",
-          tag: "Tip",
-          caption: "Stops you rambling with no clear problem to solve",
-        }}
-      />,
+      undefined,
     ];
   }
 
   if (conceptId === "1.11") {
     return [
-      <LiteracyConceptScene
-        key={0}
-        spec={{
-          type: "quotedExcerpt",
-          quote: "Mood is the feeling or atmosphere a writer creates for the reader, built mainly through the physical setting and the specific words used to describe it.",
-          tag: "Definition",
-          caption: "What mood is",
-        }}
-      />,
-      <LiteracyConceptScene
-        key={1}
-        spec={{
-          type: "quotedExcerpt",
-          quote: "The old house creaked and groaned in the wind, its broken windows staring out like empty eyes.",
-          tag: "Example",
-          caption: "Creates a scary mood through word choice, not by saying 'it was scary'",
-        }}
-      />,
+      undefined,
+      undefined,
       <LiteracyConceptScene
         key={2}
         spec={{
@@ -410,38 +209,18 @@ export function getEnglishUnit1ConceptScenes(conceptId: string): ReactNode[] | u
           caption: "How mood is built",
         }}
       />,
-      <LiteracyConceptScene
-        key={3}
-        spec={{
-          type: "quotedExcerpt",
-          quote: "Ask which specific words are doing the mood-building work in a sentence - which ones would you change to flip a calm scene into a tense one?",
-          tag: "Tip",
-          caption: "Spotting the words that build mood",
-        }}
-      />,
+      undefined,
     ];
   }
 
   if (conceptId === "1.12") {
     return [
-      <LiteracyConceptScene
-        key={0}
-        spec={{
-          type: "quotedExcerpt",
-          quote: "Adverbs have three forms: positive (quickly), comparative - comparing two things (more quickly/faster), and superlative - comparing three or more (most quickly/fastest).",
-          tag: "Definition",
-          caption: "The three adverb forms",
-        }}
-      />,
-      <LiteracyConceptScene
-        key={1}
-        spec={{
-          type: "quotedExcerpt",
-          quote: "Positive: 'Zach played well in the match.' Comparative: 'Masie played better than him.' Superlative: 'Ronan played the best of everyone.'",
-          tag: "Example",
-          caption: "All three forms in one example",
-        }}
-      />,
+      undefined,
+      // Real example content ("Positive: 'played well.' Comparative: 'played
+      // better.' Superlative: 'played the best.'") is itself already
+      // structured as three labeled forms - a table is a genuine format
+      // change from prose, not a re-quote, so this one earns its place.
+      <LiteracyConceptScene key={1} spec={{ type: "checklistCard", items: ["well (positive)", "better (comparative)", "best (superlative)"], caption: "Zach played well. Masie played better. Ronan played the best." }} />,
       <LiteracyConceptScene
         key={2}
         spec={{
@@ -450,33 +229,14 @@ export function getEnglishUnit1ConceptScenes(conceptId: string): ReactNode[] | u
           caption: "How comparative and superlative adverbs form",
         }}
       />,
-      <LiteracyConceptScene
-        key={3}
-        spec={{
-          type: "quotedExcerpt",
-          quote: "Comparative compares exactly two things ('better than him'); superlative compares three or more, and almost always needs 'the' in front ('the best').",
-          tag: "Tip",
-          caption: "Comparative vs. superlative",
-        }}
-      />,
+      undefined,
     ];
   }
 
   if (conceptId === "1.13") {
     return [
-      <LiteracyConceptScene
-        key={0}
-        spec={{
-          type: "quotedExcerpt",
-          quote: "A full writing checklist brings together everything you check before calling a piece of writing finished - adjectives/adverbs, sense, mood and setting, and punctuation.",
-          tag: "Definition",
-          caption: "What the full checklist covers",
-        }}
-      />,
-      <LiteracyConceptScene
-        key={1}
-        spec={{ type: "quotedExcerpt", quote: "The travellers coat was soaked", tag: "Example", caption: "Missing an apostrophe - should be 'traveller's'" }}
-      />,
+      undefined,
+      undefined,
       <LiteracyConceptScene
         key={2}
         spec={{
@@ -485,15 +245,7 @@ export function getEnglishUnit1ConceptScenes(conceptId: string): ReactNode[] | u
           caption: "How the full checklist is organised",
         }}
       />,
-      <LiteracyConceptScene
-        key={3}
-        spec={{
-          type: "quotedExcerpt",
-          quote: "Work through a checklist like this in passes, not all at once - one read for mood/setting/sense, a separate read for commas and full stops, a separate read for apostrophes and speech marks.",
-          tag: "Tip",
-          caption: "Check in passes, not all at once",
-        }}
-      />,
+      undefined,
     ];
   }
 
