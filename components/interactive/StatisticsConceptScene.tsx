@@ -11,7 +11,8 @@ export type StatisticsSceneSpec =
   | { type: 'dotPlot'; labels: string[]; counts: number[]; caption: string }
   | { type: 'frequencyChart'; intervals: string[]; values: number[]; caption: string }
   | { type: 'lineGraph'; xLabels: string[]; values: number[]; unit?: string; highlightIndex?: number; caption: string }
-  | { type: 'likelihoodScale'; event: string; position: 'impossible' | 'unlikely' | 'equally likely' | 'likely' | 'certain'; caption: string };
+  | { type: 'likelihoodScale'; event: string; position: 'impossible' | 'unlikely' | 'equally likely' | 'likely' | 'certain'; caption: string }
+  | { type: 'waffleGrid'; cols: number; rows: number; shaded: number; caption: string };
 
 function BarChart({ labels, values, unit, caption }: Extract<StatisticsSceneSpec, { type: 'barChart' }>) {
   const max = Math.max(...values, 1);
@@ -166,6 +167,27 @@ function LikelihoodScale({ event, position, caption }: Extract<StatisticsSceneSp
   );
 }
 
+function WaffleGrid({ cols, rows, shaded, caption }: Extract<StatisticsSceneSpec, { type: 'waffleGrid' }>) {
+  const total = cols * rows;
+  const pct = Math.round((shaded / total) * 100);
+  return (
+    <>
+      <div className="flex flex-col items-center gap-1.5">
+        <div className="grid gap-[3px]" style={{ gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))` }}>
+          {Array.from({ length: total }).map((_, i) => (
+            <span
+              key={i}
+              className={`block h-3 w-3 rounded-sm ${i < shaded ? 'bg-[#9c6f1f]' : 'bg-[#16241f]/10'}`}
+            />
+          ))}
+        </div>
+        <span className="text-[11px] font-bold text-[#16241f]">{shaded}/{total} = {pct}%</span>
+      </div>
+      <p className="mt-1.5 text-center text-[10px] font-medium text-[#16241f]/60">{caption}</p>
+    </>
+  );
+}
+
 export const StatisticsConceptScene: React.FC<{ spec: StatisticsSceneSpec }> = ({ spec }) => {
   return (
     <div className="rounded-xl border border-[#16241f]/10 bg-[#f4f6f1] p-3">
@@ -174,6 +196,7 @@ export const StatisticsConceptScene: React.FC<{ spec: StatisticsSceneSpec }> = (
       {spec.type === 'frequencyChart' && <FrequencyChart {...spec} />}
       {spec.type === 'lineGraph' && <LineGraph {...spec} />}
       {spec.type === 'likelihoodScale' && <LikelihoodScale {...spec} />}
+      {spec.type === 'waffleGrid' && <WaffleGrid {...spec} />}
     </div>
   );
 };

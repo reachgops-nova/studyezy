@@ -19,6 +19,7 @@ import { getUnit14ConceptScenes } from "@/lib/unit14SceneSpecs";
 import { UNIT15_CONCEPT_SCENES } from "@/lib/unit15SceneSpecs";
 import { getEnglishUnit1ConceptScenes } from "@/lib/englishUnit1SceneSpecs";
 import { getEnglishUnit2ConceptScenes } from "@/lib/englishUnit2SceneSpecs";
+import { getUnit16ConceptScenes } from "@/lib/unit16SceneSpecs";
 import type { ReactNode } from "react";
 
 // Central place to look up "what should Ezy show on screen while narrating
@@ -117,6 +118,10 @@ export function getCheckpointSceneNodes(unitKey: string | undefined, conceptId: 
 
   if (unitKey === 'cambridge-5-english-2') {
     return getEnglishUnit2ConceptScenes(conceptId);
+  }
+
+  if (unitKey === 'cambridge-4-math-16') {
+    return getUnit16ConceptScenes(conceptId);
   }
 
   return undefined;
