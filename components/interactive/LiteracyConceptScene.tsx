@@ -13,7 +13,8 @@ import React from 'react';
 export type LiteracySceneSpec =
   | { type: 'quotedExcerpt'; quote: string; tag: string; caption: string }
   | { type: 'narrativeMountain'; stages: { name: string; note: string }[]; peakIndex: number; caption: string }
-  | { type: 'checklistCard'; items: string[]; caption: string };
+  | { type: 'checklistCard'; items: string[]; caption: string }
+  | { type: 'timeline'; points: { label: string; note: string }[]; caption: string };
 
 function QuotedExcerpt({ quote, tag, caption }: Extract<LiteracySceneSpec, { type: 'quotedExcerpt' }>) {
   return (
@@ -73,6 +74,38 @@ function NarrativeMountain({ stages, peakIndex, caption }: Extract<LiteracyScene
   );
 }
 
+function Timeline({ points, caption }: Extract<LiteracySceneSpec, { type: 'timeline' }>) {
+  const w = 280;
+  const pad = 34;
+  const n = points.length;
+  const stepX = n > 1 ? (w - pad * 2) / (n - 1) : 0;
+  const y = 20;
+  return (
+    <>
+      <div className="flex justify-center overflow-x-auto">
+        <svg width={w} height={70} viewBox={`0 0 ${w} 70`}>
+          <line x1={pad} y1={y} x2={w - pad} y2={y} stroke="#16241f22" strokeWidth={2} />
+          {points.map((p, i) => {
+            const x = pad + i * stepX;
+            return (
+              <g key={i}>
+                <circle cx={x} cy={y} r={4} fill="#9c6f1f" />
+                <text x={x} y={y - 10} fontSize="8" fontWeight="bold" fill="#16241f" textAnchor="middle">
+                  {p.label}
+                </text>
+                <text x={x} y={y + 22} fontSize="7" fill="#16241f99" textAnchor="middle">
+                  {p.note}
+                </text>
+              </g>
+            );
+          })}
+        </svg>
+      </div>
+      <p className="mt-1.5 text-center text-[10px] font-medium text-[#16241f]/60">{caption}</p>
+    </>
+  );
+}
+
 function ChecklistCard({ items, caption }: Extract<LiteracySceneSpec, { type: 'checklistCard' }>) {
   return (
     <>
@@ -97,6 +130,7 @@ export const LiteracyConceptScene: React.FC<{ spec: LiteracySceneSpec }> = ({ sp
       {spec.type === 'quotedExcerpt' && <QuotedExcerpt {...spec} />}
       {spec.type === 'narrativeMountain' && <NarrativeMountain {...spec} />}
       {spec.type === 'checklistCard' && <ChecklistCard {...spec} />}
+      {spec.type === 'timeline' && <Timeline {...spec} />}
     </div>
   );
 };
