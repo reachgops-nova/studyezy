@@ -18,6 +18,7 @@ export type GeometrySceneSpec =
       shapes: { points: [number, number][]; color: 'accent' | 'ink'; dashed?: boolean }[];
       arrows?: { from: [number, number]; to: [number, number] }[];
       labels?: { at: [number, number]; text: string }[];
+      mirrorLines?: { axis: 'vertical' | 'horizontal'; at: number }[];
       caption: string;
     }
   | { type: 'shapeNet'; cols: number; rows: number; cells: [number, number][]; foldsInto: string; caption: string }
@@ -138,7 +139,7 @@ function TriangleClassify({ kind, sides, caption }: Extract<GeometrySceneSpec, {
   );
 }
 
-function CoordinateGrid({ gridSize, shapes, arrows, labels, caption }: Extract<GeometrySceneSpec, { type: 'coordinateGrid' }>) {
+function CoordinateGrid({ gridSize, shapes, arrows, labels, mirrorLines, caption }: Extract<GeometrySceneSpec, { type: 'coordinateGrid' }>) {
   const cell = 22;
   const pad = 16;
   const size = gridSize * cell;
@@ -158,6 +159,14 @@ function CoordinateGrid({ gridSize, shapes, arrows, labels, caption }: Extract<G
           ))}
           <line x1={px(0)} y1={py(0)} x2={px(gridSize)} y2={py(0)} stroke="#16241f" strokeWidth={2} />
           <line x1={px(0)} y1={py(0)} x2={px(0)} y2={py(gridSize)} stroke="#16241f" strokeWidth={2} />
+
+          {mirrorLines?.map((m, i) =>
+            m.axis === 'vertical' ? (
+              <line key={`mirror-${i}`} x1={px(m.at)} y1={py(0)} x2={px(m.at)} y2={py(gridSize)} stroke="#b45309" strokeWidth={2} strokeDasharray="6 3" />
+            ) : (
+              <line key={`mirror-${i}`} x1={px(0)} y1={py(m.at)} x2={px(gridSize)} y2={py(m.at)} stroke="#b45309" strokeWidth={2} strokeDasharray="6 3" />
+            )
+          )}
 
           {arrows?.map((a, i) => (
             <g key={`arrow-${i}`}>
