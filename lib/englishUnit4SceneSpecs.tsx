@@ -3,45 +3,51 @@ import type { ReactNode } from "react";
 
 // Real user direction 2026-09-10: "start working on the other units...
 // prepare those lessons for english and math cambridge." English Unit 4
-// (Non-fiction: Information and explanation texts) reuses
-// LiteracyConceptScene's existing quotedExcerpt/checklistCard variants as
-// -is, no new scene shape needed. Every value below is grounded in this
-// unit's real, production content (fetched via railway ssh), never
-// invented.
+// (Non-fiction: Information and explanation texts). Every value below is
+// grounded in this unit's real, production content (fetched via railway
+// ssh), never invented.
+//
+// Follows the same index-alignment fix as Units 1-3's spec files (see
+// Unit 1's header comment for the full explanation): AvatarChat.tsx's
+// buildCheckpoints() pairs checkpointSceneNodes[i] to a FIXED checkpoint
+// index - [0] definition, [1] examples, [2] key_points, [3] tips[0]
+// (only if that field exists).
 export function getEnglishUnit4ConceptScenes(conceptId: string): ReactNode[] | undefined {
   if (conceptId === "4.1") {
     return [
       <LiteracyConceptScene
         key={0}
         spec={{
-          type: "checklistCard",
-          items: ["Title and introduction", "Sub-headings and sections", "Paragraphs", "Facts, diagrams, bullet points", "Topic-specific technical vocabulary"],
-          caption: "Information texts share these features with other non-fiction",
+          type: "quotedExcerpt",
+          quote: "An information text is a piece of non-fiction writing about a topic - it can be read in any order, which is why it's sometimes called a non-chronological report.",
+          tag: "Definition",
+          caption: "What an information text is",
         }}
       />,
       <LiteracyConceptScene
         key={1}
         spec={{
           type: "quotedExcerpt",
-          quote: "lava, magma, ash cloud",
-          tag: "Technical vocabulary",
-          caption: "An information text about volcanoes uses technical vocabulary like this, organized under sub-headings like 'How volcanoes form'",
+          quote: "An information text about volcanoes might use technical vocabulary like 'lava', 'magma', and 'ash cloud', organized under sub-headings like 'How volcanoes form.'",
+          tag: "Example",
+          caption: "Technical vocabulary and sub-headings",
         }}
       />,
       <LiteracyConceptScene
         key={2}
         spec={{
           type: "checklistCard",
-          items: ["Can be read in any order", "Not telling a story in sequence", "Also called a non-chronological report"],
-          caption: "A reader can jump straight to the section they need instead of reading start to finish",
+          items: ["Title, introduction, sub-headings", "Facts, diagrams, bullet points", "Topic-specific technical vocabulary"],
+          caption: "Features of an information text",
         }}
       />,
       <LiteracyConceptScene
         key={3}
         spec={{
-          type: "checklistCard",
-          items: ["Skim first for a general impression", "Then scan for specific facts you need"],
-          caption: "Two different reading speeds for two different jobs",
+          type: "quotedExcerpt",
+          quote: "Skim an information text first for a general impression, then scan it to find specific facts you actually need.",
+          tag: "Tip",
+          caption: "Two reading speeds for two different jobs",
         }}
       />,
     ];
@@ -52,34 +58,31 @@ export function getEnglishUnit4ConceptScenes(conceptId: string): ReactNode[] | u
       <LiteracyConceptScene
         key={0}
         spec={{
-          type: "checklistCard",
-          items: ["Information: non-chronological, read in any order", "Explanation: chronological, describes a process"],
-          caption: "The key difference between the two text types",
+          type: "quotedExcerpt",
+          quote: "An information text presents facts about a topic and can be read in any order; an explanation text describes a process, showing how or why something happens, usually chronologically.",
+          tag: "Definition",
+          caption: "Information vs. explanation texts",
         }}
       />,
       <LiteracyConceptScene
         key={1}
-        spec={{
-          type: "quotedExcerpt",
-          quote: "Icebergs form when...then...eventually...",
-          tag: "Explanation text",
-          caption: "Chronologically describes the process using sequencing words",
-        }}
+        spec={{ type: "quotedExcerpt", quote: "Icebergs form when...then...eventually...", tag: "Example", caption: "An explanation text, chronologically describing a process" }}
       />,
       <LiteracyConceptScene
         key={2}
         spec={{
           type: "checklistCard",
-          items: ["first", "next", "afterwards", "eventually"],
-          caption: "Explanation texts rely heavily on adverbs and adverbial phrases of time like these",
+          items: ["Information: non-chronological", "Explanation: chronological, a process", "The same topic can be either kind"],
+          caption: "Telling the two text types apart",
         }}
       />,
       <LiteracyConceptScene
         key={3}
         spec={{
-          type: "checklistCard",
-          items: ["Does it describe a PROCESS over time?", "Or does it just present facts?"],
-          caption: "Ask this to work out which type of text you're reading",
+          type: "quotedExcerpt",
+          quote: "Ask: does this text describe a PROCESS happening over time, or does it just present facts about a topic?",
+          tag: "Tip",
+          caption: "The question that answers which type it is",
         }}
       />,
     ];
@@ -90,34 +93,36 @@ export function getEnglishUnit4ConceptScenes(conceptId: string): ReactNode[] | u
       <LiteracyConceptScene
         key={0}
         spec={{
-          type: "checklistCard",
-          items: ["who -> a name or noun", "where -> a place", "when -> a time"],
-          caption: "Different question words point you toward different kinds of answers",
+          type: "quotedExcerpt",
+          quote: "Scanning means reading an information text quickly to find the answer to a specific question, rather than reading every word.",
+          tag: "Definition",
+          caption: "What scanning is",
         }}
       />,
       <LiteracyConceptScene
         key={1}
         spec={{
           type: "quotedExcerpt",
-          quote: "in warm shallow seas and oceans",
-          tag: "Scanned answer",
-          caption: "For 'Where do coral reefs grow?', scan for a place name like this",
+          quote: "For 'Where do coral reefs grow?', scan for a place name - the answer is 'in warm shallow seas and oceans.'",
+          tag: "Example",
+          caption: "Scanning for a place-name answer",
         }}
       />,
       <LiteracyConceptScene
         key={2}
         spec={{
           type: "checklistCard",
-          items: ["what / how / why", "need a whole explanation section, not a quick scan"],
-          caption: "These question words are harder to scan for",
+          items: ["who -> a name", "where -> a place", "when -> a time", "what/how/why -> a whole section"],
+          caption: "Matching question words to answer types",
         }}
       />,
       <LiteracyConceptScene
         key={3}
         spec={{
-          type: "checklistCard",
-          items: ["Skimming: general impression of a whole text", "Scanning: hunts for one specific piece of information"],
-          caption: "Scanning is different from skimming",
+          type: "quotedExcerpt",
+          quote: "Before scanning, turn the question into the kind of answer you're hunting for - a name, a place, a time, or an explanation.",
+          tag: "Tip",
+          caption: "How to scan effectively",
         }}
       />,
     ];
@@ -129,34 +134,35 @@ export function getEnglishUnit4ConceptScenes(conceptId: string): ReactNode[] | u
         key={0}
         spec={{
           type: "quotedExcerpt",
-          quote: "photosynthesis, biodiversity",
-          tag: "Formal (unexplained)",
-          caption: "A formal information text uses precise technical vocabulary without explaining it, for readers who already know the topic",
+          quote: "Information texts can be written formally (technical language) or informally (simpler, everyday language) - and '-ology'/'-ogy' often means 'the study of' a topic.",
+          tag: "Definition",
+          caption: "Register and suffixes in information texts",
         }}
       />,
       <LiteracyConceptScene
         key={1}
         spec={{
           type: "quotedExcerpt",
-          quote: "how plants make food",
-          tag: "Informal (explained simply)",
-          caption: "An informal version explains the same idea in simpler, everyday language",
+          quote: "A formal information text about ecosystems might use 'photosynthesis' and 'biodiversity' without explaining them; an informal version might say 'how plants make food' instead.",
+          tag: "Example",
+          caption: "Formal vs. informal register",
         }}
       />,
       <LiteracyConceptScene
         key={2}
         spec={{
           type: "checklistCard",
-          items: ["-ology / -ogy = 'the study of'", "biology = the study of living things", "geology = the study of the Earth"],
-          caption: "This suffix pattern often signals a field of study",
+          items: ["Formal: precise, technical, expert audience", "Informal: simpler, general audience", "-ology/-ogy = 'the study of'"],
+          caption: "Styles of information text",
         }}
       />,
       <LiteracyConceptScene
         key={3}
         spec={{
-          type: "checklistCard",
-          items: ["Unexplained technical terms? -> formal, expert audience", "Simple explained language? -> informal, general audience"],
-          caption: "Check who the text seems to be written for",
+          type: "quotedExcerpt",
+          quote: "Check who the text seems to be written for - unexplained technical terms suggest a formal, expert audience.",
+          tag: "Tip",
+          caption: "How to spot the intended audience",
         }}
       />,
     ];

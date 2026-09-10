@@ -3,12 +3,15 @@ import type { ReactNode } from "react";
 
 // Real user direction 2026-09-10: "start working on the other units...
 // prepare those lessons for english and math cambridge." English Unit 2
-// (Non-fiction: Biography) adds a new timeline variant to
-// LiteracyConceptScene.tsx (a flat chronological sequence, distinct from
-// narrativeMountain's tension arc) for concept 2.2's time-connective
-// content; every other concept reuses quotedExcerpt/checklistCard as-is.
-// Every value below is grounded in this unit's real, production content
-// (fetched via railway ssh), never invented.
+// (Non-fiction: Biography). Every value below is grounded in this unit's
+// real, production content (fetched via railway ssh), never invented.
+//
+// Follows the same index-alignment fix as Unit 1's spec file (see its
+// header comment for the full explanation): AvatarChat.tsx's
+// buildCheckpoints() pairs checkpointSceneNodes[i] to a FIXED checkpoint
+// index - [0] definition, [1] examples, [2] key_points, [3] tips[0]
+// (only if that field exists) - so each item below shows exactly the
+// content being spoken at that index, not just a loosely related visual.
 export function getEnglishUnit2ConceptScenes(conceptId: string): ReactNode[] | undefined {
   if (conceptId === "2.1") {
     return [
@@ -16,14 +19,22 @@ export function getEnglishUnit2ConceptScenes(conceptId: string): ReactNode[] | u
         key={0}
         spec={{
           type: "quotedExcerpt",
-          quote:
-            "Poorna Malavath was born on 10 June 2000 in a village in Telangana, India. Her family was very poor... but she grew up to climb to the peak of Mount Everest on 25 May 2014 aged 13 years and 11 months.",
-          tag: "Biography opening",
-          caption: "Starts with who the person is and why they're famous, then moves through their life in chronological order",
+          quote: "A biography is a true, non-fiction record of the real events in a person's life, written from the viewpoint of an author - someone else, not the person themselves.",
+          tag: "Definition",
+          caption: "What a biography is",
         }}
       />,
       <LiteracyConceptScene
         key={1}
+        spec={{
+          type: "quotedExcerpt",
+          quote: "Poorna Malavath was born on 10 June 2000 in a village in Telangana, India. Her family was very poor... but she grew up to climb to the peak of Mount Everest on 25 May 2014 aged 13 years and 11 months.",
+          tag: "Example",
+          caption: "A real biography opening",
+        }}
+      />,
+      <LiteracyConceptScene
+        key={2}
         spec={{
           type: "checklistCard",
           items: [
@@ -36,18 +47,6 @@ export function getEnglishUnit2ConceptScenes(conceptId: string): ReactNode[] | u
           caption: "The five features every biography shares",
         }}
       />,
-      <LiteracyConceptScene
-        key={2}
-        spec={{ type: "quotedExcerpt", quote: "he, she, they, him, her", tag: "Third person", caption: "Biographies are written about someone else, from the author's viewpoint - never 'I' or 'me'" }}
-      />,
-      <LiteracyConceptScene
-        key={3}
-        spec={{
-          type: "checklistCard",
-          items: ["Exact dates", "Real places", "Factual achievements"],
-          caption: "A biography is a true, non-fiction record - not an invented story",
-        }}
-      />,
     ];
   }
 
@@ -55,6 +54,15 @@ export function getEnglishUnit2ConceptScenes(conceptId: string): ReactNode[] | u
     return [
       <LiteracyConceptScene
         key={0}
+        spec={{
+          type: "quotedExcerpt",
+          quote: "Chronological order means arranging events in the exact sequence they happened in time. We use time connectives and adverbial phrases of time to guide the reader through this sequence.",
+          tag: "Definition",
+          caption: "What chronological order is",
+        }}
+      />,
+      <LiteracyConceptScene
+        key={1}
         spec={{
           type: "timeline",
           points: [
@@ -66,24 +74,11 @@ export function getEnglishUnit2ConceptScenes(conceptId: string): ReactNode[] | u
         }}
       />,
       <LiteracyConceptScene
-        key={1}
-        spec={{ type: "checklistCard", items: ["first", "now", "soon", "afterwards", "eventually", "finally"], caption: "Adverbs of time tell us WHEN something happened" }}
-      />,
-      <LiteracyConceptScene
         key={2}
         spec={{
           type: "checklistCard",
-          items: ["in the end", "throughout her childhood", "later on"],
-          caption: "Adverbial phrases of time tell us how long or in what period",
-        }}
-      />,
-      <LiteracyConceptScene
-        key={3}
-        spec={{
-          type: "quotedExcerpt",
-          quote: "Throughout her childhood, she trained every morning.",
-          tag: "Comma after time phrase",
-          caption: "When starting a sentence with an adverbial phrase of time, add a comma after it",
+          items: ["Adverbs of time (first, now, eventually)", "Adverbial phrases (in the end, later on)", "Comma after a time phrase that opens a sentence"],
+          caption: "How chronological order is signalled in writing",
         }}
       />,
     ];
@@ -95,30 +90,35 @@ export function getEnglishUnit2ConceptScenes(conceptId: string): ReactNode[] | u
         key={0}
         spec={{
           type: "quotedExcerpt",
-          quote: "I would be grateful if you could provide further information.",
-          tag: "Formal",
-          caption: "Fuller vocabulary, complete sentences, no contractions - used for official writing",
+          quote: "Register is the tone and level of formality a writer or speaker chooses, depending on who they're communicating with and why.",
+          tag: "Definition",
+          caption: "What register is",
         }}
       />,
       <LiteracyConceptScene
         key={1}
         spec={{
           type: "quotedExcerpt",
-          quote: "Can you tell me more about it?",
-          tag: "Informal",
-          caption: "The same message, casually phrased - used for messages to friends",
+          quote: "Formal: 'I would be grateful if you could provide further information.' Informal: 'Can you tell me more about it?'",
+          tag: "Example",
+          caption: "The same message, two registers",
         }}
       />,
       <LiteracyConceptScene
         key={2}
-        spec={{ type: "checklistCard", items: ["Contractions (don't, it's)?", "Slang?", "-> informal"], caption: "Their presence is the biggest giveaway that a piece is informal" }}
+        spec={{
+          type: "checklistCard",
+          items: ["Formal avoids contractions and slang", "Informal uses casual, everyday phrasing", "The right register depends on audience and purpose"],
+          caption: "Formal vs. informal register",
+        }}
       />,
       <LiteracyConceptScene
         key={3}
         spec={{
-          type: "checklistCard",
-          items: ["Who is going to read this?", "How well do I know them?"],
-          caption: "Ask this before writing to decide what register to use",
+          type: "quotedExcerpt",
+          quote: "Check for contractions ('don't', 'it's') and slang - their presence is the biggest giveaway that a piece is informal.",
+          tag: "Tip",
+          caption: "How to spot informal register",
         }}
       />,
     ];
@@ -128,31 +128,37 @@ export function getEnglishUnit2ConceptScenes(conceptId: string): ReactNode[] | u
     return [
       <LiteracyConceptScene
         key={0}
-        spec={{ type: "quotedExcerpt", quote: "Andre had the strength to hit the ball and beat his opponent.", tag: "Original", caption: "Plain, functional wording" }}
+        spec={{
+          type: "quotedExcerpt",
+          quote: "Writing becomes more interesting and precise when you replace overused words with synonyms - words with very similar meanings - found using a thesaurus.",
+          tag: "Definition",
+          caption: "Why synonyms matter",
+        }}
       />,
       <LiteracyConceptScene
         key={1}
         spec={{
           type: "quotedExcerpt",
-          quote: "Andre had the power to blast the ball and annihilate his adversary.",
-          tag: "With synonyms",
-          caption: "Swapping in synonyms makes the same sentence more vivid and dramatic",
+          quote: "'Win' can become 'triumph', 'succeed', or 'come out on top', depending on how dramatic the sentence should sound.",
+          tag: "Example",
+          caption: "One word, several synonyms",
         }}
       />,
       <LiteracyConceptScene
         key={2}
         spec={{
           type: "checklistCard",
-          items: ["win -> triumph", "win -> succeed", "win -> come out on top"],
-          caption: "A thesaurus lists several synonyms depending on how dramatic the sentence should sound",
+          items: ["A thesaurus lists synonyms for any word type", "Repeating a word makes writing feel flat", "Not every synonym fits every context"],
+          caption: "How to use synonyms well",
         }}
       />,
       <LiteracyConceptScene
         key={3}
         spec={{
-          type: "checklistCard",
-          items: ["Circle any word used 3+ times on a page", "That's your shortlist for synonym replacement"],
-          caption: "A quick way to spot where your writing needs more variety",
+          type: "quotedExcerpt",
+          quote: "Circle any word you've used three or more times on a page - that's your shortlist for synonym replacement.",
+          tag: "Tip",
+          caption: "Finding where you need more variety",
         }}
       />,
     ];
@@ -164,34 +170,30 @@ export function getEnglishUnit2ConceptScenes(conceptId: string): ReactNode[] | u
         key={0}
         spec={{
           type: "quotedExcerpt",
-          quote: "She became a sensation overnight.",
-          tag: "Opinion (fact-sounding)",
-          caption: "'Sensation' is a judgement, not something you can measure exactly",
+          quote: "Biography writers sometimes phrase opinions in a confident, fact-like tone, using strong descriptive words - spotting these disguised opinions matters.",
+          tag: "Definition",
+          caption: "Opinions dressed up as facts",
         }}
       />,
       <LiteracyConceptScene
         key={1}
-        spec={{
-          type: "quotedExcerpt",
-          quote: "She performed at 17 national concerts in one year.",
-          tag: "Fact",
-          caption: "This can be checked against a real record",
-        }}
+        spec={{ type: "quotedExcerpt", quote: "She became a sensation overnight.", tag: "Example", caption: "Sounds fact-like, but 'sensation' is a judgement - it's an opinion" }}
       />,
       <LiteracyConceptScene
         key={2}
         spec={{
           type: "checklistCard",
-          items: ["prodigy", "sensation", "the greatest"],
-          caption: "Words like these are opinion signals, even when written in a confident, fact-sounding way",
+          items: ["'prodigy', 'sensation' are opinion signals", "Biographies mix real facts and admiring opinions", "Turn a sentence into a question to test it"],
+          caption: "Spotting opinions in biographies",
         }}
       />,
       <LiteracyConceptScene
         key={3}
         spec={{
-          type: "checklistCard",
-          items: ["Is that provable?", "Can you check a record, date, or count?"],
-          caption: "Turn the sentence into a question to test whether it's really a fact or a disguised opinion",
+          type: "quotedExcerpt",
+          quote: "Watch for superlatives and glowing descriptions ('prodigy', 'the best', 'a sensation') - they're almost always opinions dressed up as facts.",
+          tag: "Tip",
+          caption: "What to watch for",
         }}
       />,
     ];
@@ -201,26 +203,20 @@ export function getEnglishUnit2ConceptScenes(conceptId: string): ReactNode[] | u
     return [
       <LiteracyConceptScene
         key={0}
-        spec={{ type: "quotedExcerpt", quote: "patient + im- -> impatient", tag: "Prefix", caption: "Before roots beginning with 'm' or 'p', use 'im-'" }}
+        spec={{
+          type: "quotedExcerpt",
+          quote: "Prefixes are letters added to the BEGINNING of a root word to change its meaning. Suffixes are letters added to the END of a word to change its grammatical form.",
+          tag: "Definition",
+          caption: "Prefixes vs. suffixes",
+        }}
       />,
-      <LiteracyConceptScene
-        key={1}
-        spec={{ type: "quotedExcerpt", quote: "regular + ir- -> irregular", tag: "Prefix", caption: "Before roots beginning with 'r', use 'ir-'" }}
-      />,
+      <LiteracyConceptScene key={1} spec={{ type: "quotedExcerpt", quote: "patient + im- -> impatient (not patient)", tag: "Example", caption: "A negative prefix in action" }} />,
       <LiteracyConceptScene
         key={2}
         spec={{
           type: "checklistCard",
-          items: ["il- before l (illegal)", "im- before m/p (impossible, immature)", "ir- before r (irresponsible)"],
-          caption: "Negative prefixes change depending on the first letter of the root word",
-        }}
-      />,
-      <LiteracyConceptScene
-        key={3}
-        spec={{
-          type: "checklistCard",
-          items: ["swim -> swimming (double the letter)", "prefer -> preferred (stressed, double)", "enter -> entered (unstressed, no double)"],
-          caption: "Suffix doubling rules for verbs ending in a vowel + consonant",
+          items: ["il- before l, im- before m/p, ir- before r", "Double the final letter (1-syllable verbs)", "Only double if the final syllable is stressed"],
+          caption: "The prefix and suffix rules",
         }}
       />,
     ];
