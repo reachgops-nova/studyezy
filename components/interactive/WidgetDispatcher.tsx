@@ -28,6 +28,11 @@ import { TimeIntervalPlayer } from './TimeIntervalPlayer';
 import { BarDotChartPlayer } from './BarDotChartPlayer';
 import { FrequencyChartPlayer } from './FrequencyChartPlayer';
 import { LineGraphPlayer } from './LineGraphPlayer';
+import { FractionDivisionPlayer } from './FractionDivisionPlayer';
+import { EquivalentFractionsPlayer } from './EquivalentFractionsPlayer';
+import { MixedNumbersPlayer } from './MixedNumbersPlayer';
+import { FractionOfQuantityPlayer } from './FractionOfQuantityPlayer';
+import { RelatedFractionsPlayer } from './RelatedFractionsPlayer';
 import { getWidgetForConcept, type InteractiveWidget, type TraitMatcherSpec, type PredictiveBrancherSpec } from '@/lib/interactiveWidgets';
 
 type BespokePlayer = React.FC<{ onSuccess?: () => void; onAttempt?: (correct: boolean) => void; onNarrate?: (text: string) => void }>;
@@ -77,6 +82,13 @@ const BESPOKE_PLAYERS: Record<string, Record<string, BespokePlayer>> = {
     '5.1': BarDotChartPlayer,
     '5.2': FrequencyChartPlayer,
     '5.3': LineGraphPlayer,
+  },
+  'cambridge-4-math-6': {
+    '6.1': FractionDivisionPlayer,
+    '6.2': EquivalentFractionsPlayer,
+    '6.3': MixedNumbersPlayer,
+    '6.4': FractionOfQuantityPlayer,
+    '6.5': RelatedFractionsPlayer,
   },
 };
 
