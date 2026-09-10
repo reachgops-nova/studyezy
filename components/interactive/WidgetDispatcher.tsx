@@ -33,6 +33,11 @@ import { EquivalentFractionsPlayer } from './EquivalentFractionsPlayer';
 import { MixedNumbersPlayer } from './MixedNumbersPlayer';
 import { FractionOfQuantityPlayer } from './FractionOfQuantityPlayer';
 import { RelatedFractionsPlayer } from './RelatedFractionsPlayer';
+import { TenthsHundredthsPlayer } from './TenthsHundredthsPlayer';
+import { DecomposeRegroupPlayer } from './DecomposeRegroupPlayer';
+import { RoundingDecimalsPlayer } from './RoundingDecimalsPlayer';
+import { ScalingDecimalsPlayer } from './ScalingDecimalsPlayer';
+import { LinearSequencesRulesPlayer } from './LinearSequencesRulesPlayer';
 import { getWidgetForConcept, type InteractiveWidget, type TraitMatcherSpec, type PredictiveBrancherSpec } from '@/lib/interactiveWidgets';
 
 type BespokePlayer = React.FC<{ onSuccess?: () => void; onAttempt?: (correct: boolean) => void; onNarrate?: (text: string) => void }>;
@@ -89,6 +94,13 @@ const BESPOKE_PLAYERS: Record<string, Record<string, BespokePlayer>> = {
     '6.3': MixedNumbersPlayer,
     '6.4': FractionOfQuantityPlayer,
     '6.5': RelatedFractionsPlayer,
+  },
+  'cambridge-4-math-7': {
+    '7.1': TenthsHundredthsPlayer,
+    '7.2': DecomposeRegroupPlayer,
+    '7.3': RoundingDecimalsPlayer,
+    '7.4': ScalingDecimalsPlayer,
+    '7.5': LinearSequencesRulesPlayer,
   },
 };
 
