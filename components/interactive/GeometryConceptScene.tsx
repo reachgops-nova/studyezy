@@ -19,6 +19,15 @@ export type GeometrySceneSpec =
       arrows?: { from: [number, number]; to: [number, number] }[];
       labels?: { at: [number, number]; text: string }[];
       caption: string;
+    }
+  | { type: 'shapeNet'; cols: number; rows: number; cells: [number, number][]; foldsInto: string; caption: string }
+  | {
+      type: 'topDownView';
+      shapeEmoji: string;
+      shapeLabel: string;
+      viewLabel: string;
+      outline: 'circle' | 'square' | 'rectangle' | 'squareWithX';
+      caption: string;
     };
 
 function SymmetryGrid({ axis, shaded, cols, rows, caption }: Extract<GeometrySceneSpec, { type: 'symmetryGrid' }>) {
@@ -197,6 +206,67 @@ function CoordinateGrid({ gridSize, shapes, arrows, labels, caption }: Extract<G
   );
 }
 
+function ShapeNet({ cols, rows, cells, foldsInto, caption }: Extract<GeometrySceneSpec, { type: 'shapeNet' }>) {
+  const cell = 30;
+  const isFilled = (c: number, r: number) => cells.some(([cc, rr]) => cc === c && rr === r);
+  return (
+    <>
+      <div className="flex flex-col items-center gap-2">
+        <svg width={cols * cell} height={rows * cell} viewBox={`0 0 ${cols * cell} ${rows * cell}`}>
+          {Array.from({ length: rows }).map((_, r) =>
+            Array.from({ length: cols }).map((_, c) =>
+              isFilled(c, r) ? (
+                <rect
+                  key={`${c}-${r}`}
+                  x={c * cell + 1}
+                  y={r * cell + 1}
+                  width={cell - 2}
+                  height={cell - 2}
+                  fill="#9c6f1f1a"
+                  stroke="#9c6f1f"
+                  strokeWidth={2}
+                />
+              ) : null
+            )
+          )}
+        </svg>
+        <span className="text-[11px] font-bold uppercase tracking-wide text-[#16241f]">↳ {foldsInto}</span>
+      </div>
+      <p className="mt-1.5 text-center text-[10px] font-medium text-[#16241f]/60">{caption}</p>
+    </>
+  );
+}
+
+function TopDownView({ shapeEmoji, shapeLabel, viewLabel, outline, caption }: Extract<GeometrySceneSpec, { type: 'topDownView' }>) {
+  return (
+    <>
+      <div className="flex items-center justify-center gap-4">
+        <div className="flex flex-col items-center gap-1">
+          <span className="text-3xl">{shapeEmoji}</span>
+          <span className="text-[10px] font-bold text-[#16241f]">{shapeLabel}</span>
+        </div>
+        <span className="text-xl text-[#9c6f1f]">➔</span>
+        <div className="flex flex-col items-center gap-1">
+          <svg width={64} height={64} viewBox="0 0 64 64">
+            {outline === 'circle' && <circle cx={32} cy={32} r={28} fill="#9c6f1f1a" stroke="#9c6f1f" strokeWidth={2.5} />}
+            {outline === 'square' && <rect x={6} y={6} width={52} height={52} fill="#9c6f1f1a" stroke="#9c6f1f" strokeWidth={2.5} />}
+            {outline === 'rectangle' && <rect x={4} y={16} width={56} height={32} fill="#9c6f1f1a" stroke="#9c6f1f" strokeWidth={2.5} />}
+            {outline === 'squareWithX' && (
+              <>
+                <rect x={6} y={6} width={52} height={52} fill="#9c6f1f1a" stroke="#9c6f1f" strokeWidth={2.5} />
+                <line x1={6} y1={6} x2={58} y2={58} stroke="#9c6f1f" strokeWidth={2} />
+                <line x1={58} y1={6} x2={6} y2={58} stroke="#9c6f1f" strokeWidth={2} />
+              </>
+            )}
+          </svg>
+          <span className="text-[10px] font-bold text-[#16241f]">{viewLabel}</span>
+        </div>
+      </div>
+      <p className="mt-1.5 text-center text-[10px] font-medium text-[#16241f]/60">{caption}</p>
+    </>
+  );
+}
+
 export const GeometryConceptScene: React.FC<{ spec: GeometrySceneSpec }> = ({ spec }) => {
   return (
     <div className="rounded-xl border border-[#16241f]/10 bg-[#f4f6f1] p-3">
@@ -205,6 +275,8 @@ export const GeometryConceptScene: React.FC<{ spec: GeometrySceneSpec }> = ({ sp
       {spec.type === 'straightLineSplit' && <StraightLineSplit {...spec} />}
       {spec.type === 'triangleClassify' && <TriangleClassify {...spec} />}
       {spec.type === 'coordinateGrid' && <CoordinateGrid {...spec} />}
+      {spec.type === 'shapeNet' && <ShapeNet {...spec} />}
+      {spec.type === 'topDownView' && <TopDownView {...spec} />}
     </div>
   );
 };
