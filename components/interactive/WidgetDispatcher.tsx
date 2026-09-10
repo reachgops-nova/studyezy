@@ -15,36 +15,55 @@ import { ComposingDecomposingPlayer } from './ComposingDecomposingPlayer';
 import { MultiplyDivideShiftPlayer } from './MultiplyDivideShiftPlayer';
 import { NegativeNumberLinePlayer } from './NegativeNumberLinePlayer';
 import { LinearSequencePlayer } from './LinearSequencePlayer';
+import { SymmetryPatternPlayer } from './SymmetryPatternPlayer';
+import { AngleLinePlayer } from './AngleLinePlayer';
+import { TriangleClassifyPlayer } from './TriangleClassifyPlayer';
 import { getWidgetForConcept, type InteractiveWidget, type TraitMatcherSpec, type PredictiveBrancherSpec } from '@/lib/interactiveWidgets';
 
-// Bespoke, richer widgets for the whole of Unit 1 (Number) - started as a
-// pilot for just concept 1.1 ("test this visual appealing graphical session
-// along with our chat, in a separate link first", 2026-09-09), then
-// extended to 1.2-1.5 ("Rest of Math Unit 1 (recommended)"). Real user
-// request 2026-09-09: "please do not use gemini / openroute now.. use
-// NotebookLLM for all of these as it generates intuitive images / screens
-// and quiz as well" - these four (plus DecimalPlaceValuePlayer for 1.1) were
-// generated via NotebookLM's chat (grounded in this unit's real content,
-// same house style: phases visual_intro -> demo -> checkpoint_quiz ->
-// passed, brand colors, onNarrate reporting the exact on-screen text)
-// instead of the generic Gemini/OpenRouter widget-generation pipeline
-// (lib/conceptWidgetGeneration.ts), which stays in place for every other
-// subject/unit. Checked here (not via the WidgetSpec/getWidgetForConcept
-// data path) since these are bespoke multi-phase components, not generic
-// spec renderers.
-export const DECIMAL_PILOT_UNIT_KEY = 'cambridge-4-math-1';
-export const DECIMAL_PILOT_CONCEPT_ID = '1.1';
+type BespokePlayer = React.FC<{ onSuccess?: () => void; onAttempt?: (correct: boolean) => void; onNarrate?: (text: string) => void }>;
 
-const UNIT1_PLAYERS: Record<string, React.FC<{ onSuccess?: () => void; onAttempt?: (correct: boolean) => void; onNarrate?: (text: string) => void }>> = {
-  '1.1': DecimalPlaceValuePlayer,
-  '1.2': ComposingDecomposingPlayer,
-  '1.3': MultiplyDivideShiftPlayer,
-  '1.4': NegativeNumberLinePlayer,
-  '1.5': LinearSequencePlayer,
+// Bespoke, richer widgets per unit - started as a pilot for just concept
+// 1.1 ("test this visual appealing graphical session along with our chat,
+// in a separate link first", 2026-09-09), extended to the rest of Unit 1
+// ("Rest of Math Unit 1 (recommended)"), then to Unit 2 and beyond ("start
+// working on the other units... prepare those lessons for english and math
+// cambridge", 2026-09-10). Real user request 2026-09-09: "please do not
+// use gemini / openroute now.. use NotebookLLM for all of these as it
+// generates intuitive images / screens and quiz as well" - every player
+// here was generated via NotebookLM's chat (grounded in that unit's real
+// content, same house style: phases visual_intro -> demo -> checkpoint_quiz
+// -> passed, brand colors, onNarrate reporting the exact on-screen text)
+// instead of the generic Gemini/OpenRouter widget-generation pipeline
+// (lib/conceptWidgetGeneration.ts), which stays in place for every subject/
+// unit not yet covered here. Checked here (not via the WidgetSpec/
+// getWidgetForConcept data path) since these are bespoke multi-phase
+// components, not generic spec renderers. Matching scene visuals for the
+// same units/concepts live in lib/bespokeSceneRegistry.tsx.
+const BESPOKE_PLAYERS: Record<string, Record<string, BespokePlayer>> = {
+  'cambridge-4-math-1': {
+    '1.1': DecimalPlaceValuePlayer,
+    '1.2': ComposingDecomposingPlayer,
+    '1.3': MultiplyDivideShiftPlayer,
+    '1.4': NegativeNumberLinePlayer,
+    '1.5': LinearSequencePlayer,
+  },
+  'cambridge-4-math-2': {
+    '2.1': SymmetryPatternPlayer,
+    '2.2': AngleLinePlayer,
+    '2.3': TriangleClassifyPlayer,
+  },
 };
 
-/** Every concept ID with a bespoke Unit1 player - lets UnitView.tsx check membership without duplicating this list. */
-export const UNIT1_PLAYER_CONCEPT_IDS = Object.keys(UNIT1_PLAYERS);
+/** True when this exact unit+concept has a bespoke player - lets UnitView.tsx gate skipMicroCheck/banner-hiding/etc without duplicating the registry. */
+export function hasBespokePlayer(unitKey: string | undefined, conceptId: string): boolean {
+  return Boolean(unitKey && BESPOKE_PLAYERS[unitKey]?.[conceptId]);
+}
+
+// Kept for the one place that still needs the pilot concept specifically
+// (the decimal-specific DecimalConceptScene variants, scoped to exactly
+// 1.1 - see lib/bespokeSceneRegistry.tsx).
+export const DECIMAL_PILOT_UNIT_KEY = 'cambridge-4-math-1';
+export const DECIMAL_PILOT_CONCEPT_ID = '1.1';
 
 interface WidgetDispatcherProps {
   conceptId: string;
@@ -76,15 +95,15 @@ export const WidgetDispatcher: React.FC<WidgetDispatcherProps> = ({
   onWidgetPhase,
 }) => {
   const id = conceptId || conceptTested || '';
+  const Player = unitKey ? BESPOKE_PLAYERS[unitKey]?.[id] : undefined;
 
-  if (unitKey === DECIMAL_PILOT_UNIT_KEY && UNIT1_PLAYERS[id]) {
-    const Player = UNIT1_PLAYERS[id];
+  if (Player) {
     return (
       <div className="w-full h-full p-2 flex items-center justify-center animate-fade-in">
         <Player
           onAttempt={onAttempt}
           onSuccess={onSuccess}
-          onNarrate={(text) => onWidgetPhase?.(text)}
+          onNarrate={onWidgetPhase}
         />
       </div>
     );
