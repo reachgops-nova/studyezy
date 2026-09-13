@@ -83,6 +83,12 @@ import { RCRTMakingPredictionsPlayer } from './RCRTMakingPredictionsPlayer';
 import { RCRTPerspectivePlayer } from './RCRTPerspectivePlayer';
 import { RCRTProofreadingPlayer } from './RCRTProofreadingPlayer';
 import { RCRTFactOpinionEnglishPlayer } from './RCRTFactOpinionEnglishPlayer';
+import { RCRTIdiomsPlayer } from './RCRTIdiomsPlayer';
+import { RCRTSentenceTypesPlayer } from './RCRTSentenceTypesPlayer';
+import { RCRTStoryStructurePlayer } from './RCRTStoryStructurePlayer';
+import { RCRTMoodPlayer } from './RCRTMoodPlayer';
+import { RCRTAdverbsPlayer } from './RCRTAdverbsPlayer';
+import { RCRTFinalProofreadingPlayer } from './RCRTFinalProofreadingPlayer';
 import { getWidgetForConcept, type InteractiveWidget, type TraitMatcherSpec, type PredictiveBrancherSpec } from '@/lib/interactiveWidgets';
 
 type BespokePlayer = React.FC<{ onSuccess?: () => void; onAttempt?: (correct: boolean) => void; onNarrate?: (text: string) => void }>;
@@ -222,6 +228,12 @@ const BESPOKE_PLAYERS: Record<string, Record<string, BespokePlayer>> = {
     '1.5': RCRTPerspectivePlayer,
     '1.6': RCRTProofreadingPlayer,
     '1.7': RCRTFactOpinionEnglishPlayer,
+    '1.8': RCRTIdiomsPlayer,
+    '1.9': RCRTSentenceTypesPlayer,
+    '1.10': RCRTStoryStructurePlayer,
+    '1.11': RCRTMoodPlayer,
+    '1.12': RCRTAdverbsPlayer,
+    '1.13': RCRTFinalProofreadingPlayer,
   },
 };
 
