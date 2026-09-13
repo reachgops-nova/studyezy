@@ -56,6 +56,10 @@ import { RCRTPerimeterPolygonsPlayer } from './RCRTPerimeterPolygonsPlayer';
 import { RCRTAreaRectanglesPlayer } from './RCRTAreaRectanglesPlayer';
 import { RCRT3DNetsPlayer } from './RCRT3DNetsPlayer';
 import { RCRTVisualising3DPlayer } from './RCRTVisualising3DPlayer';
+import { RCRTSquareNumbersPlayer } from './RCRTSquareNumbersPlayer';
+import { RCRTTriangularNumbersPlayer } from './RCRTTriangularNumbersPlayer';
+import { RCRTDivisibilityRulesPlayer } from './RCRTDivisibilityRulesPlayer';
+import { RCRTPrimeCompositePlayer } from './RCRTPrimeCompositePlayer';
 import { getWidgetForConcept, type InteractiveWidget, type TraitMatcherSpec, type PredictiveBrancherSpec } from '@/lib/interactiveWidgets';
 
 type BespokePlayer = React.FC<{ onSuccess?: () => void; onAttempt?: (correct: boolean) => void; onNarrate?: (text: string) => void }>;
@@ -154,6 +158,12 @@ const BESPOKE_PLAYERS: Record<string, Record<string, BespokePlayer>> = {
     '12.2': RCRTAreaRectanglesPlayer,
     '12.3': RCRT3DNetsPlayer,
     '12.4': RCRTVisualising3DPlayer,
+  },
+  'cambridge-4-math-13': {
+    '13.1': RCRTSquareNumbersPlayer,
+    '13.2': RCRTTriangularNumbersPlayer,
+    '13.3': RCRTDivisibilityRulesPlayer,
+    '13.4': RCRTPrimeCompositePlayer,
   },
 };
 
