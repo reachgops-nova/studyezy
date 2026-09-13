@@ -584,6 +584,16 @@ export default function AvatarChat({
   // conversation", just persistent instead of a single scrolled-past
   // bubble) from the moment it's introduced through the rest of the lesson.
   const [activeIllustrationUrl, setActiveIllustrationUrl] = useState<string | undefined>(undefined);
+  // Real feedback 2026-09-13: the illustration recap above only ever shows
+  // the LATEST picture, and interactive sceneNodes (GeometryConceptScene
+  // etc.) had no recap at all - once their message scrolled past, the
+  // student had to scroll back up through chat history to see an earlier
+  // worked example again. Keeps every sceneNode shown so far this concept
+  // in one pinned, horizontally-scrollable "drawing board" strip so all the
+  // examples stay visible (and their own replay buttons stay usable)
+  // without hunting through the transcript. Cleared on concept change like
+  // activeIllustrationUrl above.
+  const [sceneBoard, setSceneBoard] = useState<{ id: string; node: ReactNode }[]>([]);
 
   const playTokenRef = useRef(0);
   // Synchronous guard against a double-fired "Got it, keep going" click -
@@ -1111,6 +1121,10 @@ export default function AvatarChat({
       const id = nextId();
       const { text: cleanText, keyRanges } = parseFormattedText(msgs[i]);
       if (i === 0 && step.illustrationUrl) setActiveIllustrationUrl(step.illustrationUrl);
+      if (i === 0 && step.sceneNode) {
+        const boardId = id;
+        setSceneBoard((prev) => [...prev, { id: boardId, node: step.sceneNode }]);
+      }
       setMessages((prev) => [
         ...prev,
         {
@@ -1155,6 +1169,7 @@ export default function AvatarChat({
     setDynamicFollowUps([]);
     setSpeechPaused(false);
     setActiveIllustrationUrl(undefined);
+    setSceneBoard([]);
     setPreparingSpeech(false);
     /* eslint-enable react-hooks/set-state-in-effect */
     stopSpeech();
@@ -1483,6 +1498,21 @@ export default function AvatarChat({
                 🎬 Video coming soon
               </span>
             )}
+          </div>
+        </div>
+      )}
+
+      {sceneBoard.length > 0 && (
+        <div className="mb-3 rounded-xl border border-practice-border bg-white/70 p-3">
+          <p className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-slate-500">
+            Drawing board - every example from this lesson, in one place
+          </p>
+          <div className="flex gap-3 overflow-x-auto pb-1">
+            {sceneBoard.map((entry) => (
+              <div key={entry.id} className="w-56 shrink-0 rounded-lg border border-slate-200 bg-white p-2">
+                {entry.node}
+              </div>
+            ))}
           </div>
         </div>
       )}
