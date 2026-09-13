@@ -52,6 +52,10 @@ import { FractionDecimalPercentPlayer } from './FractionDecimalPercentPlayer';
 import { RCRTComparingOrderingPlayer } from './RCRTComparingOrderingPlayer';
 import { RCRTFindingFractionsOfAmountsPlayer } from './RCRTFindingFractionsOfAmountsPlayer';
 import { RCRTRatioProportionPlayer } from './RCRTRatioProportionPlayer';
+import { RCRTPerimeterPolygonsPlayer } from './RCRTPerimeterPolygonsPlayer';
+import { RCRTAreaRectanglesPlayer } from './RCRTAreaRectanglesPlayer';
+import { RCRT3DNetsPlayer } from './RCRT3DNetsPlayer';
+import { RCRTVisualising3DPlayer } from './RCRTVisualising3DPlayer';
 import { getWidgetForConcept, type InteractiveWidget, type TraitMatcherSpec, type PredictiveBrancherSpec } from '@/lib/interactiveWidgets';
 
 type BespokePlayer = React.FC<{ onSuccess?: () => void; onAttempt?: (correct: boolean) => void; onNarrate?: (text: string) => void }>;
@@ -144,6 +148,12 @@ const BESPOKE_PLAYERS: Record<string, Record<string, BespokePlayer>> = {
     '11.3': RCRTComparingOrderingPlayer,
     '11.4': RCRTFindingFractionsOfAmountsPlayer,
     '11.5': RCRTRatioProportionPlayer,
+  },
+  'cambridge-4-math-12': {
+    '12.1': RCRTPerimeterPolygonsPlayer,
+    '12.2': RCRTAreaRectanglesPlayer,
+    '12.3': RCRT3DNetsPlayer,
+    '12.4': RCRTVisualising3DPlayer,
   },
 };
 
