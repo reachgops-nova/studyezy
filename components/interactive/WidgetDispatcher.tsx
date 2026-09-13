@@ -74,6 +74,8 @@ import { RCRTAddSubtractRelatedFractionsPlayer } from './RCRTAddSubtractRelatedF
 import { RCRTDivideUnitFractionsPlayer } from './RCRTDivideUnitFractionsPlayer';
 import { RCRTMultiplyUnitFractionsPlayer } from './RCRTMultiplyUnitFractionsPlayer';
 import { RCRTRatioProportionUnit17Player } from './RCRTRatioProportionUnit17Player';
+import { RCRTWorldTimeZonesPlayer } from './RCRTWorldTimeZonesPlayer';
+import { RCRTStartEndTimesPlayer } from './RCRTStartEndTimesPlayer';
 import { getWidgetForConcept, type InteractiveWidget, type TraitMatcherSpec, type PredictiveBrancherSpec } from '@/lib/interactiveWidgets';
 
 type BespokePlayer = React.FC<{ onSuccess?: () => void; onAttempt?: (correct: boolean) => void; onNarrate?: (text: string) => void }>;
@@ -200,6 +202,10 @@ const BESPOKE_PLAYERS: Record<string, Record<string, BespokePlayer>> = {
     '17.3': RCRTDivideUnitFractionsPlayer,
     '17.4': RCRTMultiplyUnitFractionsPlayer,
     '17.5': RCRTRatioProportionUnit17Player,
+  },
+  'cambridge-4-math-18': {
+    '18.1': RCRTWorldTimeZonesPlayer,
+    '18.2': RCRTStartEndTimesPlayer,
   },
 };
 
