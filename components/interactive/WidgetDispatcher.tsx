@@ -60,6 +60,8 @@ import { RCRTSquareNumbersPlayer } from './RCRTSquareNumbersPlayer';
 import { RCRTTriangularNumbersPlayer } from './RCRTTriangularNumbersPlayer';
 import { RCRTDivisibilityRulesPlayer } from './RCRTDivisibilityRulesPlayer';
 import { RCRTPrimeCompositePlayer } from './RCRTPrimeCompositePlayer';
+import { RCRTReflectionsPlayer } from './RCRTReflectionsPlayer';
+import { RCRTCompareTranslationReflectionPlayer } from './RCRTCompareTranslationReflectionPlayer';
 import { getWidgetForConcept, type InteractiveWidget, type TraitMatcherSpec, type PredictiveBrancherSpec } from '@/lib/interactiveWidgets';
 
 type BespokePlayer = React.FC<{ onSuccess?: () => void; onAttempt?: (correct: boolean) => void; onNarrate?: (text: string) => void }>;
@@ -164,6 +166,10 @@ const BESPOKE_PLAYERS: Record<string, Record<string, BespokePlayer>> = {
     '13.2': RCRTTriangularNumbersPlayer,
     '13.3': RCRTDivisibilityRulesPlayer,
     '13.4': RCRTPrimeCompositePlayer,
+  },
+  'cambridge-4-math-14': {
+    '14.1': RCRTReflectionsPlayer,
+    '14.2': RCRTCompareTranslationReflectionPlayer,
   },
 };
 
