@@ -1558,9 +1558,13 @@ export default function AvatarChat({
                     </div>
                   )}
                   {m.sceneNode && (
-                    <div className="mt-2 w-64 max-w-full">
-                      {m.sceneNode}
-                    </div>
+                    // The scene itself lives on the drawing board above (one
+                    // home, not two) - real feedback 2026-09-13: rendering it
+                    // here as well meant the same diagram filled two large
+                    // areas of the screen at once. This just points at it.
+                    <p className="mt-2 text-[11px] font-semibold text-[#9c6f1f]">
+                      ↑ See this on the drawing board
+                    </p>
                   )}
                 </div>
               </div>
