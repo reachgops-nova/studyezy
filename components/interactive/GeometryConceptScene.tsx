@@ -15,10 +15,12 @@ export type GeometrySceneSpec =
   | {
       type: 'coordinateGrid';
       gridSize: number;
-      shapes: { points: [number, number][]; color: 'accent' | 'ink'; dashed?: boolean }[];
+      shapes: { points: [number, number][]; color: 'accent' | 'ink'; dashed?: boolean; ghost?: boolean }[];
       arrows?: { from: [number, number]; to: [number, number] }[];
       labels?: { at: [number, number]; text: string }[];
       mirrorLines?: { axis: 'vertical' | 'horizontal'; at: number }[];
+      /** Makes one shape visibly slide from a starting offset (in grid units, before the shape's own transform is applied) into its resting `points` position - real motion instead of a static before/after pair. Plays automatically shortly after the scene mounts (i.e. right as its narration begins) and can be replayed via the on-screen button. */
+      animate?: { shapeIndex: number; fromDelta: [number, number]; durationMs?: number };
       caption: string;
     }
   | { type: 'shapeNet'; cols: number; rows: number; cells: [number, number][]; foldsInto: string; caption: string }
@@ -139,7 +141,7 @@ function TriangleClassify({ kind, sides, caption }: Extract<GeometrySceneSpec, {
   );
 }
 
-function CoordinateGrid({ gridSize, shapes, arrows, labels, mirrorLines, caption }: Extract<GeometrySceneSpec, { type: 'coordinateGrid' }>) {
+function CoordinateGrid({ gridSize, shapes, arrows, labels, mirrorLines, animate, caption }: Extract<GeometrySceneSpec, { type: 'coordinateGrid' }>) {
   const cell = 22;
   const pad = 16;
   const size = gridSize * cell;
@@ -147,6 +149,21 @@ function CoordinateGrid({ gridSize, shapes, arrows, labels, mirrorLines, caption
   const py = (v: number) => pad + (gridSize - v) * cell;
   const colorOf = (c: 'accent' | 'ink') => (c === 'accent' ? '#9c6f1f' : '#16241f');
   const toPolyPoints = (pts: [number, number][]) => pts.map(([x, y]) => `${px(x)},${py(y)}`).join(' ');
+
+  const [played, setPlayed] = React.useState(false);
+  React.useEffect(() => {
+    if (!animate) return;
+    setPlayed(false);
+    const t = setTimeout(() => setPlayed(true), 400);
+    return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [animate?.shapeIndex, animate?.fromDelta?.[0], animate?.fromDelta?.[1]]);
+
+  const replaySlide = () => {
+    setPlayed(false);
+    requestAnimationFrame(() => requestAnimationFrame(() => setPlayed(true)));
+  };
+
   return (
     <>
       <div className="flex justify-center overflow-x-auto">
@@ -188,20 +205,31 @@ function CoordinateGrid({ gridSize, shapes, arrows, labels, mirrorLines, caption
             </marker>
           </defs>
 
-          {shapes.map((s, i) => (
-            <g key={`shape-${i}`}>
-              <polygon
-                points={toPolyPoints(s.points)}
-                fill={`${colorOf(s.color)}1a`}
-                stroke={colorOf(s.color)}
-                strokeWidth={2}
-                strokeDasharray={s.dashed ? '4 3' : undefined}
-              />
-              {s.points.map(([x, y], vi) => (
-                <circle key={vi} cx={px(x)} cy={py(y)} r={3} fill={colorOf(s.color)} />
-              ))}
-            </g>
-          ))}
+          {shapes.map((s, i) => {
+            const isAnimated = !!animate && animate.shapeIndex === i;
+            const [dx, dy] = isAnimated ? animate!.fromDelta : [0, 0];
+            const offsetX = dx * cell;
+            const offsetY = -dy * cell; // grid y increases upward, pixel y increases downward
+            const groupStyle = isAnimated
+              ? {
+                  transform: played ? 'translate(0px, 0px)' : `translate(${offsetX}px, ${offsetY}px)`,
+                  transition: `transform ${animate!.durationMs ?? 1200}ms cubic-bezier(0.34, 1.2, 0.64, 1)`,
+                }
+              : undefined;
+            return (
+              <g key={`shape-${i}`} style={groupStyle} opacity={s.ghost ? 0.35 : 1}>
+                <polygon
+                  points={toPolyPoints(s.points)}
+                  fill={`${colorOf(s.color)}1a`}
+                  stroke={colorOf(s.color)}
+                  strokeWidth={2}
+                  strokeDasharray={s.dashed || s.ghost ? '4 3' : undefined}
+                />
+                {!s.ghost &&
+                  s.points.map(([x, y], vi) => <circle key={vi} cx={px(x)} cy={py(y)} r={3} fill={colorOf(s.color)} />)}
+              </g>
+            );
+          })}
 
           {labels?.map((l, i) => (
             <text key={`label-${i}`} x={px(l.at[0]) + 4} y={py(l.at[1]) - 4} fontSize="10" fontWeight="bold" fill="#16241f">
@@ -210,6 +238,16 @@ function CoordinateGrid({ gridSize, shapes, arrows, labels, mirrorLines, caption
           ))}
         </svg>
       </div>
+      {animate && (
+        <div className="flex justify-center mt-1">
+          <button
+            onClick={replaySlide}
+            className="text-[10px] font-bold text-[#9c6f1f] hover:underline px-2 py-0.5"
+          >
+            ▶ Replay slide
+          </button>
+        </div>
+      )}
       <p className="mt-1.5 text-center text-[10px] font-medium text-[#16241f]/60">{caption}</p>
     </>
   );

@@ -13,28 +13,21 @@ export const UNIT10_CONCEPT_SCENES: Record<string, GeometrySceneSpec[]> = {
       type: "coordinateGrid",
       gridSize: 8,
       shapes: [
-        { points: [[5, 6], [7, 6], [6, 8]], color: "ink" },
+        { points: [[5, 6], [7, 6], [6, 8]], color: "ink", ghost: true },
         { points: [[1, 5], [3, 5], [2, 7]], color: "accent" },
       ],
-      arrows: [
-        { from: [5, 6], to: [1, 5] },
-        { from: [7, 6], to: [3, 5] },
-        { from: [6, 8], to: [2, 7] },
-      ],
-      caption: "Sliding a triangle 4 squares to the left and 1 square down - every vertex moves the same distance and direction",
+      animate: { shapeIndex: 1, fromDelta: [4, 1], durationMs: 1400 },
+      caption: "Watch the triangle slide 4 squares left and 1 square down - every vertex moves the same distance and direction",
     },
     {
       type: "coordinateGrid",
       gridSize: 9,
       shapes: [
-        { points: [[2, 3], [4, 3], [4, 4], [2, 4]], color: "ink" },
+        { points: [[2, 3], [4, 3], [4, 4], [2, 4]], color: "ink", ghost: true },
         { points: [[7, 5], [9, 5], [9, 6], [7, 6]], color: "accent" },
       ],
-      arrows: [
-        { from: [2, 3], to: [7, 5] },
-        { from: [4, 3], to: [9, 5] },
-      ],
-      caption: "Moving a rectangle from starting position (2, 3) by 5 squares right and 2 squares up",
+      animate: { shapeIndex: 1, fromDelta: [-5, -2], durationMs: 1400 },
+      caption: "Watch the rectangle move from starting position (2, 3) by 5 squares right and 2 squares up",
     },
     {
       type: "coordinateGrid",
