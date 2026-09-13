@@ -105,6 +105,11 @@ import { RCRTAstronomicUnitsPlayer } from './RCRTAstronomicUnitsPlayer';
 import { RCRTVernierCaliperPlayer } from './RCRTVernierCaliperPlayer';
 import { RCRTScrewGaugePlayer } from './RCRTScrewGaugePlayer';
 import { RCRTMassWeightPlayer } from './RCRTMassWeightPlayer';
+import { RCRTTypesOfMotionPlayer } from './RCRTTypesOfMotionPlayer';
+import { RCRTSpeedVelocityAccelerationPlayer } from './RCRTSpeedVelocityAccelerationPlayer';
+import { RCRTEquationsOfMotionPlayer } from './RCRTEquationsOfMotionPlayer';
+import { RCRTMotionGraphsPlayer } from './RCRTMotionGraphsPlayer';
+import { RCRTCircularMotionPlayer } from './RCRTCircularMotionPlayer';
 import { getWidgetForConcept, type InteractiveWidget, type TraitMatcherSpec, type PredictiveBrancherSpec } from '@/lib/interactiveWidgets';
 
 type BespokePlayer = React.FC<{ onSuccess?: () => void; onAttempt?: (correct: boolean) => void; onNarrate?: (text: string) => void }>;
@@ -272,6 +277,13 @@ const BESPOKE_PLAYERS: Record<string, Record<string, BespokePlayer>> = {
     '1.3': RCRTVernierCaliperPlayer,
     '1.4': RCRTScrewGaugePlayer,
     '1.5': RCRTMassWeightPlayer,
+  },
+  'tamilnadustateboard-9-science-2': {
+    '2.1': RCRTTypesOfMotionPlayer,
+    '2.2': RCRTSpeedVelocityAccelerationPlayer,
+    '2.3': RCRTMotionGraphsPlayer,
+    '2.4': RCRTEquationsOfMotionPlayer,
+    '2.5': RCRTCircularMotionPlayer,
   },
 };
 
