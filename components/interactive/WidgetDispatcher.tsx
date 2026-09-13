@@ -50,6 +50,8 @@ import { CoordinateShapesPlayer } from './CoordinateShapesPlayer';
 import { PercentageGridPlayer } from './PercentageGridPlayer';
 import { FractionDecimalPercentPlayer } from './FractionDecimalPercentPlayer';
 import { RCRTComparingOrderingPlayer } from './RCRTComparingOrderingPlayer';
+import { RCRTFindingFractionsOfAmountsPlayer } from './RCRTFindingFractionsOfAmountsPlayer';
+import { RCRTRatioProportionPlayer } from './RCRTRatioProportionPlayer';
 import { getWidgetForConcept, type InteractiveWidget, type TraitMatcherSpec, type PredictiveBrancherSpec } from '@/lib/interactiveWidgets';
 
 type BespokePlayer = React.FC<{ onSuccess?: () => void; onAttempt?: (correct: boolean) => void; onNarrate?: (text: string) => void }>;
@@ -140,6 +142,8 @@ const BESPOKE_PLAYERS: Record<string, Record<string, BespokePlayer>> = {
     // dry and boring... make it interactive, not rushing with narration")
     // led to piloting this template; see the component's own phase names.
     '11.3': RCRTComparingOrderingPlayer,
+    '11.4': RCRTFindingFractionsOfAmountsPlayer,
+    '11.5': RCRTRatioProportionPlayer,
   },
 };
 
