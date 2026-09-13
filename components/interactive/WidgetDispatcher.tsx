@@ -95,6 +95,11 @@ import { RCRTFormalInformalRegisterPlayer } from './RCRTFormalInformalRegisterPl
 import { RCRTSynonymsPlayer } from './RCRTSynonymsPlayer';
 import { RCRTSpottingOpinionsPlayer } from './RCRTSpottingOpinionsPlayer';
 import { RCRTPrefixesSuffixesPlayer } from './RCRTPrefixesSuffixesPlayer';
+import { RCRTFeaturesOfNarrativePoemPlayer } from './RCRTFeaturesOfNarrativePoemPlayer';
+import { RCRTCharacterCluesPoetryPlayer } from './RCRTCharacterCluesPoetryPlayer';
+import { RCRTDialoguePunctuationPoetryPlayer } from './RCRTDialoguePunctuationPoetryPlayer';
+import { RCRTMetaphorsPlayer } from './RCRTMetaphorsPlayer';
+import { RCRTPersonificationPlayer } from './RCRTPersonificationPlayer';
 import { getWidgetForConcept, type InteractiveWidget, type TraitMatcherSpec, type PredictiveBrancherSpec } from '@/lib/interactiveWidgets';
 
 type BespokePlayer = React.FC<{ onSuccess?: () => void; onAttempt?: (correct: boolean) => void; onNarrate?: (text: string) => void }>;
@@ -248,6 +253,13 @@ const BESPOKE_PLAYERS: Record<string, Record<string, BespokePlayer>> = {
     '2.4': RCRTSynonymsPlayer,
     '2.5': RCRTSpottingOpinionsPlayer,
     '2.6': RCRTPrefixesSuffixesPlayer,
+  },
+  'cambridge-5-english-3': {
+    '3.1': RCRTFeaturesOfNarrativePoemPlayer,
+    '3.2': RCRTCharacterCluesPoetryPlayer,
+    '3.3': RCRTDialoguePunctuationPoetryPlayer,
+    '3.4': RCRTMetaphorsPlayer,
+    '3.5': RCRTPersonificationPlayer,
   },
 };
 
