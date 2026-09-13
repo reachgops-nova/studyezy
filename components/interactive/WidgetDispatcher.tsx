@@ -62,6 +62,11 @@ import { RCRTDivisibilityRulesPlayer } from './RCRTDivisibilityRulesPlayer';
 import { RCRTPrimeCompositePlayer } from './RCRTPrimeCompositePlayer';
 import { RCRTReflectionsPlayer } from './RCRTReflectionsPlayer';
 import { RCRTCompareTranslationReflectionPlayer } from './RCRTCompareTranslationReflectionPlayer';
+import { RCRTMissingNumberPlayer } from './RCRTMissingNumberPlayer';
+import { RCRTOrderOfOperationsPlayer } from './RCRTOrderOfOperationsPlayer';
+import { RCRTWrittenMultiplicationDivisionPlayer } from './RCRTWrittenMultiplicationDivisionPlayer';
+import { RCRTAddSubtractDecimalsPlayer } from './RCRTAddSubtractDecimalsPlayer';
+import { RCRTMultiplyDecimalsPlayer } from './RCRTMultiplyDecimalsPlayer';
 import { getWidgetForConcept, type InteractiveWidget, type TraitMatcherSpec, type PredictiveBrancherSpec } from '@/lib/interactiveWidgets';
 
 type BespokePlayer = React.FC<{ onSuccess?: () => void; onAttempt?: (correct: boolean) => void; onNarrate?: (text: string) => void }>;
@@ -170,6 +175,13 @@ const BESPOKE_PLAYERS: Record<string, Record<string, BespokePlayer>> = {
   'cambridge-4-math-14': {
     '14.1': RCRTReflectionsPlayer,
     '14.2': RCRTCompareTranslationReflectionPlayer,
+  },
+  'cambridge-4-math-15': {
+    '15.1': RCRTMissingNumberPlayer,
+    '15.2': RCRTOrderOfOperationsPlayer,
+    '15.3': RCRTWrittenMultiplicationDivisionPlayer,
+    '15.4': RCRTAddSubtractDecimalsPlayer,
+    '15.5': RCRTMultiplyDecimalsPlayer,
   },
 };
 
