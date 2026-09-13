@@ -23,6 +23,14 @@ export type GeometrySceneSpec =
       animate?: { shapeIndex: number; fromDelta: [number, number]; durationMs?: number };
       caption: string;
     }
+  | {
+      /** A single choreographed scene for teaching translation: the original shape's vertices slide to their new position, the new shape then draws itself stroke-by-stroke from those arrived points, and finally the original-to-new connector for each vertex draws in one at a time - one continuous story instead of a separate "before/after" image plus a separate "connecting lines" image. */
+      type: 'translationDemo';
+      gridSize: number;
+      originalPoints: [number, number][];
+      delta: [number, number];
+      caption: string;
+    }
   | { type: 'shapeNet'; cols: number; rows: number; cells: [number, number][]; foldsInto: string; caption: string }
   | {
       type: 'topDownView';
@@ -253,6 +261,141 @@ function CoordinateGrid({ gridSize, shapes, arrows, labels, mirrorLines, animate
   );
 }
 
+function TranslationDemo({ gridSize, originalPoints, delta, caption }: Extract<GeometrySceneSpec, { type: 'translationDemo' }>) {
+  const cell = 22;
+  const pad = 16;
+  const size = gridSize * cell;
+  const px = (v: number) => pad + v * cell;
+  const py = (v: number) => pad + (gridSize - v) * cell;
+  const newPoints: [number, number][] = originalPoints.map(([x, y]) => [x + delta[0], y + delta[1]]);
+  const toPolyPoints = (pts: [number, number][]) => pts.map(([x, y]) => `${px(x)},${py(y)}`).join(' ');
+
+  type Stage = 'start' | 'moving' | 'drawn' | 'connect1' | 'connect2' | 'connect3' | 'done';
+  const [stage, setStage] = React.useState<Stage>('start');
+  const timersRef = React.useRef<ReturnType<typeof setTimeout>[]>([]);
+
+  const runSequence = React.useCallback(() => {
+    timersRef.current.forEach(clearTimeout);
+    timersRef.current = [];
+    setStage('start');
+    const schedule = (s: Stage, at: number) => timersRef.current.push(setTimeout(() => setStage(s), at));
+    schedule('moving', 500);
+    schedule('drawn', 1800);
+    schedule('connect1', 2200);
+    schedule('connect2', 2650);
+    schedule('connect3', 3100);
+    schedule('done', 3550);
+  }, []);
+
+  React.useEffect(() => {
+    runSequence();
+    return () => timersRef.current.forEach(clearTimeout);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const dotsMoved = stage !== 'start';
+  const showNewShape = stage !== 'start' && stage !== 'moving';
+  const connectorsShown = stage === 'connect1' ? 1 : stage === 'connect2' ? 2 : stage === 'connect3' || stage === 'done' ? 3 : 0;
+  const originalFaded = stage === 'done';
+
+  return (
+    <>
+      <div className="flex justify-center overflow-x-auto">
+        <svg width={size + pad * 2} height={size + pad * 2} viewBox={`0 0 ${size + pad * 2} ${size + pad * 2}`}>
+          {Array.from({ length: gridSize + 1 }).map((_, i) => (
+            <React.Fragment key={`g-${i}`}>
+              <line x1={px(i)} y1={py(0)} x2={px(i)} y2={py(gridSize)} stroke="#16241f14" strokeWidth={1} />
+              <line x1={px(0)} y1={py(i)} x2={px(gridSize)} y2={py(i)} stroke="#16241f14" strokeWidth={1} />
+            </React.Fragment>
+          ))}
+          <line x1={px(0)} y1={py(0)} x2={px(gridSize)} y2={py(0)} stroke="#16241f" strokeWidth={2} />
+          <line x1={px(0)} y1={py(0)} x2={px(0)} y2={py(gridSize)} stroke="#16241f" strokeWidth={2} />
+
+          {/* Original shape - crisp while its points are still there, fades to a dashed echo once the story finishes */}
+          <polygon
+            points={toPolyPoints(originalPoints)}
+            fill="none"
+            stroke="#16241f"
+            strokeWidth={2}
+            style={{
+              strokeDasharray: originalFaded ? '4 3' : undefined,
+              opacity: originalFaded ? 0.35 : 1,
+              transition: 'opacity 500ms ease',
+            }}
+          />
+
+          {/* New shape - drawn on stroke-by-stroke once its points have arrived */}
+          <polygon
+            points={toPolyPoints(newPoints)}
+            fill="#9c6f1f"
+            stroke="#9c6f1f"
+            strokeWidth={2.5}
+            pathLength={1}
+            style={{
+              strokeDasharray: 1,
+              strokeDashoffset: showNewShape ? 0 : 1,
+              fillOpacity: showNewShape ? 0.12 : 0,
+              transition: 'stroke-dashoffset 550ms ease, fill-opacity 550ms ease 250ms',
+            }}
+          />
+
+          {/* Connector lines - drawn one vertex at a time */}
+          {originalPoints.map((op, i) => {
+            const np = newPoints[i];
+            const visible = i < connectorsShown;
+            return (
+              <line
+                key={`connector-${i}`}
+                x1={px(op[0])}
+                y1={py(op[1])}
+                x2={px(np[0])}
+                y2={py(np[1])}
+                stroke="#b45309"
+                strokeWidth={1.5}
+                pathLength={1}
+                style={{
+                  strokeDasharray: 1,
+                  strokeDashoffset: visible ? 0 : 1,
+                  opacity: visible ? 0.85 : 0,
+                  transition: 'stroke-dashoffset 400ms ease, opacity 200ms ease',
+                }}
+              />
+            );
+          })}
+
+          {/* The vertices themselves, sliding from their original spot to the new one */}
+          {originalPoints.map(([x, y], i) => {
+            const [nx, ny] = newPoints[i];
+            const startPx = px(x);
+            const startPy = py(y);
+            const endPx = px(nx);
+            const endPy = py(ny);
+            return (
+              <circle
+                key={`dot-${i}`}
+                cx={startPx}
+                cy={startPy}
+                r={4}
+                fill="#9c6f1f"
+                style={{
+                  transform: dotsMoved ? `translate(${endPx - startPx}px, ${endPy - startPy}px)` : 'translate(0px, 0px)',
+                  transition: 'transform 1200ms cubic-bezier(0.34, 1.15, 0.6, 1)',
+                }}
+              />
+            );
+          })}
+        </svg>
+      </div>
+      <div className="flex justify-center mt-1">
+        <button onClick={runSequence} className="text-[10px] font-bold text-[#9c6f1f] hover:underline px-2 py-0.5">
+          ▶ Replay animation
+        </button>
+      </div>
+      <p className="mt-1.5 text-center text-[10px] font-medium text-[#16241f]/60">{caption}</p>
+    </>
+  );
+}
+
 function ShapeNet({ cols, rows, cells, foldsInto, caption }: Extract<GeometrySceneSpec, { type: 'shapeNet' }>) {
   const cell = 30;
   const isFilled = (c: number, r: number) => cells.some(([cc, rr]) => cc === c && rr === r);
@@ -322,6 +465,7 @@ export const GeometryConceptScene: React.FC<{ spec: GeometrySceneSpec }> = ({ sp
       {spec.type === 'straightLineSplit' && <StraightLineSplit {...spec} />}
       {spec.type === 'triangleClassify' && <TriangleClassify {...spec} />}
       {spec.type === 'coordinateGrid' && <CoordinateGrid {...spec} />}
+      {spec.type === 'translationDemo' && <TranslationDemo {...spec} />}
       {spec.type === 'shapeNet' && <ShapeNet {...spec} />}
       {spec.type === 'topDownView' && <TopDownView {...spec} />}
     </div>

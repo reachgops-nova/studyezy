@@ -10,38 +10,18 @@ import type { GeometrySceneSpec } from "@/components/interactive/GeometryConcept
 export const UNIT10_CONCEPT_SCENES: Record<string, GeometrySceneSpec[]> = {
   "10.1": [
     {
-      type: "coordinateGrid",
+      type: "translationDemo",
       gridSize: 8,
-      shapes: [
-        { points: [[5, 6], [7, 6], [6, 8]], color: "ink", ghost: true },
-        { points: [[1, 5], [3, 5], [2, 7]], color: "accent" },
-      ],
-      animate: { shapeIndex: 1, fromDelta: [4, 1], durationMs: 1400 },
-      caption: "Watch the triangle slide 4 squares left and 1 square down - every vertex moves the same distance and direction",
+      originalPoints: [[5, 6], [7, 6], [6, 8]],
+      delta: [-4, -1],
+      caption: "Watch each point slide 4 squares left and 1 square down, the new triangle draw itself from those points, then the matching vertices join one by one - the connectors are always parallel and equal in length",
     },
     {
-      type: "coordinateGrid",
+      type: "translationDemo",
       gridSize: 9,
-      shapes: [
-        { points: [[2, 3], [4, 3], [4, 4], [2, 4]], color: "ink", ghost: true },
-        { points: [[7, 5], [9, 5], [9, 6], [7, 6]], color: "accent" },
-      ],
-      animate: { shapeIndex: 1, fromDelta: [-5, -2], durationMs: 1400 },
-      caption: "Watch the rectangle move from starting position (2, 3) by 5 squares right and 2 squares up",
-    },
-    {
-      type: "coordinateGrid",
-      gridSize: 8,
-      shapes: [
-        { points: [[5, 6], [7, 6], [6, 8]], color: "ink" },
-        { points: [[1, 5], [3, 5], [2, 7]], color: "accent" },
-      ],
-      arrows: [
-        { from: [5, 6], to: [1, 5] },
-        { from: [7, 6], to: [3, 5] },
-        { from: [6, 8], to: [2, 7] },
-      ],
-      caption: "Connecting lines between each original vertex and its matching new vertex are always parallel and equal in length",
+      originalPoints: [[2, 3], [4, 3], [4, 4], [2, 4]],
+      delta: [5, 2],
+      caption: "Watch each corner slide 5 squares right and 2 squares up, the new rectangle draw itself from those points, then the matching corners join one by one",
     },
     {
       type: "coordinateGrid",
