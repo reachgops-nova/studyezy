@@ -89,6 +89,12 @@ import { RCRTStoryStructurePlayer } from './RCRTStoryStructurePlayer';
 import { RCRTMoodPlayer } from './RCRTMoodPlayer';
 import { RCRTAdverbsPlayer } from './RCRTAdverbsPlayer';
 import { RCRTFinalProofreadingPlayer } from './RCRTFinalProofreadingPlayer';
+import { RCRTFeaturesOfBiographyPlayer } from './RCRTFeaturesOfBiographyPlayer';
+import { RCRTChronologicalOrderPlayer } from './RCRTChronologicalOrderPlayer';
+import { RCRTFormalInformalRegisterPlayer } from './RCRTFormalInformalRegisterPlayer';
+import { RCRTSynonymsPlayer } from './RCRTSynonymsPlayer';
+import { RCRTSpottingOpinionsPlayer } from './RCRTSpottingOpinionsPlayer';
+import { RCRTPrefixesSuffixesPlayer } from './RCRTPrefixesSuffixesPlayer';
 import { getWidgetForConcept, type InteractiveWidget, type TraitMatcherSpec, type PredictiveBrancherSpec } from '@/lib/interactiveWidgets';
 
 type BespokePlayer = React.FC<{ onSuccess?: () => void; onAttempt?: (correct: boolean) => void; onNarrate?: (text: string) => void }>;
@@ -234,6 +240,14 @@ const BESPOKE_PLAYERS: Record<string, Record<string, BespokePlayer>> = {
     '1.11': RCRTMoodPlayer,
     '1.12': RCRTAdverbsPlayer,
     '1.13': RCRTFinalProofreadingPlayer,
+  },
+  'cambridge-5-english-2': {
+    '2.1': RCRTFeaturesOfBiographyPlayer,
+    '2.2': RCRTChronologicalOrderPlayer,
+    '2.3': RCRTFormalInformalRegisterPlayer,
+    '2.4': RCRTSynonymsPlayer,
+    '2.5': RCRTSpottingOpinionsPlayer,
+    '2.6': RCRTPrefixesSuffixesPlayer,
   },
 };
 
