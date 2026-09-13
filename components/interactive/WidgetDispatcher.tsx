@@ -76,6 +76,13 @@ import { RCRTMultiplyUnitFractionsPlayer } from './RCRTMultiplyUnitFractionsPlay
 import { RCRTRatioProportionUnit17Player } from './RCRTRatioProportionUnit17Player';
 import { RCRTWorldTimeZonesPlayer } from './RCRTWorldTimeZonesPlayer';
 import { RCRTStartEndTimesPlayer } from './RCRTStartEndTimesPlayer';
+import { RCRTFeaturesOfFablePlayer } from './RCRTFeaturesOfFablePlayer';
+import { RCRTImplicitMeaningPlayer } from './RCRTImplicitMeaningPlayer';
+import { RCRTExplicitMeaningPlayer } from './RCRTExplicitMeaningPlayer';
+import { RCRTMakingPredictionsPlayer } from './RCRTMakingPredictionsPlayer';
+import { RCRTPerspectivePlayer } from './RCRTPerspectivePlayer';
+import { RCRTProofreadingPlayer } from './RCRTProofreadingPlayer';
+import { RCRTFactOpinionEnglishPlayer } from './RCRTFactOpinionEnglishPlayer';
 import { getWidgetForConcept, type InteractiveWidget, type TraitMatcherSpec, type PredictiveBrancherSpec } from '@/lib/interactiveWidgets';
 
 type BespokePlayer = React.FC<{ onSuccess?: () => void; onAttempt?: (correct: boolean) => void; onNarrate?: (text: string) => void }>;
@@ -206,6 +213,15 @@ const BESPOKE_PLAYERS: Record<string, Record<string, BespokePlayer>> = {
   'cambridge-4-math-18': {
     '18.1': RCRTWorldTimeZonesPlayer,
     '18.2': RCRTStartEndTimesPlayer,
+  },
+  'cambridge-5-english-1': {
+    '1.1': RCRTFeaturesOfFablePlayer,
+    '1.2': RCRTImplicitMeaningPlayer,
+    '1.3': RCRTExplicitMeaningPlayer,
+    '1.4': RCRTMakingPredictionsPlayer,
+    '1.5': RCRTPerspectivePlayer,
+    '1.6': RCRTProofreadingPlayer,
+    '1.7': RCRTFactOpinionEnglishPlayer,
   },
 };
 
