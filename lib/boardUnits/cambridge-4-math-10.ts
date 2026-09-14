@@ -21,6 +21,21 @@ export const CAMBRIDGE_4_MATH_10: BoardUnit = {
   badge: "Grade 4 · Unit 10",
   gridMax: 10,
 
+  intro: {
+    covers: [
+      "What a translation is - sliding a shape without turning or resizing it",
+      "Describing a slide properly: how far across, then how far up or down",
+      "Reading and plotting coordinates as (across, up)",
+      "Finding a missing corner of a rectangle or square on a grid",
+    ],
+    outcomes: [
+      "Slide any shape on a grid and say exactly where it landed",
+      "Describe a translation so someone else could copy it without seeing it",
+      "Plot a point from its coordinates, and read coordinates off a plotted point",
+      "Work out a missing vertex by matching equal sides and parallel edges",
+    ],
+  },
+
   concepts: [
     {
       conceptId: "10.1",
@@ -100,6 +115,45 @@ export const CAMBRIDGE_4_MATH_10: BoardUnit = {
           { from: [2, 4], to: [5, 6] },
         ],
         dots: [{ at: [4, 4], label: "(4,4) ✓", tone: "green" }],
+      },
+    },
+    {
+      label: "5. Reading (x,y)",
+      say: "Now the second half of this chapter - coordinates. This point is at 6 across and 3 up. We always say across first, so we write it as (6,3).",
+      frame: {
+        dots: [{ at: [6, 3], label: "(6,3)", tone: "blue" }],
+        arrows: [{ from: [0, 0], to: [6, 0] }, { from: [6, 0], to: [6, 3] }],
+      },
+    },
+    {
+      label: "6. Order matters",
+      say: "Swap the numbers and you land somewhere completely different. (6,3) and (3,6) are not the same place at all - across always comes first.",
+      frame: {
+        dots: [
+          { at: [6, 3], label: "(6,3)", tone: "blue" },
+          { at: [3, 6], label: "(3,6) - a different place", tone: "red" },
+        ],
+      },
+    },
+    {
+      label: "7. Missing corner",
+      say: "Here are three corners of a rectangle. Because opposite sides must be equal and parallel, there is only one place the fourth corner can go.",
+      frame: {
+        shapes: [{ points: [[2, 2], [7, 2], [7, 5]], look: "ghost" }],
+        dots: [
+          { at: [2, 2], label: "(2,2)", tone: "gold" },
+          { at: [7, 2], label: "(7,2)", tone: "gold" },
+          { at: [7, 5], label: "(7,5)", tone: "gold" },
+          { at: [2, 5], label: "where must this be?", tone: "red" },
+        ],
+      },
+    },
+    {
+      label: "8. Completed",
+      say: "There it is - (2,5). It lines up above (2,2) and across from (7,5), so all four sides stay straight and the opposite sides match.",
+      frame: {
+        shapes: [{ points: [[2, 2], [7, 2], [7, 5], [2, 5]], look: "correct" }],
+        dots: [{ at: [2, 5], label: "(2,5) ✓", tone: "green" }],
       },
     },
   ],
@@ -374,6 +428,17 @@ export const CAMBRIDGE_4_MATH_10: BoardUnit = {
       ask: "Which number in a coordinate comes first, and what does it mean?",
       answer: "The across number comes first - how far along the bottom - and then the up number.",
     },
+  ],
+
+  // Work these on paper, then check - real user direction 2026-09-14: "they
+  // can write down in rough note and check as well".
+  writtenPractice: [
+    { question: "A triangle has corners at (1,1), (4,1) and (2,4). Write the three new corners after a translation of 3 right and 2 up.", answer: "(4,3), (7,3) and (5,6). Add 3 to every across number and 2 to every up number." },
+    { question: "A shape moves from (9,8) to (4,3). Describe the translation in words.", answer: "5 left and 5 down. 9 take away 4 is 5 across, and 8 take away 3 is 5 down." },
+    { question: "Plot (2,7), (2,3) and (8,3). What are the coordinates of the fourth corner of the rectangle, and how long are its sides?", answer: "(8,7). The short sides are 4 units and the long sides are 6 units." },
+    { question: "A square has one corner at (3,2) and sides 4 units long, going right and up. Write all four corners.", answer: "(3,2), (7,2), (7,6) and (3,6)." },
+    { question: "A shape is translated 6 right and 3 down, then 2 left and 5 up. Write the single translation that would do the same job.", answer: "4 right and 2 up. Across: 6 take away 2 is 4. Up: 5 take away 3 is 2." },
+    { question: "Point P is at (5,5). Point Q is 3 left of P. Point R is 4 up from Q. Write the coordinates of Q and R.", answer: "Q is (2,5) and R is (2,9)." },
   ],
 
   // Phase 4. Straight recall first, then a question that needs the idea

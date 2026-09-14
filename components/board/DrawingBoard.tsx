@@ -389,27 +389,38 @@ export default function DrawingBoard({ unit }: { unit: BoardUnit }) {
             <p className="min-w-0 flex-1 text-[0.95rem] font-bold leading-snug text-[#e0f2fe]">{subtitle}</p>
           </div>
 
-          {/* Concept tray */}
-          <div className="flex shrink-0 items-center gap-2.5 overflow-x-auto border-t-2 border-white/10 bg-[#020617] px-4 py-2.5">
-            <span className="shrink-0 text-[0.7rem] font-extrabold uppercase tracking-wider text-slate-500">Topics</span>
-            {unit.concepts.map((c) => (
-              <button
-                key={c.conceptId}
-                type="button"
-                onClick={() => say(`${c.title}. ${c.summary}`)}
-                className="shrink-0 rounded-xl border-2 border-white/15 bg-white/5 px-3.5 py-1.5 text-[0.82rem] font-bold text-white transition-colors hover:border-[#38bdf8]"
-              >
-                {c.icon} {c.conceptId} {c.title}
-              </button>
-            ))}
-          </div>
         </section>
 
         {/* ---------- Assistant / tasks ---------- */}
         <aside className="flex min-h-0 flex-col gap-3 overflow-y-auto rounded-3xl border-2 border-slate-700 bg-[#1e293b] p-4">
           {phase === 1 && (
             <>
-              <h2 className="border-b-2 border-slate-700 pb-2 text-lg font-bold text-[#f59e0b]">📖 What is happening</h2>
+              <h2 className="border-b-2 border-slate-700 pb-2 text-lg font-bold text-[#f59e0b]">📖 This chapter</h2>
+              {/* A child should know what they are walking into and what they
+                  will be able to do at the end of it - real feedback
+                  2026-09-14: "it lacks some introduction on what we are going
+                  to cover in this chapter and what will be achieved". */}
+              <div className="rounded-2xl border-2 border-slate-700 bg-[#0f172a] p-3">
+                <p className="text-[0.7rem] font-extrabold uppercase tracking-wider text-[#38bdf8]">What we will cover</p>
+                <ul className="mt-1.5 flex flex-col gap-1">
+                  {unit.intro.covers.map((c) => (
+                    <li key={c} className="text-[0.8rem] leading-snug text-slate-300">• {c}</li>
+                  ))}
+                </ul>
+                <p className="mt-3 text-[0.7rem] font-extrabold uppercase tracking-wider text-[#34d399]">By the end you can</p>
+                <ul className="mt-1.5 flex flex-col gap-1">
+                  {unit.intro.outcomes.map((o) => (
+                    <li key={o} className="text-[0.8rem] leading-snug text-slate-300">✓ {o}</li>
+                  ))}
+                </ul>
+                <button
+                  type="button"
+                  onClick={() => say(`In this chapter we will cover: ${unit.intro.covers.join(". ")}. By the end you will be able to ${unit.intro.outcomes.join(", and ")}.`)}
+                  className="mt-3 rounded-xl border-2 border-slate-600 px-3 py-1.5 text-[0.78rem] font-bold text-slate-300 hover:border-[#38bdf8] hover:text-[#38bdf8]"
+                >
+                  🎙️ Read this to me
+                </button>
+              </div>
               <div className="rounded-2xl border-2 border-[#f59e0b] bg-[#f59e0b]/10 px-3.5 py-2.5 text-[0.82rem] font-bold leading-snug text-[#fef08a]">
                 💡 {unit.concepts[0].summary}
               </div>
@@ -418,31 +429,6 @@ export default function DrawingBoard({ unit }: { unit: BoardUnit }) {
                   <li key={k} className="rounded-xl bg-[#0f172a] px-3 py-2 text-[0.8rem] leading-snug text-slate-300">• {k}</li>
                 ))}
               </ul>
-              <h3 className="pt-1 text-sm font-bold text-slate-200">📌 Ask me</h3>
-              <div className="flex flex-col gap-1.5">
-                {unit.readymade.map((r) => (
-                  <button
-                    key={r.q}
-                    type="button"
-                    onClick={() => ask(r.q, r.a)}
-                    className="rounded-xl border-2 border-slate-700 bg-[#0f172a] px-3 py-2 text-left text-[0.82rem] font-semibold text-slate-300 transition-colors hover:border-[#38bdf8] hover:text-[#38bdf8]"
-                  >
-                    {r.q}
-                  </button>
-                ))}
-              </div>
-              <div className="flex max-h-40 flex-col gap-2 overflow-y-auto rounded-2xl border border-slate-700 bg-[#090d16] p-2.5">
-                {chat.map((m, i) => (
-                  <p
-                    key={i}
-                    className={`rounded-xl px-3 py-2 text-[0.8rem] font-semibold ${
-                      m.who === "kid" ? "self-end bg-[#0284c7] text-white" : "self-start border border-slate-700 bg-[#1e293b] text-[#38bdf8]"
-                    }`}
-                  >
-                    {m.text}
-                  </p>
-                ))}
-              </div>
               <button type="button" onClick={() => goPhase(2)} className="mt-auto rounded-xl bg-[#ec4899] px-4 py-2.5 font-bold text-white shadow-[0_4px_0_#be185d] transition-transform hover:-translate-y-0.5">
                 Cover it up and try ➔
               </button>
@@ -491,6 +477,14 @@ export default function DrawingBoard({ unit }: { unit: BoardUnit }) {
               <div className="flex flex-col gap-2">
                 {unit.recitePrompts.map((r) => (
                   <ReciteCard key={r.ask} prompt={r} onSay={say} />
+                ))}
+              </div>
+              <p className="pt-1 text-[0.7rem] font-extrabold uppercase tracking-wider text-slate-500">
+                Write these in your rough book, then check
+              </p>
+              <div className="flex flex-col gap-2">
+                {unit.writtenPractice.map((w, i) => (
+                  <ReciteCard key={w.question} prompt={{ ask: `${i + 1}. ${w.question}`, answer: w.answer }} onSay={say} revealLabel="I've written it - check me" />
                 ))}
               </div>
               <p className="pt-1 text-[0.7rem] font-extrabold uppercase tracking-wider text-slate-500">Then play with it</p>
@@ -581,13 +575,54 @@ export default function DrawingBoard({ unit }: { unit: BoardUnit }) {
               </button>
             </>
           )}
+
+          {/* Ask-me sits under every phase, not just the first - real
+              feedback 2026-09-14: "on the chat side there is no change,
+              probably we should have some questions there". */}
+          <details className="mt-2 rounded-2xl border-2 border-slate-700 bg-[#0f172a]" open={phase === 1}>
+            <summary className="cursor-pointer px-3 py-2 text-[0.8rem] font-bold text-[#38bdf8]">
+              📌 Stuck? Ask me ({unit.readymade.length})
+            </summary>
+            <div className="flex flex-col gap-1.5 px-3 pb-3">
+              {unit.readymade.map((r) => (
+                <button
+                  key={r.q}
+                  type="button"
+                  onClick={() => ask(r.q, r.a)}
+                  className="rounded-xl border-2 border-slate-700 bg-[#1e293b] px-3 py-2 text-left text-[0.8rem] font-semibold text-slate-300 transition-colors hover:border-[#38bdf8] hover:text-[#38bdf8]"
+                >
+                  {r.q}
+                </button>
+              ))}
+              <div className="mt-1 flex max-h-36 flex-col gap-1.5 overflow-y-auto rounded-xl border border-slate-700 bg-[#090d16] p-2">
+                {chat.map((m, i) => (
+                  <p
+                    key={i}
+                    className={`rounded-lg px-2.5 py-1.5 text-[0.78rem] font-semibold ${
+                      m.who === "kid" ? "self-end bg-[#0284c7] text-white" : "self-start border border-slate-700 bg-[#1e293b] text-[#38bdf8]"
+                    }`}
+                  >
+                    {m.text}
+                  </p>
+                ))}
+              </div>
+            </div>
+          </details>
         </aside>
       </div>
     </div>
   );
 }
 
-function ReciteCard({ prompt, onSay }: { prompt: { ask: string; answer: string }; onSay: (t: string) => void }) {
+function ReciteCard({
+  prompt,
+  onSay,
+  revealLabel = "I've said it - show me",
+}: {
+  prompt: { ask: string; answer: string };
+  onSay: (t: string) => void;
+  revealLabel?: string;
+}) {
   const [shown, setShown] = useState(false);
   return (
     <div className="rounded-2xl border-2 border-slate-700 bg-[#0f172a] p-3">
@@ -603,7 +638,7 @@ function ReciteCard({ prompt, onSay }: { prompt: { ask: string; answer: string }
           }}
           className="mt-2 rounded-xl border-2 border-slate-600 px-3 py-1.5 text-[0.78rem] font-bold text-slate-300 hover:border-[#38bdf8] hover:text-[#38bdf8]"
         >
-          I&apos;ve said it - show me
+          {revealLabel}
         </button>
       )}
     </div>

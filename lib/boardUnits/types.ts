@@ -99,17 +99,25 @@ export type RecitePrompt = {
   answer: string;
 };
 
+/** Written practice: work it in a rough book, then check yourself. */
+export type WrittenPractice = { question: string; answer: string };
+
 export type BoardUnit = {
   unitKey: string;
   title: string;
   badge: string;
   /** Grid extent. The reference uses 0-10 on both axes. */
   gridMax: number;
+  /** Shown and read out before anything else: what this chapter covers and
+   *  what the child will be able to do by the end of it. */
+  intro: { covers: string[]; outcomes: string[] };
   concepts: BoardConcept[];
   conceptSteps: ConceptStep[];
   guidedTasks: BoardTask[];
   lab: BoardLab;
   recitePrompts: RecitePrompt[];
+  /** Longer practice to work on paper - deliberately not multiple choice. */
+  writtenPractice: WrittenPractice[];
   assessment: { partA: BoardTask[]; partB: BoardTask[] };
   /** Tappable readymade questions in the assistant panel. */
   readymade: { q: string; a: string }[];
