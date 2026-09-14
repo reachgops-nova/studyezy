@@ -43,7 +43,7 @@ const PAD_B = 44;
 const VB_W = 460;
 const VB_H = 396;
 
-export default function DrawingBoard({ unit }: { unit: BoardUnit }) {
+export default function DrawingBoard({ unit, paperTasks = [] }: { unit: BoardUnit; paperTasks?: BoardTask[] }) {
   const [phase, setPhase] = useState(1);
   const [step, setStep] = useState(0);
   const [frame, setFrame] = useState<BoardFrame>(unit.conceptSteps[0]?.frame ?? {});
@@ -144,7 +144,9 @@ export default function DrawingBoard({ unit }: { unit: BoardUnit }) {
 
   // Score is only ever the graded phase - the practice phases are for trying
   // things, and counting them would punish exploring.
-  const graded = [...unit.assessment.partA, ...unit.assessment.partB];
+  // Paper questions count the same as the board's own - they are this unit's
+  // real progression-test content, not a warm-up.
+  const graded = [...unit.assessment.partA, ...unit.assessment.partB, ...paperTasks];
   const gradedAnswered = graded.filter((t) => answers[t.title]);
   const gradedCorrect = graded.filter((t) => answers[t.title]?.correct);
   const readiness = graded.length ? Math.round((gradedCorrect.length / graded.length) * 100) : 0;
@@ -443,7 +445,7 @@ export default function DrawingBoard({ unit }: { unit: BoardUnit }) {
               {phase === 4 && (
                 <p className="text-[0.8rem] text-slate-400">
                   These count. Part A is straight recall; Part B asks you to use the idea somewhere new.
-                  {" "}{graded.length} questions in all.
+                  {" "}{graded.length} questions in all{paperTasks.length ? `, ${paperTasks.length} of them straight from your question paper` : ""}.
                 </p>
               )}
               {(phase === 2 ? unit.guidedTasks : unit.assessment.partA).map((t) => (
@@ -455,6 +457,16 @@ export default function DrawingBoard({ unit }: { unit: BoardUnit }) {
                   {unit.assessment.partB.map((t) => (
                     <TaskCard key={t.title} task={t} chosen={answers[t.title]} onPick={(i) => answer(t, i)} />
                   ))}
+                  {paperTasks.length > 0 && (
+                    <>
+                      <p className="pt-1 text-[0.7rem] font-extrabold uppercase tracking-wider text-[#38bdf8]">
+                        From your question paper
+                      </p>
+                      {paperTasks.map((t) => (
+                        <TaskCard key={t.title} task={t} chosen={answers[t.title]} onPick={(i) => answer(t, i)} />
+                      ))}
+                    </>
+                  )}
                 </>
               )}
               <button
