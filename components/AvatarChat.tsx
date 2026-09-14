@@ -1637,7 +1637,7 @@ export default function AvatarChat({
           </div>
 
           {/* The example being explained, given the whole width. */}
-          <div className="flex min-h-0 flex-1 items-stretch justify-center overflow-hidden rounded-lg border border-[#9c6f1f]/30 bg-white p-2">
+          <div className="flex min-h-[12rem] flex-1 items-stretch justify-center overflow-hidden rounded-lg border border-[#9c6f1f]/30 bg-white p-2">
             {(sceneBoard[activeBoardIndex] ?? sceneBoard[sceneBoard.length - 1])?.node}
           </div>
 
