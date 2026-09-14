@@ -151,6 +151,13 @@ export type BoardConcept = {
   keyPoints: string[];
   /** Worked examples to try at the end of this concept, before moving on. */
   examples: { question: string; answer: string }[];
+  /**
+   * A quick check at the end of this concept, before the next one starts -
+   * real user direction 2026-09-14: "at end of each concept we should do
+   * quick assessment or worksheet homeworks on what they learnt". Not graded
+   * in the readiness score; that is what the Test is for.
+   */
+  quickCheck?: BoardTask[];
 };
 
 /**
@@ -185,6 +192,13 @@ export type BoardUnit = {
   recitePrompts: RecitePrompt[];
   /** Longer practice to work on paper - deliberately not multiple choice. */
   writtenPractice: WrittenPractice[];
+  /**
+   * A passage the child has NOT seen during teaching, shown on the board
+   * through the Test - real user direction 2026-09-14: "assess them with an
+   * entirely new story for the 13 concepts". Applying an idea to unfamiliar
+   * material is the only way to tell understanding from recall.
+   */
+  assessmentStory?: BoardFrame;
   assessment: { partA: BoardTask[]; partB: BoardTask[] };
   /** Tappable readymade questions in the assistant panel. */
   readymade: { q: string; a: string }[];

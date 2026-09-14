@@ -194,6 +194,10 @@ export default function DrawingBoard({ unit, paperTasks = [] }: { unit: BoardUni
    * receding the cards was meant to remove.
    */
   function handOverToNextTask(justAnswered: string) {
+    if (phase === 1) {
+      setFrame(unit.conceptSteps[step]?.frame ?? {});
+      return;
+    }
     const list = phase === 2 ? unit.guidedTasks : [...unit.assessment.partA, ...unit.assessment.partB, ...paperTasks];
     const next = list.find((t) => t.title !== justAnswered && !answersRef.current[t.title]);
     setFrame(next?.setup ?? {});
@@ -301,7 +305,7 @@ export default function DrawingBoard({ unit, paperTasks = [] }: { unit: BoardUni
     } else if (p === 3) {
       say("Recite. Say the rule back in your own words first, then play with the sliders and watch the shape travel.");
     } else if (p === 4) {
-      setFrame({});
+      setFrame(unit.assessmentStory ?? {});
       say("Test time. Part A is straight recall, Part B asks you to use the idea somewhere new.");
     } else {
       say(
@@ -639,6 +643,16 @@ export default function DrawingBoard({ unit, paperTasks = [] }: { unit: BoardUni
                       <ReciteCard key={e.question} prompt={{ ask: `${i + 1}. ${e.question}`, answer: e.answer }} onSay={say} revealLabel="Check my answer" />
                     ))}
                   </div>
+                  {activeConcept.quickCheck && activeConcept.quickCheck.length > 0 && (
+                    <>
+                      <p className="pt-1 text-[0.7rem] font-extrabold uppercase tracking-wider text-[#f59e0b]">
+                        Quick check before the next part
+                      </p>
+                      {activeConcept.quickCheck.map((t) => (
+                        <TaskCard key={t.title} task={t} chosen={answers[t.title]} onPick={(i) => answer(t, i)} onReplay={() => replayTask(t)} />
+                      ))}
+                    </>
+                  )}
                 </>
               )}
               <ul className="hidden flex-col gap-1.5">
