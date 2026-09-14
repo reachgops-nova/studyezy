@@ -38,6 +38,16 @@ const PHASES = [
 
 // SVG geometry. Grid units in, pixels out - the one place this conversion
 // happens, so a shape can never drift off its own grid.
+/** Reads a value the way a child should hear it: 0.3 as "three tenths". */
+function nameValue(v: number): string {
+  if (Number.isInteger(v)) return v < 0 ? `Minus ${Math.abs(v)}.` : `${v}.`;
+  const whole = Math.trunc(v);
+  const tenths = Math.round(Math.abs(v - whole) * 10);
+  const tenthWord = `${tenths} ${tenths === 1 ? "tenth" : "tenths"}`;
+  if (whole === 0) return `${v} - that is ${tenthWord}.`;
+  return `${v} - that is ${Math.abs(whole)} ${Math.abs(whole) === 1 ? "whole" : "wholes"} and ${tenthWord}.`;
+}
+
 const PAD_L = 44;
 const PAD_B = 44;
 const VB_W = 460;
@@ -51,7 +61,7 @@ export default function DrawingBoard({ unit, paperTasks = [] }: { unit: BoardUni
     `Welcome to ${unit.title}. Press the buttons above the board to walk through it one step at a time.`,
   );
   const [voiceOn, setVoiceOn] = useState(true);
-  const [answers, setAnswers] = useState<Record<string, { correct: boolean; label: string }>>({});
+  const [answers, setAnswers] = useState<Record<string, { correct: boolean; label: string; locked?: boolean }>>({});
   const [dx, setDx] = useState(2);
   const [dy, setDy] = useState(3);
   const [chat, setChat] = useState<{ who: "kid" | "ezy"; text: string }[]>([
@@ -125,6 +135,8 @@ export default function DrawingBoard({ unit, paperTasks = [] }: { unit: BoardUni
     };
   }, []);
 
+  const activeConcept = unit.concepts.find((c) => c.conceptId === unit.conceptSteps[step]?.conceptId);
+
   function loadStep(i: number) {
     const s = unit.conceptSteps[i];
     if (!s) return;
@@ -134,9 +146,32 @@ export default function DrawingBoard({ unit, paperTasks = [] }: { unit: BoardUni
     say(s.say);
   }
 
+  /**
+   * The first answer is the one that counts. A child can keep pressing to see
+   * what each option does - that is how the board teaches - but a question
+   * answered wrongly stays wrong, exactly as it would in a real test. Real
+   * user direction 2026-09-14: "in test mark wrong answer as wrong only
+   * though we explain them... their score for that answer will be zero".
+   */
+  /** Still-to-do questions first; finished ones sink to the bottom. */
+  const byDone = (tasks: BoardTask[]) => [...tasks].sort((a, b) => Number(Boolean(answers[a.title])) - Number(Boolean(answers[b.title])));
+
+  /** Put a finished question's working back on the board on demand. */
+  function replayTask(task: BoardTask) {
+    const chosen = answers[task.title];
+    const opt = task.options.find((o) => o.label === chosen?.label);
+    if (!opt) return;
+    setFrame(opt.frame);
+    say(opt.say);
+  }
+
   function answer(task: BoardTask, optionIndex: number) {
     const opt = task.options[optionIndex];
-    setAnswers((prev) => ({ ...prev, [task.title]: { correct: opt.correct, label: opt.label } }));
+    setAnswers((prev) =>
+      prev[task.title]
+        ? { ...prev, [task.title]: { ...prev[task.title], label: opt.label } }
+        : { ...prev, [task.title]: { correct: opt.correct, label: opt.label, locked: true } },
+    );
     setFrame(opt.frame);
     sfx(opt.correct ? "right" : "wrong");
     say(opt.say);
@@ -322,7 +357,7 @@ export default function DrawingBoard({ unit, paperTasks = [] }: { unit: BoardUni
             )}
 
             {unit.stage === "numberLine" ? (
-              <NumberLineStage frame={frame} />
+              <NumberLineStage frame={frame} onTap={(v) => say(nameValue(v))} />
             ) : (
             <svg
               viewBox={`0 0 ${VB_W} ${VB_H}`}
@@ -356,6 +391,22 @@ export default function DrawingBoard({ unit, paperTasks = [] }: { unit: BoardUni
               <line x1={gx(0)} y1={gy(0)} x2={gx(unit.gridMax) + 12} y2={gy(0)} stroke="#64748b" strokeWidth={3} />
               <line x1={gx(0)} y1={gy(0)} x2={gx(0)} y2={gy(unit.gridMax) - 12} stroke="#64748b" strokeWidth={3} />
 
+              {/* Every whole-number point is touchable and says its
+                  coordinates aloud. */}
+              {Array.from({ length: unit.gridMax + 1 }, (_, ix) =>
+                Array.from({ length: unit.gridMax + 1 }, (_, iy) => (
+                  <rect
+                    key={`h${ix}-${iy}`}
+                    x={gx(ix) - 9}
+                    y={gy(iy) - 9}
+                    width={18}
+                    height={18}
+                    fill="transparent"
+                    className="cursor-pointer"
+                    onClick={() => say(`${ix} across and ${iy} up. We write that as ${ix}, ${iy}.`)}
+                  />
+                )),
+              )}
               {(frame.shapes ?? []).map((s, i) => (
                 <polygon
                   key={`s${i}`}
@@ -430,7 +481,27 @@ export default function DrawingBoard({ unit, paperTasks = [] }: { unit: BoardUni
               <div className="rounded-2xl border-2 border-[#f59e0b] bg-[#f59e0b]/10 px-3.5 py-2.5 text-[0.82rem] font-bold leading-snug text-[#fef08a]">
                 💡 {unit.concepts[0].summary}
               </div>
-              <ul className="flex flex-col gap-1.5">
+              {activeConcept && (
+                <>
+                  <p className="pt-1 text-[0.7rem] font-extrabold uppercase tracking-wider text-[#38bdf8]">
+                    {activeConcept.icon} {activeConcept.conceptId} {activeConcept.title}
+                  </p>
+                  <p className="rounded-xl bg-[#0f172a] px-3 py-2 text-[0.8rem] leading-snug text-slate-300">{activeConcept.summary}</p>
+                  {/* Examples sit at the end of each concept, to try before
+                      moving on - real user direction 2026-09-14: "we have to
+                      have examples at the end of each concept, that will be
+                      practice". */}
+                  <p className="pt-1 text-[0.7rem] font-extrabold uppercase tracking-wider text-[#34d399]">
+                    Try these before moving on
+                  </p>
+                  <div className="flex flex-col gap-2">
+                    {activeConcept.examples.map((e, i) => (
+                      <ReciteCard key={e.question} prompt={{ ask: `${i + 1}. ${e.question}`, answer: e.answer }} onSay={say} revealLabel="Check my answer" />
+                    ))}
+                  </div>
+                </>
+              )}
+              <ul className="hidden flex-col gap-1.5">
                 {unit.concepts[0].keyPoints.map((k) => (
                   <li key={k} className="rounded-xl bg-[#0f172a] px-3 py-2 text-[0.8rem] leading-snug text-slate-300">• {k}</li>
                 ))}
@@ -452,22 +523,27 @@ export default function DrawingBoard({ unit, paperTasks = [] }: { unit: BoardUni
                   {" "}{graded.length} questions in all{paperTasks.length ? `, ${paperTasks.length} of them straight from your question paper` : ""}.
                 </p>
               )}
-              {(phase === 2 ? unit.guidedTasks : unit.assessment.partA).map((t) => (
-                <TaskCard key={t.title} task={t} chosen={answers[t.title]} onPick={(i) => answer(t, i)} />
+              {/* Answered questions sink and dim so the one still to do has
+                  the board to itself - real user direction 2026-09-14: "clear
+                  or mark them light or move them backward for each answer
+                  done... else old answer stays we work on new question that
+                  may confuse". */}
+              {byDone(phase === 2 ? unit.guidedTasks : unit.assessment.partA).map((t) => (
+                <TaskCard key={t.title} task={t} chosen={answers[t.title]} onPick={(i) => answer(t, i)} onReplay={() => replayTask(t)} />
               ))}
               {phase === 4 && (
                 <>
                   <p className="pt-1 text-[0.7rem] font-extrabold uppercase tracking-wider text-[#f59e0b]">Part B · use it somewhere new</p>
-                  {unit.assessment.partB.map((t) => (
-                    <TaskCard key={t.title} task={t} chosen={answers[t.title]} onPick={(i) => answer(t, i)} />
+                  {byDone(unit.assessment.partB).map((t) => (
+                    <TaskCard key={t.title} task={t} chosen={answers[t.title]} onPick={(i) => answer(t, i)} onReplay={() => replayTask(t)} />
                   ))}
                   {paperTasks.length > 0 && (
                     <>
                       <p className="pt-1 text-[0.7rem] font-extrabold uppercase tracking-wider text-[#38bdf8]">
                         From your question paper
                       </p>
-                      {paperTasks.map((t) => (
-                        <TaskCard key={t.title} task={t} chosen={answers[t.title]} onPick={(i) => answer(t, i)} />
+                      {byDone(paperTasks).map((t) => (
+                        <TaskCard key={t.title} task={t} chosen={answers[t.title]} onPick={(i) => answer(t, i)} onReplay={() => replayTask(t)} />
                       ))}
                     </>
                   )}
@@ -635,7 +711,7 @@ export default function DrawingBoard({ unit, paperTasks = [] }: { unit: BoardUni
  * hops drawn as arcs with their size written above, and place-value parts
  * underneath. Values in, pixels out - the same boundary the grid keeps.
  */
-function NumberLineStage({ frame }: { frame: BoardFrame }) {
+function NumberLineStage({ frame, onTap }: { frame: BoardFrame; onTap?: (v: number) => void }) {
   const L = frame.line;
   if (!L) return <p className="text-sm text-slate-500">Press a step to begin.</p>;
 
@@ -665,6 +741,10 @@ function NumberLineStage({ frame }: { frame: BoardFrame }) {
           <g key={v}>
             <line x1={px(v)} y1={midY - (isZero ? 14 : 9)} x2={px(v)} y2={midY + (isZero ? 14 : 9)} stroke={isZero ? "#94a3b8" : "#475569"} strokeWidth={isZero ? 3 : 2} />
             <text x={px(v)} y={midY + 32} fill={isZero ? "#e2e8f0" : "#94a3b8"} fontSize={12} fontWeight="bold" textAnchor="middle">{fmt(v)}</text>
+            {/* Every tick is touchable and says what it is called - real user
+                direction 2026-09-14: "sliding 0.1 to any tenths to understand
+                how they are called". */}
+            <rect x={px(v) - 14} y={midY - 26} width={28} height={64} fill="transparent" className="cursor-pointer" onClick={() => onTap?.(v)} />
           </g>
         );
       })}
@@ -738,20 +818,37 @@ function TaskCard({
   task,
   chosen,
   onPick,
+  onReplay,
 }: {
   task: BoardTask;
-  chosen?: { correct: boolean; label: string };
+  chosen?: { correct: boolean; label: string; locked?: boolean };
   onPick: (index: number) => void;
+  onReplay?: () => void;
 }) {
+  const done = Boolean(chosen);
   return (
-    <div className="flex flex-col gap-2.5 rounded-2xl border-2 border-slate-700 bg-[#0f172a] p-3.5">
+    <div
+      className={`flex flex-col gap-2.5 rounded-2xl border-2 p-3.5 transition-all ${
+        done ? "scale-[0.98] border-slate-800 bg-[#0b1220] opacity-60" : "border-slate-700 bg-[#0f172a]"
+      }`}
+    >
       <div className="flex items-center justify-between gap-2 text-[0.9rem] font-bold text-white">
         <span className="min-w-0">{task.title}</span>
         <span className={`shrink-0 text-[0.75rem] ${chosen ? (chosen.correct ? "text-[#34d399]" : "text-[#f43f5e]") : "text-[#f59e0b]"}`}>
-          {chosen ? (chosen.correct ? "✅ Right" : "❌ Not yet") : "· to do ·"}
+          {chosen ? (chosen.correct ? "✅ Right" : "❌ Marked wrong") : "· to do ·"}
         </span>
       </div>
       <p className="text-[0.82rem] font-semibold leading-snug text-slate-400">{task.prompt}</p>
+      {done ? (
+        <div className="flex items-center justify-between gap-2">
+          <span className="text-[0.78rem] text-slate-400">
+            You answered <strong className="text-slate-200">{chosen?.label}</strong>
+          </span>
+          <button type="button" onClick={onReplay} className="shrink-0 rounded-lg border border-slate-700 px-2 py-1 text-[0.7rem] font-bold text-slate-400 hover:border-[#38bdf8] hover:text-[#38bdf8]">
+            Show on board
+          </button>
+        </div>
+      ) : (
       <div className="grid grid-cols-2 gap-2">
         {task.options.map((o, i) => {
           const isChosen = chosen?.label === o.label;
@@ -773,6 +870,7 @@ function TaskCard({
           );
         })}
       </div>
+      )}
     </div>
   );
 }

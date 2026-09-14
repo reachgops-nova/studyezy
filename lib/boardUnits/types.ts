@@ -61,6 +61,8 @@ export type BoardFrame = {
 export type ConceptStep = {
   /** Button face, e.g. "2. Shift right +3". */
   label: string;
+  /** Which concept this step belongs to, so its examples can follow it. */
+  conceptId?: string;
   /** Spoken, and shown on the subtitle strip. */
   say: string;
   frame: BoardFrame;
@@ -105,6 +107,8 @@ export type BoardConcept = {
   /** Shown in the module popup from the tray. */
   summary: string;
   keyPoints: string[];
+  /** Worked examples to try at the end of this concept, before moving on. */
+  examples: { question: string; answer: string }[];
 };
 
 /**

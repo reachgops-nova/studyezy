@@ -48,6 +48,11 @@ export const CAMBRIDGE_4_MATH_10: BoardUnit = {
         "Translations are described by stating how many units a shape moves horizontally (left or right) and vertically (up or down).",
         "Connecting lines drawn between each original vertex and its matching new vertex will always be parallel and equal in length.",
       ],
+      examples: [
+        { question: "A shape at (2,3) is translated 4 right and 1 up. Where does it land?", answer: "(6,4)" },
+        { question: "Describe the translation from (9,7) to (9,2).", answer: "5 down. The across number never changed." },
+        { question: "A triangle has corners (1,1), (3,1), (2,3). Write its corners after 2 right and 3 up.", answer: "(3,4), (5,4) and (4,6)." },
+      ],
     },
     {
       conceptId: "10.2",
@@ -60,6 +65,11 @@ export const CAMBRIDGE_4_MATH_10: BoardUnit = {
         "You can work out the missing vertex of a shape like a rectangle by matching equal side lengths and parallel edges.",
         "Given a set of vertices, sometimes more than one valid geometric shape can be formed depending on where you plot the final points.",
       ],
+      examples: [
+        { question: "Which point is 5 across and 2 up?", answer: "(5,2)" },
+        { question: "Three corners of a rectangle are (1,1), (6,1), (6,4). Where is the fourth?", answer: "(1,4)" },
+        { question: "Is (3,8) the same place as (8,3)?", answer: "No - across always comes first, so they are two different points." },
+      ],
     },
   ],
 
@@ -68,6 +78,7 @@ export const CAMBRIDGE_4_MATH_10: BoardUnit = {
   conceptSteps: [
     {
       label: "1. Start at (1,2)",
+      conceptId: "10.1",
       say: "Here is our triangle. Its bottom-left corner sits at 1 across and 2 up - we write that as (1,2).",
       frame: {
         shapes: [{ points: [[1, 2], [3, 2], [2, 4]], look: "live" }],
@@ -76,6 +87,7 @@ export const CAMBRIDGE_4_MATH_10: BoardUnit = {
     },
     {
       label: "2. Slide right 3",
+      conceptId: "10.1",
       say: "Now slide it 3 squares to the right. Count with me - one, two, three. The corner moves from 1 across to 4 across.",
       frame: {
         shapes: [
@@ -88,6 +100,7 @@ export const CAMBRIDGE_4_MATH_10: BoardUnit = {
     },
     {
       label: "3. Slide up 2",
+      conceptId: "10.1",
       say: "Then slide it 2 squares up. The corner moves from 2 up to 4 up. Notice the triangle has not turned at all - it only moved.",
       frame: {
         shapes: [
@@ -103,6 +116,7 @@ export const CAMBRIDGE_4_MATH_10: BoardUnit = {
     },
     {
       label: "4. Landed (4,4)",
+      conceptId: "10.1",
       say: "Landed! Three right and two up. Look at the three dashed arrows - every corner travelled the same distance in the same direction. That is what makes it a translation.",
       frame: {
         shapes: [
@@ -119,6 +133,7 @@ export const CAMBRIDGE_4_MATH_10: BoardUnit = {
     },
     {
       label: "5. Reading (x,y)",
+      conceptId: "10.2",
       say: "Now the second half of this chapter - coordinates. This point is at 6 across and 3 up. We always say across first, so we write it as (6,3).",
       frame: {
         dots: [{ at: [6, 3], label: "(6,3)", tone: "blue" }],
@@ -127,6 +142,7 @@ export const CAMBRIDGE_4_MATH_10: BoardUnit = {
     },
     {
       label: "6. Order matters",
+      conceptId: "10.2",
       say: "Swap the numbers and you land somewhere completely different. (6,3) and (3,6) are not the same place at all - across always comes first.",
       frame: {
         dots: [
@@ -137,6 +153,7 @@ export const CAMBRIDGE_4_MATH_10: BoardUnit = {
     },
     {
       label: "7. Missing corner",
+      conceptId: "10.2",
       say: "Here are three corners of a rectangle. Because opposite sides must be equal and parallel, there is only one place the fourth corner can go.",
       frame: {
         shapes: [{ points: [[2, 2], [7, 2], [7, 5]], look: "ghost" }],
@@ -150,6 +167,7 @@ export const CAMBRIDGE_4_MATH_10: BoardUnit = {
     },
     {
       label: "8. Completed",
+      conceptId: "10.2",
       say: "There it is - (2,5). It lines up above (2,2) and across from (7,5), so all four sides stay straight and the opposite sides match.",
       frame: {
         shapes: [{ points: [[2, 2], [7, 2], [7, 5], [2, 5]], look: "correct" }],

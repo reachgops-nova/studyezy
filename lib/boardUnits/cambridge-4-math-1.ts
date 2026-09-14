@@ -47,6 +47,11 @@ export const CAMBRIDGE_4_MATH_1: BoardUnit = {
         "A 1-metre rod split into 10 identical pieces gives pieces of 0.1 metres each.",
         "The number 2.6 represents 2 whole units and 6 additional tenths.",
       ],
+      examples: [
+        { question: "A 2-metre rope is split into 10 equal pieces. How long is each piece?", answer: "0.2 metres. Each tenth of 2 metres is 0.2." },
+        { question: "Write the number that is 4 wholes and 7 tenths.", answer: "4.7" },
+        { question: "How many tenths are in 1.3?", answer: "13 tenths." },
+      ],
     },
     {
       conceptId: "1.2",
@@ -57,6 +62,11 @@ export const CAMBRIDGE_4_MATH_1: BoardUnit = {
       keyPoints: [
         "Decomposing 45.8 gives 40 plus 5 plus 0.8.",
         "Regrouping 3.4 could be shown as 2 wholes and 14 tenths, which still totals 3.4.",
+      ],
+      examples: [
+        { question: "Decompose 38.6 into place values.", answer: "30 + 8 + 0.6" },
+        { question: "Regroup 6.1 so it has only 5 wholes.", answer: "5 wholes and 11 tenths." },
+        { question: "Which is bigger: 2 wholes and 13 tenths, or 3.2?", answer: "They are equal - 2 + 1.3 makes 3.3, which is bigger than 3.2. So 2 wholes and 13 tenths is bigger." },
       ],
     },
     {
@@ -69,22 +79,30 @@ export const CAMBRIDGE_4_MATH_1: BoardUnit = {
         "Counting back in steps of 5 from 6 gives 1, then -4, then -9.",
         "A temperature starting at -2 degrees that rises by 5 degrees crosses 0 and reaches 3 degrees.",
       ],
+      examples: [
+        { question: "Count back in steps of 3 from 4. Write the first five numbers.", answer: "4, 1, -2, -5, -8." },
+        { question: "The temperature is -7 and rises by 4. What is it now?", answer: "-3 degrees." },
+        { question: "Which is colder, -9 or -2?", answer: "-9, because it is further to the left of zero." },
+      ],
     },
   ],
 
   conceptSteps: [
     {
       label: "1. One whole",
+      conceptId: "1.1",
       say: "Here is one whole unit, from 0 to 1. Nothing has been split up yet.",
       frame: { line: { min: 0, max: 1, step: 1, marks: [{ at: 0, label: "0", tone: "blue" }, { at: 1, label: "1 whole", tone: "gold" }] } },
     },
     {
       label: "2. Split into 10",
+      conceptId: "1.1",
       say: "Now split that one whole into 10 equal parts. Each single part is one tenth, and we write it as 0.1.",
       frame: { line: { min: 0, max: 1, step: 0.1, marks: [{ at: 0.1, label: "0.1 - one tenth", tone: "green" }] } },
     },
     {
       label: "3. Reading 2.6",
+      conceptId: "1.1",
       say: "The number 2.6 means 2 whole units and 6 more tenths. Find 2 first, then count on six tenths.",
       frame: {
         line: {
@@ -96,6 +114,7 @@ export const CAMBRIDGE_4_MATH_1: BoardUnit = {
     },
     {
       label: "4. Decompose 45.8",
+      conceptId: "1.2",
       say: "Decomposing means splitting a number into the value each digit is really worth. 45.8 is 40, plus 5, plus 0.8.",
       frame: {
         line: {
@@ -111,6 +130,7 @@ export const CAMBRIDGE_4_MATH_1: BoardUnit = {
     },
     {
       label: "5. Regroup 3.4",
+      conceptId: "1.2",
       say: "Regrouping shuffles those parts around without changing the total. 3.4 is 3 wholes and 4 tenths - but it is also 2 wholes and 14 tenths. Same number, written differently.",
       frame: {
         line: {
@@ -125,6 +145,7 @@ export const CAMBRIDGE_4_MATH_1: BoardUnit = {
     },
     {
       label: "6. Below zero",
+      conceptId: "1.4",
       say: "Negative numbers live to the left of zero. Counting back in steps of 5 from 6 gives 1, then minus 4, then minus 9 - the steps never change size just because we passed zero.",
       frame: {
         line: {
@@ -141,6 +162,7 @@ export const CAMBRIDGE_4_MATH_1: BoardUnit = {
     },
     {
       label: "7. Rising past 0",
+      conceptId: "1.4",
       say: "It works upward too. A temperature of minus 2 degrees that rises by 5 crosses zero and lands on 3.",
       frame: {
         line: {
@@ -152,6 +174,7 @@ export const CAMBRIDGE_4_MATH_1: BoardUnit = {
     },
     {
       label: "8. Sequences",
+      conceptId: "1.5",
       say: "A linear sequence steps by the same amount every time. In 3, 11, 19, 27 the difference is always 8, so the rule is add 8.",
       frame: {
         line: {
