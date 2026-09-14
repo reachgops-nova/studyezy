@@ -72,12 +72,55 @@ export type TextFrame = {
   columns?: { label: string; items: string[]; tone?: "gold" | "green" | "red" | "blue" }[];
 };
 
+type Tone = "gold" | "green" | "red" | "blue";
+
+/**
+ * A labelled figure - apparatus, a circuit, a cell, a map. The artwork is
+ * hand-authored SVG in the data file (repo source, not model output), and
+ * `parts` puts tappable callouts on it that explain themselves.
+ */
+export type DiagramFrame = {
+  title?: string;
+  viewBox: string;
+  svg: string;
+  parts?: { label: string; at: [number, number]; note: string; tone?: Tone }[];
+};
+
+/** Bar models and arrays - multiplication, fractions of an amount. */
+export type BarFrame = {
+  title?: string;
+  /** Proportional bars, e.g. 3/4 of 20. */
+  bars?: { label: string; value: number; tone?: Tone; note?: string }[];
+  max?: number;
+  /** A rows x cols array of counters, with the first n picked out. */
+  array?: { rows: number; cols: number; highlight?: number; tone?: Tone };
+  caption?: string;
+};
+
+/** A bar chart with axes - data handling and statistics. */
+export type ChartFrame = {
+  title?: string;
+  xLabel?: string;
+  yLabel?: string;
+  categories: { label: string; value: number; tone?: Tone; note?: string }[];
+};
+
+/** Dated events along a line - history, or the story of an idea. */
+export type TimelineFrame = {
+  title?: string;
+  events: { when: string; what: string; note?: string; tone?: Tone }[];
+};
+
 export type BoardFrame = {
   shapes?: BoardShape[];
   arrows?: BoardArrow[];
   dots?: BoardDot[];
   line?: NumberLineFrame;
   text?: TextFrame;
+  diagram?: DiagramFrame;
+  bar?: BarFrame;
+  chart?: ChartFrame;
+  timeline?: TimelineFrame;
 };
 
 /** Phase 1: one press of a stepper button. */
@@ -196,7 +239,12 @@ export type BoardUnit = {
   /** Grid extent. The reference uses 0-10 on both axes. */
   gridMax: number;
   /** Which stage this unit draws on. Defaults to the coordinate grid. */
-  stage?: "grid" | "numberLine" | "text";
+  /**
+   * The default stage. Individual frames override it by carrying their own
+   * shape - a frame with `diagram` draws a diagram whatever the unit says -
+   * so one unit can mix stages where the content calls for it.
+   */
+  stage?: "grid" | "numberLine" | "text" | "diagram" | "bar" | "chart" | "timeline" | "map";
   /** Shown and read out before anything else: what this chapter covers and
    *  what the child will be able to do by the end of it. */
   intro: { covers: string[]; outcomes: string[] };

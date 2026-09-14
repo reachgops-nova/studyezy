@@ -4,6 +4,7 @@ import Link from "next/link";
 import React from "react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { BoardFrame, BoardTask, BoardUnit } from "@/lib/boardUnits/types";
+import { sanitizeSvgFragment } from "@/lib/richScene";
 
 /**
  * The Drawing Board: a five-phase lesson surface built to the reference the
@@ -447,7 +448,15 @@ export default function DrawingBoard({ unit, paperTasks = [] }: { unit: BoardUni
           )}
 
           <div className="relative flex min-h-0 flex-1 items-center justify-center p-3">
-            {unit.stage === "text" ? (
+            {frame.diagram ? (
+              <DiagramStage frame={frame} onTap={(t) => say(t)} />
+            ) : frame.bar ? (
+              <BarStage frame={frame} onTap={(t) => say(t)} />
+            ) : frame.chart ? (
+              <ChartStage frame={frame} onTap={(t) => say(t)} />
+            ) : frame.timeline ? (
+              <TimelineStage frame={frame} onTap={(t) => say(t)} />
+            ) : unit.stage === "text" ? (
               <TextStage
                 frame={frame}
                 onTap={(t) => say(t)}
@@ -874,6 +883,141 @@ export default function DrawingBoard({ unit, paperTasks = [] }: { unit: BoardUni
  * hops drawn as arcs with their size written above, and place-value parts
  * underneath. Values in, pixels out - the same boundary the grid keeps.
  */
+/** A labelled figure. Artwork is repo source, still sanitised on the way in. */
+function DiagramStage({ frame, onTap }: { frame: BoardFrame; onTap?: (t: string) => void }) {
+  const D = frame.diagram;
+  if (!D) return null;
+  const [, , vw, vh] = D.viewBox.split(/\s+/).map(Number);
+  return (
+    <div className="flex h-full w-full select-none flex-col items-center gap-2 overflow-y-auto p-3">
+      {D.title && <h3 className="text-center text-xl font-bold text-[#f59e0b]">{D.title}</h3>}
+      <svg viewBox={D.viewBox} className="h-full max-h-[24rem] w-full max-w-[44rem] rounded-2xl border-[3px] border-slate-700 bg-[#0b1329]">
+        <g dangerouslySetInnerHTML={{ __html: sanitizeSvgFragment(D.svg) }} />
+        {(D.parts ?? []).map((p, i) => (
+          <g key={i} className="cursor-pointer" onClick={() => onTap?.(`${p.label}. ${p.note}`)}>
+            <circle cx={p.at[0]} cy={p.at[1]} r={Math.max(6, vw / 70)} fill={TONE[p.tone ?? "gold"]} stroke="#0b1329" strokeWidth={2} />
+            <text
+              x={p.at[0] + vw / 55}
+              y={p.at[1] - vh / 45}
+              fill={TONE[p.tone ?? "gold"]}
+              fontSize={Math.max(11, vw / 42)}
+              fontWeight="bold"
+            >
+              {p.label}
+            </text>
+          </g>
+        ))}
+      </svg>
+      <p className="text-[0.78rem] text-slate-500">Tap a label to hear what that part does.</p>
+    </div>
+  );
+}
+
+/** Bar models and arrays. */
+function BarStage({ frame, onTap }: { frame: BoardFrame; onTap?: (t: string) => void }) {
+  const B = frame.bar;
+  if (!B) return null;
+  const max = B.max ?? Math.max(1, ...(B.bars ?? []).map((b) => b.value));
+  return (
+    <div className="flex h-full w-full select-none flex-col justify-center gap-4 overflow-y-auto p-5">
+      {B.title && <h3 className="text-center text-xl font-bold text-[#f59e0b]">{B.title}</h3>}
+      {(B.bars ?? []).map((b, i) => (
+        <button key={i} type="button" onClick={() => onTap?.(b.note ?? `${b.label}, ${b.value}`)} className="w-full text-left">
+          <div className="mb-1 flex justify-between text-[0.82rem] font-bold text-slate-300">
+            <span>{b.label}</span>
+            <span className="tabular-nums" style={{ color: TONE[b.tone ?? "blue"] }}>{b.value}</span>
+          </div>
+          <div className="h-8 w-full overflow-hidden rounded-lg bg-[#0f172a] ring-1 ring-slate-700">
+            <div className="h-full rounded-lg transition-all" style={{ width: `${(b.value / max) * 100}%`, backgroundColor: TONE[b.tone ?? "blue"] }} />
+          </div>
+        </button>
+      ))}
+      {B.array && (
+        <div className="mx-auto flex flex-col gap-1.5">
+          {Array.from({ length: B.array.rows }, (_, r) => (
+            <div key={r} className="flex gap-1.5">
+              {Array.from({ length: B.array!.cols }, (_, c) => {
+                const n = r * B.array!.cols + c;
+                const on = B.array!.highlight === undefined || n < B.array!.highlight;
+                return <span key={c} className="h-6 w-6 rounded-full" style={{ backgroundColor: on ? TONE[B.array!.tone ?? "blue"] : "#1e293b" }} />;
+              })}
+            </div>
+          ))}
+        </div>
+      )}
+      {B.caption && <p className="text-center text-[0.9rem] font-bold text-slate-300">{B.caption}</p>}
+    </div>
+  );
+}
+
+/** A bar chart with axes. */
+function ChartStage({ frame, onTap }: { frame: BoardFrame; onTap?: (t: string) => void }) {
+  const C = frame.chart;
+  if (!C) return null;
+  const W = 620, H = 340, padL = 52, padB = 52;
+  const max = Math.max(1, ...C.categories.map((c) => c.value));
+  const step = (W - padL - 24) / C.categories.length;
+  const ticks = Array.from({ length: max + 1 }, (_, i) => i).filter((i) => max <= 10 || i % Math.ceil(max / 5) === 0);
+  return (
+    <div className="flex h-full w-full select-none flex-col items-center gap-2 p-3">
+      {C.title && <h3 className="text-center text-xl font-bold text-[#f59e0b]">{C.title}</h3>}
+      <svg viewBox={`0 0 ${W} ${H}`} className="h-full max-h-[24rem] w-full max-w-[42rem] rounded-2xl border-[3px] border-slate-700 bg-[#0b1329]">
+        {ticks.map((t) => {
+          const y = H - padB - (t / max) * (H - padB - 26);
+          return (
+            <g key={t}>
+              <line x1={padL} y1={y} x2={W - 16} y2={y} stroke="#1e293b" strokeWidth={1} />
+              <text x={padL - 8} y={y + 4} fill="#94a3b8" fontSize={11} fontWeight="bold" textAnchor="end">{t}</text>
+            </g>
+          );
+        })}
+        <line x1={padL} y1={H - padB} x2={W - 16} y2={H - padB} stroke="#64748b" strokeWidth={2.5} />
+        <line x1={padL} y1={26} x2={padL} y2={H - padB} stroke="#64748b" strokeWidth={2.5} />
+        {C.categories.map((c, i) => {
+          const h = (c.value / max) * (H - padB - 26);
+          const x = padL + i * step + step * 0.18;
+          const w = step * 0.64;
+          return (
+            <g key={i} className="cursor-pointer" onClick={() => onTap?.(c.note ?? `${c.label}, ${c.value}`)}>
+              <rect x={x} y={H - padB - h} width={w} height={h} rx={5} fill={TONE[c.tone ?? "blue"]} />
+              <text x={x + w / 2} y={H - padB - h - 7} fill={TONE[c.tone ?? "blue"]} fontSize={12} fontWeight="bold" textAnchor="middle">{c.value}</text>
+              <text x={x + w / 2} y={H - padB + 18} fill="#cbd5e1" fontSize={11} fontWeight="bold" textAnchor="middle">{c.label}</text>
+            </g>
+          );
+        })}
+        {C.yLabel && <text x={14} y={20} fill="#94a3b8" fontSize={11} fontWeight="bold">{C.yLabel}</text>}
+        {C.xLabel && <text x={W - 16} y={H - 10} fill="#94a3b8" fontSize={11} fontWeight="bold" textAnchor="end">{C.xLabel}</text>}
+      </svg>
+    </div>
+  );
+}
+
+/** Dated events along a line. */
+function TimelineStage({ frame, onTap }: { frame: BoardFrame; onTap?: (t: string) => void }) {
+  const T = frame.timeline;
+  if (!T) return null;
+  return (
+    <div className="flex h-full w-full select-none flex-col gap-3 overflow-y-auto p-5">
+      {T.title && <h3 className="text-center text-xl font-bold text-[#f59e0b]">{T.title}</h3>}
+      <ol className="relative ml-3 border-l-[3px] border-[#38bdf8]/50 pl-5">
+        {T.events.map((e, i) => (
+          <li key={i} className="mb-4">
+            <button type="button" onClick={() => onTap?.(e.note ?? `${e.when}. ${e.what}`)} className="text-left">
+              <span
+                className="absolute -left-[11px] mt-1 h-5 w-5 rounded-full border-[3px] border-[#0f172a]"
+                style={{ backgroundColor: TONE[e.tone ?? "blue"] }}
+              />
+              <span className="block text-[0.8rem] font-extrabold uppercase tracking-wider" style={{ color: TONE[e.tone ?? "blue"] }}>{e.when}</span>
+              <span className="block text-[0.95rem] font-bold text-white">{e.what}</span>
+              {e.note && <span className="block text-[0.82rem] leading-snug text-slate-400">{e.note}</span>}
+            </button>
+          </li>
+        ))}
+      </ol>
+    </div>
+  );
+}
+
 const TONE: Record<string, string> = { gold: "#f59e0b", green: "#34d399", red: "#f43f5e", blue: "#38bdf8" };
 
 /**
