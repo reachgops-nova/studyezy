@@ -391,8 +391,9 @@ export const CAMBRIDGE_5_ENGLISH_1: BoardUnit = {
       frame: {
         text: {
           title: "Features of a Fable· Pages 5 and 6",
-          chips: [
-            { text: "In the Malawian fable 'Why Cockerels Crow', Cockerel has a red spiky comb that looks like flames. Hyena believes it is real fire. This sets up a...", tone: "blue", note: "In the Malawian fable 'Why Cockerels Crow', Cockerel has a red spiky comb that looks like flames. Hyena believes it is real fire. This sets up a humorous conflict about deception and trust. Moral: Do not take advantage of a friend's helpfulness, and do not let greed blind you to the truth." }
+          cards: [
+            { tag: "Moral / Lesson", title: "True Friendship", desc: "Deception and arrogance destroy trust. False claims eventually get exposed.", quote: "Why Cockerels Crow (Malawi)" },
+            { tag: "Moral / Lesson", title: "Cooperation", desc: "Working as a team and sharing what you have helps everyone succeed.", quote: "The Broath with the Rocks (Scotland)" },
           ],
         },
       },
@@ -404,8 +405,9 @@ export const CAMBRIDGE_5_ENGLISH_1: BoardUnit = {
       frame: {
         text: {
           title: "Implicit Meaning (Jo's Face)· Page 5",
-          chips: [
-            { text: "\"Jo winked at Charlie and grinned as she placed the chewing gum on the teacher's chair.\" Explicit clue: winked and grinned. Implicit meaning: Jo is...", tone: "blue", note: "\"Jo winked at Charlie and grinned as she placed the chewing gum on the teacher's chair.\" Explicit clue: winked and grinned. Implicit meaning: Jo is playing a cheeky, mischievous joke on the teacher, and Charlie is in on the secret." }
+          cards: [
+            { tag: "Implicit Meaning", title: "Hidden traits - shown, not told", desc: "Cockerel sat in the shade with his feet up while Hyena worked. That shows he is lazy and arrogant without ever saying so.", quote: "'Cockerel was sitting with his feet up on an old table under the trees.'" },
+            { tag: "Character Motive", title: "Monkey's trickery", desc: "Monkey winked and tied Lioness's tail to a tree - the wink shows he is a clever trickster.", quote: "Why Monkeys Live in Trees (South Africa)" },
           ],
         },
       },
@@ -417,9 +419,8 @@ export const CAMBRIDGE_5_ENGLISH_1: BoardUnit = {
       frame: {
         text: {
           title: "Explicit Meaning· Page 5",
-          chips: [
-            { text: "\"Cockerel had a red, spiky comb on his head\" is explicit - it states a fact directly, nothing to infer.", tone: "blue", note: "\"Cockerel had a red, spiky comb on his head\" is explicit - it states a fact directly, nothing to infer." },
-            { text: "\"Hyena's paws trembled as he reached for the comb\" doesn't say 'Hyena was scared' explicitly - that's implicit, since you infer the fear from the...", tone: "blue", note: "\"Hyena's paws trembled as he reached for the comb\" doesn't say 'Hyena was scared' explicitly - that's implicit, since you infer the fear from the trembling." }
+          cards: [
+            { tag: "Explicit Meaning", title: "Direct facts - told outright", desc: "The text states it plainly. Nothing to infer, nothing to work out.", quote: "'Hyena brought back some water and Cockerel drank it.'" },
           ],
         },
       },
@@ -487,9 +488,13 @@ export const CAMBRIDGE_5_ENGLISH_1: BoardUnit = {
       frame: {
         text: {
           title: "Idiomatic phrases· Page 17",
-          chips: [
-            { text: "'Break a leg!' doesn't mean an actual injury - it's an idiom meaning 'good luck', often said before a performance.", tone: "blue", note: "'Break a leg!' doesn't mean an actual injury - it's an idiom meaning 'good luck', often said before a performance." },
-            { text: "'She let the cat out of the bag' doesn't involve a real cat - it means she accidentally revealed a secret.", tone: "blue", note: "'She let the cat out of the bag' doesn't involve a real cat - it means she accidentally revealed a secret." }
+          cards: [
+            { tag: "Idiom", title: "was on the fence", desc: "Hyena was hesitant and undecided about taking a flame from Cockerel.", quote: "'Hyena was on the fence: if he could get a flame from Cockerel...'" },
+            { tag: "Idiom", title: "under the weather", desc: "Feeling unwell - used by Lioness to trick Monkey into visiting.", quote: "'Tell Monkey that I am feeling really under the weather...'" },
+            { tag: "Idiom", title: "in a flash", desc: "Happening very quickly and suddenly.", quote: "'In a flash, Lioness roared loudly and sprang out of bed!'" },
+            { tag: "Idiom", title: "heart of gold", desc: "King Elephant was extremely kind, gentle and generous.", quote: "'King Elephant was gentle and had a heart of gold.'" },
+            { tag: "Idiom", title: "a piece of cake", desc: "Something was very easy to do.", quote: "'Teasing King Elephant was such a piece of cake!'" },
+            { tag: "Idiom", title: "in hot water", desc: "In deep trouble.", quote: "'He is in hot water now, someone murmured.'" },
           ],
         },
       },
@@ -501,9 +506,10 @@ export const CAMBRIDGE_5_ENGLISH_1: BoardUnit = {
       frame: {
         text: {
           title: "Sentence types: simple, compound, complex + connectives· Page 16",
-          chips: [
-            { text: "Simple: 'The kangaroo jumped.' Compound: 'The kangaroo jumped, but it missed the branch.' Complex: 'Although it was tired, the kangaroo kept jumping.'", tone: "blue", note: "Simple: 'The kangaroo jumped.' Compound: 'The kangaroo jumped, but it missed the branch.' Complex: 'Although it was tired, the kangaroo kept jumping.'" },
-            { text: "'Because the fire had gone out, they couldn't cook dinner' is complex - the comma comes after the dependent clause ('Because the fire had gone out')...", tone: "blue", note: "'Because the fire had gone out, they couldn't cook dinner' is complex - the comma comes after the dependent clause ('Because the fire had gone out') since it comes first in the sentence." }
+          cards: [
+            { tag: "Simple Sentence", title: "One independent clause", desc: "One subject, one verb, one complete thought.", quote: "'The magpies sang their song.'" },
+            { tag: "Compound Sentence", title: "Two clauses + connective", desc: "Two equal clauses joined by and, but or so.", quote: "'The magpies loved the warmth, BUT the wombats missed their burrows.'" },
+            { tag: "Complex Sentence", title: "Main + dependent clause", desc: "A main clause joined to one that cannot stand alone, using because, although or while.", quote: "'BECAUSE the magpies had never been able to jump before, they hopped about in joy.'" },
           ],
         },
       },
@@ -515,9 +521,8 @@ export const CAMBRIDGE_5_ENGLISH_1: BoardUnit = {
       frame: {
         text: {
           title: "Story structure (the narrative 'mountain')· Page 19",
-          chips: [
-            { text: "In a fable about a clever ant who tricks a lion, the build up shows the lion boasting, the challenge is the ant deciding to teach him a lesson, the...", tone: "blue", note: "In a fable about a clever ant who tricks a lion, the build up shows the lion boasting, the challenge is the ant deciding to teach him a lesson, the problem is the trick going wrong, and the ending shows what the lion learned." },
-            { text: "If a story jumps straight from 'the beginning' to 'the ending' with no build up or problem in between, it will feel flat - readers expect that rise...", tone: "blue", note: "If a story jumps straight from 'the beginning' to 'the ending' with no build up or problem in between, it will feel flat - readers expect that rise and fall in tension." }
+          cards: [
+            { tag: "Story Pace", title: "Building tension", desc: "Short clauses speed the pace up as the excitement builds when the sky rises.", quote: "The First Sunrise (Australia)" },
           ],
         },
       },
@@ -529,9 +534,10 @@ export const CAMBRIDGE_5_ENGLISH_1: BoardUnit = {
       frame: {
         text: {
           title: "Mood created through setting and word choice· Page 20",
-          chips: [
-            { text: "'The old house creaked and groaned in the wind, its broken windows staring out like empty eyes' creates a scary mood through word choice, not just by...", tone: "blue", note: "'The old house creaked and groaned in the wind, its broken windows staring out like empty eyes' creates a scary mood through word choice, not just by saying 'it was scary.'" },
-            { text: "The same walk through a forest could feel peaceful ('sunlight dappled gently through the leaves') or frightening ('shadows twisted between the trees,...", tone: "blue", note: "The same walk through a forest could feel peaceful ('sunlight dappled gently through the leaves') or frightening ('shadows twisted between the trees, and every snap of a twig echoed'), purely through setting and word choice." }
+          cards: [
+            { tag: "Setting Mood", title: "Dreich and rainy", desc: "A gloomy, cold outside makes the warm house inside feel all the cosier.", quote: "'It's awful dreich tonight, said the old man.'" },
+            { tag: "Sensory Details", title: "Taste and sound", desc: "Drips from a hat making a puddle, a crackling fire, the soft plop of wooden spoons.", quote: "'The only sound was the gentle crackling of the logs...'" },
+            { tag: "Setting Detail", title: "Heat and cold", desc: "A boiling hot day when Lioness stalked her prey, against a cold windy night.", quote: "'It was a boiling hot day and the fleas in her fur were working overtime!'" },
           ],
         },
       },

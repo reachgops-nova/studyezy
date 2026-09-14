@@ -920,6 +920,30 @@ function TextStage({
         </p>
       )}
 
+      {T.cards && (
+        <div className="mx-auto grid w-full max-w-4xl gap-3 sm:grid-cols-2">
+          {T.cards.map((c, i) => (
+            <button
+              key={i}
+              type="button"
+              onClick={() => onTap?.(`${c.title}. ${c.desc}${c.quote ? ` The book says: ${c.quote}` : ""}`)}
+              className="flex flex-col items-start gap-1.5 rounded-2xl border-2 border-slate-700 bg-[#0f172a] p-3.5 text-left transition-colors hover:border-[#38bdf8]"
+            >
+              <span className="rounded-full bg-[#f59e0b]/15 px-2.5 py-0.5 text-[0.65rem] font-extrabold uppercase tracking-wider text-[#f59e0b]">
+                {c.tag}
+              </span>
+              <span className="text-[0.95rem] font-bold text-white">{c.title}</span>
+              <span className="text-[0.82rem] leading-snug text-slate-400">{c.desc}</span>
+              {c.quote && (
+                <span className="mt-1 border-l-[3px] border-[#38bdf8] pl-2.5 text-[0.82rem] italic leading-snug text-[#7dd3fc]">
+                  {c.quote}
+                </span>
+              )}
+            </button>
+          ))}
+        </div>
+      )}
+
       {T.chips && (
         <div className="flex flex-wrap justify-center gap-2">
           {T.chips.map((c, i) => (

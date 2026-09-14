@@ -62,6 +62,12 @@ export type TextFrame = {
   passage?: { text: string; tone?: "gold" | "green" | "red" | "blue"; note?: string }[];
   /** Words or events in a row - tappable, and draggable into columns. */
   chips?: { text: string; tone?: "gold" | "green" | "red" | "blue"; note?: string }[];
+  /**
+   * Concept cards, each carrying the real quote it came from. A child reads
+   * the idea and the line from the book side by side, which is what makes
+   * cross-checking possible when they meet a fable they have never seen.
+   */
+  cards?: { tag: string; title: string; desc: string; quote?: string }[];
   /** Labelled buckets to sort into, e.g. Fact / Opinion, Formal / Informal. */
   columns?: { label: string; items: string[]; tone?: "gold" | "green" | "red" | "blue" }[];
 };
