@@ -321,6 +321,9 @@ export default function DrawingBoard({ unit, paperTasks = [] }: { unit: BoardUni
               </div>
             )}
 
+            {unit.stage === "numberLine" ? (
+              <NumberLineStage frame={frame} />
+            ) : (
             <svg
               viewBox={`0 0 ${VB_W} ${VB_H}`}
               className="h-full max-h-[26rem] w-full max-w-[36rem] rounded-2xl border-[3px] border-slate-700 bg-[#0b1329]"
@@ -383,6 +386,7 @@ export default function DrawingBoard({ unit, paperTasks = [] }: { unit: BoardUni
                 </g>
               ))}
             </svg>
+            )}
           </div>
 
           {/* Narration */}
@@ -623,6 +627,79 @@ export default function DrawingBoard({ unit, paperTasks = [] }: { unit: BoardUni
         </aside>
       </div>
     </div>
+  );
+}
+
+/**
+ * Draws a number line frame: the line and its ticks, marks sitting on it,
+ * hops drawn as arcs with their size written above, and place-value parts
+ * underneath. Values in, pixels out - the same boundary the grid keeps.
+ */
+function NumberLineStage({ frame }: { frame: BoardFrame }) {
+  const L = frame.line;
+  if (!L) return <p className="text-sm text-slate-500">Press a step to begin.</p>;
+
+  const W = 640;
+  const H = 300;
+  const padX = 46;
+  const midY = 150;
+  const span = L.max - L.min || 1;
+  const px = (v: number) => padX + ((v - L.min) / span) * (W - padX * 2);
+  const ticks: number[] = [];
+  for (let v = L.min; v <= L.max + 1e-9; v += L.step) ticks.push(Number(v.toFixed(6)));
+  const tone: Record<string, string> = { gold: "#f59e0b", green: "#34d399", red: "#f43f5e", blue: "#38bdf8" };
+  const fmt = (v: number) => (Number.isInteger(v) ? String(v) : String(Number(v.toFixed(4))));
+
+  return (
+    <svg viewBox={`0 0 ${W} ${H}`} className="h-full max-h-[26rem] w-full max-w-[42rem] rounded-2xl border-[3px] border-slate-700 bg-[#0b1329]" role="img" aria-label="Number line">
+      <defs>
+        <marker id="nl-arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse">
+          <path d="M0 0 L10 5 L0 10 z" fill="#f59e0b" />
+        </marker>
+      </defs>
+
+      <line x1={padX - 20} y1={midY} x2={W - padX + 20} y2={midY} stroke="#64748b" strokeWidth={3} />
+      {ticks.map((v) => {
+        const isZero = Math.abs(v) < 1e-9;
+        return (
+          <g key={v}>
+            <line x1={px(v)} y1={midY - (isZero ? 14 : 9)} x2={px(v)} y2={midY + (isZero ? 14 : 9)} stroke={isZero ? "#94a3b8" : "#475569"} strokeWidth={isZero ? 3 : 2} />
+            <text x={px(v)} y={midY + 32} fill={isZero ? "#e2e8f0" : "#94a3b8"} fontSize={12} fontWeight="bold" textAnchor="middle">{fmt(v)}</text>
+          </g>
+        );
+      })}
+
+      {(L.jumps ?? []).map((j, i) => {
+        const x1 = px(j.from);
+        const x2 = px(j.to);
+        const top = midY - 52;
+        return (
+          <g key={`j${i}`}>
+            <path d={`M ${x1} ${midY - 12} Q ${(x1 + x2) / 2} ${top} ${x2} ${midY - 12}`} fill="none" stroke="#f59e0b" strokeWidth={2.5} strokeDasharray="6,4" markerEnd="url(#nl-arrow)" />
+            {j.label && <text x={(x1 + x2) / 2} y={top - 4} fill="#f59e0b" fontSize={13} fontWeight="bold" textAnchor="middle">{j.label}</text>}
+          </g>
+        );
+      })}
+
+      {(L.marks ?? []).map((m, i) => (
+        <g key={`m${i}`}>
+          <circle cx={px(m.at)} cy={midY} r={7} fill={tone[m.tone ?? "gold"]} />
+          {m.label && <text x={px(m.at)} y={midY - 18} fill={tone[m.tone ?? "gold"]} fontSize={13} fontWeight="bold" textAnchor="middle">{m.label}</text>}
+        </g>
+      ))}
+
+      {(L.parts ?? []).map((p, i, arr) => {
+        const boxW = Math.min(130, (W - padX * 2) / arr.length - 10);
+        const x = padX + i * (boxW + 10);
+        return (
+          <g key={`p${i}`}>
+            <rect x={x} y={midY + 56} width={boxW} height={54} rx={10} fill="#1e293b" stroke={tone[p.tone ?? "blue"]} strokeWidth={2} />
+            <text x={x + boxW / 2} y={midY + 78} fill="#94a3b8" fontSize={11} fontWeight="bold" textAnchor="middle">{p.label}</text>
+            <text x={x + boxW / 2} y={midY + 99} fill={tone[p.tone ?? "blue"]} fontSize={17} fontWeight="bold" textAnchor="middle">{p.value}</text>
+          </g>
+        );
+      })}
+    </svg>
   );
 }
 

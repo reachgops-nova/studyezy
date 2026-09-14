@@ -32,10 +32,29 @@ export type BoardArrow = { from: [number, number]; to: [number, number] };
 /** A labelled dot, for calling out a specific vertex or coordinate. */
 export type BoardDot = { at: [number, number]; label?: string; tone?: "gold" | "green" | "red" | "blue" };
 
+/**
+ * A number line, for units that teach number rather than position. Unit 1 is
+ * decimals, decomposing and negatives - a coordinate grid says nothing about
+ * any of them, so the board needs a second stage rather than a grid pressed
+ * into a shape it does not fit.
+ */
+export type NumberLineFrame = {
+  min: number;
+  max: number;
+  /** Distance between labelled ticks, e.g. 1 for whole numbers, 0.1 for tenths. */
+  step: number;
+  marks?: { at: number; label?: string; tone?: "gold" | "green" | "red" | "blue" }[];
+  /** A hop along the line, drawn as an arc with its size written above it. */
+  jumps?: { from: number; to: number; label?: string }[];
+  /** Place-value columns shown under the line, e.g. 40 + 5 + 0.8. */
+  parts?: { label: string; value: string; tone?: "gold" | "green" | "red" | "blue" }[];
+};
+
 export type BoardFrame = {
   shapes?: BoardShape[];
   arrows?: BoardArrow[];
   dots?: BoardDot[];
+  line?: NumberLineFrame;
 };
 
 /** Phase 1: one press of a stepper button. */
@@ -108,6 +127,8 @@ export type BoardUnit = {
   badge: string;
   /** Grid extent. The reference uses 0-10 on both axes. */
   gridMax: number;
+  /** Which stage this unit draws on. Defaults to the coordinate grid. */
+  stage?: "grid" | "numberLine";
   /** Shown and read out before anything else: what this chapter covers and
    *  what the child will be able to do by the end of it. */
   intro: { covers: string[]; outcomes: string[] };

@@ -1,4 +1,5 @@
 import type { BoardUnit } from "./types";
+import { CAMBRIDGE_4_MATH_1 } from "./cambridge-4-math-1";
 import { CAMBRIDGE_4_MATH_10 } from "./cambridge-4-math-10";
 
 /**
@@ -7,5 +8,6 @@ import { CAMBRIDGE_4_MATH_10 } from "./cambridge-4-math-10";
  * is drawn where it is.
  */
 export const BOARD_UNITS: Record<string, BoardUnit> = {
+  [CAMBRIDGE_4_MATH_1.unitKey]: CAMBRIDGE_4_MATH_1,
   [CAMBRIDGE_4_MATH_10.unitKey]: CAMBRIDGE_4_MATH_10,
 };
