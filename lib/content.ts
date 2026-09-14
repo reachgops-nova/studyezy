@@ -205,3 +205,52 @@ export async function getUploadedPageStorageKeys(
   const seen = new Set<string>();
   return entries.filter((e) => (seen.has(e.storageKey) ? false : (seen.add(e.storageKey), true)));
 }
+
+/**
+ * A few sample pages for a whole book, for the "is this the right textbook?"
+ * check on /select.
+ *
+ * Deliberately sampled ACROSS the subject's units rather than taking the
+ * first - real user direction 2026-09-14: "just random 2-3 unit images will
+ * be good, just to rule out there is no first unit common or some relevant
+ * topic is common". Two books in a series often open the same way, so a
+ * first page proves very little; pages from the middle and the end tell a
+ * family whether this is genuinely their book.
+ */
+export async function getSubjectSamplePages(
+  curriculumSlug: string,
+  stageNumber: number,
+  subjectSlug: string,
+  limit = 3,
+): Promise<string[]> {
+  const units = await db.unit.findMany({
+    where: {
+      subject: { slug: subjectSlug, stage: { number: stageNumber, curriculum: { slug: curriculumSlug } } },
+    },
+    orderBy: { number: "asc" },
+    select: { id: true },
+  });
+  if (units.length === 0) return [];
+
+  // Spread the picks over the book: roughly a third of the way in, the
+  // middle, and near the end, rather than three pages of chapter one.
+  const picks = Array.from({ length: Math.min(limit, units.length) }, (_, i) =>
+    units[Math.floor(((i + 1) / (Math.min(limit, units.length) + 1)) * units.length)] ?? units[i],
+  );
+
+  const rows = await db.uploadedPage.findMany({
+    where: { unitId: { in: picks.map((u) => u.id) }, purpose: "textbook_source" },
+    orderBy: { createdAt: "asc" },
+    select: { unitId: true, storageKey: true, mimeType: true },
+  });
+
+  const seen = new Set<string>();
+  const out: string[] = [];
+  for (const row of rows) {
+    if (!row.mimeType.startsWith("image/") || seen.has(row.unitId)) continue;
+    seen.add(row.unitId);
+    out.push(`/api/uploads/${row.storageKey}`);
+    if (out.length >= limit) break;
+  }
+  return out;
+}

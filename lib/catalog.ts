@@ -18,6 +18,8 @@ export interface CatalogSubject {
   id: string;
   name: string;
   available: boolean;
+  /** A few real pages from across this book, for the "is this your book?" check. */
+  samplePages: string[];
   units: CatalogUnit[];
 }
 
@@ -71,6 +73,29 @@ export async function getCatalog(profileId?: string): Promise<CatalogCurriculum[
       )
     : null;
 
+  // A couple of real pages per book, sampled across its units, so a family can
+  // check they are looking at the right textbook before committing to it.
+  const allSubjectIds = curricula.flatMap((c) => c.stages.flatMap((s) => s.subjects.map((sub) => sub.id)));
+  const sampleRows = allSubjectIds.length
+    ? await db.uploadedPage.findMany({
+        where: { purpose: "textbook_source", unit: { subjectId: { in: allSubjectIds } } },
+        orderBy: { createdAt: "asc" },
+        select: { storageKey: true, mimeType: true, unit: { select: { subjectId: true, number: true } } },
+      })
+    : [];
+  const samplesBySubject = new Map<string, string[]>();
+  const seenUnit = new Map<string, Set<number>>();
+  for (const row of sampleRows) {
+    if (!row.mimeType.startsWith("image/")) continue;
+    const sid = row.unit.subjectId;
+    const units = seenUnit.get(sid) ?? new Set<number>();
+    // One page per unit, three per book - spread, not three of chapter one.
+    if (units.has(row.unit.number) || (samplesBySubject.get(sid)?.length ?? 0) >= 3) continue;
+    units.add(row.unit.number);
+    seenUnit.set(sid, units);
+    samplesBySubject.set(sid, [...(samplesBySubject.get(sid) ?? []), `/api/uploads/${row.storageKey}`]);
+  }
+
   return curricula.map((c) => ({
     id: c.slug,
     name: c.name,
@@ -82,6 +107,7 @@ export async function getCatalog(profileId?: string): Promise<CatalogCurriculum[
         id: subj.slug,
         name: subj.name,
         available: subj.available,
+        samplePages: samplesBySubject.get(subj.id) ?? [],
         units: subj.units.map((u) => ({
           id: u.number,
           title: u.title,

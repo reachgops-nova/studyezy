@@ -165,6 +165,25 @@ export default function CurriculumSelector({
         </Step>
       )}
 
+      {subject && subject.samplePages.length > 0 && (
+        <Step label="Is this your book?">
+          <div className="flex flex-wrap gap-3">
+            {subject.samplePages.map((src) => (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                key={src}
+                src={src}
+                alt={`A sample page from ${subject.name}`}
+                className="h-40 w-auto rounded-xl border border-slate-200 bg-white object-contain shadow-soft"
+              />
+            ))}
+          </div>
+          <p className="mt-2 text-xs text-slate-500">
+            Pages from different parts of the book - if these look like your child&apos;s book, you are in the right place.
+          </p>
+        </Step>
+      )}
+
       {subject && (
         <Step label="4. Unit">
           <div className="grid gap-2">
