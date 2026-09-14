@@ -1500,7 +1500,15 @@ export default function AvatarChat({
     "";
 
   return (
-    <div className="grid grid-cols-1 gap-4">
+    // Three zones, not sticky layers. Real feedback 2026-09-14: "chat input
+    // window covers the subtitle read out" and "it still scrolls up in the
+    // background". Pinning the board to the top and the composer to the
+    // bottom of a single scroll context necessarily overlaps whatever is
+    // between them - the thread slid under both and the subtitle was hidden
+    // behind the composer. Instead the column is a flex stack: the board and
+    // the composer are fixed rows that own their height, and only the thread
+    // between them scrolls, so nothing can cover anything else.
+    <div className="flex h-full min-h-0 flex-col gap-4">
       {/* A generated illustration (lib/conceptIllustration.ts) no longer
           shows here - 2026-09-08: moved into the conversation itself (see
           buildCheckpoints/playCheckpoint), spoken right after the intro
@@ -1557,7 +1565,7 @@ export default function AvatarChat({
         // grew past it, which is exactly when a child needs it most. It now
         // sticks to the top of the lesson column and the conversation scrolls
         // underneath it, so the picture being discussed is never off screen.
-        <div className="sticky top-0 z-20 mb-3 rounded-xl border border-practice-border bg-[#f4f6f1] p-3 shadow-md">
+        <div className="shrink-0 rounded-xl border border-practice-border bg-[#f4f6f1] p-3 shadow-sm">
           <div className="mb-2 flex items-center justify-between gap-2">
             <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">
               Drawing board - every example from this lesson, in one place
@@ -1602,7 +1610,7 @@ export default function AvatarChat({
         </div>
       )}
 
-      <div className="rounded-xl border border-practice-border bg-practice-bg">
+      <div className="flex min-h-0 flex-1 flex-col rounded-xl border border-practice-border bg-practice-bg">
         {/* The 40px "scroll up to see it full size" recap that used to sit
             here was a workaround for a board that scrolled away. The board is
             pinned now and carries the illustration itself, so sending a child
@@ -1615,7 +1623,7 @@ export default function AvatarChat({
             small box the reader wasn't looking at while the board sat above in
             the outer one. The thread now grows naturally and the page scrolls
             as a single stream (see the endRef sentinel below). */}
-        <div ref={scrollRef} className="flex flex-col gap-3 p-4">
+        <div ref={scrollRef} className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto p-4">
           {messages.map((m) =>
             m.sender === "avatar" ? (
               <div key={m.id} className="message-enter flex items-start gap-2">
@@ -1668,11 +1676,9 @@ export default function AvatarChat({
           <div ref={endRef} />
         </div>
 
-        {/* Sticky like the board, for the same reason - real feedback
-            2026-09-14: "chat text input can be seen the full screen and
-            invoke them". Asking a question should never require scrolling
-            to the bottom of the thread to find the box. */}
-        <div className="sticky bottom-0 z-20 border-t border-practice-border bg-practice-bg p-4">
+        {/* The bottom zone: always on screen because it is a fixed row of
+            the stack, not because it floats over the thread. */}
+        <div className="shrink-0 border-t border-practice-border bg-practice-bg p-4">
           {awaitingContinue ? (
             <div className="mb-3 flex flex-wrap gap-2">
               <button

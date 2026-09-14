@@ -674,8 +674,13 @@ export function UnitView({
             wide monitor now that the 3-column layout can stretch much wider
             (AppShell's `wide` mode) - without this, a one-sentence reply
             would stretch edge-to-edge across 1000+px of column 3. */}
-        <div className="flex-1 overflow-y-auto p-4">
-        <div className="mx-auto max-w-3xl space-y-4">
+        {/* AvatarChat owns the scrolling for the lesson now (board fixed,
+            thread scrolling, composer fixed - see its root comment), so this
+            wrapper stops being a scroller and just hands it a bounded height
+            to fill. min-h-0 is what lets a flex child actually shrink instead
+            of being sized by its content and overflowing the column. */}
+        <div className="flex min-h-0 flex-1 flex-col p-4">
+        <div className="mx-auto flex min-h-0 w-full max-w-3xl flex-1 flex-col space-y-4">
           {currentConcept ? (
             <AvatarChat
               key={activeConceptId}
