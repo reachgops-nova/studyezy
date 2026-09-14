@@ -47,7 +47,8 @@ LAYER RULES
 TIMELINE RULES
 - 4 to 7 steps. Each "say" is ONE short spoken sentence a child hears - warm and concrete, never "As we can see".
 - "draw" strokes a shape on as if a hand were drawing it. It only works on stroked shapes, so give a drawn layer stroke and fill="none".
-- Build the picture up: do not show everything in step 1.
+- Build the picture up: do not show everything in step 1. If a step's line says something appears, arrives or is added, that layer MUST carry "hidden": true and be revealed by that very step. A scene whose first frame already contains what step 4 introduces has no reveal at all, and is the single most common way these come back wrong.
+- Reveal one thing per step. Three points plotted "one at a time" means three separate hidden layers shown by three different steps.
 - NEVER hide a layer that a later step still points at, compares against or connects to. A before/after comparison needs BOTH halves on screen at the end. Hiding is only for something genuinely finished with.
 - A "move" is a slide, not a teleport: the layer keeps its own artwork, so move the pieces that travel and leave a marker of where they started if the point is how far they went.
 - holdMs 1800-3000.
@@ -59,6 +60,7 @@ GEOMETRY CHECK - do this before you write the JSON, it is the most common way th
     py = ORIGIN_Y - (y * CELL)        <- note the minus: SVG y grows downward, graph y grows upward
   The grid lines, the axis tick labels and the shapes must all come from the same mapping, or the labels will say one thing and the picture another.
 - Draw the grid lines only across the range the axes actually cover, and make sure every plotted shape sits inside that range. A shape floating above or beside the grid is a broken scene.
+- A grid or axis MUST carry a visible axis line and a numbered tick label at every whole value on both axes. Without them a child cannot read a coordinate off the picture and the scene fails at its job, however pretty it is.
 - Axis tick labels go just outside the axis line (x labels a few px below it, y labels a few px to its left) so they never collide with each other or with the plotted shapes.
 - Work out the final position of everything that moves: start coordinate + every dx/dy applied to it. A move of n cells is dx = n * CELL, so the shape lands exactly on grid points.
 - That final position must sit fully inside the drawn scene - inside the grid, the axes and the viewBox, with a margin. A shape that slides off the edge, behind an axis or into space that was never drawn is a broken scene.
@@ -106,6 +108,32 @@ function repairJson(raw: string): string {
   return raw.replace(/"\s*\+\s*"/g, "");
 }
 
+/**
+ * The free tier's budget is per minute, so generating scenes back to back
+ * runs into it routinely - the call is not wrong, it is just early. Wait out
+ * the window rather than failing the run, which matters when this is batched
+ * across a unit.
+ */
+async function requestWithBackoff(body: Record<string, unknown>): Promise<Response> {
+  for (let attempt = 0; ; attempt++) {
+    const res = await fetch(GROQ_API_URL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${process.env.GROQ_API_KEY}`,
+      },
+      body: JSON.stringify(body),
+    });
+
+    const rateLimited = res.status === 429 || res.status === 413;
+    if (!rateLimited || attempt >= 4) return res;
+
+    const waitMs = Number(res.headers.get("retry-after")) * 1000 || (attempt + 1) * 20_000;
+    console.warn(`Rate limited (${res.status}); waiting ${Math.round(waitMs / 1000)}s before retry ${attempt + 1}/4.`);
+    await new Promise((resolve) => setTimeout(resolve, waitMs));
+  }
+}
+
 /** Groq returns a failed generation in the error body; it is usually repairable. */
 async function contentFrom(res: Response): Promise<{ raw: string; usage?: { prompt_tokens?: number; completion_tokens?: number } }> {
   const body = (await res.json()) as {
@@ -137,26 +165,25 @@ async function main() {
     process.exit(1);
   }
 
-  const res = await fetch(GROQ_API_URL, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${process.env.GROQ_API_KEY}`,
-    },
-    body: JSON.stringify({
+  const res = await requestWithBackoff({
       model: MODEL,
-      // Generous, because the whole artwork comes back in one object and a
-      // truncated response is an invalid one. Reasoning shares this budget,
-      // so "high" here starved the actual output.
-      max_tokens: 20000,
+      // The free tier allows 8000 tokens per minute and counts the prompt
+      // plus the whole max_tokens reservation against it, so a single call
+      // cannot reserve more than that however long the artwork is. Reasoning
+      // shares this budget with the output, and the quality here comes from
+      // the art direction above rather than from reasoning depth - "high"
+      // starved the output entirely and returned nothing.
+      max_tokens: 6000,
       temperature: 0.6,
+      // "low" fits the budget comfortably but visibly costs quality - it
+      // returned a grid with no axis numbers and no progressive reveal.
+      // Medium is worth the tighter margin.
       reasoning_effort: "medium",
       response_format: { type: "json_object" },
       messages: [
         { role: "system", content: SYSTEM },
         { role: "user", content: `Draw and animate this for a school lesson card: ${brief}` },
       ],
-    }),
   });
 
   const { raw, usage } = await contentFrom(res);

@@ -1,0 +1,82 @@
+{
+  "title": "Finding the Missing Corner",
+  "viewBox": "0 0 520 360",
+  "defs": "<linearGradient id=\"bgGrad\" x1=\"0%\" y1=\"0%\" x2=\"100%\" y2=\"100%\"><stop offset=\"0%\" stop-color=\"#f4f6f1\"/><stop offset=\"100%\" stop-color=\"#e0e5e0\"/></linearGradient><linearGradient id=\"cardGrad\" x1=\"0%\" y1=\"0%\" x2=\"100%\" y2=\"0%\"><stop offset=\"0%\" stop-color=\"#e8ece5\"/><stop offset=\"100%\" stop-color=\"#d0d5c8\"/></linearGradient><radialGradient id=\"pointGrad\" cx=\"50%\" cy=\"50%\" r=\"50%\"><stop offset=\"0%\" stop-color=\"#2a9d8f\"/><stop offset=\"100%\" stop-color=\"#a8dadc\"/></radialGradient><linearGradient id=\"chipGrad\" x1=\"0%\" y1=\"0%\" x2=\"0%\" y2=\"100%\"><stop offset=\"0%\" stop-color=\"#ffffff\"/><stop offset=\"100%\" stop-color=\"#f4f6f1\"/></linearGradient><linearGradient id=\"rectGrad\" x1=\"0%\" y1=\"0%\" x2=\"100%\" y2=\"0%\"><stop offset=\"0%\" stop-color=\"#2a9d8f\"/><stop offset=\"100%\" stop-color=\"#e76f51\"/></linearGradient><filter id=\"soft\" x=\"-20%\" y=\"-20%\" width=\"140%\" height=\"140%\"><feDropShadow dx=\"0\" dy=\"3\" stdDeviation=\"4\" flood-color=\"#16241f\" flood-opacity=\"0.18\"/></filter>",
+  "caption": "Three corners are plotted, then the missing fourth corner appears and the rectangle is drawn.",
+  "layers": [
+    {
+      "id": "background",
+      "svg": "<rect width=\"520\" height=\"360\" rx=\"16\" fill=\"url(#bgGrad)\"/>"
+    },
+    {
+      "id": "card",
+      "svg": "<rect x=\"80\" y=\"40\" width=\"360\" height=\"280\" rx=\"12\" fill=\"url(#cardGrad)\" filter=\"url(#soft)\"/>"
+    },
+    {
+      "id": "grid",
+      "svg": "<g stroke=\"#16241f\" stroke-opacity=\"0.15\" stroke-width=\"1\" font-size=\"13\" font-family=\"system-ui, -apple-system, sans-serif\" font-weight=\"700\" fill=\"#16241f\"><!-- vertical grid lines --><line x1=\"100\" y1=\"300\" x2=\"100\" y2=\"20\"/><line x1=\"140\" y1=\"300\" x2=\"140\" y2=\"20\"/><line x1=\"180\" y1=\"300\" x2=\"180\" y2=\"20\"/><line x1=\"220\" y1=\"300\" x2=\"220\" y2=\"20\"/><line x1=\"260\" y1=\"300\" x2=\"260\" y2=\"20\"/><line x1=\"300\" y1=\"300\" x2=\"300\" y2=\"20\"/><line x1=\"340\" y1=\"300\" x2=\"340\" y2=\"20\"/><line x1=\"380\" y1=\"300\" x2=\"380\" y2=\"20\"/><line x1=\"420\" y1=\"300\" x2=\"420\" y2=\"20\"/><!-- horizontal grid lines --><line x1=\"100\" y1=\"300\" x2=\"420\" y2=\"300\"/><line x1=\"100\" y1=\"260\" x2=\"420\" y2=\"260\"/><line x1=\"100\" y1=\"220\" x2=\"420\" y2=\"220\"/><line x1=\"100\" y1=\"180\" x2=\"420\" y2=\"180\"/><line x1=\"100\" y1=\"140\" x2=\"420\" y2=\"140\"/><line x1=\"100\" y1=\"100\" x2=\"420\" y2=\"100\"/><line x1=\"100\" y1=\"60\" x2=\"420\" y2=\"60\"/><line x1=\"100\" y1=\"20\" x2=\"420\" y2=\"20\"/><!-- x‑axis --><line x1=\"100\" y1=\"300\" x2=\"420\" y2=\"300\" stroke=\"#16241f\" stroke-opacity=\"1\" stroke-width=\"2\"/><polygon points=\"420,300 414,296 414,304\" fill=\"#16241f\"/><!-- y‑axis --><line x1=\"100\" y1=\"300\" x2=\"100\" y2=\"20\" stroke=\"#16241f\" stroke-opacity=\"1\" stroke-width=\"2\"/><polygon points=\"100,20 96,26 104,26\" fill=\"#16241f\"/><!-- x ticks & labels --><line x1=\"100\" y1=\"300\" x2=\"100\" y2=\"306\"/><text x=\"100\" y=\"322\" text-anchor=\"middle\">0</text><line x1=\"140\" y1=\"300\" x2=\"140\" y2=\"306\"/><text x=\"140\" y=\"322\" text-anchor=\"middle\">1</text><line x1=\"180\" y1=\"300\" x2=\"180\" y2=\"306\"/><text x=\"180\" y=\"322\" text-anchor=\"middle\">2</text><line x1=\"220\" y1=\"300\" x2=\"220\" y2=\"306\"/><text x=\"220\" y=\"322\" text-anchor=\"middle\">3</text><line x1=\"260\" y1=\"300\" x2=\"260\" y2=\"306\"/><text x=\"260\" y=\"322\" text-anchor=\"middle\">4</text><line x1=\"300\" y1=\"300\" x2=\"300\" y2=\"306\"/><text x=\"300\" y=\"322\" text-anchor=\"middle\">5</text><line x1=\"340\" y1=\"300\" x2=\"340\" y2=\"306\"/><text x=\"340\" y=\"322\" text-anchor=\"middle\">6</text><line x1=\"380\" y1=\"300\" x2=\"380\" y2=\"306\"/><text x=\"380\" y=\"322\" text-anchor=\"middle\">7</text><line x1=\"420\" y1=\"300\" x2=\"420\" y2=\"306\"/><text x=\"420\" y=\"322\" text-anchor=\"middle\">8</text><!-- y ticks & labels --><line x1=\"100\" y1=\"300\" x2=\"94\" y2=\"300\"/><text x=\"84\" y=\"304\" text-anchor=\"end\">0</text><line x1=\"100\" y1=\"260\" x2=\"94\" y2=\"260\"/><text x=\"84\" y=\"264\" text-anchor=\"end\">1</text><line x1=\"100\" y1=\"220\" x2=\"94\" y2=\"220\"/><text x=\"84\" y=\"224\" text-anchor=\"end\">2</text><line x1=\"100\" y1=\"180\" x2=\"94\" y2=\"180\"/><text x=\"84\" y=\"184\" text-anchor=\"end\">3</text><line x1=\"100\" y1=\"140\" x2=\"94\" y2=\"140\"/><text x=\"84\" y=\"144\" text-anchor=\"end\">4</text><line x1=\"100\" y1=\"100\" x2=\"94\" y2=\"100\"/><text x=\"84\" y=\"104\" text-anchor=\"end\">5</text><line x1=\"100\" y1=\"60\" x2=\"94\" y2=\"60\"/><text x=\"84\" y=\"64\" text-anchor=\"end\">6</text><line x1=\"100\" y1=\"20\" x2=\"94\" y2=\"20\"/><text x=\"84\" y=\"24\" text-anchor=\"end\">7</text><!-- extra line for 8 on y‑axis (optional) --><line x1=\"100\" y1=\"-20\" x2=\"94\" y2=\"-20\"/><text x=\"84\" y=\"-16\" text-anchor=\"end\">8</text></g>"
+    },
+    {
+      "id": "pt1",
+      "hidden": true,
+      "svg": "<circle cx=\"140\" cy=\"180\" r=\"6\" fill=\"url(#pointGrad)\" filter=\"url(#soft)\"/><rect x=\"148\" y=\"152\" width=\"50\" height=\"20\" rx=\"6\" fill=\"url(#chipGrad)\" filter=\"url(#soft)\"/><text x=\"173\" y=\"168\" font-size=\"13\" font-family=\"system-ui, -apple-system, sans-serif\" font-weight=\"700\" fill=\"#16241f\" text-anchor=\"middle\">(1,3)</text>"
+    },
+    {
+      "id": "pt2",
+      "hidden": true,
+      "svg": "<circle cx=\"300\" cy=\"180\" r=\"6\" fill=\"url(#pointGrad)\" filter=\"url(#soft)\"/><rect x=\"308\" y=\"152\" width=\"50\" height=\"20\" rx=\"6\" fill=\"url(#chipGrad)\" filter=\"url(#soft)\"/><text x=\"333\" y=\"168\" font-size=\"13\" font-family=\"system-ui, -apple-system, sans-serif\" font-weight=\"700\" fill=\"#16241f\" text-anchor=\"middle\">(5,3)</text>"
+    },
+    {
+      "id": "pt3",
+      "hidden": true,
+      "svg": "<circle cx=\"300\" cy=\"140\" r=\"6\" fill=\"url(#pointGrad)\" filter=\"url(#soft)\"/><rect x=\"308\" y=\"112\" width=\"50\" height=\"20\" rx=\"6\" fill=\"url(#chipGrad)\" filter=\"url(#soft)\"/><text x=\"333\" y=\"128\" font-size=\"13\" font-family=\"system-ui, -apple-system, sans-serif\" font-weight=\"700\" fill=\"#16241f\" text-anchor=\"middle\">(5,4)</text>"
+    },
+    {
+      "id": "pt4",
+      "hidden": true,
+      "svg": "<circle cx=\"140\" cy=\"140\" r=\"6\" fill=\"url(#pointGrad)\" filter=\"url(#soft)\"/><rect x=\"148\" y=\"112\" width=\"50\" height=\"20\" rx=\"6\" fill=\"url(#chipGrad)\" filter=\"url(#soft)\"/><text x=\"173\" y=\"128\" font-size=\"13\" font-family=\"system-ui, -apple-system, sans-serif\" font-weight=\"700\" fill=\"#16241f\" text-anchor=\"middle\">(1,4)</text>"
+    },
+    {
+      "id": "rect",
+      "hidden": true,
+      "svg": "<path pathLength=\"1\" d=\"M140,180 L300,180 L300,140 L140,140 Z\" fill=\"url(#rectGrad)\" stroke=\"#2a9d8f\" stroke-width=\"4\" stroke-linejoin=\"round\" filter=\"url(#soft)\"/>"
+    }
+  ],
+  "steps": [
+    {
+      "say": "First corner at (1,3).",
+      "show": [
+        "pt1"
+      ],
+      "holdMs": 2200
+    },
+    {
+      "say": "Second corner at (5,3).",
+      "show": [
+        "pt2"
+      ],
+      "holdMs": 2200
+    },
+    {
+      "say": "Third corner at (5,4).",
+      "show": [
+        "pt3"
+      ],
+      "holdMs": 2200
+    },
+    {
+      "say": "The missing corner is at (1,4).",
+      "show": [
+        "pt4"
+      ],
+      "holdMs": 2400
+    },
+    {
+      "say": "Now the rectangle is complete.",
+      "draw": [
+        "rect"
+      ],
+      "holdMs": 2600
+    }
+  ]
+}
