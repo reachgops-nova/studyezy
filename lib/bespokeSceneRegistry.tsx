@@ -1,4 +1,6 @@
 import DecimalConceptScene, { type DecimalSceneVariant } from "@/components/interactive/DecimalConceptScene";
+import RichSceneStage from "@/components/interactive/RichSceneStage";
+import { getRichScene } from "@/lib/richSceneRegistry";
 import NumberConceptScene from "@/components/interactive/NumberConceptScene";
 import GeometryConceptScene from "@/components/interactive/GeometryConceptScene";
 import StatisticsConceptScene from "@/components/interactive/StatisticsConceptScene";
@@ -39,6 +41,11 @@ const DECIMAL_PILOT_SCENES: DecimalSceneVariant[] = ['split', 'rodExample', 'pla
 
 export function getCheckpointSceneNodes(unitKey: string | undefined, conceptId: string): (ReactNode | undefined)[] | undefined {
   if (!unitKey) return undefined;
+
+  // A model-authored scene supersedes the hand-coded specs for its concept,
+  // so concepts can be upgraded one at a time (see lib/richSceneRegistry.ts).
+  const richScene = getRichScene(unitKey, conceptId);
+  if (richScene) return [<RichSceneStage key="rich" scene={richScene} />];
 
   if (unitKey === 'cambridge-4-math-1') {
     if (conceptId === '1.1') {
