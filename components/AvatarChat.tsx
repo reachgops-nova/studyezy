@@ -1547,495 +1547,248 @@ export default function AvatarChat({
   const subtitleIsLive = Boolean(speakingMessage);
   const subtitleKeyRanges = subtitleMessage?.keyRanges;
 
+  // Which RCRT phase the lesson is in, for the tabs across the top. Derived
+  // from where the teaching actually is rather than tracked separately, so
+  // the tabs cannot drift out of step with the lesson.
+  const rcrtPhase = inMicroCheck || awaitingConceptAdvance ? 3 : practiceSlot ? 2 : checkpointIndex === 0 ? 0 : 1;
+  const RCRT_TABS = ["1. Recall", "2. Concept", "3. Reinforce", "4. Test"];
+
   return (
-    // Three zones, not sticky layers. Real feedback 2026-09-14: "chat input
-    // window covers the subtitle read out" and "it still scrolls up in the
-    // background". Pinning the board to the top and the composer to the
-    // bottom of a single scroll context necessarily overlaps whatever is
-    // between them - the thread slid under both and the subtitle was hidden
-    // behind the composer. Instead the column is a flex stack: the board and
-    // the composer are fixed rows that own their height, and only the thread
-    // between them scrolls, so nothing can cover anything else.
-    // Board-first. Real user direction 2026-09-14: "the chat window can be a
-    // layer at the bottom.. only thing it overlaps and visible in the
-    // background". The board owns the whole panel, and the workbook floats
-    // over its lower edge - collapsed to a single line by default, so the
-    // picture keeps the room, and expandable when there is something to read
-    // or write. Neither competes with the other for height any more.
-    <div className="flex h-full min-h-0 flex-col gap-2">
-      {/* A generated illustration (lib/conceptIllustration.ts) no longer
-          shows here - 2026-09-08: moved into the conversation itself (see
-          buildCheckpoints/playCheckpoint), spoken right after the intro
-          alongside the concept's examples, instead of a static header a kid
-          could scroll past unread. This card is back to its original two
-          jobs: the real scanned textbook page, and the legacy hand-drawn
-          illustration_key set (still gated by hideIllustration). */}
-      {((concept.media?.source_image_path && !hideSourceImage) ||
-        (concept.media?.illustration_key && !hideIllustration)) && (
-        // max-w-xl + aspect-ratio (matching the illustrations' own 300x180
-        // viewBox) gives the artwork real presence instead of a small
-        // thumbnail, while still capping it well short of the full-width
-        // lesson column - an uncapped width was the earlier "empty space"
-        // regression (2026-08-21) when this card had little content to fill
-        // it with.
-        <div className="max-w-xl rounded-2xl border border-slate-200/70 bg-white p-4 shadow-soft">
-          {/* A scanned page is portrait, so it gets a portrait box and
-              object-contain. It used to share the illustrations' landscape
-              aspect-[5/3] with object-cover, which sliced the top and bottom
-              off every real textbook page - the actual source of the
-              "cropped pages" complaint (2026-08-30). Built-in illustrations
-              really are 300x180 artwork and keep the landscape box. */}
-          <div
-            className={`w-full overflow-hidden rounded-xl ${
-              concept.media?.source_image_path && !hideSourceImage ? "aspect-[3/4]" : "aspect-[5/3]"
+    // Modelled on the reference the user brought back from NotebookLM
+    // (2026-09-14, "this is nearest"): a dark board carrying the lesson with
+    // the topic titled across the top, the spoken line along a lit strip at
+    // its foot, a memory tray of what has been covered, and a light
+    // assistant panel beside it holding readymade questions and the chat.
+    <div className="flex h-full min-h-0 flex-col gap-3">
+      {/* RCRT phases across the top - the user asked repeatedly for RCRT to
+          be part of the Learn stream, and the reference shows it as the
+          spine of the lesson rather than a separate exercise. */}
+      <div className="flex shrink-0 flex-wrap items-center gap-2 rounded-xl bg-[#131c33] px-3 py-2">
+        <span className="mr-auto flex items-center gap-2 text-sm font-extrabold text-[#fbbf24]">
+          🏫 Drawing Board
+        </span>
+        {RCRT_TABS.map((label, i) => (
+          <span
+            key={label}
+            className={`rounded-full px-3 py-1 text-[11px] font-bold transition-colors ${
+              i === rcrtPhase ? "bg-[#22d3ee] text-[#0b1220]" : "text-white/35"
             }`}
           >
-            {concept.media?.source_image_path && !hideSourceImage ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                src={concept.media.source_image_path}
-                alt={concept.media.illustration_caption ?? concept.concept_name}
-                className="h-full w-full bg-slate-50 object-contain"
-              />
-            ) : (
-              <Illustration illustrationKey={concept.media!.illustration_key!} />
-            )}
-          </div>
-          <div className="mt-3 flex items-center justify-between gap-3">
-            <p className="text-sm text-slate-600">{concept.media?.illustration_caption}</p>
-            {concept.media?.video_status === "coming_soon" && (
-              <span className="w-fit shrink-0 rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-slate-500">
-                🎬 Video coming soon
-              </span>
-            )}
-          </div>
-        </div>
-      )}
-
-      {sceneBoard.length > 0 && (
-        // The board is the stage, not a sidebar. Real user direction
-        // 2026-09-14: "a broader board where we showcase examples that are
-        // active to explain and whatever done can be kept as a miniature..
-        // and when clicked again it can pop up to main bigger picture".
-        // So: one example at full width, everything already covered sitting
-        // under it as miniatures you can promote back to the stage.
-        // pb leaves room for the collapsed workbook bar that floats over the
-        // bottom edge, so the miniatures and the "need anything more" row are
-        // never hidden underneath it.
-        <div
-          className="flex min-h-0 flex-1 flex-col rounded-xl border border-practice-border bg-[#f4f6f1] p-3 shadow-sm"
-        >
-          <div className="mb-2 flex items-center justify-between gap-2">
-            <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">
-              Drawing board{sceneBoard.length > 1 ? ` - example ${activeBoardIndex + 1} of ${sceneBoard.length}` : ""}
-            </p>
-            {subtitleText && (
-              <button
-                type="button"
-                onClick={() => navigator.clipboard?.writeText(subtitleText)}
-                className="shrink-0 rounded-md border border-slate-200 px-2 py-0.5 text-[10px] font-semibold text-slate-500 hover:bg-slate-50"
-              >
-                Copy line
-              </button>
-            )}
-          </div>
-
-          {/* The example being explained, given the whole width. */}
-          <div className="flex min-h-[9rem] flex-1 items-stretch justify-center overflow-hidden rounded-lg border border-[#9c6f1f]/30 bg-white p-2">
-            {(sceneBoard[activeBoardIndex] ?? sceneBoard[sceneBoard.length - 1])?.node}
-          </div>
-
-          {/* Projector controls. Real user direction 2026-09-14: "a digital
-              board where we can click / touch and rerun the examples in a
-              projector manner". Stepping between examples belongs here, next
-              to the picture, not buried in a list somewhere else. */}
-          {sceneBoard.length > 1 && (
-            <div className="mt-1 flex shrink-0 items-center justify-center gap-3 text-[11px] font-semibold text-[#9c6f1f]">
-              <button
-                type="button"
-                onClick={() => setActiveBoardIndex((i) => Math.max(0, i - 1))}
-                disabled={activeBoardIndex === 0}
-                className="rounded px-2 py-0.5 hover:underline disabled:opacity-30"
-              >
-                ◀ Previous
-              </button>
-              <span className="text-slate-400">
-                {activeBoardIndex + 1} / {sceneBoard.length}
-              </span>
-              <button
-                type="button"
-                onClick={() => setActiveBoardIndex((i) => Math.min(sceneBoard.length - 1, i + 1))}
-                disabled={activeBoardIndex === sceneBoard.length - 1}
-                className="rounded px-2 py-0.5 hover:underline disabled:opacity-30"
-              >
-                Next ▶
-              </button>
-            </div>
-          )}
-
-          {/* Subtitle: what Ezy is saying, read along word by word. This is
-              the reading surface for narration now - real user direction
-              2026-09-14: "rather highlighter can be on the subtitle
-              reading" - so the same line is not repeated down in the
-              workbook. */}
-          {subtitleText && (
-            <p className="mt-2 rounded-lg bg-[#16241f]/90 px-3 py-2 text-center text-sm font-medium leading-snug text-white">
-              <HighlightedText
-                text={subtitleText}
-                range={subtitleIsLive ? highlightRange : null}
-                keyRanges={subtitleKeyRanges}
-              />
-            </p>
-          )}
-
-          {/* Covered already: miniatures, click to put one back on the stage. */}
-          {sceneBoard.length > 1 && !isWorkbookOpen && (
-            <div className="mt-2 flex shrink-0 items-center gap-2 overflow-x-auto pb-1">
-              <span className="shrink-0 text-[10px] font-semibold uppercase tracking-wide text-slate-400">Covered</span>
-              {sceneBoard.map((entry, i) => (
-                <button
-                  key={entry.id}
-                  type="button"
-                  onClick={() => setActiveBoardIndex(i)}
-                  aria-label={`Show example ${i + 1} on the board`}
-                  aria-pressed={i === activeBoardIndex}
-                  className={`h-12 w-20 shrink-0 overflow-hidden rounded-md border bg-white transition-all hover:border-[#9c6f1f] ${
-                    i === activeBoardIndex ? "border-[#9c6f1f] ring-2 ring-[#9c6f1f]/30" : "border-slate-200 opacity-70"
-                  }`}
-                >
-                  {/* Miniature: the same live scene, scaled right down, so a
-                      click promotes exactly what the child remembers seeing. */}
-                  <span className="pointer-events-none block w-[20rem] origin-top-left scale-[0.25]">{entry.node}</span>
-                </button>
-              ))}
-            </div>
-          )}
-
-          {/* Every lesson control lives on the board. Real user feedback
-              2026-09-14 (annotated screenshot): three separate rows of chips
-              were stacking and colliding above the composer - the per-example
-              offer, the checkpoint chips and the follow-up suggestions all
-              said overlapping things in different places. The board is where
-              the child is looking and where the hints and question session
-              belong, so it owns them; the workbook below is left with just
-              the thread and the input. */}
-          <div className="mt-2 shrink-0 [&_.mb-3]:mb-0">
-        {awaitingContinue ? (
-          <div className="mb-3 flex flex-wrap gap-2">
-            <button
-              type="button"
-              onClick={handleContinueCheckpoint}
-              disabled={loading}
-              className="rounded-full bg-green-600 px-4 py-1.5 text-xs font-medium text-white hover:bg-green-700 disabled:opacity-50"
-            >
-              👍 Got it, keep going
-            </button>
-            <button
-              type="button"
-              onClick={handleExplainDifferently}
-              disabled={loading}
-              className="rounded-full border border-slate-300 bg-white px-4 py-1.5 text-xs text-slate-700 hover:bg-slate-50 disabled:opacity-50"
-            >
-              🤔 Kind of - explain it another way
-            </button>
-            <button
-              type="button"
-              onClick={handleRepeatCheckpoint}
-              disabled={loading}
-              className="rounded-full border border-slate-300 bg-white px-4 py-1.5 text-xs text-slate-700 hover:bg-slate-50 disabled:opacity-50"
-            >
-              🔁 Say that again
-            </button>
-            <button
-              type="button"
-              onClick={promptForSpecificConfusion}
-              disabled={loading}
-              className="rounded-full border border-slate-300 bg-white px-4 py-1.5 text-xs text-slate-700 hover:bg-slate-50 disabled:opacity-50"
-            >
-              ❓ I&apos;m stuck on one part
-            </button>
-            {dynamicFollowUps.length > 0 && (
-              <div className="mt-1 flex w-full flex-wrap gap-2 border-t border-slate-200 pt-2">
-                {dynamicFollowUps.map((q, i) => (
-                  <button
-                    key={i}
-                    type="button"
-                    onClick={() => sendMessage(q)}
-                    disabled={loading}
-                    className="rounded-full border border-brand-ink-light bg-white px-3 py-1.5 text-xs text-brand-ink hover:bg-brand-paper disabled:opacity-50"
-                  >
-                    {q}
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
-        ) : awaitingConceptAdvance ? (
-          <div className="mb-3 flex flex-wrap gap-2">
-            {onAdvanceConcept && (
-              <button
-                type="button"
-                onClick={handleAdvanceConcept}
-                disabled={loading}
-                className="rounded-full bg-green-600 px-4 py-1.5 text-xs font-medium text-white hover:bg-green-700 disabled:opacity-50"
-              >
-                ➡️ Next part
-              </button>
-            )}
-            {dynamicFollowUps.length > 0 &&
-              dynamicFollowUps.map((q, i) => (
-                <button
-                  key={i}
-                  type="button"
-                  onClick={() => sendMessage(q)}
-                  disabled={loading}
-                  className="rounded-full border border-brand-ink-light bg-white px-3 py-1.5 text-xs text-brand-ink hover:bg-brand-paper disabled:opacity-50"
-                >
-                  {q}
-                </button>
-              ))}
-          </div>
-        ) : inMicroCheck ? (
-          <p className="mb-3 text-xs text-slate-400">
-            Quick check - take your best shot. Ezy will help you get there if it's not quite right yet.
-          </p>
-        ) : (
-          readyForInput &&
-          quickReplies.length > 0 && (
-            <div className="mb-3 flex flex-wrap gap-2">
-              {quickReplies.map((q, i) => (
-                <button
-                  key={i}
-                  type="button"
-                  onClick={() => sendMessage(q)}
-                  disabled={loading}
-                  className="rounded-full border border-brand-ink-light bg-white px-3 py-1.5 text-xs text-brand-ink hover:bg-brand-paper disabled:opacity-50"
-                >
-                  {q}
-                </button>
-              ))}
-            </div>
-          )
-        )}
-          </div>
-        </div>
-      )}
-
-      <div
-        // Always in flow, never floating. Layering it over the board was
-        // the source of the clutter in the annotated screenshot: it covered
-        // the control row and the subtitle, and the padding the board needed
-        // to dodge it was space the picture could have used. As a short row
-        // below the board it costs the same height and hides nothing, and
-        // the board gets everything left over.
-        className={`z-20 flex shrink-0 flex-col rounded-xl border border-practice-border bg-practice-bg ${
-          isWorkbookOpen ? "min-h-0 max-h-[48%]" : "max-h-[6rem]"
-        }`}
-      >
-        <button
-          type="button"
-          onClick={() => setIsWorkbookOpen((open) => !open)}
-          aria-expanded={isWorkbookOpen}
-          className="flex shrink-0 items-center justify-between gap-2 rounded-t-xl px-4 py-1 text-left hover:bg-white/50"
-        >
-          <span className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">
-            Workbook - your questions, hints and notes
-            {workbookCount > 0 ? ` (${workbookCount})` : ""}
+            {label}
           </span>
-          <span className="text-[11px] font-bold text-[#9c6f1f]">{isWorkbookOpen ? "Hide ▾" : "Open ▴"}</span>
-        </button>
-        {/* The 40px "scroll up to see it full size" recap that used to sit
-            here was a workaround for a board that scrolled away. The board is
-            pinned now and carries the illustration itself, so sending a child
-            back up the thread to find a picture is no longer the answer -
-            real feedback 2026-09-14: "scroll goes up images vanishes". */}
-        {/* One scroll context, not two - real feedback 2026-09-14: "chat does
-            not auto scroll... which makes it difficult to follow drawing board
-            and chat session". This used to be its own 420px-tall scroller
-            nested inside the page's scroller, so new lines scrolled inside a
-            small box the reader wasn't looking at while the board sat above in
-            the outer one. The thread now grows naturally and the page scrolls
-            as a single stream (see the endRef sentinel below). */}
-        <div ref={scrollRef} className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto p-4">
-          {workbookMessages.map((m) =>
-            m.sender === "avatar" ? (
-              <div key={m.id} className="message-enter flex items-start gap-2">
-                <Avatar speaking={m.id === speakingMessageId} />
-                <div className="rounded-2xl rounded-tl-sm bg-white px-4 py-2 text-sm leading-relaxed text-slate-800 shadow-sm">
-                  <HighlightedText
-                    text={m.text}
-                    range={m.id === speakingMessageId ? highlightRange : null}
-                    keyRanges={m.keyRanges}
-                  />
-                  {m.illustrationKey && (
-                    <div className="mt-2 aspect-[5/3] w-64 max-w-full overflow-hidden rounded-xl">
-                      <Illustration illustrationKey={m.illustrationKey} />
-                    </div>
-                  )}
-                  {m.generatedIllustrationUrl && (
-                    <div className="mt-2 aspect-square w-64 max-w-full overflow-hidden rounded-xl border border-slate-200/70">
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img src={m.generatedIllustrationUrl} alt="" className="h-full w-full bg-slate-50 object-contain" />
-                    </div>
-                  )}
-                  {m.sceneNode && (
-                    // The scene itself lives on the drawing board above (one
-                    // home, not two) - real feedback 2026-09-13: rendering it
-                    // here as well meant the same diagram filled two large
-                    // areas of the screen at once. This just points at it.
-                    <p className="mt-2 text-[11px] font-semibold text-[#9c6f1f]">
-                      ↑ See this on the drawing board
-                    </p>
-                  )}
-                </div>
+        ))}
+      </div>
+
+      <div className="flex min-h-0 flex-1 flex-col gap-3 lg:flex-row">
+        {/* ---------------- The board ---------------- */}
+        <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl bg-[#1e2749] ring-2 ring-[#22d3ee]/40">
+          <h3 className="shrink-0 px-4 pt-4 text-center text-lg font-extrabold text-[#fbbf24]">
+            {concept.concept_name}
+          </h3>
+
+          <div className="flex min-h-[9rem] flex-1 items-center justify-center overflow-hidden p-4">
+            {sceneBoard.length > 0 ? (
+              <div className="flex h-full w-full items-stretch justify-center rounded-xl bg-white p-2">
+                {(sceneBoard[activeBoardIndex] ?? sceneBoard[sceneBoard.length - 1])?.node}
               </div>
             ) : (
-              <div key={m.id} className="message-enter flex justify-end">
-                <div className="rounded-2xl rounded-tr-sm bg-brand-ink px-4 py-2 text-sm leading-relaxed text-white shadow-sm">
-                  {m.text}
-                </div>
-              </div>
-            )
-          )}
-          {loading && (
-            <div className="flex items-center gap-2">
-              <Avatar speaking />
-              <div className="rounded-2xl rounded-tl-sm bg-white px-4 py-2 text-sm text-slate-400 shadow-sm">
-                Thinking...
-              </div>
-            </div>
-          )}
-          {practiceSlot && <div className="message-enter flex items-start gap-2">{practiceSlot}</div>}
-          <div ref={endRef} />
-        </div>
-
-        {/* The bottom zone: always on screen because it is a fixed row of
-            the stack, not because it floats over the thread. */}
-        <div className="shrink-0 border-t border-practice-border bg-practice-bg p-2.5">
-          <div className="flex gap-2">
-            <input
-              ref={inputRef}
-              type="text"
-              value={inputText}
-              onChange={(e) => setInputText(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && sendMessage(inputText)}
-              disabled={!readyForInput}
-              placeholder={
-                !readyForInput
-                  ? "Ezy is teaching..."
-                  : inMicroCheck
-                  ? "Type your answer..."
-                  : speechInputSupported
-                  ? "Type or use the mic..."
-                  : "Type your question..."
-              }
-              // min-w-0: a flex item defaults to min-width:auto, so this input
-              // refused to shrink below its intrinsic width and pushed the whole
-              // lesson page into a horizontal scroll on a phone (measured 436px of
-              // content in a 375px viewport, 2026-08-30). flex-1 alone does not fix
-              // that - the row is the widest thing on the page without this.
-              className="min-w-0 flex-1 rounded-xl border border-slate-300 px-3 py-2 text-sm disabled:bg-slate-50"
-            />
-            <button
-              type="button"
-              onClick={listening ? stopListening : startListening}
-              disabled={!readyForInput || !speechInputSupported}
-              aria-pressed={listening}
-              aria-label={
-                speechInputSupported
-                  ? listening
-                    ? "Stop listening"
-                    : "Start voice question"
-                  : "Voice input isn't available in this browser"
-              }
-              title={speechInputSupported ? undefined : "Voice input isn't available in this browser - try Chrome or Safari"}
-              className={`rounded-xl px-3 py-2 text-sm disabled:opacity-40 ${
-                listening ? "bg-red-500 text-white" : "border border-slate-300 bg-white"
-              }`}
-            >
-              🎤
-            </button>
-            <select
-              value={language}
-              onChange={(e) => {
-                setLanguage(e.target.value);
-                localStorage.setItem(LANGUAGE_KEY, e.target.value);
-              }}
-              disabled={!readyForInput}
-              aria-label="Language"
-              title="Language - for voice input, and for answers to your own questions (the lesson itself stays in English)"
-              className="rounded-xl border border-slate-300 bg-white px-1 text-xs text-slate-600 disabled:opacity-40"
-            >
-              {LANGUAGES.map((l) => (
-                <option key={l.code} value={l.code}>
-                  {l.label}
-                </option>
-              ))}
-            </select>
-            <button
-              type="button"
-              onClick={() => sendMessage(inputText)}
-              disabled={!readyForInput || loading}
-              className="rounded-xl bg-practice-accent px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
-            >
-              Send
-            </button>
+              <p className="text-sm text-white/40">Ezy is getting the first example ready...</p>
+            )}
           </div>
 
-          <div className="mt-2 flex items-center justify-between">
+          {/* The spoken line, on its own lit strip at the foot of the board. */}
+          <div className="shrink-0 border-t-2 border-[#22d3ee] bg-[#16203a] px-4 py-3">
             <div className="flex items-center gap-3">
-              <label className="flex items-center gap-2 text-xs text-slate-500">
+              <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#22d3ee] text-sm">
+                🎙️
+              </span>
+              <p className="min-w-0 flex-1 text-sm font-semibold leading-snug text-white">
+                {subtitleText ? (
+                  <HighlightedText
+                    text={subtitleText}
+                    range={subtitleIsLive ? highlightRange : null}
+                    keyRanges={subtitleKeyRanges}
+                  />
+                ) : (
+                  <span className="text-white/40">Ezy will start in a moment...</span>
+                )}
+              </p>
+              {speaking && (
+                <button
+                  type="button"
+                  onClick={togglePauseSpeech}
+                  className="shrink-0 rounded-full bg-white/10 px-2.5 py-1 text-[11px] font-bold text-white hover:bg-white/20"
+                >
+                  {speechPaused ? "▶ Resume" : "⏸ Pause"}
+                </button>
+              )}
+              <button
+                type="button"
+                onClick={handleRepeatCheckpoint}
+                disabled={loading}
+                title="Play this part again"
+                className="shrink-0 rounded-full bg-white/10 px-2.5 py-1 text-[11px] font-bold text-white hover:bg-white/20 disabled:opacity-40"
+              >
+                ⟲ Again
+              </button>
+            </div>
+          </div>
+
+          {/* Memory tray: everything covered so far, tap to put it back up. */}
+          <div className="flex shrink-0 items-center gap-2 overflow-x-auto bg-[#16203a] px-4 py-2.5">
+            <span className="shrink-0 text-[10px] font-bold uppercase tracking-wider text-white/40">Memory tray</span>
+            {sceneBoard.length === 0 && <span className="text-[11px] text-white/30">Nothing covered yet</span>}
+            {sceneBoard.map((entry, i) => (
+              <button
+                key={entry.id}
+                type="button"
+                onClick={() => setActiveBoardIndex(i)}
+                aria-pressed={i === activeBoardIndex}
+                className={`shrink-0 rounded-lg border-2 px-3 py-1.5 text-[11px] font-bold transition-colors ${
+                  i === activeBoardIndex
+                    ? "border-[#fbbf24] bg-[#fbbf24]/15 text-[#fbbf24]"
+                    : "border-white/10 bg-white/5 text-white/60 hover:border-white/30"
+                }`}
+              >
+                {i + 1}. Example
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* ---------------- The assistant ---------------- */}
+        <div className="flex min-h-0 flex-col overflow-hidden rounded-2xl bg-white lg:w-[21rem]">
+          <div className="shrink-0 px-4 pt-4">
+            <h3 className="text-base font-extrabold text-[#16241f]">💡 RCRT Assistant</h3>
+            <div className="mt-2 rounded-xl border-2 border-[#f59e0b] bg-[#fef3c7] px-3 py-2 text-[12px] font-medium leading-snug text-[#78350f]">
+              <span className="font-extrabold">RCRT Tip:</span>{" "}
+              {concept.tips_to_remember?.[0] ?? "Tap a question below if you get stuck - Ezy will take it slowly."}
+            </div>
+            {quickReplies.length > 0 && (
+              <>
+                <p className="mt-3 text-[12px] font-extrabold text-[#16241f]">📌 Readymade questions:</p>
+                <div className="mt-1.5 flex flex-col gap-1.5">
+                  {quickReplies.slice(0, 3).map((q, i) => (
+                    <button
+                      key={i}
+                      type="button"
+                      onClick={() => sendMessage(q)}
+                      disabled={loading}
+                      className="rounded-xl bg-slate-100 px-3 py-2 text-left text-[12px] font-bold text-[#16241f] hover:bg-slate-200 disabled:opacity-50"
+                    >
+                      {q}
+                    </button>
+                  ))}
+                </div>
+              </>
+            )}
+          </div>
+
+          {/* Only what the child and Ezy actually exchange - the narration is
+              read on the board, so it is not repeated here. */}
+          <div ref={scrollRef} className="mt-3 flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto px-4">
+            {workbookMessages.length === 0 && (
+              <p className="rounded-xl bg-[#e0f2fe] px-3 py-2 text-[12px] font-medium text-[#0c4a6e]">
+                👋 Tap a question above, or ask me anything about this topic.
+              </p>
+            )}
+            {workbookMessages.map((m) =>
+              m.sender === "avatar" ? (
+                <div key={m.id} className="message-enter flex items-start gap-2">
+                  <Avatar speaking={m.id === speakingMessageId} />
+                  <div className="rounded-2xl rounded-tl-sm bg-slate-100 px-3 py-2 text-[13px] leading-relaxed text-slate-800">
+                    <HighlightedText
+                      text={m.text}
+                      range={m.id === speakingMessageId ? highlightRange : null}
+                      keyRanges={m.keyRanges}
+                    />
+                  </div>
+                </div>
+              ) : (
+                <div key={m.id} className="message-enter flex justify-end">
+                  <div className="rounded-2xl rounded-tr-sm bg-[#22d3ee] px-3 py-2 text-[13px] font-medium text-[#0b1220]">
+                    {m.text}
+                  </div>
+                </div>
+              ),
+            )}
+            {loading && <p className="text-[12px] text-slate-400">Ezy is thinking...</p>}
+            {practiceSlot}
+            <div ref={endRef} />
+          </div>
+
+          <div className="shrink-0 space-y-2 p-3">
+            <div className="flex gap-1.5">
+              <input
+                ref={inputRef}
+                type="text"
+                value={inputText}
+                onChange={(e) => setInputText(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && sendMessage(inputText)}
+                disabled={!readyForInput}
+                placeholder={
+                  !readyForInput ? "Ezy is teaching..." : inMicroCheck ? "Type your answer..." : "Ask Ezy..."
+                }
+                className="min-w-0 flex-1 rounded-xl border-2 border-slate-200 px-3 py-2 text-[13px] focus:border-[#22d3ee] focus:outline-none disabled:bg-slate-50"
+              />
+              {speechInputSupported && (
+                <button
+                  type="button"
+                  onClick={listening ? stopListening : startListening}
+                  disabled={!readyForInput}
+                  aria-pressed={listening}
+                  className={`shrink-0 rounded-xl px-2.5 text-sm ${listening ? "bg-[#f43f5e] text-white" : "bg-slate-100"}`}
+                >
+                  🎤
+                </button>
+              )}
+              <button
+                type="button"
+                onClick={() => sendMessage(inputText)}
+                disabled={!readyForInput || loading}
+                className="shrink-0 rounded-xl bg-[#22d3ee] px-3 text-[13px] font-bold text-[#0b1220] disabled:opacity-50"
+              >
+                Send
+              </button>
+            </div>
+
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={handleExplainDifferently}
+                disabled={loading}
+                className="flex-1 rounded-xl bg-slate-100 px-3 py-2 text-[12px] font-bold text-[#16241f] hover:bg-slate-200 disabled:opacity-50"
+              >
+                🤔 Explain differently
+              </button>
+              <button
+                type="button"
+                onClick={
+                  awaitingConceptAdvance && onAdvanceConcept
+                    ? handleAdvanceConcept
+                    : awaitingContinue
+                    ? handleContinueCheckpoint
+                    : () => sendMessage("Keep going")
+                }
+                disabled={loading}
+                className="flex-1 rounded-xl bg-[#f43f5e] px-3 py-2 text-[12px] font-bold text-white hover:bg-[#e11d48] disabled:opacity-50"
+              >
+                {awaitingConceptAdvance ? "Next topic ➡" : "Keep going ➡"}
+              </button>
+            </div>
+
+            <div className="flex items-center justify-between text-[11px] text-slate-500">
+              <label className="flex items-center gap-1.5">
                 <input type="checkbox" checked={readAloud} onChange={(e) => setReadAloud(e.target.checked)} />
                 Read aloud
               </label>
-              <button
-                type="button"
-                onClick={() => setShowVoicePicker((prev) => !prev)}
-                className="text-xs font-medium text-brand-ink hover:underline"
-              >
-                🔊 Choose voice
+              <button type="button" onClick={() => setShowVoicePicker((v) => !v)} className="font-medium hover:underline">
+                🔊 Voice
               </button>
             </div>
-            {speaking && (
-              <button
-                type="button"
-                onClick={togglePauseSpeech}
-                className="flex items-center gap-1 text-xs font-medium text-brand-gold hover:underline"
-              >
-                {speechPaused ? (
-                  <>▶ resume reading</>
-                ) : (
-                  <>
-                    <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-brand-gold" /> reading... (tap to
-                    pause)
-                  </>
-                )}
-              </button>
-            )}
+            {showVoicePicker && <VoicePicker onClose={() => setShowVoicePicker(false)} />}
+            {error && <p className="text-[12px] text-red-600">{error}</p>}
           </div>
-
-          {preparingSpeech && (
-            <p className="mt-1 flex items-center gap-1.5 text-xs text-slate-400">
-              <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-brand-gold" aria-hidden="true" />
-              Getting the {LANGUAGES.find((l) => l.code === language)?.label ?? ""} audio ready - the text above is
-              already correct, sound is just a moment behind...
-            </p>
-          )}
-
-          {noVoiceForLanguage && (
-            <p className="mt-1 text-xs text-amber-600">
-              Couldn&apos;t read this one aloud in {LANGUAGES.find((l) => l.code === language)?.label ?? "this language"}{" "}
-              right now - the text above is still correct.
-            </p>
-          )}
-
-          {showVoicePicker && (
-            <div className="mt-2">
-              <VoicePicker onClose={() => setShowVoicePicker(false)} />
-            </div>
-          )}
-
-          {error && <p className="mt-2 text-sm text-red-600">{error}</p>}
         </div>
       </div>
     </div>
