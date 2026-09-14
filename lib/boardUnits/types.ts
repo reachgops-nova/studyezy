@@ -1,0 +1,104 @@
+/**
+ * A unit's Drawing Board content.
+ *
+ * Real user direction 2026-09-14, with a working reference attached
+ * (drawing_board_unit10_v5.py): "we can use this template and examples as is
+ * and how interactive is this is good. just realign to our learning methods
+ * one by one and steady for the kids... once you reproduce this, we can do
+ * this for unit by unit."
+ *
+ * The whole point of this file is that last sentence. Everything that differs
+ * between units is data here; the player in components/board/DrawingBoard.tsx
+ * never changes. Adding Unit 11 means writing one more of these, not touching
+ * a component.
+ *
+ * Coordinates are in GRID units (0-10), never pixels - the player owns the
+ * mapping to SVG space. Getting that boundary wrong is what produced shapes
+ * floating off their own grid in earlier attempts.
+ */
+
+/** A polygon given by its grid-space corners, e.g. [[1,2],[3,2],[2,4]]. */
+export type GridPoints = [number, number][];
+
+export type BoardShape = {
+  points: GridPoints;
+  /** ghost = where it started, live = the shape under discussion. */
+  look: "ghost" | "live" | "correct" | "wrong";
+};
+
+/** A dashed vector arrow from one grid point to another. */
+export type BoardArrow = { from: [number, number]; to: [number, number] };
+
+/** A labelled dot, for calling out a specific vertex or coordinate. */
+export type BoardDot = { at: [number, number]; label?: string; tone?: "gold" | "green" | "red" | "blue" };
+
+export type BoardFrame = {
+  shapes?: BoardShape[];
+  arrows?: BoardArrow[];
+  dots?: BoardDot[];
+};
+
+/** Phase 1: one press of a stepper button. */
+export type ConceptStep = {
+  /** Button face, e.g. "2. Shift right +3". */
+  label: string;
+  /** Spoken, and shown on the subtitle strip. */
+  say: string;
+  frame: BoardFrame;
+};
+
+/** Phase 2/4: one answerable option. Choosing it draws its own outcome. */
+export type BoardOption = {
+  label: string;
+  correct: boolean;
+  /** What Ezy says for this choice - wrong answers explain, never just buzz. */
+  say: string;
+  /**
+   * What the board shows for this choice. A wrong answer draws where that
+   * answer would actually land, which is the single most useful thing the
+   * reference does: the child sees their own mistake happen.
+   */
+  frame: BoardFrame;
+};
+
+export type BoardTask = {
+  title: string;
+  prompt: string;
+  options: BoardOption[];
+  /** Concept this question belongs to, so mastery is recorded per concept. */
+  conceptId: string;
+};
+
+/** Phase 3: the slider lab. */
+export type BoardLab = {
+  prompt: string;
+  /** Bottom-left anchor of the shape being dragged around, in grid units. */
+  start: [number, number];
+  /** Offsets from the anchor that define the shape, e.g. a 2x2 square. */
+  shape: GridPoints;
+  range: { min: number; max: number };
+};
+
+export type BoardConcept = {
+  conceptId: string;
+  title: string;
+  icon: string;
+  /** Shown in the module popup from the tray. */
+  summary: string;
+  keyPoints: string[];
+};
+
+export type BoardUnit = {
+  unitKey: string;
+  title: string;
+  badge: string;
+  /** Grid extent. The reference uses 0-10 on both axes. */
+  gridMax: number;
+  concepts: BoardConcept[];
+  conceptSteps: ConceptStep[];
+  guidedTasks: BoardTask[];
+  lab: BoardLab;
+  assessment: { partA: BoardTask[]; partB: BoardTask[] };
+  /** Tappable readymade questions in the assistant panel. */
+  readymade: { q: string; a: string }[];
+};
