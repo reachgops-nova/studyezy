@@ -433,7 +433,7 @@ export default function DrawingBoard({ unit, paperTasks = [] }: { unit: BoardUni
             ) : (
             <svg
               viewBox={`0 0 ${VB_W} ${VB_H}`}
-              className="h-full max-h-[26rem] w-full max-w-[36rem] rounded-2xl border-[3px] border-slate-700 bg-[#0b1329]"
+              className="h-full max-h-[26rem] w-full max-w-[36rem] select-none touch-none rounded-2xl border-[3px] border-slate-700 bg-[#0b1329]"
               role="img"
               aria-label={`Coordinate grid showing ${unit.title}`}
             >
@@ -851,7 +851,7 @@ function NumberLineStage({
   const fmt = (v: number) => (Number.isInteger(v) ? String(v) : String(Number(v.toFixed(4))));
 
   return (
-    <svg viewBox={`0 0 ${W} ${H}`} className="h-full max-h-[26rem] w-full max-w-[42rem] rounded-2xl border-[3px] border-slate-700 bg-[#0b1329]" role="img" aria-label="Number line">
+    <svg viewBox={`0 0 ${W} ${H}`} className="h-full max-h-[26rem] w-full max-w-[42rem] select-none touch-none rounded-2xl border-[3px] border-slate-700 bg-[#0b1329]" role="img" aria-label="Number line">
       <defs>
         <marker id="nl-arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse">
           <path d="M0 0 L10 5 L0 10 z" fill="#f59e0b" />
