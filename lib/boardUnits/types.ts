@@ -50,11 +50,28 @@ export type NumberLineFrame = {
   parts?: { label: string; value: string; tone?: "gold" | "green" | "red" | "blue" }[];
 };
 
+/**
+ * A text stage, for subjects where the thing being taught is language rather
+ * than position or quantity. English Unit 2 is biography, chronological
+ * order, register, synonyms and prefixes - a grid says nothing about any of
+ * them, and neither does a number line.
+ */
+export type TextFrame = {
+  title?: string;
+  /** A passage, split into parts so some can be picked out in colour. */
+  passage?: { text: string; tone?: "gold" | "green" | "red" | "blue"; note?: string }[];
+  /** Words or events in a row - tappable, and draggable into columns. */
+  chips?: { text: string; tone?: "gold" | "green" | "red" | "blue"; note?: string }[];
+  /** Labelled buckets to sort into, e.g. Fact / Opinion, Formal / Informal. */
+  columns?: { label: string; items: string[]; tone?: "gold" | "green" | "red" | "blue" }[];
+};
+
 export type BoardFrame = {
   shapes?: BoardShape[];
   arrows?: BoardArrow[];
   dots?: BoardDot[];
   line?: NumberLineFrame;
+  text?: TextFrame;
 };
 
 /** Phase 1: one press of a stepper button. */
@@ -107,6 +124,8 @@ export type BoardTask = {
   setup?: BoardFrame;
   /** Answerable by dragging, as well as by the options below. */
   drag?: BoardDrag;
+  /** The text-stage equivalent: drag a word into the right bucket. */
+  chipDrag?: { chip: string; toColumn: number; hint?: string };
   prompt: string;
   options: BoardOption[];
   /** Concept this question belongs to, so mastery is recorded per concept. */
@@ -155,7 +174,7 @@ export type BoardUnit = {
   /** Grid extent. The reference uses 0-10 on both axes. */
   gridMax: number;
   /** Which stage this unit draws on. Defaults to the coordinate grid. */
-  stage?: "grid" | "numberLine";  // eslint-disable-line
+  stage?: "grid" | "numberLine" | "text";
   /** Shown and read out before anything else: what this chapter covers and
    *  what the child will be able to do by the end of it. */
   intro: { covers: string[]; outcomes: string[] };

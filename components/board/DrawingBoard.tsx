@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import React from "react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { BoardFrame, BoardTask, BoardUnit } from "@/lib/boardUnits/types";
 
@@ -231,6 +232,26 @@ export default function DrawingBoard({ unit, paperTasks = [] }: { unit: BoardUni
     );
   }
 
+  /** The question currently offering a word to sort into a bucket. */
+  const chipTask =
+    phase === 2 || phase === 4
+      ? (phase === 2 ? unit.guidedTasks : [...unit.assessment.partA, ...unit.assessment.partB]).find(
+          (t) => t.chipDrag && !answers[t.title],
+        )
+      : undefined;
+
+  function dropChip(columnIndex: number) {
+    const cd = chipTask?.chipDrag;
+    if (!cd || !chipTask) return;
+    const hit = columnIndex === cd.toColumn;
+    const opt = chipTask.options.find((o) => o.correct === hit);
+    setAnswers((prev) =>
+      prev[chipTask.title] ? prev : { ...prev, [chipTask.title]: { correct: hit, label: cd.chip, locked: true } },
+    );
+    sfx(hit ? "right" : "wrong");
+    say(opt?.say ?? (hit ? "That's the one." : "Not quite - have another look."), () => handOverToNextTask(chipTask.title));
+  }
+
   function answer(task: BoardTask, optionIndex: number) {
     const opt = task.options[optionIndex];
     setAnswers((prev) =>
@@ -356,7 +377,7 @@ export default function DrawingBoard({ unit, paperTasks = [] }: { unit: BoardUni
           >
             ← Unit
           </Link>
-          🏫 Drawing Board
+          🏫 Learning Board
           <span className="rounded-full bg-[#ec4899] px-3 py-0.5 text-xs text-white">{unit.badge}</span>
         </div>
         <div className="flex items-center gap-3">
@@ -422,7 +443,14 @@ export default function DrawingBoard({ unit, paperTasks = [] }: { unit: BoardUni
               </div>
             )}
 
-            {unit.stage === "numberLine" ? (
+            {unit.stage === "text" ? (
+              <TextStage
+                frame={frame}
+                onTap={(t) => say(t)}
+                chipDrag={chipTask?.chipDrag && !answers[chipTask.title] ? chipTask.chipDrag : undefined}
+                onDropChip={(col) => dropChip(col)}
+              />
+            ) : unit.stage === "numberLine" ? (
               <NumberLineStage
                 frame={frame}
                 onTap={(v) => say(nameValue(v))}
@@ -823,6 +851,115 @@ export default function DrawingBoard({ unit, paperTasks = [] }: { unit: BoardUni
  * hops drawn as arcs with their size written above, and place-value parts
  * underneath. Values in, pixels out - the same boundary the grid keeps.
  */
+const TONE: Record<string, string> = { gold: "#f59e0b", green: "#34d399", red: "#f43f5e", blue: "#38bdf8" };
+
+/**
+ * Renders a text frame: a passage with parts picked out in colour, a row of
+ * tappable words, and buckets to sort them into. Every coloured part says its
+ * note aloud when tapped, the same way a point on the grid does.
+ */
+function TextStage({
+  frame,
+  onTap,
+  chipDrag,
+  onDropChip,
+}: {
+  frame: BoardFrame;
+  onTap?: (t: string) => void;
+  chipDrag?: { chip: string; toColumn: number; hint?: string };
+  onDropChip?: (columnIndex: number) => void;
+}) {
+  const T = frame.text;
+  const [over, setOver] = React.useState<number | null>(null);
+  if (!T) return <p className="text-sm text-slate-500">Press a step to begin.</p>;
+
+  return (
+    <div className="flex h-full w-full select-none flex-col gap-4 overflow-y-auto p-4">
+      {T.title && <h3 className="text-center text-xl font-bold text-[#f59e0b]">{T.title}</h3>}
+
+      {T.passage && (
+        <p className="mx-auto max-w-3xl text-[1.05rem] leading-relaxed text-slate-200">
+          {T.passage.map((part, i) =>
+            part.tone ? (
+              <button
+                key={i}
+                type="button"
+                onClick={() => onTap?.(part.note ?? part.text)}
+                className="mx-0.5 rounded-md px-1 font-bold underline decoration-dotted underline-offset-4"
+                style={{ color: TONE[part.tone], backgroundColor: `${TONE[part.tone]}1f` }}
+              >
+                {part.text}
+              </button>
+            ) : (
+              <span key={i}>{part.text}</span>
+            ),
+          )}
+        </p>
+      )}
+
+      {T.chips && (
+        <div className="flex flex-wrap justify-center gap-2">
+          {T.chips.map((c, i) => (
+            <button
+              key={i}
+              type="button"
+              onClick={() => onTap?.(c.note ?? c.text)}
+              className="rounded-xl border-2 px-3.5 py-2 text-[0.95rem] font-bold"
+              style={{ borderColor: TONE[c.tone ?? "blue"], color: TONE[c.tone ?? "blue"], backgroundColor: `${TONE[c.tone ?? "blue"]}14` }}
+            >
+              {c.text}
+            </button>
+          ))}
+        </div>
+      )}
+
+      {chipDrag && (
+        <div
+          className="mx-auto cursor-grab rounded-xl border-2 border-[#ec4899] bg-[#ec4899]/15 px-4 py-2.5 text-[1rem] font-bold text-[#ec4899]"
+          draggable
+          onDragStart={(e) => e.dataTransfer.setData("text/plain", chipDrag.chip)}
+        >
+          {chipDrag.chip}
+          <span className="ml-2 text-[0.72rem] font-semibold opacity-80">{chipDrag.hint ?? "drag me into a box"}</span>
+        </div>
+      )}
+
+      {T.columns && (
+        <div className="mx-auto flex w-full max-w-3xl flex-wrap justify-center gap-3">
+          {T.columns.map((col, ci) => (
+            <div
+              key={col.label}
+              onDragOver={(e) => {
+                if (!chipDrag) return;
+                e.preventDefault();
+                setOver(ci);
+              }}
+              onDragLeave={() => setOver((o) => (o === ci ? null : o))}
+              onDrop={(e) => {
+                e.preventDefault();
+                setOver(null);
+                onDropChip?.(ci);
+              }}
+              className={`min-w-[12rem] flex-1 rounded-2xl border-2 p-3 transition-colors ${
+                over === ci ? "border-[#ec4899] bg-[#ec4899]/10" : "border-slate-700 bg-[#0f172a]"
+              }`}
+            >
+              <p className="mb-2 text-center text-[0.8rem] font-extrabold uppercase tracking-wider" style={{ color: TONE[col.tone ?? "blue"] }}>
+                {col.label}
+              </p>
+              <ul className="flex flex-col gap-1.5">
+                {col.items.map((it) => (
+                  <li key={it} className="rounded-lg bg-[#1e293b] px-2.5 py-1.5 text-[0.85rem] text-slate-300">{it}</li>
+                ))}
+              </ul>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 function NumberLineStage({
   frame,
   onTap,
