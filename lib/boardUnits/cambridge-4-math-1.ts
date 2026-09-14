@@ -89,6 +89,82 @@ export const CAMBRIDGE_4_MATH_1: BoardUnit = {
 
   conceptSteps: [
     {
+      label: "1.1 Poster · tenths",
+      conceptId: "1.1",
+      say: "Look at the chocolate bar. One whole bar cut into ten equal pieces - each single piece is one tenth, and we write it 0.1.",
+      frame: {
+        image: {
+          src: "/board-art/math1-number-poster.jpg",
+          alt: "Four panels: tenths as a chocolate bar, decomposing 45.8, regrouping 3.4, and counting below zero.",
+          title: "Mastering numbers: decimals and below zero",
+          focus: { x: 1, y: 26, w: 25, h: 70 },
+          hotspots: [
+            { label: "Tenths", at: [13, 20], note: "One piece of a ten-part chocolate bar is one tenth, written 0.1.", tone: "gold" },
+            { label: "Decompose", at: [38, 20], note: "Break the number into what each digit is really worth: 40, 5 and 0.8.", tone: "blue" },
+            { label: "Regroup", at: [62, 20], note: "3 wholes and 4 tenths is the same amount as 2 wholes and 14 tenths.", tone: "green" },
+            { label: "Below zero", at: [86, 20], note: "Count backwards in fives from 6, straight through zero, down to minus 9.", tone: "red" },
+          ],
+        },
+      },
+    },
+    {
+      label: "1.2 Poster · decompose",
+      conceptId: "1.2",
+      say: "Decomposing means breaking a number into what each digit is really worth. 45.8 comes apart into 40, then 5, then 0.8.",
+      frame: {
+        image: {
+          src: "/board-art/math1-number-poster.jpg",
+          alt: "Four panels: tenths as a chocolate bar, decomposing 45.8, regrouping 3.4, and counting below zero.",
+          title: "Mastering numbers: decimals and below zero",
+          focus: { x: 25, y: 26, w: 25, h: 70 },
+          hotspots: [
+            { label: "Tenths", at: [13, 20], note: "One piece of a ten-part chocolate bar is one tenth, written 0.1.", tone: "gold" },
+            { label: "Decompose", at: [38, 20], note: "Break the number into what each digit is really worth: 40, 5 and 0.8.", tone: "blue" },
+            { label: "Regroup", at: [62, 20], note: "3 wholes and 4 tenths is the same amount as 2 wholes and 14 tenths.", tone: "green" },
+            { label: "Below zero", at: [86, 20], note: "Count backwards in fives from 6, straight through zero, down to minus 9.", tone: "red" },
+          ],
+        },
+      },
+    },
+    {
+      label: "1.2 Poster · regroup",
+      conceptId: "1.2",
+      say: "Regrouping shuffles those parts without changing the total. Three wholes and four tenths is the very same amount as two wholes and fourteen tenths.",
+      frame: {
+        image: {
+          src: "/board-art/math1-number-poster.jpg",
+          alt: "Four panels: tenths as a chocolate bar, decomposing 45.8, regrouping 3.4, and counting below zero.",
+          title: "Mastering numbers: decimals and below zero",
+          focus: { x: 49, y: 26, w: 26, h: 70 },
+          hotspots: [
+            { label: "Tenths", at: [13, 20], note: "One piece of a ten-part chocolate bar is one tenth, written 0.1.", tone: "gold" },
+            { label: "Decompose", at: [38, 20], note: "Break the number into what each digit is really worth: 40, 5 and 0.8.", tone: "blue" },
+            { label: "Regroup", at: [62, 20], note: "3 wholes and 4 tenths is the same amount as 2 wholes and 14 tenths.", tone: "green" },
+            { label: "Below zero", at: [86, 20], note: "Count backwards in fives from 6, straight through zero, down to minus 9.", tone: "red" },
+          ],
+        },
+      },
+    },
+    {
+      label: "1.4 Poster · below zero",
+      conceptId: "1.4",
+      say: "And here is counting below zero. Watch the hops of five going backwards from 6, straight through zero, all the way down to minus 9.",
+      frame: {
+        image: {
+          src: "/board-art/math1-number-poster.jpg",
+          alt: "Four panels: tenths as a chocolate bar, decomposing 45.8, regrouping 3.4, and counting below zero.",
+          title: "Mastering numbers: decimals and below zero",
+          focus: { x: 73, y: 26, w: 26, h: 70 },
+          hotspots: [
+            { label: "Tenths", at: [13, 20], note: "One piece of a ten-part chocolate bar is one tenth, written 0.1.", tone: "gold" },
+            { label: "Decompose", at: [38, 20], note: "Break the number into what each digit is really worth: 40, 5 and 0.8.", tone: "blue" },
+            { label: "Regroup", at: [62, 20], note: "3 wholes and 4 tenths is the same amount as 2 wholes and 14 tenths.", tone: "green" },
+            { label: "Below zero", at: [86, 20], note: "Count backwards in fives from 6, straight through zero, down to minus 9.", tone: "red" },
+          ],
+        },
+      },
+    },
+    {
       label: "1. One whole",
       conceptId: "1.1",
       say: "Here is one whole unit, from 0 to 1. Nothing has been split up yet.",
