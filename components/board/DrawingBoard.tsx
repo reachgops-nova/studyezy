@@ -157,6 +157,22 @@ export default function DrawingBoard({ unit, paperTasks = [] }: { unit: BoardUni
     };
   }, []);
 
+  // Steps bucketed by the concept they belong to, in the order they appear.
+  const conceptGroups = (() => {
+    const out: { key: string; label: string; indexes: number[] }[] = [];
+    unit.conceptSteps.forEach((st, i) => {
+      const key = st.conceptId ?? st.label;
+      const found = out.find((g) => g.key === key);
+      if (found) found.indexes.push(i);
+      else {
+        const c = unit.concepts.find((x) => x.conceptId === key);
+        out.push({ key, label: c ? `${c.conceptId} ${c.title}` : st.label, indexes: [i] });
+      }
+    });
+    return out;
+  })();
+  const activeGroup = conceptGroups.find((g) => g.indexes.includes(step));
+
   const activeConcept = unit.concepts.find((c) => c.conceptId === unit.conceptSteps[step]?.conceptId);
 
   function loadStep(i: number) {
@@ -428,22 +444,51 @@ export default function DrawingBoard({ unit, paperTasks = [] }: { unit: BoardUni
       <div className="grid min-h-0 flex-1 gap-3 p-3 lg:grid-cols-[1fr_22rem]">
         {/* ---------- Board ---------- */}
         <section className="flex min-h-0 flex-col overflow-hidden rounded-3xl border-4 border-slate-700 bg-[#0f172a] shadow-2xl">
+          {/* Grouped by concept. A unit where several concepts are walked
+              across an illustration can reach forty steps, and a flat row of
+              forty buttons is not navigable - so the row shows one button per
+              concept, and its sub-steps appear underneath only while that
+              concept is the one being read. */}
           {phase === 1 && (
-            <div className="flex shrink-0 flex-wrap justify-center gap-2 border-b border-slate-800 px-3 py-2">
-                {unit.conceptSteps.map((s, i) => (
-                  <button
-                    key={s.label}
-                    type="button"
-                    onClick={() => loadStep(i)}
-                    className={`rounded-xl border-2 px-3 py-1.5 text-xs font-bold transition-colors ${
-                      i === step
-                        ? "border-[#f59e0b] bg-[#f59e0b] text-[#020617]"
-                        : "border-slate-700 bg-slate-900/95 text-slate-300 hover:border-[#38bdf8] hover:text-white"
-                    }`}
-                  >
-                    {s.label}
-                  </button>
-                ))}
+            <div className="shrink-0 border-b border-slate-800 px-3 py-2">
+              <div className="flex flex-wrap justify-center gap-2">
+                {conceptGroups.map((g) => {
+                  const isHere = g.indexes.includes(step);
+                  return (
+                    <button
+                      key={g.key}
+                      type="button"
+                      onClick={() => loadStep(g.indexes[0])}
+                      className={`rounded-xl border-2 px-3 py-1.5 text-xs font-bold transition-colors ${
+                        isHere
+                          ? "border-[#f59e0b] bg-[#f59e0b] text-[#020617]"
+                          : "border-slate-700 bg-slate-900/95 text-slate-300 hover:border-[#38bdf8] hover:text-white"
+                      }`}
+                    >
+                      {g.label}
+                      {g.indexes.length > 1 ? ` · ${g.indexes.length}` : ""}
+                    </button>
+                  );
+                })}
+              </div>
+              {activeGroup && activeGroup.indexes.length > 1 && (
+                <div className="mt-2 flex flex-wrap justify-center gap-1.5">
+                  {activeGroup.indexes.map((idx, n) => (
+                    <button
+                      key={idx}
+                      type="button"
+                      onClick={() => loadStep(idx)}
+                      className={`rounded-lg border px-2.5 py-1 text-[0.7rem] font-bold transition-colors ${
+                        idx === step
+                          ? "border-[#38bdf8] bg-[#38bdf8]/20 text-[#7dd3fc]"
+                          : "border-slate-700 text-slate-400 hover:border-[#38bdf8] hover:text-white"
+                      }`}
+                    >
+                      {n + 1}. {unit.conceptSteps[idx].label.replace(/^\S+\s*/, "")}
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
           )}
 
@@ -909,13 +954,22 @@ function ImageStage({ frame, onTap }: { frame: BoardFrame; onTap?: (t: string) =
         >
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src={I.src} alt={I.alt} className="h-full w-full object-contain" />
+          {/* Counter-scaled: the labels live in the image's coordinate space
+              so they stay pinned to their features, but they must not
+              magnify with it - at a 3x zoom a fixed-size label balloons and
+              drifts away from the thing it names. */}
           {(I.hotspots ?? []).map((h, i) => (
             <button
               key={i}
               type="button"
               onClick={() => onTap?.(`${h.label}. ${h.note}`)}
-              style={{ left: `${h.at[0]}%`, top: `${h.at[1]}%`, borderColor: TONE[h.tone ?? "gold"] }}
-              className="absolute -translate-x-1/2 -translate-y-1/2 rounded-full border-2 bg-[#0b1329]/80 px-2 py-0.5 text-[0.6rem] font-bold text-white backdrop-blur-sm hover:bg-[#0b1329]"
+              style={{
+                left: `${h.at[0]}%`,
+                top: `${h.at[1]}%`,
+                borderColor: TONE[h.tone ?? "gold"],
+                transform: `translate(-50%, -50%) scale(${1 / scale})`,
+              }}
+              className="absolute whitespace-nowrap rounded-full border-2 bg-[#0b1329]/85 px-2 py-0.5 text-[0.7rem] font-bold text-white backdrop-blur-sm hover:bg-[#0b1329]"
             >
               {h.label}
             </button>
