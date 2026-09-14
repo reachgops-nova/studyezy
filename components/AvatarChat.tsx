@@ -1829,14 +1829,14 @@ export default function AvatarChat({
         // below the board it costs the same height and hides nothing, and
         // the board gets everything left over.
         className={`z-20 flex shrink-0 flex-col rounded-xl border border-practice-border bg-practice-bg ${
-          isWorkbookOpen ? "min-h-0 max-h-[48%]" : "max-h-[7.5rem]"
+          isWorkbookOpen ? "min-h-0 max-h-[48%]" : "max-h-[6rem]"
         }`}
       >
         <button
           type="button"
           onClick={() => setIsWorkbookOpen((open) => !open)}
           aria-expanded={isWorkbookOpen}
-          className="flex shrink-0 items-center justify-between gap-2 rounded-t-xl px-4 py-1.5 text-left hover:bg-white/50"
+          className="flex shrink-0 items-center justify-between gap-2 rounded-t-xl px-4 py-1 text-left hover:bg-white/50"
         >
           <span className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">
             Workbook - your questions, hints and notes
@@ -1911,7 +1911,7 @@ export default function AvatarChat({
 
         {/* The bottom zone: always on screen because it is a fixed row of
             the stack, not because it floats over the thread. */}
-        <div className="shrink-0 border-t border-practice-border bg-practice-bg p-4">
+        <div className="shrink-0 border-t border-practice-border bg-practice-bg p-2.5">
           <div className="flex gap-2">
             <input
               ref={inputRef}

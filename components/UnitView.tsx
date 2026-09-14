@@ -664,7 +664,10 @@ export function UnitView({
       <section className="flex-1 min-w-0 flex flex-col bg-[#f4f6f1] lg:overflow-hidden relative">
         {isBookletCollapsed && (
           <div className="p-3 bg-white border-b border-[#16241f]/10 flex items-center justify-between">
-            <span className="text-xs font-serif font-black text-[#16241f]">Sourced from Page {activePage}</span>
+            <span className="flex items-center gap-2 text-xs font-serif font-black text-[#16241f]">
+              <span className="h-2 w-2 shrink-0 rounded-full bg-orange-500" aria-hidden />
+              Sourced from Page {activePage}
+            </span>
             <button
               onClick={() => setIsBookletCollapsed(false)}
               className="text-xs font-bold text-[#9c6f1f] hover:underline flex items-center gap-1.5"
@@ -674,12 +677,6 @@ export function UnitView({
           </div>
         )}
 
-        <div className="px-4 py-2 border-b border-[#16241f]/5 bg-gray-50 flex items-center gap-2 shrink-0">
-          <span className="w-2.5 h-2.5 rounded-full bg-orange-500 animate-pulse" />
-          <span className="text-[10px] font-sans font-bold uppercase tracking-wider text-[#16241f]/60">
-            Ezy the Kangaroo Live Voice Session
-          </span>
-        </div>
 
         {/* max-w-3xl mx-auto keeps chat text at a readable line length on a
             wide monitor now that the 3-column layout can stretch much wider
