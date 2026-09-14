@@ -1080,7 +1080,7 @@ export default function AvatarChat({
     if (skipMicroCheck) {
       const checkIn = "Time to try it yourself - give the activity below a go!";
       const id = nextId();
-      setMessages((prev) => [...prev, { id, sender: "avatar", text: checkIn }]);
+      setMessages((prev) => [...prev, { id, sender: "avatar", text: checkIn, kind: "narration" }]);
       speakText(checkIn, id, () => {});
       setReadyForInput(true);
       setAwaitingContinue(false);
@@ -1097,7 +1097,7 @@ export default function AvatarChat({
       ? "Want to try answering a quick question, ask me anything about this, or move on to the next part?"
       : "Want to try answering a quick question, or ask me anything about this?";
     const id = nextId();
-    setMessages((prev) => [...prev, { id, sender: "avatar", text: checkIn }]);
+    setMessages((prev) => [...prev, { id, sender: "avatar", text: checkIn, kind: "narration" }]);
     speakText(checkIn, id, () => {});
     setReadyForInput(true);
     setAwaitingContinue(false);
@@ -1120,7 +1120,7 @@ export default function AvatarChat({
         ? "Ready to move on to the next part, or want to ask me anything else about this first?"
         : "Nice work - that's everything in this unit! Want to ask me anything else about this first?";
       const id = nextId();
-      setMessages((prev) => [...prev, { id, sender: "avatar", text: checkIn }]);
+      setMessages((prev) => [...prev, { id, sender: "avatar", text: checkIn, kind: "narration" }]);
       speakText(checkIn, id, () => {});
       setReadyForInput(true);
       setAwaitingContinue(false);
@@ -1131,7 +1131,7 @@ export default function AvatarChat({
 
     const question = samples[index].question;
     const id = nextId();
-    setMessages((prev) => [...prev, { id, sender: "avatar", text: question }]);
+    setMessages((prev) => [...prev, { id, sender: "avatar", text: question, kind: "narration" }]);
     speakText(question, id, () => {});
     setReadyForInput(true);
     setAwaitingContinue(false);
@@ -1161,7 +1161,7 @@ export default function AvatarChat({
         } else {
           const prompt = pausePromptFor(concept, index);
           const id = nextId();
-          setMessages((prev) => [...prev, { id, sender: "avatar", text: prompt }]);
+          setMessages((prev) => [...prev, { id, sender: "avatar", text: prompt, kind: "narration" }]);
           speakText(prompt, id, () => {});
           setReadyForInput(true);
           setAwaitingContinue(true);
