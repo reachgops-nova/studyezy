@@ -448,7 +448,9 @@ export default function DrawingBoard({ unit, paperTasks = [] }: { unit: BoardUni
           )}
 
           <div className="relative flex min-h-0 flex-1 items-center justify-center p-3">
-            {frame.diagram ? (
+            {frame.image ? (
+              <ImageStage frame={frame} onTap={(t) => say(t)} />
+            ) : frame.diagram ? (
               <DiagramStage frame={frame} onTap={(t) => say(t)} />
             ) : frame.bar ? (
               <BarStage frame={frame} onTap={(t) => say(t)} />
@@ -883,6 +885,48 @@ export default function DrawingBoard({ unit, paperTasks = [] }: { unit: BoardUni
  * hops drawn as arcs with their size written above, and place-value parts
  * underneath. Values in, pixels out - the same boundary the grid keeps.
  */
+/**
+ * A real illustration, panned and zoomed step by step. The transform is what
+ * turns one big picture into a walkthrough - each step focuses a region, and
+ * the move between them is the animation.
+ */
+function ImageStage({ frame, onTap }: { frame: BoardFrame; onTap?: (t: string) => void }) {
+  const I = frame.image;
+  if (!I) return null;
+  const f = I.focus;
+  // Zoom so the focused region fills the stage, then shift it to the middle.
+  const scale = f ? Math.min(100 / f.w, 100 / f.h) : 1;
+  const originX = f ? f.x + f.w / 2 : 50;
+  const originY = f ? f.y + f.h / 2 : 50;
+
+  return (
+    <div className="flex h-full w-full select-none flex-col items-center gap-2 p-3">
+      {I.title && <h3 className="shrink-0 text-center text-xl font-bold text-[#f59e0b]">{I.title}</h3>}
+      <div className="relative min-h-0 w-full flex-1 overflow-hidden rounded-2xl border-[3px] border-slate-700 bg-[#0b1329]">
+        <div
+          className="absolute inset-0 motion-safe:transition-transform motion-safe:duration-700 motion-safe:ease-out"
+          style={{ transform: `scale(${scale})`, transformOrigin: `${originX}% ${originY}%` }}
+        >
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={I.src} alt={I.alt} className="h-full w-full object-contain" />
+          {(I.hotspots ?? []).map((h, i) => (
+            <button
+              key={i}
+              type="button"
+              onClick={() => onTap?.(`${h.label}. ${h.note}`)}
+              style={{ left: `${h.at[0]}%`, top: `${h.at[1]}%`, borderColor: TONE[h.tone ?? "gold"] }}
+              className="absolute -translate-x-1/2 -translate-y-1/2 rounded-full border-2 bg-[#0b1329]/80 px-2 py-0.5 text-[0.6rem] font-bold text-white backdrop-blur-sm hover:bg-[#0b1329]"
+            >
+              {h.label}
+            </button>
+          ))}
+        </div>
+      </div>
+      <p className="shrink-0 text-[0.78rem] text-slate-500">Tap a label to hear more.</p>
+    </div>
+  );
+}
+
 /** A labelled figure. Artwork is repo source, still sanitised on the way in. */
 function DiagramStage({ frame, onTap }: { frame: BoardFrame; onTap?: (t: string) => void }) {
   const D = frame.diagram;

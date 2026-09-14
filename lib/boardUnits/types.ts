@@ -134,6 +134,28 @@ export type TimelineFrame = {
   events: { when: string; what: string; note?: string; tone?: Tone }[];
 };
 
+/**
+ * A real illustration on the board, walked through rather than just shown.
+ *
+ * Real user direction 2026-09-14: generate artwork covering several topics in
+ * one go and "split or clip and use them aptly for respective topics", then
+ * "use them for interactive session on the drawing board animating them
+ * wherever possible". So a frame can focus on one region of a bigger picture,
+ * and successive steps pan across it - one image, many teaching moments, no
+ * separate crops to manage.
+ *
+ * All coordinates are percentages of the image, so they survive any resize.
+ */
+export type ImageFrame = {
+  src: string;
+  alt: string;
+  title?: string;
+  /** Tappable labels sitting on the picture, each explaining itself. */
+  hotspots?: { label: string; at: [number, number]; note: string; tone?: Tone }[];
+  /** The region to zoom to. Omitted shows the whole picture. */
+  focus?: { x: number; y: number; w: number; h: number };
+};
+
 export type BoardFrame = {
   shapes?: BoardShape[];
   arrows?: BoardArrow[];
@@ -144,6 +166,7 @@ export type BoardFrame = {
   bar?: BarFrame;
   chart?: ChartFrame;
   timeline?: TimelineFrame;
+  image?: ImageFrame;
 };
 
 /** Phase 1: one press of a stepper button. */

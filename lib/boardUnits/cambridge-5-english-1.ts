@@ -514,15 +514,115 @@ export const CAMBRIDGE_5_ENGLISH_1: BoardUnit = {
         },
       },
     },
-    {
-      label: "1.10 Story structure (the narrative 'mountain')",
+        {
+      label: "1.10 Story structure",
       conceptId: "1.10",
-      say: "Story structure is the shape a story's events follow from beginning to end. Many stories follow a 'narrative mountain': the beginning sets the scene, then events build up, lead to a challenge, reach a problem (the most tense...You will find this on page 19 of your book, in The Elephant who lost his Patience (a fable from India).",
+      say: "Many stories follow a narrative mountain. Look at the whole shape first - it climbs to a peak in the middle, then comes back down.",
       frame: {
-        text: {
-          title: "Story structure (the narrative 'mountain')· Page 19",
-          cards: [
-            { tag: "Story Pace", title: "Building tension", desc: "Short clauses speed the pace up as the excitement builds when the sky rises.", quote: "The First Sunrise (Australia)" },
+        image: {
+          src: "/board-art/en1-narrative-mountain.jpg", alt: "The narrative mountain: beginning, build up, problem at the peak, resolution and ending.",
+          title: "The narrative mountain",
+          hotspots: [
+            { label: "Beginning", at: [21, 47], note: "The start, where we meet the characters and see the setting.", tone: "gold" },
+            { label: "Build up", at: [39, 35], note: "Exciting clues appear and the action starts to move faster.", tone: "green" },
+            { label: "Problem", at: [58, 26], note: "The peak, and the most exciting part of the story.", tone: "red" },
+            { label: "Resolution", at: [72, 40], note: "The action slows down as the characters find ways to fix things.", tone: "blue" },
+            { label: "Ending", at: [86, 47], note: "The story finishes and all the parts come together at last.", tone: "gold" },
+          ],
+        },
+      },
+    },
+    {
+      label: "1.10a Beginning",
+      conceptId: "1.10",
+      say: "At the foot of the mountain is the beginning, where we meet the characters and see where the story happens.",
+      frame: {
+        image: {
+          src: "/board-art/en1-narrative-mountain.jpg", alt: "The narrative mountain: beginning, build up, problem at the peak, resolution and ending.",
+          title: "The narrative mountain",
+          focus: { x: 4, y: 28, w: 30, h: 50 },
+          hotspots: [
+            { label: "Beginning", at: [21, 47], note: "The start, where we meet the characters and see the setting.", tone: "gold" },
+            { label: "Build up", at: [39, 35], note: "Exciting clues appear and the action starts to move faster.", tone: "green" },
+            { label: "Problem", at: [58, 26], note: "The peak, and the most exciting part of the story.", tone: "red" },
+            { label: "Resolution", at: [72, 40], note: "The action slows down as the characters find ways to fix things.", tone: "blue" },
+            { label: "Ending", at: [86, 47], note: "The story finishes and all the parts come together at last.", tone: "gold" },
+          ],
+        },
+      },
+    },
+    {
+      label: "1.10b Build up",
+      conceptId: "1.10",
+      say: "Climbing the mountain is the build up. Exciting clues appear and the action starts to move faster.",
+      frame: {
+        image: {
+          src: "/board-art/en1-narrative-mountain.jpg", alt: "The narrative mountain: beginning, build up, problem at the peak, resolution and ending.",
+          title: "The narrative mountain",
+          focus: { x: 26, y: 18, w: 30, h: 50 },
+          hotspots: [
+            { label: "Beginning", at: [21, 47], note: "The start, where we meet the characters and see the setting.", tone: "gold" },
+            { label: "Build up", at: [39, 35], note: "Exciting clues appear and the action starts to move faster.", tone: "green" },
+            { label: "Problem", at: [58, 26], note: "The peak, and the most exciting part of the story.", tone: "red" },
+            { label: "Resolution", at: [72, 40], note: "The action slows down as the characters find ways to fix things.", tone: "blue" },
+            { label: "Ending", at: [86, 47], note: "The story finishes and all the parts come together at last.", tone: "gold" },
+          ],
+        },
+      },
+    },
+    {
+      label: "1.10c Problem",
+      conceptId: "1.10",
+      say: "The peak is the problem - the most exciting part, where everything comes to a head.",
+      frame: {
+        image: {
+          src: "/board-art/en1-narrative-mountain.jpg", alt: "The narrative mountain: beginning, build up, problem at the peak, resolution and ending.",
+          title: "The narrative mountain",
+          focus: { x: 45, y: 8, w: 30, h: 45 },
+          hotspots: [
+            { label: "Beginning", at: [21, 47], note: "The start, where we meet the characters and see the setting.", tone: "gold" },
+            { label: "Build up", at: [39, 35], note: "Exciting clues appear and the action starts to move faster.", tone: "green" },
+            { label: "Problem", at: [58, 26], note: "The peak, and the most exciting part of the story.", tone: "red" },
+            { label: "Resolution", at: [72, 40], note: "The action slows down as the characters find ways to fix things.", tone: "blue" },
+            { label: "Ending", at: [86, 47], note: "The story finishes and all the parts come together at last.", tone: "gold" },
+          ],
+        },
+      },
+    },
+    {
+      label: "1.10d Resolution",
+      conceptId: "1.10",
+      say: "Coming down the other side is the resolution. The action slows as the characters find ways to fix things.",
+      frame: {
+        image: {
+          src: "/board-art/en1-narrative-mountain.jpg", alt: "The narrative mountain: beginning, build up, problem at the peak, resolution and ending.",
+          title: "The narrative mountain",
+          focus: { x: 62, y: 22, w: 30, h: 50 },
+          hotspots: [
+            { label: "Beginning", at: [21, 47], note: "The start, where we meet the characters and see the setting.", tone: "gold" },
+            { label: "Build up", at: [39, 35], note: "Exciting clues appear and the action starts to move faster.", tone: "green" },
+            { label: "Problem", at: [58, 26], note: "The peak, and the most exciting part of the story.", tone: "red" },
+            { label: "Resolution", at: [72, 40], note: "The action slows down as the characters find ways to fix things.", tone: "blue" },
+            { label: "Ending", at: [86, 47], note: "The story finishes and all the parts come together at last.", tone: "gold" },
+          ],
+        },
+      },
+    },
+    {
+      label: "1.10e Ending",
+      conceptId: "1.10",
+      say: "And at the foot again is the ending, where the story finishes and all the parts come together.",
+      frame: {
+        image: {
+          src: "/board-art/en1-narrative-mountain.jpg", alt: "The narrative mountain: beginning, build up, problem at the peak, resolution and ending.",
+          title: "The narrative mountain",
+          focus: { x: 74, y: 28, w: 26, h: 50 },
+          hotspots: [
+            { label: "Beginning", at: [21, 47], note: "The start, where we meet the characters and see the setting.", tone: "gold" },
+            { label: "Build up", at: [39, 35], note: "Exciting clues appear and the action starts to move faster.", tone: "green" },
+            { label: "Problem", at: [58, 26], note: "The peak, and the most exciting part of the story.", tone: "red" },
+            { label: "Resolution", at: [72, 40], note: "The action slows down as the characters find ways to fix things.", tone: "blue" },
+            { label: "Ending", at: [86, 47], note: "The story finishes and all the parts come together at last.", tone: "gold" },
           ],
         },
       },
