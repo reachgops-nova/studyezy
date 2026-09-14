@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { BoardFrame, BoardTask, BoardUnit } from "@/lib/boardUnits/types";
 
@@ -121,11 +122,6 @@ export default function DrawingBoard({ unit }: { unit: BoardUnit }) {
     say(s.say);
   }
 
-  const allTasks = useMemo(
-    () => [...unit.guidedTasks, ...unit.assessment.partA, ...unit.assessment.partB],
-    [unit],
-  );
-
   function answer(task: BoardTask, optionIndex: number) {
     const opt = task.options[optionIndex];
     setAnswers((prev) => ({ ...prev, [task.title]: { correct: opt.correct, label: opt.label } }));
@@ -236,6 +232,15 @@ export default function DrawingBoard({ unit }: { unit: BoardUnit }) {
       {/* Header */}
       <header className="flex shrink-0 flex-wrap items-center justify-between gap-3 border-b-4 border-[#f59e0b] bg-[#020617] px-5 py-2.5">
         <div className="flex items-center gap-2.5 text-lg font-bold text-[#f59e0b]">
+          {/* The board is a room inside the unit, not a separate app - real
+              feedback 2026-09-14: "it has not synced up with our old link
+              portion". */}
+          <Link
+            href={`/learn/${unit.unitKey}`}
+            className="rounded-lg border-2 border-slate-700 px-2.5 py-1 text-sm text-slate-300 transition-colors hover:border-[#38bdf8] hover:text-[#38bdf8]"
+          >
+            ← Unit
+          </Link>
           🏫 Drawing Board
           <span className="rounded-full bg-[#ec4899] px-3 py-0.5 text-xs text-white">{unit.badge}</span>
         </div>
@@ -531,6 +536,23 @@ export default function DrawingBoard({ unit }: { unit: BoardUnit }) {
                 {saveState === "saved" ? "✓ Saved to your progress" : saveState === "saving" ? "Saving..." : "Save this to my progress"}
               </button>
               {saveState === "error" && <p className="text-[0.78rem] text-red-400">Couldn&apos;t save that - your answers are still on screen, try again.</p>}
+              {/* Everything this unit already has, reachable from the end of
+                  the board rather than leaving the child at a dead end. */}
+              <div className="flex flex-col gap-2">
+                <p className="text-[0.7rem] font-extrabold uppercase tracking-wider text-slate-500">Carry on with</p>
+                <Link href={`/exam/${unit.unitKey}`} className="rounded-xl border-2 border-slate-600 bg-[#0f172a] px-4 py-2.5 text-center text-sm font-bold text-slate-200 hover:border-[#38bdf8]">
+                  ✍️ Written exam practice
+                </Link>
+                <Link href={`/test/${unit.unitKey}`} className="rounded-xl border-2 border-slate-600 bg-[#0f172a] px-4 py-2.5 text-center text-sm font-bold text-slate-200 hover:border-[#38bdf8]">
+                  📋 Progression test
+                </Link>
+                <Link href="/plan" className="rounded-xl border-2 border-slate-600 bg-[#0f172a] px-4 py-2.5 text-center text-sm font-bold text-slate-200 hover:border-[#38bdf8]">
+                  🧠 Prep plan &amp; brush-ups
+                </Link>
+                <Link href={`/learn/${unit.unitKey}`} className="rounded-xl border-2 border-slate-600 bg-[#0f172a] px-4 py-2.5 text-center text-sm font-bold text-slate-200 hover:border-[#38bdf8]">
+                  💬 Talk it through with Ezy
+                </Link>
+              </div>
               <button type="button" onClick={() => { setAnswers({}); goPhase(1); }} className="mt-auto rounded-xl border-2 border-slate-600 bg-[#0f172a] px-4 py-2.5 font-bold text-slate-200 hover:border-[#38bdf8]">
                 Walk through it again 🔄
               </button>

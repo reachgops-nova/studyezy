@@ -8,6 +8,7 @@ import type { ResourceGroup } from "@/lib/queries/unitResources";
 import UnitResources from "./UnitResources";
 import Booklet from "./Booklet";
 import { Illustration, hasIllustration } from "./illustrations";
+import { BOARD_UNITS } from "@/lib/boardUnits";
 
 interface LatestTestAttempt {
   band: MasteryBand;
@@ -256,6 +257,28 @@ export default function UnitOverview({
             ))}
           </ul>
         </div>
+      )}
+
+      {/* The Drawing Board is the interactive route through this unit -
+          concept walkthrough, guided practice, lab, check, then what next.
+          It was unreachable from here when it first shipped (real feedback
+          2026-09-14: "it has not synced up with our old link portion"), so
+          the unit now opens onto it wherever one exists. */}
+      {BOARD_UNITS[unitKey] && (
+        <Link
+          href={`/board/${unitKey}`}
+          className="group flex items-center gap-4 rounded-2xl border-2 border-[#38bdf8]/40 bg-[#0f172a] p-5 text-white shadow-soft transition-colors hover:border-[#38bdf8]"
+        >
+          <span className="grid h-12 w-12 shrink-0 place-items-center rounded-xl bg-[#38bdf8] text-2xl">🏫</span>
+          <span className="min-w-0 flex-1">
+            <span className="block font-semibold text-[#f59e0b]">Open the Drawing Board</span>
+            <span className="mt-0.5 block text-sm text-slate-300">
+              Walk through {unit.unit_title ?? "this unit"} step by step, practise with instant feedback, then check
+              yourself - your score comes back here.
+            </span>
+          </span>
+          <span className="shrink-0 text-xl text-[#38bdf8] transition-transform group-hover:translate-x-1">→</span>
+        </Link>
       )}
 
       <div className="rounded-2xl border border-slate-200/70 bg-white p-5 shadow-soft">
