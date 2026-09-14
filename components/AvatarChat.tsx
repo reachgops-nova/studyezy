@@ -1637,9 +1637,37 @@ export default function AvatarChat({
           </div>
 
           {/* The example being explained, given the whole width. */}
-          <div className="flex min-h-0 flex-1 items-center justify-center overflow-y-auto rounded-lg border border-[#9c6f1f]/30 bg-white p-2">
-            <div className="w-full">{(sceneBoard[activeBoardIndex] ?? sceneBoard[sceneBoard.length - 1])?.node}</div>
+          <div className="flex min-h-0 flex-1 items-stretch justify-center overflow-hidden rounded-lg border border-[#9c6f1f]/30 bg-white p-2">
+            {(sceneBoard[activeBoardIndex] ?? sceneBoard[sceneBoard.length - 1])?.node}
           </div>
+
+          {/* Projector controls. Real user direction 2026-09-14: "a digital
+              board where we can click / touch and rerun the examples in a
+              projector manner". Stepping between examples belongs here, next
+              to the picture, not buried in a list somewhere else. */}
+          {sceneBoard.length > 1 && (
+            <div className="mt-1 flex shrink-0 items-center justify-center gap-3 text-[11px] font-semibold text-[#9c6f1f]">
+              <button
+                type="button"
+                onClick={() => setActiveBoardIndex((i) => Math.max(0, i - 1))}
+                disabled={activeBoardIndex === 0}
+                className="rounded px-2 py-0.5 hover:underline disabled:opacity-30"
+              >
+                ◀ Previous
+              </button>
+              <span className="text-slate-400">
+                {activeBoardIndex + 1} / {sceneBoard.length}
+              </span>
+              <button
+                type="button"
+                onClick={() => setActiveBoardIndex((i) => Math.min(sceneBoard.length - 1, i + 1))}
+                disabled={activeBoardIndex === sceneBoard.length - 1}
+                className="rounded px-2 py-0.5 hover:underline disabled:opacity-30"
+              >
+                Next ▶
+              </button>
+            </div>
+          )}
 
           {/* Subtitle: what Ezy is saying, read along word by word. This is
               the reading surface for narration now - real user direction
@@ -1679,38 +1707,113 @@ export default function AvatarChat({
             </div>
           )}
 
-          {/* Real user direction 2026-09-14: "and ask if you need anything
-              more here" - offered per example, on the board, rather than
-              making the child think to ask. */}
-          {!speaking && !isWorkbookOpen && (
-            <div className="mt-2 flex shrink-0 flex-wrap items-center gap-2">
-              <span className="text-[11px] font-medium text-slate-500">Need anything more on this one?</span>
+          {/* Every lesson control lives on the board. Real user feedback
+              2026-09-14 (annotated screenshot): three separate rows of chips
+              were stacking and colliding above the composer - the per-example
+              offer, the checkpoint chips and the follow-up suggestions all
+              said overlapping things in different places. The board is where
+              the child is looking and where the hints and question session
+              belong, so it owns them; the workbook below is left with just
+              the thread and the input. */}
+          <div className="mt-2 shrink-0 [&_.mb-3]:mb-0">
+        {awaitingContinue ? (
+          <div className="mb-3 flex flex-wrap gap-2">
+            <button
+              type="button"
+              onClick={handleContinueCheckpoint}
+              disabled={loading}
+              className="rounded-full bg-green-600 px-4 py-1.5 text-xs font-medium text-white hover:bg-green-700 disabled:opacity-50"
+            >
+              👍 Got it, keep going
+            </button>
+            <button
+              type="button"
+              onClick={handleExplainDifferently}
+              disabled={loading}
+              className="rounded-full border border-slate-300 bg-white px-4 py-1.5 text-xs text-slate-700 hover:bg-slate-50 disabled:opacity-50"
+            >
+              🤔 Kind of - explain it another way
+            </button>
+            <button
+              type="button"
+              onClick={handleRepeatCheckpoint}
+              disabled={loading}
+              className="rounded-full border border-slate-300 bg-white px-4 py-1.5 text-xs text-slate-700 hover:bg-slate-50 disabled:opacity-50"
+            >
+              🔁 Say that again
+            </button>
+            <button
+              type="button"
+              onClick={promptForSpecificConfusion}
+              disabled={loading}
+              className="rounded-full border border-slate-300 bg-white px-4 py-1.5 text-xs text-slate-700 hover:bg-slate-50 disabled:opacity-50"
+            >
+              ❓ I&apos;m stuck on one part
+            </button>
+            {dynamicFollowUps.length > 0 && (
+              <div className="mt-1 flex w-full flex-wrap gap-2 border-t border-slate-200 pt-2">
+                {dynamicFollowUps.map((q, i) => (
+                  <button
+                    key={i}
+                    type="button"
+                    onClick={() => sendMessage(q)}
+                    disabled={loading}
+                    className="rounded-full border border-brand-ink-light bg-white px-3 py-1.5 text-xs text-brand-ink hover:bg-brand-paper disabled:opacity-50"
+                  >
+                    {q}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        ) : awaitingConceptAdvance ? (
+          <div className="mb-3 flex flex-wrap gap-2">
+            {onAdvanceConcept && (
               <button
                 type="button"
-                onClick={() => sendMessage("Explain this example again, more slowly")}
+                onClick={handleAdvanceConcept}
                 disabled={loading}
-                className="rounded-full border border-brand-ink-light bg-white px-2.5 py-1 text-[11px] text-brand-ink hover:bg-brand-paper disabled:opacity-50"
+                className="rounded-full bg-green-600 px-4 py-1.5 text-xs font-medium text-white hover:bg-green-700 disabled:opacity-50"
               >
-                Explain again
+                ➡️ Next part
               </button>
-              <button
-                type="button"
-                onClick={() => sendMessage("Give me another example like this one")}
-                disabled={loading}
-                className="rounded-full border border-brand-ink-light bg-white px-2.5 py-1 text-[11px] text-brand-ink hover:bg-brand-paper disabled:opacity-50"
-              >
-                Another example
-              </button>
-              <button
-                type="button"
-                onClick={() => sendMessage("What is the trick to remember this?")}
-                disabled={loading}
-                className="rounded-full border border-brand-ink-light bg-white px-2.5 py-1 text-[11px] text-brand-ink hover:bg-brand-paper disabled:opacity-50"
-              >
-                Give me a hint
-              </button>
+            )}
+            {dynamicFollowUps.length > 0 &&
+              dynamicFollowUps.map((q, i) => (
+                <button
+                  key={i}
+                  type="button"
+                  onClick={() => sendMessage(q)}
+                  disabled={loading}
+                  className="rounded-full border border-brand-ink-light bg-white px-3 py-1.5 text-xs text-brand-ink hover:bg-brand-paper disabled:opacity-50"
+                >
+                  {q}
+                </button>
+              ))}
+          </div>
+        ) : inMicroCheck ? (
+          <p className="mb-3 text-xs text-slate-400">
+            Quick check - take your best shot. Ezy will help you get there if it's not quite right yet.
+          </p>
+        ) : (
+          readyForInput &&
+          quickReplies.length > 0 && (
+            <div className="mb-3 flex flex-wrap gap-2">
+              {quickReplies.map((q, i) => (
+                <button
+                  key={i}
+                  type="button"
+                  onClick={() => sendMessage(q)}
+                  disabled={loading}
+                  className="rounded-full border border-brand-ink-light bg-white px-3 py-1.5 text-xs text-brand-ink hover:bg-brand-paper disabled:opacity-50"
+                >
+                  {q}
+                </button>
+              ))}
             </div>
-          )}
+          )
+        )}
+          </div>
         </div>
       )}
 
@@ -1805,104 +1908,6 @@ export default function AvatarChat({
         {/* The bottom zone: always on screen because it is a fixed row of
             the stack, not because it floats over the thread. */}
         <div className="shrink-0 border-t border-practice-border bg-practice-bg p-4">
-          {awaitingContinue ? (
-            <div className="mb-3 flex flex-wrap gap-2">
-              <button
-                type="button"
-                onClick={handleContinueCheckpoint}
-                disabled={loading}
-                className="rounded-full bg-green-600 px-4 py-1.5 text-xs font-medium text-white hover:bg-green-700 disabled:opacity-50"
-              >
-                👍 Got it, keep going
-              </button>
-              <button
-                type="button"
-                onClick={handleExplainDifferently}
-                disabled={loading}
-                className="rounded-full border border-slate-300 bg-white px-4 py-1.5 text-xs text-slate-700 hover:bg-slate-50 disabled:opacity-50"
-              >
-                🤔 Kind of - explain it another way
-              </button>
-              <button
-                type="button"
-                onClick={handleRepeatCheckpoint}
-                disabled={loading}
-                className="rounded-full border border-slate-300 bg-white px-4 py-1.5 text-xs text-slate-700 hover:bg-slate-50 disabled:opacity-50"
-              >
-                🔁 Say that again
-              </button>
-              <button
-                type="button"
-                onClick={promptForSpecificConfusion}
-                disabled={loading}
-                className="rounded-full border border-slate-300 bg-white px-4 py-1.5 text-xs text-slate-700 hover:bg-slate-50 disabled:opacity-50"
-              >
-                ❓ I&apos;m stuck on one part
-              </button>
-              {dynamicFollowUps.length > 0 && (
-                <div className="mt-1 flex w-full flex-wrap gap-2 border-t border-slate-200 pt-2">
-                  {dynamicFollowUps.map((q, i) => (
-                    <button
-                      key={i}
-                      type="button"
-                      onClick={() => sendMessage(q)}
-                      disabled={loading}
-                      className="rounded-full border border-brand-ink-light bg-white px-3 py-1.5 text-xs text-brand-ink hover:bg-brand-paper disabled:opacity-50"
-                    >
-                      {q}
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
-          ) : awaitingConceptAdvance ? (
-            <div className="mb-3 flex flex-wrap gap-2">
-              {onAdvanceConcept && (
-                <button
-                  type="button"
-                  onClick={handleAdvanceConcept}
-                  disabled={loading}
-                  className="rounded-full bg-green-600 px-4 py-1.5 text-xs font-medium text-white hover:bg-green-700 disabled:opacity-50"
-                >
-                  ➡️ Next part
-                </button>
-              )}
-              {dynamicFollowUps.length > 0 &&
-                dynamicFollowUps.map((q, i) => (
-                  <button
-                    key={i}
-                    type="button"
-                    onClick={() => sendMessage(q)}
-                    disabled={loading}
-                    className="rounded-full border border-brand-ink-light bg-white px-3 py-1.5 text-xs text-brand-ink hover:bg-brand-paper disabled:opacity-50"
-                  >
-                    {q}
-                  </button>
-                ))}
-            </div>
-          ) : inMicroCheck ? (
-            <p className="mb-3 text-xs text-slate-400">
-              Quick check - take your best shot. Ezy will help you get there if it's not quite right yet.
-            </p>
-          ) : (
-            readyForInput &&
-            quickReplies.length > 0 && (
-              <div className="mb-3 flex flex-wrap gap-2">
-                {quickReplies.map((q, i) => (
-                  <button
-                    key={i}
-                    type="button"
-                    onClick={() => sendMessage(q)}
-                    disabled={loading}
-                    className="rounded-full border border-brand-ink-light bg-white px-3 py-1.5 text-xs text-brand-ink hover:bg-brand-paper disabled:opacity-50"
-                  >
-                    {q}
-                  </button>
-                ))}
-              </div>
-            )
-          )}
-
           <div className="flex gap-2">
             <input
               ref={inputRef}

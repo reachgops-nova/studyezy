@@ -66,16 +66,34 @@ export default function RichSceneStage({ scene }: { scene: RichScene }) {
   const spokenLine = currentStep?.say ?? normalized.caption ?? "";
 
   return (
-    <>
-      <div className="rounded-lg bg-white p-2">
-        {/* Height-capped, because the board is pinned: left to its own
-            aspect ratio it grew tall enough that it and the composer between
-            them filled the viewport and squeezed the conversation out of
-            existence. preserveAspectRatio letterboxes rather than clips. */}
+    // min-h-0 lets the drawing shrink inside a flex parent instead of forcing
+    // the parent taller than its share of the board.
+    <div className="flex min-h-0 w-full flex-1 flex-col">
+      {/* The drawing itself is the replay control - tap it to run the
+          example again, the way you would poke at a board. The explicit
+          button below stays for anyone who does not guess that. */}
+      <div
+        role="button"
+        tabIndex={0}
+        onClick={play}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            play();
+          }
+        }}
+        aria-label={`Replay: ${normalized.title}`}
+        className="flex min-h-0 flex-1 cursor-pointer rounded-lg bg-white p-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#9c6f1f]"
+      >
+        {/* Fits the room it is given rather than claiming a fixed height.
+            Every fixed value tried here was wrong in one state or another:
+            tall enough to teach from with the workbook closed is too tall
+            once it opens, and a size that survives both is a postage stamp.
+            preserveAspectRatio scales the drawing to the box and letterboxes
+            rather than clipping, so the picture is always whole. */}
         <svg
           viewBox={normalized.viewBox}
-          className="w-full"
-          style={{ maxHeight: "30vh" }}
+          className="h-full max-h-full w-full"
           preserveAspectRatio="xMidYMid meet"
           role="img"
           aria-label={normalized.title}
@@ -107,7 +125,7 @@ export default function RichSceneStage({ scene }: { scene: RichScene }) {
         </svg>
       </div>
 
-      <div className="mt-1 flex items-center justify-center gap-2">
+      <div className="mt-1 flex shrink-0 items-center justify-center gap-2">
         <button onClick={play} className="px-2 py-0.5 text-[10px] font-bold text-[#9c6f1f] hover:underline">
           ▶ Replay animation
         </button>
@@ -127,7 +145,7 @@ export default function RichSceneStage({ scene }: { scene: RichScene }) {
         </span>
       </div>
 
-      <p className="mt-1.5 text-center text-[10px] font-medium text-[#16241f]/70">{spokenLine}</p>
-    </>
+      <p className="mt-1.5 shrink-0 text-center text-[10px] font-medium text-[#16241f]/70">{spokenLine}</p>
+    </div>
   );
 }
