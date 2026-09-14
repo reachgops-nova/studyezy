@@ -397,6 +397,11 @@ export function UnitView({
 
   if (screen === 'overview' && unit) {
     return (
+      // The lesson page's main is height-bounded so the lesson itself can be
+      // a fixed panel (board / thread / composer). These other screens are
+      // ordinary long pages, so they scroll inside that bound rather than
+      // being clipped by it.
+      <div className="lg:h-full lg:overflow-y-auto">
       <UnitOverview
         unit={unit}
         unitKey={unitKey || ''}
@@ -410,6 +415,7 @@ export function UnitView({
         previousUnitRecap={previousUnitRecap}
         taughtUpToConceptKey={taughtUpToConceptKey}
       />
+      </div>
     );
   }
 
@@ -419,7 +425,7 @@ export function UnitView({
       .filter((entry) => entry.points.length > 0);
 
     return (
-      <div className="mx-auto grid w-full max-w-3xl gap-6 p-4 sm:p-6">
+      <div className="mx-auto grid w-full max-w-3xl gap-6 p-4 sm:p-6 lg:h-full lg:overflow-y-auto">
         <div className="rounded-3xl border-2 border-[#9c6f1f]/20 bg-gradient-to-br from-[#9c6f1f]/10 to-[#f4f6f1] p-6 text-center shadow-sm sm:p-8">
           <span className="text-4xl sm:text-5xl">🏆</span>
           <h1 className="mt-3 font-serif text-xl font-black text-[#16241f] sm:text-2xl">
@@ -483,6 +489,7 @@ export function UnitView({
 
   if (screen === 'diagnostic' && unit) {
     return (
+      <div className="lg:h-full lg:overflow-y-auto">
       <UnitDiagnostic
         unit={unit}
         unitKey={unitKey || ''}
@@ -490,6 +497,7 @@ export function UnitView({
         onReviewConcept={handleReviewConcept}
         onAllMastered={handleAllMastered}
       />
+      </div>
     );
   }
 
