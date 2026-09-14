@@ -601,16 +601,12 @@ export default function AvatarChat({
   // the chat pane (not the whole page - it's still "inside the
   // conversation", just persistent instead of a single scrolled-past
   // bubble) from the moment it's introduced through the rest of the lesson.
-  const [activeIllustrationUrl, setActiveIllustrationUrl] = useState<string | undefined>(undefined);
-  // Real feedback 2026-09-13: the illustration recap above only ever shows
-  // the LATEST picture, and interactive sceneNodes (GeometryConceptScene
-  // etc.) had no recap at all - once their message scrolled past, the
-  // student had to scroll back up through chat history to see an earlier
-  // worked example again. Keeps every sceneNode shown so far this concept
-  // in one pinned, horizontally-scrollable "drawing board" strip so all the
-  // examples stay visible (and their own replay buttons stay usable)
-  // without hunting through the transcript. Cleared on concept change like
-  // activeIllustrationUrl above.
+  // Real feedback 2026-09-13: once a worked example's message scrolled
+  // past, the student had to scroll back up through chat history to see it
+  // again. Keeps every example shown so far this concept - interactive
+  // scenes and still illustrations alike - in one pinned "drawing board"
+  // strip, so they stay visible and their replay buttons stay usable
+  // without hunting through the transcript. Cleared on concept change.
   const [sceneBoard, setSceneBoard] = useState<{ id: string; node: ReactNode }[]>([]);
 
   const playTokenRef = useRef(0);
@@ -1143,7 +1139,23 @@ export default function AvatarChat({
       }
       const id = nextId();
       const { text: cleanText, keyRanges } = parseFormattedText(msgs[i]);
-      if (i === 0 && step.illustrationUrl) setActiveIllustrationUrl(step.illustrationUrl);
+      // Real feedback 2026-09-14: "bring in all new images / concepts /
+      // animation on to the drawing board". A still picture is an example
+      // like any other, so it goes on the board instead of into its own
+      // strip that scrolls away from the thread it belongs to.
+      if (i === 0 && step.illustrationUrl) {
+        const url = step.illustrationUrl;
+        setSceneBoard((prev) => [
+          ...prev,
+          {
+            id,
+            node: (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={url} alt="" className="w-full rounded-lg bg-white object-contain" />
+            ),
+          },
+        ]);
+      }
       if (i === 0 && step.sceneNode) {
         const boardId = id;
         setSceneBoard((prev) => [...prev, { id: boardId, node: step.sceneNode }]);
@@ -1191,7 +1203,6 @@ export default function AvatarChat({
     setHighlightRange(null);
     setDynamicFollowUps([]);
     setSpeechPaused(false);
-    setActiveIllustrationUrl(undefined);
     setSceneBoard([]);
     setPreparingSpeech(false);
     /* eslint-enable react-hooks/set-state-in-effect */
@@ -1540,7 +1551,13 @@ export default function AvatarChat({
       )}
 
       {sceneBoard.length > 0 && (
-        <div className="mb-3 rounded-xl border border-practice-border bg-white/70 p-3">
+        // Pinned, not parked. Real feedback 2026-09-14: "scroll goes up,
+        // images vanish, concept again in text boring mode, moves focus" -
+        // the board used to scroll out of the viewport the moment the thread
+        // grew past it, which is exactly when a child needs it most. It now
+        // sticks to the top of the lesson column and the conversation scrolls
+        // underneath it, so the picture being discussed is never off screen.
+        <div className="sticky top-0 z-20 mb-3 rounded-xl border border-practice-border bg-[#f4f6f1] p-3 shadow-md">
           <div className="mb-2 flex items-center justify-between gap-2">
             <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">
               Drawing board - every example from this lesson, in one place
@@ -1586,23 +1603,11 @@ export default function AvatarChat({
       )}
 
       <div className="rounded-xl border border-practice-border bg-practice-bg">
-        {activeIllustrationUrl && (
-          // Real feedback 2026-09-08: a later checkpoint's text can refer
-          // back to something the illustration showed (e.g. a key point
-          // naming an idiom the picture already drew) after the message
-          // that introduced it has scrolled out of view. This small recap
-          // stays pinned for the rest of the concept so the conversation
-          // keeps "connecting" to the picture instead of only showing it once.
-          <div className="flex items-center gap-2 border-b border-practice-border bg-white/70 px-4 py-2">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={activeIllustrationUrl}
-              alt=""
-              className="h-10 w-10 shrink-0 rounded-lg border border-slate-200 object-cover"
-            />
-            <p className="text-xs text-slate-500">This lesson&apos;s picture - scroll up to see it full size</p>
-          </div>
-        )}
+        {/* The 40px "scroll up to see it full size" recap that used to sit
+            here was a workaround for a board that scrolled away. The board is
+            pinned now and carries the illustration itself, so sending a child
+            back up the thread to find a picture is no longer the answer -
+            real feedback 2026-09-14: "scroll goes up images vanishes". */}
         {/* One scroll context, not two - real feedback 2026-09-14: "chat does
             not auto scroll... which makes it difficult to follow drawing board
             and chat session". This used to be its own 420px-tall scroller
@@ -1663,7 +1668,11 @@ export default function AvatarChat({
           <div ref={endRef} />
         </div>
 
-        <div className="border-t border-practice-border p-4">
+        {/* Sticky like the board, for the same reason - real feedback
+            2026-09-14: "chat text input can be seen the full screen and
+            invoke them". Asking a question should never require scrolling
+            to the bottom of the thread to find the box. */}
+        <div className="sticky bottom-0 z-20 border-t border-practice-border bg-practice-bg p-4">
           {awaitingContinue ? (
             <div className="mb-3 flex flex-wrap gap-2">
               <button

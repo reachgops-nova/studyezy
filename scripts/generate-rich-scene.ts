@@ -53,19 +53,43 @@ TIMELINE RULES
 - holdMs 1800-3000.
 
 GEOMETRY CHECK - do this before you write the JSON, it is the most common way these scenes go wrong
-- Work out the final position of everything that moves: start coordinate + every dx/dy applied to it.
+- If the scene has a grid, number line or axis, FIRST fix its mapping and write it down: the pixel position of the origin (ORIGIN_X, ORIGIN_Y) and the pixel size of one cell (CELL, use 34-40).
+- Then EVERY plotted point is computed from that mapping, never placed by eye:
+    px = ORIGIN_X + (x * CELL)
+    py = ORIGIN_Y - (y * CELL)        <- note the minus: SVG y grows downward, graph y grows upward
+  The grid lines, the axis tick labels and the shapes must all come from the same mapping, or the labels will say one thing and the picture another.
+- Draw the grid lines only across the range the axes actually cover, and make sure every plotted shape sits inside that range. A shape floating above or beside the grid is a broken scene.
+- Axis tick labels go just outside the axis line (x labels a few px below it, y labels a few px to its left) so they never collide with each other or with the plotted shapes.
+- Work out the final position of everything that moves: start coordinate + every dx/dy applied to it. A move of n cells is dx = n * CELL, so the shape lands exactly on grid points.
 - That final position must sit fully inside the drawn scene - inside the grid, the axes and the viewBox, with a margin. A shape that slides off the edge, behind an axis or into space that was never drawn is a broken scene.
 - So choose the STARTING position to make room for the journey. If something slides 4 squares left, start it at least 5 squares right of the left edge.
 - Any shape you draw at a destination ("the new triangle") must use exactly the coordinates the moving markers land on. Recompute them; do not estimate.
 
-STYLE - this is what separates a real illustration from a wireframe, so spend effort here
-- REQUIRED: "defs" must contain at least one <linearGradient> or <radialGradient>, and the first layer must be a full-bleed <rect> filled with it - a sky, a water, or a soft tint of the paper colour. A white background is a failure.
-- REQUIRED: every main subject gets a fill, not just a stroke. Flat outlines read as a wireframe.
-- Structural scaffolding recedes: grid lines, guides and rules go at stroke-opacity="0.18". Only the subject is at full strength.
-- Palette: ink #16241f, accent #9c6f1f, paper #f4f6f1, plus real colours the subject calls for (water blue, leaf green, warm red).
-- stroke-linecap="round" stroke-linejoin="round". Stroke widths 2-3 for main shapes, 1 for grid lines.
-- Label things with <text> at font-size 12-14, font-family="system-ui, sans-serif", font-weight="600". Put a short title label in the artwork itself.
-- Use fill-opacity for soft washes behind shapes, and give solid shapes a second lighter shape offset a couple of units for depth.
+ART DIRECTION - this is what separates a real illustration from a wireframe, so spend real effort here
+Think modern flat editorial illustration - the look of a well-designed children's science app in 2026 - NOT a textbook line drawing and NOT a whiteboard sketch. Rounded, chunky, confident, colourful, with depth.
+
+REQUIRED, every scene:
+- "defs" contains at least two <linearGradient> or <radialGradient> definitions AND a soft shadow filter:
+  <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="3" stdDeviation="4" flood-color="#16241f" flood-opacity="0.18"/></filter>
+- The first layer is a full-bleed <rect> with rx="16" filled by a gradient. A white background is a failure.
+- Every main subject is FILLED with a gradient (not a flat colour, not an outline) and carries filter="url(#soft)" so it lifts off the page.
+- Round everything: rx on rectangles, stroke-linecap="round", stroke-linejoin="round".
+- Give the scene a rounded "card" panel behind the working area, slightly lighter than the background, so it reads as a designed surface.
+
+COLOUR
+- Ground the palette in ink #16241f, accent #9c6f1f, paper #f4f6f1, then bring in saturated modern colours the subject calls for: teal #2a9d8f, coral #e76f51, sky #4a9fd5, sun #f4a261, violet #7b6cd9.
+- Use at least three distinct colours with intent. One brown shape on a pale ground is the failure mode - a "before" object and an "after" object should be different colours so a child can tell them apart instantly.
+- Structural scaffolding recedes: grid lines, guides and rules at stroke-opacity="0.15". Only the subject is at full strength.
+
+TYPE AND LABELS
+- <text> at font-size 13-15, font-family="system-ui, -apple-system, sans-serif", font-weight="700", fill="#16241f".
+- Put a short title label in the artwork itself, and label the objects that matter ("before", "after", "4 left").
+- Set a label that sits over artwork on its own rounded <rect> chip so it stays readable.
+
+DEPTH AND POLISH
+- Add a soft highlight: a lighter shape at low fill-opacity over the top of a solid form.
+- Where a value or count matters, draw it as a chip or badge, not just loose text.
+- At most two small decorative touches that belong to the subject (a cloud, a leaf). They must sit in a margin of the scene, must not overlap or cross the working area, and must never be long lines or streaks across the artwork. If in doubt, leave them out - a clean scene beats a decorated one.
 
 FORBIDDEN
 - No <script>, no on* attributes, no <image>, no external URLs, no <style>, no <animate>. Motion comes from the timeline only.

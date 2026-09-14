@@ -65,6 +65,11 @@ const EXTERNAL_URL_FUNCS = /url\(\s*("|')?\s*(https?:|\/\/|data:text\/html)[^)]*
  */
 export function sanitizeSvgFragment(svg: string): string {
   return svg
+    // Models sometimes escape the attribute quotes a second time, so the
+    // string arrives holding a literal <rect x=\"0\"> and the fragment is
+    // malformed markup that renders nothing at all. A backslash before a
+    // quote is never meaningful in SVG, so dropping it is always safe.
+    .replace(/\\"/g, '"')
     .replace(FORBIDDEN_ELEMENTS, "")
     .replace(EVENT_ATTRS, "")
     .replace(JS_URLS, "")
