@@ -190,8 +190,15 @@ export default async function LearnPage({ params }: { params: Promise<{ unitId: 
         `100vh-3rem` UnitView, which made the page permanently taller than
         the viewport by exactly the header's height. The two now share a
         bounded column: header sized by its content, lesson taking the rest.
-        Below lg it stays an ordinary stacked, scrolling page. */}
-    <main className="mx-auto grid w-full grid-cols-1 gap-6 lg:flex lg:h-[calc(100vh-3rem)] lg:flex-col lg:overflow-hidden">
+        Below lg it stays an ordinary stacked, scrolling page.
+
+        The 10rem is the chrome this main actually sits inside, measured
+        rather than guessed: the layout's own vertical padding (3rem, the
+        same figure AppShell subtracts), AppShell's desktop account-menu row
+        above it (~4rem with its margin), and AppShell's main pb-12 below
+        (3rem). Subtracting only the 3rem left the composer about 60px under
+        the fold, which is these other two. */}
+    <main className="mx-auto grid w-full grid-cols-1 gap-6 lg:flex lg:h-[calc(100vh-10rem)] lg:flex-col lg:overflow-hidden">
       {/* flex-wrap + min-w-0: the action links were `shrink-0` beside an
           unconstrained title block, so the header's min-content was wider
           than a phone viewport and put the whole lesson page into a
