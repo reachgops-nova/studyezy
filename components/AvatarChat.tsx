@@ -30,6 +30,16 @@ interface ChatMessage {
   /** A small scene visual (e.g. components/interactive/NumberConceptScene.tsx, GeometryConceptScene.tsx) attached to THIS message via the caller's checkpointSceneNodes prop - real user request 2026-09-09: a visual synced to exactly the statement being spoken, not a separate pre-roll video with guessed timing. The caller builds the actual element (whichever scene component/spec fits this unit's subject), so AvatarChat itself never needs to know about a specific scene type. */
   sceneNode?: ReactNode;
   keyRanges?: [number, number][];
+  /**
+   * "narration" is a line Ezy speaks as part of teaching the concept - it is
+   * already on the board as the subtitle, so the workbook below does not
+   * repeat it. Real user direction 2026-09-14: "whatever we have in subtitle
+   * no need to be in chat repeating... chat window is mostly used for
+   * additional queries / answers / hints / kind of the workbook or rough
+   * book". Everything else (questions, answers, hints, marking) is an
+   * exchange and belongs in the workbook.
+   */
+  kind?: "narration" | "exchange";
 }
 
 // Matches a [[illustration:some_key]] token the AI tutor can emit when a
@@ -608,6 +618,14 @@ export default function AvatarChat({
   // strip, so they stay visible and their replay buttons stay usable
   // without hunting through the transcript. Cleared on concept change.
   const [sceneBoard, setSceneBoard] = useState<{ id: string; node: ReactNode }[]>([]);
+  // Which example is on the stage. Follows the newest as the lesson moves on,
+  // but a child can click a miniature to bring an earlier one back up, and
+  // that choice sticks until the next example arrives.
+  const [activeBoardIndex, setActiveBoardIndex] = useState(0);
+  // The workbook opens itself when there is something new to read there (an
+  // answer, a hint, a marked micro-check) and otherwise stays out of the
+  // board's way as a single line with the input on it.
+  const [isWorkbookOpen, setIsWorkbookOpen] = useState(false);
 
   const playTokenRef = useRef(0);
   // Synchronous guard against a double-fired "Got it, keep going" click -
@@ -688,6 +706,14 @@ export default function AvatarChat({
   // scrollTo on a specific container - the thread is no longer its own
   // scroller, so the element that actually needs to move is whichever
   // ancestor is scrollable, which this resolves automatically.
+  // Something new in the workbook (an answer, a hint, a marked micro-check)
+  // opens it, so a reply is never written somewhere the child cannot see.
+  // Narration never triggers this - it is read on the board instead.
+  const workbookCount = messages.reduce((n, m) => (m.kind === "narration" ? n : n + 1), 0);
+  useEffect(() => {
+    if (workbookCount > 0) setIsWorkbookOpen(true);
+  }, [workbookCount]);
+
   useEffect(() => {
     endRef.current?.scrollIntoView({ block: "end", behavior: "smooth" });
   }, [messages]);
@@ -1145,7 +1171,9 @@ export default function AvatarChat({
       // strip that scrolls away from the thread it belongs to.
       if (i === 0 && step.illustrationUrl) {
         const url = step.illustrationUrl;
-        setSceneBoard((prev) => [
+        setSceneBoard((prev) => {
+          setActiveBoardIndex(prev.length);
+          return [
           ...prev,
           {
             id,
@@ -1154,11 +1182,15 @@ export default function AvatarChat({
               <img src={url} alt="" className="max-h-[26vh] w-full rounded-lg bg-white object-contain" />
             ),
           },
-        ]);
+        ];
+        });
       }
       if (i === 0 && step.sceneNode) {
         const boardId = id;
-        setSceneBoard((prev) => [...prev, { id: boardId, node: step.sceneNode }]);
+        setSceneBoard((prev) => {
+          setActiveBoardIndex(prev.length);
+          return [...prev, { id: boardId, node: step.sceneNode }];
+        });
       }
       setMessages((prev) => [
         ...prev,
@@ -1167,6 +1199,7 @@ export default function AvatarChat({
           sender: "avatar",
           text: cleanText,
           keyRanges,
+          kind: "narration",
           generatedIllustrationUrl: i === 0 ? step.illustrationUrl : undefined,
           sceneNode: i === 0 ? step.sceneNode : undefined,
         },
@@ -1204,6 +1237,7 @@ export default function AvatarChat({
     setDynamicFollowUps([]);
     setSpeechPaused(false);
     setSceneBoard([]);
+    setActiveBoardIndex(0);
     setPreparingSpeech(false);
     /* eslint-enable react-hooks/set-state-in-effect */
     stopSpeech();
@@ -1491,13 +1525,21 @@ export default function AvatarChat({
   ].slice(0, 5);
   const quickReplies = dynamicFollowUps.length > 0 ? dynamicFollowUps : starterReplies;
 
+  // The workbook holds the exchange, not the narration - narration is read on
+  // the board as the subtitle, and repeating it here was what made the lesson
+  // feel like a wall of text with a picture stuck on top.
+  const workbookMessages = messages.filter((m) => m.kind !== "narration");
+
   // Subtitle under the board: whatever Ezy is saying right now, falling back
   // to the last thing said so the line stays readable (and copyable) after
   // the speech finishes rather than vanishing the moment audio stops.
-  const subtitleText =
-    messages.find((m) => m.id === speakingMessageId)?.text ??
-    [...messages].reverse().find((m) => m.sender === "avatar")?.text ??
-    "";
+  const speakingMessage = messages.find((m) => m.id === speakingMessageId);
+  const subtitleMessage = speakingMessage ?? [...messages].reverse().find((m) => m.sender === "avatar");
+  const subtitleText = subtitleMessage?.text ?? "";
+  // The read-along highlight only tracks the line actually being spoken; the
+  // held-over last line keeps its key-point marks but no moving word.
+  const subtitleIsLive = Boolean(speakingMessage);
+  const subtitleKeyRanges = subtitleMessage?.keyRanges;
 
   return (
     // Three zones, not sticky layers. Real feedback 2026-09-14: "chat input
@@ -1508,14 +1550,13 @@ export default function AvatarChat({
     // behind the composer. Instead the column is a flex stack: the board and
     // the composer are fixed rows that own their height, and only the thread
     // between them scrolls, so nothing can cover anything else.
-    // Side by side on a wide screen, stacked on a narrow one. Stacking a
-    // board big enough to teach from ABOVE the thread cannot fit both in one
-    // viewport - every attempt to tune the heights just moved which of the
-    // two got squeezed. The lesson column is ~890px wide, so the board takes
-    // the left and the conversation the right, and both get their full
-    // height. Real feedback 2026-09-14: the board should be large AND the
-    // chat readable, not one at the cost of the other.
-    <div className="flex h-full min-h-0 flex-col gap-4 lg:flex-row lg:items-stretch">
+    // Board-first. Real user direction 2026-09-14: "the chat window can be a
+    // layer at the bottom.. only thing it overlaps and visible in the
+    // background". The board owns the whole panel, and the workbook floats
+    // over its lower edge - collapsed to a single line by default, so the
+    // picture keeps the room, and expandable when there is something to read
+    // or write. Neither competes with the other for height any more.
+    <div className="relative flex h-full min-h-0 flex-col gap-4">
       {/* A generated illustration (lib/conceptIllustration.ts) no longer
           shows here - 2026-09-08: moved into the conversation itself (see
           buildCheckpoints/playCheckpoint), spoken right after the intro
@@ -1566,16 +1607,19 @@ export default function AvatarChat({
       )}
 
       {sceneBoard.length > 0 && (
-        // Pinned, not parked. Real feedback 2026-09-14: "scroll goes up,
-        // images vanish, concept again in text boring mode, moves focus" -
-        // the board used to scroll out of the viewport the moment the thread
-        // grew past it, which is exactly when a child needs it most. It now
-        // sticks to the top of the lesson column and the conversation scrolls
-        // underneath it, so the picture being discussed is never off screen.
-        <div className="flex shrink-0 flex-col overflow-y-auto rounded-xl border border-practice-border bg-[#f4f6f1] p-3 shadow-sm lg:w-[46%]">
+        // The board is the stage, not a sidebar. Real user direction
+        // 2026-09-14: "a broader board where we showcase examples that are
+        // active to explain and whatever done can be kept as a miniature..
+        // and when clicked again it can pop up to main bigger picture".
+        // So: one example at full width, everything already covered sitting
+        // under it as miniatures you can promote back to the stage.
+        // pb leaves room for the collapsed workbook bar that floats over the
+        // bottom edge, so the miniatures and the "need anything more" row are
+        // never hidden underneath it.
+        <div className="flex min-h-0 flex-1 flex-col rounded-xl border border-practice-border bg-[#f4f6f1] p-3 pb-[8rem] shadow-sm">
           <div className="mb-2 flex items-center justify-between gap-2">
             <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">
-              Drawing board - every example from this lesson, in one place
+              Drawing board{sceneBoard.length > 1 ? ` - example ${activeBoardIndex + 1} of ${sceneBoard.length}` : ""}
             </p>
             {subtitleText && (
               <button
@@ -1587,39 +1631,102 @@ export default function AvatarChat({
               </button>
             )}
           </div>
-          {/* The newest example is the one being taught, so it gets the room
-              (real feedback 2026-09-14: "board is larger screen"); earlier
-              ones stay beside it, smaller, still replayable. */}
-          <div className="flex items-start gap-3 overflow-x-auto pb-1 lg:min-h-0 lg:flex-1 lg:flex-col lg:overflow-x-visible lg:overflow-y-auto">
-            {sceneBoard.map((entry, i) => {
-              const isCurrent = i === sceneBoard.length - 1;
-              return (
-                <div
-                  key={entry.id}
-                  // No max-height here: the scene inside is already capped,
-                  // and clipping the card cut the caption off under it.
-                  className={`${isCurrent ? "w-[26rem]" : "w-48"} shrink-0 rounded-lg border bg-white p-2 transition-all lg:w-full ${
-                    isCurrent ? "border-[#9c6f1f]/40 shadow-sm" : "border-slate-200 opacity-80"
-                  }`}
-                >
-                  {entry.node}
-                </div>
-              );
-            })}
+
+          {/* The example being explained, given the whole width. */}
+          <div className="flex min-h-0 flex-1 items-center justify-center overflow-y-auto rounded-lg border border-[#9c6f1f]/30 bg-white p-2">
+            <div className="w-full">{(sceneBoard[activeBoardIndex] ?? sceneBoard[sceneBoard.length - 1])?.node}</div>
           </div>
-          {/* Subtitle: the line being spoken right now, under the picture it
-              belongs to, so a child can watch the board and read along instead
-              of looking away to the thread. Holds the last line after speech
-              ends so it stays on screen to re-read or copy. */}
+
+          {/* Subtitle: what Ezy is saying, read along word by word. This is
+              the reading surface for narration now - real user direction
+              2026-09-14: "rather highlighter can be on the subtitle
+              reading" - so the same line is not repeated down in the
+              workbook. */}
           {subtitleText && (
             <p className="mt-2 rounded-lg bg-[#16241f]/90 px-3 py-2 text-center text-sm font-medium leading-snug text-white">
-              {subtitleText}
+              <HighlightedText
+                text={subtitleText}
+                range={subtitleIsLive ? highlightRange : null}
+                keyRanges={subtitleKeyRanges}
+              />
             </p>
+          )}
+
+          {/* Covered already: miniatures, click to put one back on the stage. */}
+          {sceneBoard.length > 1 && (
+            <div className="mt-2 flex shrink-0 items-center gap-2 overflow-x-auto pb-1">
+              <span className="shrink-0 text-[10px] font-semibold uppercase tracking-wide text-slate-400">Covered</span>
+              {sceneBoard.map((entry, i) => (
+                <button
+                  key={entry.id}
+                  type="button"
+                  onClick={() => setActiveBoardIndex(i)}
+                  aria-label={`Show example ${i + 1} on the board`}
+                  aria-pressed={i === activeBoardIndex}
+                  className={`h-12 w-20 shrink-0 overflow-hidden rounded-md border bg-white transition-all hover:border-[#9c6f1f] ${
+                    i === activeBoardIndex ? "border-[#9c6f1f] ring-2 ring-[#9c6f1f]/30" : "border-slate-200 opacity-70"
+                  }`}
+                >
+                  {/* Miniature: the same live scene, scaled right down, so a
+                      click promotes exactly what the child remembers seeing. */}
+                  <span className="pointer-events-none block w-[20rem] origin-top-left scale-[0.25]">{entry.node}</span>
+                </button>
+              ))}
+            </div>
+          )}
+
+          {/* Real user direction 2026-09-14: "and ask if you need anything
+              more here" - offered per example, on the board, rather than
+              making the child think to ask. */}
+          {!speaking && (
+            <div className="mt-2 flex shrink-0 flex-wrap items-center gap-2">
+              <span className="text-[11px] font-medium text-slate-500">Need anything more on this one?</span>
+              <button
+                type="button"
+                onClick={() => sendMessage("Explain this example again, more slowly")}
+                disabled={loading}
+                className="rounded-full border border-brand-ink-light bg-white px-2.5 py-1 text-[11px] text-brand-ink hover:bg-brand-paper disabled:opacity-50"
+              >
+                Explain again
+              </button>
+              <button
+                type="button"
+                onClick={() => sendMessage("Give me another example like this one")}
+                disabled={loading}
+                className="rounded-full border border-brand-ink-light bg-white px-2.5 py-1 text-[11px] text-brand-ink hover:bg-brand-paper disabled:opacity-50"
+              >
+                Another example
+              </button>
+              <button
+                type="button"
+                onClick={() => sendMessage("What is the trick to remember this?")}
+                disabled={loading}
+                className="rounded-full border border-brand-ink-light bg-white px-2.5 py-1 text-[11px] text-brand-ink hover:bg-brand-paper disabled:opacity-50"
+              >
+                Give me a hint
+              </button>
+            </div>
           )}
         </div>
       )}
 
-      <div className="flex min-h-0 flex-1 flex-col rounded-xl border border-practice-border bg-practice-bg">
+      <div
+        className={`absolute inset-x-0 bottom-0 z-20 flex flex-col rounded-xl border border-practice-border bg-practice-bg/95 shadow-lg backdrop-blur-sm transition-[max-height] duration-200 ${
+          isWorkbookOpen ? "max-h-[62%]" : "max-h-[7.5rem]"
+        }`}
+      >
+        <button
+          type="button"
+          onClick={() => setIsWorkbookOpen((open) => !open)}
+          aria-expanded={isWorkbookOpen}
+          className="flex shrink-0 items-center justify-between gap-2 rounded-t-xl px-4 py-1.5 text-left hover:bg-white/50"
+        >
+          <span className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">
+            Workbook - your questions, hints and notes
+            {workbookCount > 0 ? ` (${workbookCount})` : ""}
+          </span>
+          <span className="text-[11px] font-bold text-[#9c6f1f]">{isWorkbookOpen ? "Hide ▾" : "Open ▴"}</span>
+        </button>
         {/* The 40px "scroll up to see it full size" recap that used to sit
             here was a workaround for a board that scrolled away. The board is
             pinned now and carries the illustration itself, so sending a child
@@ -1633,7 +1740,7 @@ export default function AvatarChat({
             the outer one. The thread now grows naturally and the page scrolls
             as a single stream (see the endRef sentinel below). */}
         <div ref={scrollRef} className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto p-4">
-          {messages.map((m) =>
+          {workbookMessages.map((m) =>
             m.sender === "avatar" ? (
               <div key={m.id} className="message-enter flex items-start gap-2">
                 <Avatar speaking={m.id === speakingMessageId} />
