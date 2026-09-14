@@ -184,13 +184,20 @@ export default async function LearnPage({ params }: { params: Promise<{ unitId: 
         space... expand the view broader") lifts the old max-w-6xl cap that
         left this page's 3-column lesson view squeezed into ~900px even on a
         wide monitor - this page fills whatever AppShell now gives it. */}
-    <main className="mx-auto grid w-full grid-cols-1 gap-6">
+    {/* On a wide screen the lesson is a self-contained panel, so the page
+        itself must not also scroll - real feedback 2026-09-14: "it still
+        scrolls up in the background". The header used to sit ABOVE a
+        `100vh-3rem` UnitView, which made the page permanently taller than
+        the viewport by exactly the header's height. The two now share a
+        bounded column: header sized by its content, lesson taking the rest.
+        Below lg it stays an ordinary stacked, scrolling page. */}
+    <main className="mx-auto grid w-full grid-cols-1 gap-6 lg:flex lg:h-[calc(100vh-3rem)] lg:flex-col lg:overflow-hidden">
       {/* flex-wrap + min-w-0: the action links were `shrink-0` beside an
           unconstrained title block, so the header's min-content was wider
           than a phone viewport and put the whole lesson page into a
           horizontal scroll (measured 452px of content in a 375px viewport,
           2026-08-30). They now drop onto their own line instead. */}
-      <header className="flex flex-wrap items-center justify-between gap-3">
+      <header className="flex flex-wrap items-center justify-between gap-3 lg:shrink-0">
         <div className="min-w-0">
           <Link href="/select" className="inline-flex items-center gap-2 text-sm text-slate-500 hover:text-slate-700">
             <LogoMark className="h-6 w-6" />

@@ -1589,7 +1589,9 @@ export default function AvatarChat({
               return (
                 <div
                   key={entry.id}
-                  className={`${isCurrent ? "w-[26rem]" : "w-48"} max-h-[34vh] shrink-0 overflow-hidden rounded-lg border bg-white p-2 transition-all ${
+                  // No max-height here: the scene inside is already capped,
+                  // and clipping the card cut the caption off under it.
+                  className={`${isCurrent ? "w-[26rem]" : "w-48"} shrink-0 rounded-lg border bg-white p-2 transition-all ${
                     isCurrent ? "border-[#9c6f1f]/40 shadow-sm" : "border-slate-200 opacity-80"
                   }`}
                 >

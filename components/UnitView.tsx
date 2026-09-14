@@ -494,7 +494,10 @@ export function UnitView({
   }
 
   return (
-    <div className="flex flex-col lg:flex-row w-full lg:h-[calc(100vh-3rem)] bg-[#f4f6f1] lg:overflow-hidden text-[#16241f] font-sans">
+    // lg:h-full + min-h-0, not a second `100vh-3rem`: the page above now owns
+    // that budget and this fills whatever is left beside the header, instead
+    // of both claiming a full viewport and overflowing by the header's height.
+    <div className="flex flex-col lg:flex-row w-full lg:h-full lg:min-h-0 bg-[#f4f6f1] lg:overflow-hidden text-[#16241f] font-sans">
       {/* COLUMN 1: SIDEBAR NAVIGATION. Full-width block on mobile (stacked
           above the booklet/chat, concept list height-capped so it doesn't
           dominate the screen) rather than a fixed 256px column - that column
