@@ -1616,7 +1616,11 @@ export default function AvatarChat({
         // pb leaves room for the collapsed workbook bar that floats over the
         // bottom edge, so the miniatures and the "need anything more" row are
         // never hidden underneath it.
-        <div className="flex min-h-0 flex-1 flex-col rounded-xl border border-practice-border bg-[#f4f6f1] p-3 pb-[7rem] shadow-sm">
+        <div
+          className={`flex min-h-0 flex-1 flex-col rounded-xl border border-practice-border bg-[#f4f6f1] p-3 shadow-sm ${
+            isWorkbookOpen ? "" : "pb-[7rem]"
+          }`}
+        >
           <div className="mb-2 flex items-center justify-between gap-2">
             <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">
               Drawing board{sceneBoard.length > 1 ? ` - example ${activeBoardIndex + 1} of ${sceneBoard.length}` : ""}
@@ -1711,8 +1715,14 @@ export default function AvatarChat({
       )}
 
       <div
-        className={`absolute inset-x-0 bottom-0 z-20 flex flex-col rounded-xl border border-practice-border bg-practice-bg/95 shadow-lg backdrop-blur-sm transition-[max-height] duration-200 ${
-          isWorkbookOpen ? "max-h-[48%]" : "max-h-[7.5rem]"
+        // Collapsed it floats over the board's bottom edge, which is what
+        // "a layer at the bottom... it overlaps and visible in the
+        // background" asks for. Open it takes its own space instead, because
+        // an overlay deep enough to read is also deep enough to bury the
+        // subtitle - and the spoken line is the one thing that must never be
+        // covered.
+        className={`z-20 flex flex-col rounded-xl border border-practice-border bg-practice-bg/95 shadow-lg backdrop-blur-sm ${
+          isWorkbookOpen ? "relative min-h-0 shrink-0 max-h-[48%]" : "absolute inset-x-0 bottom-0 max-h-[7.5rem]"
         }`}
       >
         <button
