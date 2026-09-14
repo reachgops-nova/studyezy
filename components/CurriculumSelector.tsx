@@ -45,6 +45,12 @@ export default function CurriculumSelector({
   // memoizing here isn't worth it and trips the compiler's mutation heuristic.
   const subject = stage?.subjects.find((s) => s.id === subjectId);
 
+  // The grades either side of the one chosen. Same curriculum only - a
+  // Cambridge child is not offered a State Board book by accident.
+  const nearbyStages = (curriculum?.stages ?? []).filter(
+    (s) => s.available && s.id !== stageId && stageId !== null && Math.abs(s.id - stageId) <= 1,
+  );
+
   // Restore on first paint only, and only to choices that still exist - a
   // remembered subject that has since moved stage must not strand the picker.
   useEffect(() => {
@@ -106,6 +112,40 @@ export default function CurriculumSelector({
           ))}
         </div>
       </Step>
+
+      {/* Books from the grades either side, offered rather than hidden - real
+          user direction 2026-09-14: "a 4th grade may use 5th textbook like in
+          our case, so we need to ensure even when a 5th grade needs same
+          textbook it must be mapped correctly... add nearby grade books
+          available for them". Picking one simply moves the whole picker to
+          that stage, so the choice is explicit and the mapping stays honest:
+          the child is on that book, not on a guess about their age. */}
+      {curriculum && stage && nearbyStages.length > 0 && (
+        <Step label="Also available - books from nearby grades">
+          <div className="flex flex-wrap gap-2">
+            {nearbyStages.map((ns) =>
+              ns.subjects
+                .filter((sub) => sub.available && sub.units.length > 0)
+                .map((sub) => (
+                  <button
+                    key={`${ns.id}-${sub.id}`}
+                    type="button"
+                    onClick={() => {
+                      setStageId(ns.id);
+                      setSubjectId(sub.id);
+                    }}
+                    className="rounded-2xl border border-slate-300 bg-white px-4 py-2 text-left text-sm hover:border-brand-gold"
+                  >
+                    <span className="block font-semibold text-slate-800">{sub.name}</span>
+                    <span className="block text-xs text-slate-500">
+                      {ns.label} · {sub.units.length} unit{sub.units.length === 1 ? "" : "s"}
+                    </span>
+                  </button>
+                )),
+            )}
+          </div>
+        </Step>
+      )}
 
       {stage && (
         <Step label="3. Subject">
