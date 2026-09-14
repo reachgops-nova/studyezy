@@ -427,9 +427,8 @@ export default function DrawingBoard({ unit, paperTasks = [] }: { unit: BoardUni
       <div className="grid min-h-0 flex-1 gap-3 p-3 lg:grid-cols-[1fr_22rem]">
         {/* ---------- Board ---------- */}
         <section className="flex min-h-0 flex-col overflow-hidden rounded-3xl border-4 border-slate-700 bg-[#0f172a] shadow-2xl">
-          <div className="relative flex min-h-0 flex-1 items-center justify-center p-3">
-            {phase === 1 && (
-              <div className="absolute inset-x-3 top-3 z-10 flex flex-wrap justify-center gap-2">
+          {phase === 1 && (
+            <div className="flex shrink-0 flex-wrap justify-center gap-2 border-b border-slate-800 px-3 py-2">
                 {unit.conceptSteps.map((s, i) => (
                   <button
                     key={s.label}
@@ -444,9 +443,10 @@ export default function DrawingBoard({ unit, paperTasks = [] }: { unit: BoardUni
                     {s.label}
                   </button>
                 ))}
-              </div>
-            )}
+            </div>
+          )}
 
+          <div className="relative flex min-h-0 flex-1 items-center justify-center p-3">
             {unit.stage === "text" ? (
               <TextStage
                 frame={frame}
