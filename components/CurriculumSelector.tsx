@@ -1,8 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import type { CatalogCurriculum } from "@/lib/catalog";
+
+const LAST_PICK_KEY = "studyezy.lastPick";
 
 export default function CurriculumSelector({
   catalog,
@@ -14,6 +16,12 @@ export default function CurriculumSelector({
   defaultCurriculumId?: string;
   defaultStageId?: number;
 }) {
+  // Remember where the child was last - real user direction 2026-09-14:
+  // "when we use the board room and come back it should back to the unit list
+  // where we left". Coming back from a lesson or the board landed on a reset
+  // picker, so they had to re-choose curriculum, stage and subject every time.
+  const [restored, setRestored] = useState(false);
+
   const [curriculumId, setCurriculumId] = useState(
     (defaultCurriculumId && catalog.some((c) => c.id === defaultCurriculumId) ? defaultCurriculumId : null) ??
       catalog[0]?.id ??
@@ -36,6 +44,37 @@ export default function CurriculumSelector({
   // Plain lookup, not memoized: the list is tiny (a handful of subjects), so
   // memoizing here isn't worth it and trips the compiler's mutation heuristic.
   const subject = stage?.subjects.find((s) => s.id === subjectId);
+
+  // Restore on first paint only, and only to choices that still exist - a
+  // remembered subject that has since moved stage must not strand the picker.
+  useEffect(() => {
+    if (restored) return;
+    setRestored(true);
+    try {
+      const raw = localStorage.getItem(LAST_PICK_KEY);
+      if (!raw) return;
+      const last = JSON.parse(raw) as { curriculumId?: string; stageId?: number; subjectId?: string };
+      const c = catalog.find((x) => x.id === last.curriculumId);
+      if (!c) return;
+      setCurriculumId(c.id);
+      const st = c.stages.find((x) => x.id === last.stageId && x.available);
+      if (!st) return;
+      setStageId(st.id);
+      const sub = st.subjects.find((x) => x.id === last.subjectId && x.available);
+      if (sub) setSubjectId(sub.id);
+    } catch {
+      /* a corrupt or unavailable store just means no memory this time */
+    }
+  }, [restored, catalog]);
+
+  useEffect(() => {
+    if (!restored) return;
+    try {
+      localStorage.setItem(LAST_PICK_KEY, JSON.stringify({ curriculumId, stageId, subjectId }));
+    } catch {
+      /* private browsing and blocked storage are fine - memory is a nicety */
+    }
+  }, [restored, curriculumId, stageId, subjectId]);
 
   return (
     <div className="grid gap-6">

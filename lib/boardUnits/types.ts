@@ -1,5 +1,28 @@
 /**
- * A unit's Drawing Board content.
+ * RCRT_GUI_V1 - the Learning Board template.
+ *
+ * Named so it can be referred to in one word (real user direction
+ * 2026-09-14). Everything below is the contract a unit fills in; the player
+ * in components/board/DrawingBoard.tsx never changes per subject.
+ *
+ * The shape of a lesson under RCRT_GUI_V1:
+ *   Read    - an intro saying what the chapter covers and what you will be
+ *             able to do, then one walkthrough step per concept, each
+ *             followed by that concept's worked examples (from the textbook,
+ *             with page and source) and its own quick check.
+ *   Cover   - the explanation is put away; guided questions where every
+ *             option draws its own outcome and names the specific mistake.
+ *   Recite  - say the rule back, then written practice to work on paper.
+ *   Test    - graded, set on material not seen while teaching, plus the
+ *             unit's own question papers. First answer is final.
+ *   Results - readiness score, written into the same mastery record the
+ *             Prep Plan and Progression Test already read.
+ *
+ * Stages available: grid, numberLine, text, diagram, bar, chart, timeline,
+ * map. A frame picks its own stage, so one unit can mix them.
+ */
+
+/** A unit's Learning Board content.
  *
  * Real user direction 2026-09-14, with a working reference attached
  * (drawing_board_unit10_v5.py): "we can use this template and examples as is
