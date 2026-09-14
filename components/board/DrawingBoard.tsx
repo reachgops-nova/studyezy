@@ -70,6 +70,8 @@ export default function DrawingBoard({ unit, paperTasks = [] }: { unit: BoardUni
   const [saveState, setSaveState] = useState<"idle" | "saving" | "saved" | "error">("idle");
 
   const audioRef = useRef<AudioContext | null>(null);
+  const answersRef = useRef(answers);
+  answersRef.current = answers;
   const voiceOnRef = useRef(voiceOn);
   voiceOnRef.current = voiceOn;
 
@@ -82,13 +84,31 @@ export default function DrawingBoard({ unit, paperTasks = [] }: { unit: BoardUni
     [unit.gridMax],
   );
 
-  const say = useCallback((text: string) => {
+  const say = useCallback((text: string, onDone?: () => void) => {
     setSubtitle(text);
-    if (!voiceOnRef.current || typeof window === "undefined" || !("speechSynthesis" in window)) return;
+    // Fall back to a length-based estimate when there is no voice to wait on,
+    // so the board behaves the same with narration off.
+    const estimate = Math.min(9000, 1400 + text.length * 55);
+    if (!voiceOnRef.current || typeof window === "undefined" || !("speechSynthesis" in window)) {
+      if (onDone) setTimeout(onDone, estimate);
+      return;
+    }
     window.speechSynthesis.cancel();
     const u = new SpeechSynthesisUtterance(text);
     u.rate = 0.95;
     u.pitch = 1.05;
+    if (onDone) {
+      let fired = false;
+      const once = () => {
+        if (fired) return;
+        fired = true;
+        onDone();
+      };
+      u.onend = once;
+      u.onerror = once;
+      // Some installed voices never fire onend at all.
+      setTimeout(once, estimate + 3000);
+    }
     window.speechSynthesis.speak(u);
   }, []);
 
@@ -165,6 +185,52 @@ export default function DrawingBoard({ unit, paperTasks = [] }: { unit: BoardUni
     say(opt.say);
   }
 
+  /**
+   * Once the explanation has been spoken, the board clears and sets up the
+   * next question - real user direction 2026-09-14: "the old answer still
+   * stays, it should populate for next question". Leaving the last answer's
+   * working up while a new question is being read is exactly the confusion
+   * receding the cards was meant to remove.
+   */
+  function handOverToNextTask(justAnswered: string) {
+    const list = phase === 2 ? unit.guidedTasks : [...unit.assessment.partA, ...unit.assessment.partB, ...paperTasks];
+    const next = list.find((t) => t.title !== justAnswered && !answersRef.current[t.title]);
+    setFrame(next?.setup ?? {});
+  }
+
+  /** The question the board is currently offering to be dragged. */
+  const dragTask =
+    phase === 2 || phase === 4
+      ? (phase === 2 ? unit.guidedTasks : [...unit.assessment.partA, ...unit.assessment.partB]).find(
+          (t) => t.drag && !answers[t.title],
+        )
+      : undefined;
+  const [dragAt, setDragAt] = useState<number[] | null>(null);
+  useEffect(() => {
+    setDragAt(dragTask?.drag ? [...dragTask.drag.from] : null);
+  }, [dragTask]);
+
+  /** Dropping the handle answers the question, same rules as tapping an option. */
+  function dropDrag(at: number[]) {
+    if (!dragTask?.drag) return;
+    setDragAt(at);
+    const hit = dragTask.drag.to.every((v, i) => Math.abs((at[i] ?? NaN) - v) < 1e-6);
+    const idx = dragTask.options.findIndex((o) => o.correct === hit);
+    const opt = dragTask.options[idx] ?? dragTask.options[0];
+    setAnswers((prev) =>
+      prev[dragTask.title]
+        ? prev
+        : { ...prev, [dragTask.title]: { correct: hit, label: `dragged to ${at.join(", ")}`, locked: true } },
+    );
+    sfx(hit ? "right" : "wrong");
+    say(
+      hit
+        ? `That is the spot. ${opt?.say ?? ""}`
+        : `Not quite - you put it at ${at.join(", ")}. ${dragTask.drag.to.length > 1 ? `It belongs at ${dragTask.drag.to.join(", ")}.` : `It belongs at ${dragTask.drag.to[0]}.`}`,
+      () => handOverToNextTask(dragTask.title),
+    );
+  }
+
   function answer(task: BoardTask, optionIndex: number) {
     const opt = task.options[optionIndex];
     setAnswers((prev) =>
@@ -174,7 +240,7 @@ export default function DrawingBoard({ unit, paperTasks = [] }: { unit: BoardUni
     );
     setFrame(opt.frame);
     sfx(opt.correct ? "right" : "wrong");
-    say(opt.say);
+    say(opt.say, () => handOverToNextTask(task.title));
   }
 
   // Score is only ever the graded phase - the practice phases are for trying
@@ -209,7 +275,7 @@ export default function DrawingBoard({ unit, paperTasks = [] }: { unit: BoardUni
       setFrame(s?.frame ?? {});
       say(s?.say ?? "Let's look at the idea again.");
     } else if (p === 2) {
-      setFrame(unit.guidedTasks[0]?.options.find((o) => o.correct)?.frame ?? {});
+      setFrame(unit.guidedTasks.find((t) => !answers[t.title])?.setup ?? {});
       say("Cover. The explanation is put away - try these from memory. Even a wrong answer will show you where it would land.");
     } else if (p === 3) {
       say("Recite. Say the rule back in your own words first, then play with the sliders and watch the shape travel.");
@@ -357,7 +423,13 @@ export default function DrawingBoard({ unit, paperTasks = [] }: { unit: BoardUni
             )}
 
             {unit.stage === "numberLine" ? (
-              <NumberLineStage frame={frame} onTap={(v) => say(nameValue(v))} />
+              <NumberLineStage
+                frame={frame}
+                onTap={(v) => say(nameValue(v))}
+                drag={dragTask?.drag && dragAt ? { at: dragAt[0], hint: dragTask.drag.hint } : undefined}
+                onDrag={(v) => setDragAt([v])}
+                onDrop={(v) => dropDrag([v])}
+              />
             ) : (
             <svg
               viewBox={`0 0 ${VB_W} ${VB_H}`}
@@ -406,6 +478,46 @@ export default function DrawingBoard({ unit, paperTasks = [] }: { unit: BoardUni
                     onClick={() => say(`${ix} across and ${iy} up. We write that as ${ix}, ${iy}.`)}
                   />
                 )),
+              )}
+              {dragTask?.drag && dragAt && (unit.stage ?? "grid") === "grid" && (
+                <g
+                  className="cursor-grab"
+                  onPointerDown={(e) => {
+                    const svg = e.currentTarget.ownerSVGElement;
+                    if (!svg) return;
+                    e.currentTarget.setPointerCapture(e.pointerId);
+                    const move = (ev: PointerEvent) => {
+                      const r = svg.getBoundingClientRect();
+                      const vx = ((ev.clientX - r.left) / r.width) * VB_W;
+                      const vy = ((ev.clientY - r.top) / r.height) * VB_H;
+                      const gxUnit = (VB_W - PAD_L - 20) / unit.gridMax;
+                      const gyUnit = (VB_H - PAD_B - 20) / unit.gridMax;
+                      const x = Math.round((vx - PAD_L) / gxUnit);
+                      const y = Math.round((VB_H - PAD_B - vy) / gyUnit);
+                      setDragAt([Math.max(0, Math.min(unit.gridMax, x)), Math.max(0, Math.min(unit.gridMax, y))]);
+                    };
+                    const up = (ev: PointerEvent) => {
+                      window.removeEventListener("pointermove", move);
+                      window.removeEventListener("pointerup", up);
+                      const r = svg.getBoundingClientRect();
+                      const vx = ((ev.clientX - r.left) / r.width) * VB_W;
+                      const vy = ((ev.clientY - r.top) / r.height) * VB_H;
+                      const gxUnit = (VB_W - PAD_L - 20) / unit.gridMax;
+                      const gyUnit = (VB_H - PAD_B - 20) / unit.gridMax;
+                      const x = Math.max(0, Math.min(unit.gridMax, Math.round((vx - PAD_L) / gxUnit)));
+                      const y = Math.max(0, Math.min(unit.gridMax, Math.round((VB_H - PAD_B - vy) / gyUnit)));
+                      dropDrag([x, y]);
+                    };
+                    window.addEventListener("pointermove", move);
+                    window.addEventListener("pointerup", up);
+                  }}
+                >
+                  <circle cx={gx(dragAt[0])} cy={gy(dragAt[1])} r={13} fill="#ec4899" fillOpacity={0.25} />
+                  <circle cx={gx(dragAt[0])} cy={gy(dragAt[1])} r={8} fill="#ec4899" stroke="#fff" strokeWidth={2} />
+                  <text x={gx(dragAt[0]) + 14} y={gy(dragAt[1]) - 12} fill="#ec4899" fontSize={12} fontWeight="bold">
+                    {dragTask.drag.hint ?? "drag me"} ({dragAt[0]}, {dragAt[1]})
+                  </text>
+                </g>
               )}
               {(frame.shapes ?? []).map((s, i) => (
                 <polygon
@@ -711,7 +823,19 @@ export default function DrawingBoard({ unit, paperTasks = [] }: { unit: BoardUni
  * hops drawn as arcs with their size written above, and place-value parts
  * underneath. Values in, pixels out - the same boundary the grid keeps.
  */
-function NumberLineStage({ frame, onTap }: { frame: BoardFrame; onTap?: (v: number) => void }) {
+function NumberLineStage({
+  frame,
+  onTap,
+  drag,
+  onDrag,
+  onDrop,
+}: {
+  frame: BoardFrame;
+  onTap?: (v: number) => void;
+  drag?: { at: number; hint?: string };
+  onDrag?: (v: number) => void;
+  onDrop?: (v: number) => void;
+}) {
   const L = frame.line;
   if (!L) return <p className="text-sm text-slate-500">Press a step to begin.</p>;
 
@@ -768,6 +892,36 @@ function NumberLineStage({ frame, onTap }: { frame: BoardFrame; onTap?: (v: numb
         </g>
       ))}
 
+      {drag && (
+        <g
+          className="cursor-grab"
+          onPointerDown={(e) => {
+            const svg = e.currentTarget.ownerSVGElement;
+            if (!svg) return;
+            const toValue = (clientX: number) => {
+              const r = svg.getBoundingClientRect();
+              const vx = ((clientX - r.left) / r.width) * W;
+              const raw = L.min + ((vx - padX) / (W - padX * 2)) * span;
+              const snapped = L.min + Math.round((raw - L.min) / L.step) * L.step;
+              return Number(Math.max(L.min, Math.min(L.max, snapped)).toFixed(6));
+            };
+            const move = (ev: PointerEvent) => onDrag?.(toValue(ev.clientX));
+            const up = (ev: PointerEvent) => {
+              window.removeEventListener("pointermove", move);
+              window.removeEventListener("pointerup", up);
+              onDrop?.(toValue(ev.clientX));
+            };
+            window.addEventListener("pointermove", move);
+            window.addEventListener("pointerup", up);
+          }}
+        >
+          <circle cx={px(drag.at)} cy={midY} r={14} fill="#ec4899" fillOpacity={0.25} />
+          <circle cx={px(drag.at)} cy={midY} r={9} fill="#ec4899" stroke="#fff" strokeWidth={2} />
+          <text x={px(drag.at)} y={midY - 24} fill="#ec4899" fontSize={13} fontWeight="bold" textAnchor="middle">
+            {drag.hint ?? "drag me"} · {fmt(drag.at)}
+          </text>
+        </g>
+      )}
       {(L.parts ?? []).map((p, i, arr) => {
         const boxW = Math.min(130, (W - padX * 2) / arr.length - 10);
         const x = padX + i * (boxW + 10);

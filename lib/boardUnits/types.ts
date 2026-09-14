@@ -82,8 +82,31 @@ export type BoardOption = {
   frame: BoardFrame;
 };
 
+/**
+ * Lets a question be answered by moving something on the board instead of
+ * picking from a list - real user direction 2026-09-14: "I am not able to
+ * drag the points to a position for answer". Dragging to the right place is
+ * the skill; choosing between four written options is a different one.
+ *
+ * Values are in board units: [x, y] on the grid, [value] on a number line.
+ */
+export type BoardDrag = {
+  from: number[];
+  to: number[];
+  /** Shown beside the handle, e.g. "drag me". */
+  hint?: string;
+};
+
 export type BoardTask = {
   title: string;
+  /**
+   * What the board shows while this question is being read, before any answer.
+   * Omitted means a clear board - which is still better than leaving the
+   * previous question's working up while a new one is being worked on.
+   */
+  setup?: BoardFrame;
+  /** Answerable by dragging, as well as by the options below. */
+  drag?: BoardDrag;
   prompt: string;
   options: BoardOption[];
   /** Concept this question belongs to, so mastery is recorded per concept. */
@@ -132,7 +155,7 @@ export type BoardUnit = {
   /** Grid extent. The reference uses 0-10 on both axes. */
   gridMax: number;
   /** Which stage this unit draws on. Defaults to the coordinate grid. */
-  stage?: "grid" | "numberLine";
+  stage?: "grid" | "numberLine";  // eslint-disable-line
   /** Shown and read out before anything else: what this chapter covers and
    *  what the child will be able to do by the end of it. */
   intro: { covers: string[]; outcomes: string[] };

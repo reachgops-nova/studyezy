@@ -182,6 +182,11 @@ export const CAMBRIDGE_4_MATH_10: BoardUnit = {
   guidedTasks: [
     {
       title: "Task 1 · Slide challenge",
+      setup: {
+        shapes: [{ points: [[1, 2], [3, 2], [2, 4]], look: "live" }],
+        dots: [{ at: [1, 2], label: "start (1,2)", tone: "gold" }],
+      },
+      drag: { from: [1, 2], to: [4, 4], hint: "drag the corner" },
       prompt: "Shape A starts at (1,2). It is translated 3 squares RIGHT and 2 squares UP. Where does its bottom-left corner land?",
       conceptId: "10.1",
       options: [
@@ -376,6 +381,8 @@ export const CAMBRIDGE_4_MATH_10: BoardUnit = {
     },
     {
       title: "Task 5 · Read the coordinate",
+      setup: {},
+      drag: { from: [0, 0], to: [3, 7], hint: "put the point here" },
       prompt: "Which coordinate is 3 across and 7 up?",
       conceptId: "10.2",
       options: [
@@ -497,6 +504,8 @@ export const CAMBRIDGE_4_MATH_10: BoardUnit = {
       },
       {
         title: "Q2 · Slide a point",
+        setup: { dots: [{ at: [2, 5], label: "(2,5)", tone: "gold" }] },
+        drag: { from: [2, 5], to: [6, 2], hint: "slide it" },
         prompt: "The point (2,5) is translated 4 right and 3 down. Where does it land?",
         conceptId: "10.2",
         options: [

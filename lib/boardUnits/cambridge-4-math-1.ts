@@ -192,6 +192,8 @@ export const CAMBRIDGE_4_MATH_1: BoardUnit = {
   guidedTasks: [
     {
       title: "Task 1 · Read the decimal",
+      setup: { line: { min: 0, max: 1, step: 0.1 } },
+      drag: { from: [0], to: [0.1], hint: "drag to one tenth" },
       prompt: "One whole is split into 10 equal parts. What is each single part worth?",
       conceptId: "1.1",
       options: [
@@ -207,6 +209,8 @@ export const CAMBRIDGE_4_MATH_1: BoardUnit = {
     },
     {
       title: "Task 2 · Place 2.6",
+      setup: { line: { min: 2, max: 3, step: 0.1 } },
+      drag: { from: [2], to: [2.6], hint: "drag to 2.6" },
       prompt: "Where does 2.6 sit?",
       conceptId: "1.1",
       options: [
@@ -246,6 +250,8 @@ export const CAMBRIDGE_4_MATH_1: BoardUnit = {
     },
     {
       title: "Task 5 · Count back past zero",
+      setup: { line: { min: -10, max: 8, step: 2, marks: [{ at: 1, label: "you are here", tone: "gold" }] } },
+      drag: { from: [1], to: [-4], hint: "drag back 5" },
       prompt: "Counting back in steps of 5 from 6: what comes after 1?",
       conceptId: "1.4",
       options: [
@@ -316,6 +322,8 @@ export const CAMBRIDGE_4_MATH_1: BoardUnit = {
       },
       {
         title: "Q3 · Below zero",
+        setup: { line: { min: -8, max: 6, step: 2, marks: [{ at: 3, label: "3", tone: "gold" }] } },
+        drag: { from: [3], to: [-5], hint: "drag to the answer" },
         prompt: "What is 3 - 8?",
         conceptId: "1.4",
         options: [
