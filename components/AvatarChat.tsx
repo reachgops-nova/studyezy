@@ -1562,7 +1562,7 @@ export default function AvatarChat({
     // over its lower edge - collapsed to a single line by default, so the
     // picture keeps the room, and expandable when there is something to read
     // or write. Neither competes with the other for height any more.
-    <div className="relative flex h-full min-h-0 flex-col gap-4">
+    <div className="flex h-full min-h-0 flex-col gap-2">
       {/* A generated illustration (lib/conceptIllustration.ts) no longer
           shows here - 2026-09-08: moved into the conversation itself (see
           buildCheckpoints/playCheckpoint), spoken right after the intro
@@ -1623,9 +1623,7 @@ export default function AvatarChat({
         // bottom edge, so the miniatures and the "need anything more" row are
         // never hidden underneath it.
         <div
-          className={`flex min-h-0 flex-1 flex-col rounded-xl border border-practice-border bg-[#f4f6f1] p-3 shadow-sm ${
-            isWorkbookOpen ? "" : "pb-[7rem]"
-          }`}
+          className="flex min-h-0 flex-1 flex-col rounded-xl border border-practice-border bg-[#f4f6f1] p-3 shadow-sm"
         >
           <div className="mb-2 flex items-center justify-between gap-2">
             <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">
@@ -1824,14 +1822,14 @@ export default function AvatarChat({
       )}
 
       <div
-        // Collapsed it floats over the board's bottom edge, which is what
-        // "a layer at the bottom... it overlaps and visible in the
-        // background" asks for. Open it takes its own space instead, because
-        // an overlay deep enough to read is also deep enough to bury the
-        // subtitle - and the spoken line is the one thing that must never be
-        // covered.
-        className={`z-20 flex flex-col rounded-xl border border-practice-border bg-practice-bg/95 shadow-lg backdrop-blur-sm ${
-          isWorkbookOpen ? "relative min-h-0 shrink-0 max-h-[48%]" : "absolute inset-x-0 bottom-0 max-h-[7.5rem]"
+        // Always in flow, never floating. Layering it over the board was
+        // the source of the clutter in the annotated screenshot: it covered
+        // the control row and the subtitle, and the padding the board needed
+        // to dodge it was space the picture could have used. As a short row
+        // below the board it costs the same height and hides nothing, and
+        // the board gets everything left over.
+        className={`z-20 flex shrink-0 flex-col rounded-xl border border-practice-border bg-practice-bg ${
+          isWorkbookOpen ? "min-h-0 max-h-[48%]" : "max-h-[7.5rem]"
         }`}
       >
         <button
