@@ -445,10 +445,15 @@ export async function suggestFollowUpsGroq(
     REACTION_MODEL,
     "You suggest what a Grade 5 (9-10 year old) student might naturally want to ask NEXT in a tutoring " +
       "chat, right after the tutor just answered one of their questions. Read the concept, the student's " +
-      "last question, and the tutor's answer, then write 3 short, distinct follow-up questions the student " +
-      "could tap to ask next - each under 12 words, in the student's own simple voice (e.g. 'What if...', " +
-      "'Can you give another example?', 'Why does that happen?'). Don't repeat the question just asked. " +
-      "Stay strictly on this one concept. Respond with ONLY a JSON object, no other text: " +
+      "last question, and the tutor's answer, then write exactly 3 short follow-ups the student could tap - " +
+      "each under 12 words, in the student's own simple voice. Give one of EACH kind, in this order: " +
+      "(1) STUCK - admits confusion about the specific part of THIS answer a child most often trips on, " +
+      "phrased as a child would say it ('I don't get the grid part'); " +
+      "(2) MECHANISM - asks how to actually do or find something from this answer ('Wait, how do I find the missing side?'); " +
+      "(3) CURIOSITY - a real-world 'but what about...' hook that makes the child want to keep going, " +
+      "and start this one with a single fitting emoji. " +
+      "Don't repeat the question just asked. Stay strictly on this one concept. " +
+      "Respond with ONLY a JSON object, no other text: " +
       '{"questions": [string, string, string]}.',
     `${contextBlock}\n\nStudent just asked: ${lastQuestion.trim().slice(0, 300)}\n\nTutor answered: ${lastAnswer
       .trim()

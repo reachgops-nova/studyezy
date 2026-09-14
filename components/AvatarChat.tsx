@@ -103,6 +103,24 @@ const PAUSE_PROMPTS = [
   "All good? Say the word and we'll keep going.",
 ];
 
+// Real user direction 2026-09-14, after comparing against Astra AI: their
+// tutor never ends a turn passively - it closes with a question about the
+// content ("...where do you think that new corner would end up?") instead of
+// a yes/no "does that make sense", so the child has to actually think rather
+// than click past. Prefers reasoning_interview_prompts (genuinely
+// thought-provoking "why" questions, and NOT the pool the micro-check grades
+// on, so this doesn't spoil those answers), then falls back to the generic
+// comprehension check only for concepts that carry no questions at all.
+// Deliberately non-blocking: the kid can still continue without answering,
+// same as Astra - the point is to provoke thought, not to gate progress.
+function pausePromptFor(concept: Concept, index: number): string {
+  const thinkers = concept.reasoning_interview_prompts?.filter(Boolean) ?? [];
+  if (thinkers.length) return `Before we move on - ${thinkers[index % thinkers.length]}`;
+  const asked = concept.voice_qa_samples?.map((q) => q.question).filter(Boolean) ?? [];
+  if (asked.length) return `Quick one before we carry on - ${asked[index % asked.length]}`;
+  return PAUSE_PROMPTS[index % PAUSE_PROMPTS.length];
+}
+
 const CONTINUE_ACKS = ["Great, let's keep going!", "Awesome, moving on!", "Nice, here we go!"];
 const REPEAT_ACKS = ["No problem, let me explain that again.", "Sure, here it is again."];
 
@@ -1108,7 +1126,7 @@ export default function AvatarChat({
         if (isLast) {
           startFinalCheckIn(token);
         } else {
-          const prompt = PAUSE_PROMPTS[index % PAUSE_PROMPTS.length];
+          const prompt = pausePromptFor(concept, index);
           const id = nextId();
           setMessages((prev) => [...prev, { id, sender: "avatar", text: prompt }]);
           speakText(prompt, id, () => {});
@@ -1443,10 +1461,16 @@ export default function AvatarChat({
   // question - dynamicFollowUps (regenerated after every answer, see
   // sendMessage) takes over from there so the chips keep evolving with the
   // conversation instead of staying frozen on this fixed list forever.
+  // Confusion-shaped, in the kid's own voice, before the exam-phrased ones -
+  // 2026-09-14: the old set led with questions worded like a test paper
+  // ("How do I describe a translation accurately?"), which is not what a
+  // stuck 9-year-old reaches for. A child who is lost clicks "I'm lost - can
+  // you start over?"; these give them that, and the concept's own questions
+  // still follow for the kid who is actually ready to probe.
   const starterReplies = [
+    "I'm lost - can you start over?",
+    "Show me a real-life example",
     ...(concept.voice_qa_samples?.map((q) => q.question) ?? []),
-    "Can you explain that differently?",
-    "Give me another example",
     ...(concept.reasoning_interview_prompts ?? []),
   ].slice(0, 5);
   const quickReplies = dynamicFollowUps.length > 0 ? dynamicFollowUps : starterReplies;
