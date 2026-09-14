@@ -16,12 +16,24 @@ import type { BoardFrame, BoardTask, BoardUnit } from "@/lib/boardUnits/types";
  * data file and never a change here.
  */
 
+/**
+ * The phases ARE the RCRT method, not a parallel set of names beside it -
+ * real user direction 2026-09-14: "our curriculum teaching flow RCRT and this
+ * UI/UX together we must be ready".
+ *
+ *   Read    - meet the idea, one press at a time
+ *   Cover   - hide the explanation and try it, with the board showing what
+ *             each answer would actually do
+ *   Recite  - say the rule back in your own words, then play with it freely
+ *   Test    - the graded check
+ *   Results - the score, and what the schedule does about it
+ */
 const PHASES = [
-  { id: 1, label: "Concept", icon: "📖" },
-  { id: 2, label: "Guided practice", icon: "🗣️" },
-  { id: 3, label: "Practice lab", icon: "✏️" },
-  { id: 4, label: "Check yourself", icon: "📝" },
-  { id: 5, label: "Results & next", icon: "📊" },
+  { id: 1, label: "Read", icon: "📖" },
+  { id: 2, label: "Cover", icon: "🙈" },
+  { id: 3, label: "Recite", icon: "🗣️" },
+  { id: 4, label: "Test", icon: "📝" },
+  { id: 5, label: "Results", icon: "📊" },
 ] as const;
 
 // SVG geometry. Grid units in, pixels out - the one place this conversion
@@ -161,12 +173,12 @@ export default function DrawingBoard({ unit }: { unit: BoardUnit }) {
       say(s?.say ?? "Let's look at the idea again.");
     } else if (p === 2) {
       setFrame(unit.guidedTasks[0]?.options.find((o) => o.correct)?.frame ?? {});
-      say("Guided practice. Pick an answer and watch what it does on the board - even a wrong one shows you where it would land.");
+      say("Cover. The explanation is put away - try these from memory. Even a wrong answer will show you where it would land.");
     } else if (p === 3) {
-      say("Your turn to play. Move the sliders and watch the shape travel.");
+      say("Recite. Say the rule back in your own words first, then play with the sliders and watch the shape travel.");
     } else if (p === 4) {
       setFrame({});
-      say("Check yourself. Part A is straight recall, Part B asks you to use the idea somewhere new.");
+      say("Test time. Part A is straight recall, Part B asks you to use the idea somewhere new.");
     } else {
       say(
         passed
@@ -432,7 +444,7 @@ export default function DrawingBoard({ unit }: { unit: BoardUnit }) {
                 ))}
               </div>
               <button type="button" onClick={() => goPhase(2)} className="mt-auto rounded-xl bg-[#ec4899] px-4 py-2.5 font-bold text-white shadow-[0_4px_0_#be185d] transition-transform hover:-translate-y-0.5">
-                I've got this - practise it ➔
+                Cover it up and try ➔
               </button>
             </>
           )}
@@ -440,11 +452,12 @@ export default function DrawingBoard({ unit }: { unit: BoardUnit }) {
           {(phase === 2 || phase === 4) && (
             <>
               <h2 className="border-b-2 border-slate-700 pb-2 text-lg font-bold text-[#f59e0b]">
-                {phase === 2 ? "🗣️ Guided practice" : "📝 Check yourself"}
+                {phase === 2 ? "🙈 Cover - try it from memory" : "📝 Test"}
               </h2>
               {phase === 4 && (
                 <p className="text-[0.8rem] text-slate-400">
                   These count. Part A is straight recall; Part B asks you to use the idea somewhere new.
+                  {" "}{graded.length} questions in all.
                 </p>
               )}
               {(phase === 2 ? unit.guidedTasks : unit.assessment.partA).map((t) => (
@@ -463,14 +476,24 @@ export default function DrawingBoard({ unit }: { unit: BoardUnit }) {
                 onClick={() => goPhase(phase === 2 ? 3 : 5)}
                 className="mt-auto rounded-xl bg-[#ec4899] px-4 py-2.5 font-bold text-white shadow-[0_4px_0_#be185d] transition-transform hover:-translate-y-0.5"
               >
-                {phase === 2 ? "Try it yourself ➔" : "See how I did ➔"}
+                {phase === 2 ? "Recite it back ➔" : "See how I did ➔"}
               </button>
             </>
           )}
 
           {phase === 3 && (
             <>
-              <h2 className="border-b-2 border-slate-700 pb-2 text-lg font-bold text-[#f59e0b]">✏️ Practice lab</h2>
+              <h2 className="border-b-2 border-slate-700 pb-2 text-lg font-bold text-[#f59e0b]">🗣️ Recite</h2>
+              <p className="text-[0.8rem] text-slate-400">
+                Have a go at saying each one out loud before you reveal the answer. Nothing here is marked - it is for
+                you to hear whether you have really got it.
+              </p>
+              <div className="flex flex-col gap-2">
+                {unit.recitePrompts.map((r) => (
+                  <ReciteCard key={r.ask} prompt={r} onSay={say} />
+                ))}
+              </div>
+              <p className="pt-1 text-[0.7rem] font-extrabold uppercase tracking-wider text-slate-500">Then play with it</p>
               <p className="text-[0.82rem] leading-snug text-slate-400">{unit.lab.prompt}</p>
               <div className="flex flex-col gap-3 rounded-2xl border border-slate-700 bg-[#0f172a] p-3">
                 <label className="flex items-center justify-between gap-3 text-[0.82rem] font-bold">
@@ -495,7 +518,7 @@ export default function DrawingBoard({ unit }: { unit: BoardUnit }) {
                 Show it on the board
               </button>
               <button type="button" onClick={() => goPhase(4)} className="mt-auto rounded-xl bg-[#ec4899] px-4 py-2.5 font-bold text-white shadow-[0_4px_0_#be185d] transition-transform hover:-translate-y-0.5">
-                I'm ready to be checked ➔
+                I'm ready for the test ➔
               </button>
             </>
           )}
@@ -560,6 +583,29 @@ export default function DrawingBoard({ unit }: { unit: BoardUnit }) {
           )}
         </aside>
       </div>
+    </div>
+  );
+}
+
+function ReciteCard({ prompt, onSay }: { prompt: { ask: string; answer: string }; onSay: (t: string) => void }) {
+  const [shown, setShown] = useState(false);
+  return (
+    <div className="rounded-2xl border-2 border-slate-700 bg-[#0f172a] p-3">
+      <p className="text-[0.85rem] font-bold leading-snug text-white">{prompt.ask}</p>
+      {shown ? (
+        <p className="mt-2 rounded-xl bg-[#38bdf8]/10 px-3 py-2 text-[0.8rem] leading-snug text-[#7dd3fc]">{prompt.answer}</p>
+      ) : (
+        <button
+          type="button"
+          onClick={() => {
+            setShown(true);
+            onSay(prompt.answer);
+          }}
+          className="mt-2 rounded-xl border-2 border-slate-600 px-3 py-1.5 text-[0.78rem] font-bold text-slate-300 hover:border-[#38bdf8] hover:text-[#38bdf8]"
+        >
+          I&apos;ve said it - show me
+        </button>
+      )}
     </div>
   );
 }

@@ -88,6 +88,17 @@ export type BoardConcept = {
   keyPoints: string[];
 };
 
+/**
+ * Phase 3 is Recite: the child says the rule back in their own words before
+ * being tested on it. Self-marked on purpose - the point is retrieval, and
+ * grading it would make them guess what we want to hear instead of trying.
+ */
+export type RecitePrompt = {
+  ask: string;
+  /** Revealed after they have had a go, to check themselves against. */
+  answer: string;
+};
+
 export type BoardUnit = {
   unitKey: string;
   title: string;
@@ -98,6 +109,7 @@ export type BoardUnit = {
   conceptSteps: ConceptStep[];
   guidedTasks: BoardTask[];
   lab: BoardLab;
+  recitePrompts: RecitePrompt[];
   assessment: { partA: BoardTask[]; partB: BoardTask[] };
   /** Tappable readymade questions in the assistant panel. */
   readymade: { q: string; a: string }[];

@@ -204,6 +204,148 @@ export const CAMBRIDGE_4_MATH_10: BoardUnit = {
         },
       ],
     },
+    {
+      title: "Task 3 · Which way did it go?",
+      prompt: "A shape moves from (7,3) to (2,3). How would you describe that translation?",
+      conceptId: "10.1",
+      options: [
+        {
+          label: "5 left",
+          correct: true,
+          say: "Yes. The across number went from 7 down to 2, so it moved 5 left. The up number never changed, so there is no vertical part at all.",
+          frame: {
+            dots: [{ at: [7, 3], label: "(7,3)", tone: "gold" }, { at: [2, 3], label: "(2,3) ✓", tone: "green" }],
+            arrows: [{ from: [7, 3], to: [2, 3] }],
+          },
+        },
+        {
+          label: "5 right",
+          correct: false,
+          say: "Check the numbers again - 7 going to 2 is getting smaller, and smaller across means left.",
+          frame: {
+            dots: [{ at: [7, 3], label: "(7,3)", tone: "gold" }, { at: [10, 3], label: "right goes the wrong way ✗", tone: "red" }],
+            arrows: [{ from: [7, 3], to: [10, 3] }],
+          },
+        },
+        {
+          label: "5 left, 3 down",
+          correct: false,
+          say: "The across part is right, but look at the up number - it stayed at 3 the whole time, so there is no down move.",
+          frame: {
+            dots: [{ at: [7, 3], label: "(7,3)", tone: "gold" }, { at: [2, 0], label: "(2,0) ✗ - dropped too far", tone: "red" }],
+            arrows: [{ from: [7, 3], to: [2, 0] }],
+          },
+        },
+        {
+          label: "3 left",
+          correct: false,
+          say: "Count the squares between 7 and 2 - that is 5, not 3.",
+          frame: {
+            dots: [{ at: [7, 3], label: "(7,3)", tone: "gold" }, { at: [4, 3], label: "(4,3) ✗ - not far enough", tone: "red" }],
+            arrows: [{ from: [7, 3], to: [4, 3] }],
+          },
+        },
+      ],
+    },
+    {
+      title: "Task 4 · Same shape, new place",
+      prompt: "A triangle at (1,1), (3,1), (2,3) is translated 4 right and 4 up. Which corner is NOT part of the new triangle?",
+      conceptId: "10.1",
+      options: [
+        {
+          label: "(5, 5)",
+          correct: false,
+          say: "That one is in the new triangle - 1 plus 4 is 5 across, and 1 plus 4 is 5 up.",
+          frame: {
+            shapes: [
+              { points: [[1, 1], [3, 1], [2, 3]], look: "ghost" },
+              { points: [[5, 5], [7, 5], [6, 7]], look: "correct" },
+            ],
+            dots: [{ at: [5, 5], label: "(5,5) is in it", tone: "green" }],
+          },
+        },
+        {
+          label: "(6, 7)",
+          correct: false,
+          say: "That one is in it too - the top corner (2,3) plus 4 and 4 lands exactly there.",
+          frame: {
+            shapes: [
+              { points: [[1, 1], [3, 1], [2, 3]], look: "ghost" },
+              { points: [[5, 5], [7, 5], [6, 7]], look: "correct" },
+            ],
+            dots: [{ at: [6, 7], label: "(6,7) is in it", tone: "green" }],
+          },
+        },
+        {
+          label: "(7, 7)",
+          correct: true,
+          say: "Well spotted. Adding 4 and 4 to each corner gives (5,5), (7,5) and (6,7). Nothing lands on (7,7).",
+          frame: {
+            shapes: [
+              { points: [[1, 1], [3, 1], [2, 3]], look: "ghost" },
+              { points: [[5, 5], [7, 5], [6, 7]], look: "correct" },
+            ],
+            dots: [{ at: [7, 7], label: "(7,7) is not a corner ✓", tone: "red" }],
+          },
+        },
+        {
+          label: "(7, 5)",
+          correct: false,
+          say: "That one is in it - the corner at (3,1) plus 4 and 4 lands there.",
+          frame: {
+            shapes: [
+              { points: [[1, 1], [3, 1], [2, 3]], look: "ghost" },
+              { points: [[5, 5], [7, 5], [6, 7]], look: "correct" },
+            ],
+            dots: [{ at: [7, 5], label: "(7,5) is in it", tone: "green" }],
+          },
+        },
+      ],
+    },
+    {
+      title: "Task 5 · Read the coordinate",
+      prompt: "Which coordinate is 3 across and 7 up?",
+      conceptId: "10.2",
+      options: [
+        {
+          label: "(3, 7)",
+          correct: true,
+          say: "Correct. Across first, then up - that is always the order.",
+          frame: { dots: [{ at: [3, 7], label: "(3,7) ✓", tone: "green" }] },
+        },
+        {
+          label: "(7, 3)",
+          correct: false,
+          say: "That is the same two numbers the other way round, which puts you somewhere completely different. Across always comes first.",
+          frame: { dots: [{ at: [7, 3], label: "(7,3) ✗ - swapped", tone: "red" }, { at: [3, 7], label: "should be here", tone: "gold" }] },
+        },
+      ],
+    },
+    {
+      title: "Task 6 · Find the fourth corner",
+      prompt: "Three corners of a rectangle are (1,2), (6,2) and (6,5). Where is the fourth?",
+      conceptId: "10.2",
+      options: [
+        {
+          label: "(1, 5)",
+          correct: true,
+          say: "Yes. Opposite sides of a rectangle are equal and parallel, so the last corner lines up under (6,5) and across from (1,2).",
+          frame: {
+            shapes: [{ points: [[1, 2], [6, 2], [6, 5], [1, 5]], look: "correct" }],
+            dots: [{ at: [1, 5], label: "(1,5) ✓", tone: "green" }],
+          },
+        },
+        {
+          label: "(5, 5)",
+          correct: false,
+          say: "That would not line up with the corner at (1,2) - the left side has to stay straight up and down.",
+          frame: {
+            shapes: [{ points: [[1, 2], [6, 2], [6, 5], [5, 5]], look: "wrong" }],
+            dots: [{ at: [5, 5], label: "(5,5) ✗ - side is not straight", tone: "red" }],
+          },
+        },
+      ],
+    },
   ],
 
   // Phase 3. Free play with an immediate visual answer - no marking, no score.
@@ -213,6 +355,26 @@ export const CAMBRIDGE_4_MATH_10: BoardUnit = {
     shape: [[0, 0], [2, 0], [2, 2], [0, 2]],
     range: { min: -3, max: 5 },
   },
+
+  // Phase 3 also asks them to say the rule back before being tested on it.
+  recitePrompts: [
+    {
+      ask: "In your own words - what is a translation?",
+      answer: "Sliding a shape in a straight direction across a grid, without turning it, flipping it, or changing its size.",
+    },
+    {
+      ask: "How do you describe a translation so someone else could copy it exactly?",
+      answer: "Say how many squares it moves across - left or right - and then how many it moves up or down.",
+    },
+    {
+      ask: "What is always true about the lines joining each old corner to its new one?",
+      answer: "They are all parallel and all exactly the same length, because every corner travels the same journey.",
+    },
+    {
+      ask: "Which number in a coordinate comes first, and what does it mean?",
+      answer: "The across number comes first - how far along the bottom - and then the up number.",
+    },
+  ],
 
   // Phase 4. Straight recall first, then a question that needs the idea
   // applied somewhere it was not taught.
@@ -269,6 +431,47 @@ export const CAMBRIDGE_4_MATH_10: BoardUnit = {
           },
         ],
       },
+      {
+        title: "Q3 · Name the slide",
+        prompt: "A square moves from (1,1) to (1,6). Describe the translation.",
+        conceptId: "10.1",
+        options: [
+          { label: "5 up", correct: true, say: "Right. The across number stayed at 1, so it is a straight climb of 5.",
+            frame: { dots: [{ at: [1, 1], label: "(1,1)", tone: "gold" }, { at: [1, 6], label: "(1,6) ✓", tone: "green" }], arrows: [{ from: [1, 1], to: [1, 6] }] } },
+          { label: "5 right", correct: false, say: "Look again - the first number never changed, so it did not move sideways at all.",
+            frame: { dots: [{ at: [1, 1], label: "(1,1)", tone: "gold" }, { at: [6, 1], label: "(6,1) ✗", tone: "red" }], arrows: [{ from: [1, 1], to: [6, 1] }] } },
+          { label: "6 up", correct: false, say: "Count the squares between 1 and 6 - that is 5 steps, not 6.",
+            frame: { dots: [{ at: [1, 1], label: "(1,1)", tone: "gold" }, { at: [1, 7], label: "(1,7) ✗ - one too far", tone: "red" }] } },
+          { label: "1 up", correct: false, say: "That is only one square. From 1 up to 6 is 5 squares.",
+            frame: { dots: [{ at: [1, 1], label: "(1,1)", tone: "gold" }, { at: [1, 2], label: "(1,2) ✗", tone: "red" }] } },
+        ],
+      },
+      {
+        title: "Q4 · Move a corner",
+        prompt: "A corner sits at (4,6). It is translated 2 left and 4 down. Where does it land?",
+        conceptId: "10.2",
+        options: [
+          { label: "(2, 2)", correct: true, say: "Yes. 4 take away 2 is 2 across, and 6 take away 4 is 2 up.",
+            frame: { dots: [{ at: [4, 6], label: "(4,6)", tone: "gold" }, { at: [2, 2], label: "(2,2) ✓", tone: "green" }], arrows: [{ from: [4, 6], to: [2, 2] }] } },
+          { label: "(6, 10)", correct: false, say: "Left and down both make numbers smaller - that answer added instead.",
+            frame: { dots: [{ at: [4, 6], label: "(4,6)", tone: "gold" }, { at: [6, 10], label: "(6,10) ✗", tone: "red" }] } },
+          { label: "(2, 10)", correct: false, say: "The across part is right, but down means the up number gets smaller, not bigger.",
+            frame: { dots: [{ at: [4, 6], label: "(4,6)", tone: "gold" }, { at: [2, 10], label: "(2,10) ✗", tone: "red" }] } },
+          { label: "(6, 2)", correct: false, say: "You have the two moves swapped - 2 left makes the first number smaller.",
+            frame: { dots: [{ at: [4, 6], label: "(4,6)", tone: "gold" }, { at: [6, 2], label: "(6,2) ✗", tone: "red" }] } },
+        ],
+      },
+      {
+        title: "Q5 · True or not?",
+        prompt: "After a translation, is the new shape the same size as the old one?",
+        conceptId: "10.1",
+        options: [
+          { label: "Yes, always", correct: true, say: "Correct. A translation only changes where a shape is, never its size or which way it faces.",
+            frame: { shapes: [{ points: [[1, 1], [3, 1], [2, 3]], look: "ghost" }, { points: [[6, 4], [8, 4], [7, 6]], look: "correct" }], arrows: [{ from: [1, 1], to: [6, 4] }] } },
+          { label: "No, it gets bigger", correct: false, say: "Making a shape bigger is a different move altogether. A slide leaves the size exactly as it was.",
+            frame: { shapes: [{ points: [[1, 1], [3, 1], [2, 3]], look: "ghost" }, { points: [[5, 3], [9, 3], [7, 7]], look: "wrong" }] } },
+        ],
+      },
     ],
     partB: [
       {
@@ -299,6 +502,47 @@ export const CAMBRIDGE_4_MATH_10: BoardUnit = {
               ],
             },
           },
+        ],
+      },
+      {
+        title: "Q7 · Two moves in a row",
+        prompt: "A shape at (2,2) moves 3 right and 1 up, then 1 left and 2 up. Where does it end up?",
+        conceptId: "10.1",
+        options: [
+          { label: "(4, 5)", correct: true, say: "Well done - that needed both moves. Across: 2 plus 3 take away 1 is 4. Up: 2 plus 1 plus 2 is 5.",
+            frame: { dots: [{ at: [2, 2], label: "start", tone: "gold" }, { at: [5, 3], label: "after move 1", tone: "blue" }, { at: [4, 5], label: "(4,5) ✓", tone: "green" }], arrows: [{ from: [2, 2], to: [5, 3] }, { from: [5, 3], to: [4, 5] }] } },
+          { label: "(5, 5)", correct: false, say: "Close - you added the 3 right but forgot to take the 1 left back off again.",
+            frame: { dots: [{ at: [2, 2], label: "start", tone: "gold" }, { at: [5, 5], label: "(5,5) ✗", tone: "red" }] } },
+          { label: "(4, 3)", correct: false, say: "The across part is right. Both moves went up though - 1 and then 2, so 3 in total.",
+            frame: { dots: [{ at: [2, 2], label: "start", tone: "gold" }, { at: [4, 3], label: "(4,3) ✗", tone: "red" }] } },
+          { label: "(6, 5)", correct: false, say: "That went right twice. The second move was 1 left, which comes back off.",
+            frame: { dots: [{ at: [2, 2], label: "start", tone: "gold" }, { at: [6, 5], label: "(6,5) ✗", tone: "red" }] } },
+        ],
+      },
+      {
+        title: "Q8 · Work out the missing move",
+        prompt: "A shape starts at (8,2) and ends at (3,7). What was the translation?",
+        conceptId: "10.1",
+        options: [
+          { label: "5 left, 5 up", correct: true, say: "Exactly. 8 down to 3 is 5 left, and 2 up to 7 is 5 up. Both parts happen to be the same size here.",
+            frame: { dots: [{ at: [8, 2], label: "(8,2)", tone: "gold" }, { at: [3, 7], label: "(3,7) ✓", tone: "green" }], arrows: [{ from: [8, 2], to: [3, 7] }] } },
+          { label: "5 right, 5 up", correct: false, say: "The up part is right. Across went from 8 to 3 though - smaller, so left.",
+            frame: { dots: [{ at: [8, 2], label: "(8,2)", tone: "gold" }, { at: [13, 7], label: "off the grid ✗", tone: "red" }] } },
+          { label: "3 left, 7 up", correct: false, say: "Those are the finishing numbers, not the journey. Work out the difference between start and end.",
+            frame: { dots: [{ at: [8, 2], label: "(8,2)", tone: "gold" }, { at: [5, 9], label: "(5,9) ✗", tone: "red" }] } },
+        ],
+      },
+      {
+        title: "Q9 · Which shape can it be?",
+        prompt: "Three corners are at (2,2), (6,2) and (6,6). If the fourth corner is (2,6), what shape is it?",
+        conceptId: "10.2",
+        options: [
+          { label: "A square", correct: true, say: "Yes. Every side is 4 units long and all the corners are square, so it is a square.",
+            frame: { shapes: [{ points: [[2, 2], [6, 2], [6, 6], [2, 6]], look: "correct" }], dots: [{ at: [2, 6], label: "(2,6) ✓", tone: "green" }] } },
+          { label: "A rectangle but not a square", correct: false, say: "Measure the sides - along the bottom is 4, and up the side is also 4. When all four match, it is a square.",
+            frame: { shapes: [{ points: [[2, 2], [6, 2], [6, 6], [2, 6]], look: "correct" }] } },
+          { label: "A triangle", correct: false, say: "Four corners means four sides, so it cannot be a triangle.",
+            frame: { shapes: [{ points: [[2, 2], [6, 2], [6, 6], [2, 6]], look: "correct" }] } },
         ],
       },
     ],
