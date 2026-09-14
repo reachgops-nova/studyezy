@@ -1508,7 +1508,14 @@ export default function AvatarChat({
     // behind the composer. Instead the column is a flex stack: the board and
     // the composer are fixed rows that own their height, and only the thread
     // between them scrolls, so nothing can cover anything else.
-    <div className="flex h-full min-h-0 flex-col gap-4">
+    // Side by side on a wide screen, stacked on a narrow one. Stacking a
+    // board big enough to teach from ABOVE the thread cannot fit both in one
+    // viewport - every attempt to tune the heights just moved which of the
+    // two got squeezed. The lesson column is ~890px wide, so the board takes
+    // the left and the conversation the right, and both get their full
+    // height. Real feedback 2026-09-14: the board should be large AND the
+    // chat readable, not one at the cost of the other.
+    <div className="flex h-full min-h-0 flex-col gap-4 lg:flex-row lg:items-stretch">
       {/* A generated illustration (lib/conceptIllustration.ts) no longer
           shows here - 2026-09-08: moved into the conversation itself (see
           buildCheckpoints/playCheckpoint), spoken right after the intro
@@ -1565,7 +1572,7 @@ export default function AvatarChat({
         // grew past it, which is exactly when a child needs it most. It now
         // sticks to the top of the lesson column and the conversation scrolls
         // underneath it, so the picture being discussed is never off screen.
-        <div className="shrink-0 rounded-xl border border-practice-border bg-[#f4f6f1] p-3 shadow-sm">
+        <div className="flex shrink-0 flex-col overflow-y-auto rounded-xl border border-practice-border bg-[#f4f6f1] p-3 shadow-sm lg:w-[46%]">
           <div className="mb-2 flex items-center justify-between gap-2">
             <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">
               Drawing board - every example from this lesson, in one place
@@ -1583,7 +1590,7 @@ export default function AvatarChat({
           {/* The newest example is the one being taught, so it gets the room
               (real feedback 2026-09-14: "board is larger screen"); earlier
               ones stay beside it, smaller, still replayable. */}
-          <div className="flex items-start gap-3 overflow-x-auto pb-1">
+          <div className="flex items-start gap-3 overflow-x-auto pb-1 lg:min-h-0 lg:flex-1 lg:flex-col lg:overflow-x-visible lg:overflow-y-auto">
             {sceneBoard.map((entry, i) => {
               const isCurrent = i === sceneBoard.length - 1;
               return (
@@ -1591,7 +1598,7 @@ export default function AvatarChat({
                   key={entry.id}
                   // No max-height here: the scene inside is already capped,
                   // and clipping the card cut the caption off under it.
-                  className={`${isCurrent ? "w-[26rem]" : "w-48"} shrink-0 rounded-lg border bg-white p-2 transition-all ${
+                  className={`${isCurrent ? "w-[26rem]" : "w-48"} shrink-0 rounded-lg border bg-white p-2 transition-all lg:w-full ${
                     isCurrent ? "border-[#9c6f1f]/40 shadow-sm" : "border-slate-200 opacity-80"
                   }`}
                 >
