@@ -96,7 +96,12 @@ export default function CurriculumSelector({
 
       <Step label="2. Class / Stage">
         <div className="flex flex-wrap gap-2">
-          {curriculum?.stages.map((s) => (
+          {/* A stage with nothing published in it is not a choice - after
+              English moved down to Stage 4, Stage 5 was left as an empty chip
+              that led nowhere. */}
+          {curriculum?.stages
+            .filter((s) => s.subjects.some((sub) => sub.available && sub.units.length > 0))
+            .map((s) => (
             <PillButton
               key={s.id}
               active={s.id === stageId}
