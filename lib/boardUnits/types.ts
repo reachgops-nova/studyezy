@@ -149,6 +149,15 @@ export type BoardConcept = {
   /** Shown in the module popup from the tray. */
   summary: string;
   keyPoints: string[];
+  /**
+   * Where this concept lives in the real textbook, and which fable it was
+   * taught from - real user question 2026-09-14: "I just wanted to know if
+   * the examples are used from existing text fables (we can refer those pages
+   * as well) so that kids can cross check". A child should be able to put the
+   * board down, open the book at the right page, and see the same example.
+   */
+  pages?: number[];
+  storyReference?: string;
   /** Worked examples to try at the end of this concept, before moving on. */
   examples: { question: string; answer: string }[];
   /**

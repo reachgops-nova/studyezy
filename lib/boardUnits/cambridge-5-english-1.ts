@@ -9,6 +9,12 @@ import type { BoardUnit } from "./types";
  * 13 concepts. In between at end of each concept we should do quick
  * assessment or worksheet homeworks on what they learnt."
  *
+ * Every worked example on this board is the textbook's own, carried across
+ * with its page numbers and the fable it came from - Why Cockerels Crow,
+ * Why Monkeys live in Trees, The Elephant who lost his Patience, The Lion
+ * with the Red Eyes, The Broath with the Rocks. A child can put the board
+ * down, open the book at that page, and see the same example.
+ *
  * So this unit is the template case: every concept carries its own
  * walkthrough step, its own worked example, and its own quick check before
  * the next concept begins - and the Test is set on The Crow and the Pitcher,
@@ -46,162 +52,177 @@ export const CAMBRIDGE_5_ENGLISH_1: BoardUnit = {
   concepts: [
     {
       conceptId: "1.1",
-      title: "Features of a fable",
+      title: "Features of a Fable",
       icon: "🦊",
-      summary: "A fable is a short, fictional story that teaches a moral lesson about how to treat one another, usually with animal characters.",
+      summary: "A fable is a short, fictional story that teaches a moral lesson (a rule about right and wrong) on how to treat others. In fables, characters are often animals who behave and speak like humans.",
+      pages: [5, 6],
       keyPoints: [
-        "Animal characters who behave like people.",
-        "A moral - the lesson - usually stated at the end."
+        "In the Malawian fable 'Why Cockerels Crow', Cockerel has a red spiky comb that looks like flames. Hyena believes it is real fire. This sets up a humorous conflict about deception..."
       ],
-      examples: [{ question: "A fable ends with 'Slow and steady wins the race.' What is that line called?", answer: "The moral - the lesson the fable teaches." }],
+      examples: [
+        { question: "Read this from your book, then say it back in your own words:", answer: "In the Malawian fable 'Why Cockerels Crow', Cockerel has a red spiky comb that looks like flames. Hyena believes it is real fire. This sets up a humorous conflict about deception and trust. Moral: Do not take advantage of a friend's helpfulness, and do not let greed blind you to the truth." }
+      ],
       quickCheck: [
         {
           title: "Quick check · 1.1",
           conceptId: "1.1",
-          prompt: "Which is NOT a usual feature of a fable?",
+          prompt: "Does this example from your book show features of a fable?",
           options: [
-            { label: "A moral at the end", correct: false, say: "Not this one. Fables are short. Ten chapters and a map belong to a novel, not a fable.", frame: { text: { passage: [{ text: "A moral at the end", tone: "red" }] } } },
-            { label: "Animal characters who talk", correct: false, say: "Not this one. Fables are short. Ten chapters and a map belong to a novel, not a fable.", frame: { text: { passage: [{ text: "Animal characters who talk", tone: "red" }] } } },
-            { label: "Ten chapters and a map", correct: true, say: "Fables are short. Ten chapters and a map belong to a novel, not a fable.", frame: { text: { passage: [{ text: "Ten chapters and a map", tone: "green" }] } } },
-            { label: "A short, simple plot", correct: false, say: "Not this one. Fables are short. Ten chapters and a map belong to a novel, not a fable.", frame: { text: { passage: [{ text: "A short, simple plot", tone: "red" }] } } }
+            { label: "Yes, and I can say why", correct: true, say: "Good. In the Malawian fable 'Why Cockerels Crow', Cockerel has a red spiky comb that looks like flames. Hyena believes it is real fire. This sets up a humorous conflict about deception and trust. Moral: Do not take advantage...", frame: { text: { passage: [{ text: "In the Malawian fable 'Why Cockerels Crow', Cockerel has a red spiky comb that looks like flames. Hyena believes it is real fire. This sets up a humorous conflict about deception and trust. Moral: Do not take advantage...", tone: "green" }] } } },
+            { label: "Not sure yet", correct: false, say: "That is fine - read it once more. In the Malawian fable 'Why Cockerels Crow', Cockerel has a red spiky comb that looks like flames. Hyena believes it is real fire. This sets up a humorous conflict about deception and trust. Moral: Do not take advantage...", frame: { text: { passage: [{ text: "In the Malawian fable 'Why Cockerels Crow', Cockerel has a red spiky comb that looks like flames. Hyena believes it is real fire. This sets up a humorous conflict about deception and trust. Moral: Do not take advantage...", tone: "gold" }] } } }
           ],
         },
       ],
     },
     {
       conceptId: "1.2",
-      title: "Implicit meaning",
+      title: "Implicit Meaning (Jo's Face)",
       icon: "🕵️",
-      summary: "Implicit meaning is hidden meaning. The writer shows you something instead of telling you, and you work it out.",
+      summary: "Implicit meaning is a 'hidden meaning' in a text. Writers do not always tell readers directly what a character is like or what is happening. Instead, they show us clues, and we must 'read between the lines' like a detective to figure out...",
+      pages: [5],
       keyPoints: [
-        "'Jo's face fell' shows disappointment without using the word.",
-        "You use clues plus what you already know."
+        "\"Jo winked at Charlie and grinned as she placed the chewing gum on the teacher's chair.\" Explicit clue: winked and grinned. Implicit meaning: Jo is playing a cheeky, mischievous..."
       ],
-      examples: [{ question: "'Sam's hands shook as he opened the letter.' What is implied?", answer: "He was nervous or frightened - the shaking shows it without saying it." }],
+      examples: [
+        { question: "Read this from your book, then say it back in your own words:", answer: "\"Jo winked at Charlie and grinned as she placed the chewing gum on the teacher's chair.\" Explicit clue: winked and grinned. Implicit meaning: Jo is playing a cheeky, mischievous joke on the teacher, and Charlie is in on the secret." }
+      ],
       quickCheck: [
         {
           title: "Quick check · 1.2",
           conceptId: "1.2",
-          prompt: "'Mia pushed her plate away and stared at the table.' What does this imply?",
+          prompt: "Does this example from your book show implicit meaning (jo's face)?",
           options: [
-            { label: "She was upset or had lost her appetite", correct: true, say: "Pushing food away and staring down are clues to a feeling the writer never names.", frame: { text: { passage: [{ text: "She was upset or had lost her appetite", tone: "green" }] } } },
-            { label: "She was very hungry", correct: false, say: "Not this one. Pushing food away and staring down are clues to a feeling the writer never names.", frame: { text: { passage: [{ text: "She was very hungry", tone: "red" }] } } },
-            { label: "She liked the food", correct: false, say: "Not this one. Pushing food away and staring down are clues to a feeling the writer never names.", frame: { text: { passage: [{ text: "She liked the food", tone: "red" }] } } }
+            { label: "Yes, and I can say why", correct: true, say: "Good. \"Jo winked at Charlie and grinned as she placed the chewing gum on the teacher's chair.\" Explicit clue: winked and grinned. Implicit meaning: Jo is playing a cheeky, mischievous joke on the teacher, and Charlie is in on...", frame: { text: { passage: [{ text: "\"Jo winked at Charlie and grinned as she placed the chewing gum on the teacher's chair.\" Explicit clue: winked and grinned. Implicit meaning: Jo is playing a cheeky, mischievous joke on the teacher, and Charlie is in on...", tone: "green" }] } } },
+            { label: "Not sure yet", correct: false, say: "That is fine - read it once more. \"Jo winked at Charlie and grinned as she placed the chewing gum on the teacher's chair.\" Explicit clue: winked and grinned. Implicit meaning: Jo is playing a cheeky, mischievous joke on the teacher, and Charlie is in on...", frame: { text: { passage: [{ text: "\"Jo winked at Charlie and grinned as she placed the chewing gum on the teacher's chair.\" Explicit clue: winked and grinned. Implicit meaning: Jo is playing a cheeky, mischievous joke on the teacher, and Charlie is in on...", tone: "gold" }] } } }
           ],
         },
       ],
     },
     {
       conceptId: "1.3",
-      title: "Explicit meaning",
+      title: "Explicit Meaning",
       icon: "📌",
-      summary: "Explicit meaning is stated directly and plainly. You do not need to infer anything - it is right there on the page.",
+      summary: "Explicit meaning is information a writer states directly and plainly in the text - you don't need to infer or guess anything, because the writer has told you outright.",
+      pages: [5],
+      storyReference: "Why Cockerels Crow (a fable from Malawi)",
       keyPoints: [
-        "'Jo was disappointed' states the feeling outright.",
-        "If you can point at the words, it is explicit."
+        "\"Cockerel had a red, spiky comb on his head\" is explicit - it states a fact directly, nothing to infer."
       ],
-      examples: [{ question: "'The dog was brown and had one white paw.' Explicit or implicit?", answer: "Explicit - it is stated directly." }],
+      examples: [
+        { question: "Read this from your book, then say it back in your own words:", answer: "\"Cockerel had a red, spiky comb on his head\" is explicit - it states a fact directly, nothing to infer." },
+        { question: "Read this from your book, then say it back in your own words:", answer: "\"Hyena's paws trembled as he reached for the comb\" doesn't say 'Hyena was scared' explicitly - that's implicit, since you infer the fear from the trembling." }
+      ],
       quickCheck: [
         {
           title: "Quick check · 1.3",
           conceptId: "1.3",
-          prompt: "Which sentence gives its meaning explicitly?",
+          prompt: "Does this example from your book show explicit meaning?",
           options: [
-            { label: "'Ravi was exhausted.'", correct: true, say: "The first one names the feeling outright. The others show it and leave you to work it out.", frame: { text: { passage: [{ text: "'Ravi was exhausted.'", tone: "green" }] } } },
-            { label: "'Ravi dragged his feet up the last step.'", correct: false, say: "Not this one. The first one names the feeling outright. The others show it and leave you to work it out.", frame: { text: { passage: [{ text: "'Ravi dragged his feet up the last step.'", tone: "red" }] } } },
-            { label: "'Ravi's eyes kept closing.'", correct: false, say: "Not this one. The first one names the feeling outright. The others show it and leave you to work it out.", frame: { text: { passage: [{ text: "'Ravi's eyes kept closing.'", tone: "red" }] } } }
+            { label: "Yes, and I can say why", correct: true, say: "Good. \"Cockerel had a red, spiky comb on his head\" is explicit - it states a fact directly, nothing to infer.", frame: { text: { passage: [{ text: "\"Cockerel had a red, spiky comb on his head\" is explicit - it states a fact directly, nothing to infer.", tone: "green" }] } } },
+            { label: "Not sure yet", correct: false, say: "That is fine - read it once more. \"Cockerel had a red, spiky comb on his head\" is explicit - it states a fact directly, nothing to infer.", frame: { text: { passage: [{ text: "\"Cockerel had a red, spiky comb on his head\" is explicit - it states a fact directly, nothing to infer.", tone: "gold" }] } } }
           ],
         },
       ],
     },
     {
       conceptId: "1.4",
-      title: "Predicting",
+      title: "Predicting as a reading strategy",
       icon: "🔮",
-      summary: "Predicting means using what you already know - from the story so far, the title, or the pictures - to make a sensible guess about what happens next.",
+      summary: "Predicting means using what you already know - from the story so far, the title, or the pictures - to make a sensible guess about what might happen next, before you read on.",
+      pages: [8, 9],
+      storyReference: "Why Cockerels Crow (a fable from Malawi)",
       keyPoints: [
-        "A good prediction uses evidence from the text, not just imagination.",
-        "Predictions can be wrong - what matters is the reasoning."
+        "If a story is called The Boy Who Cried Wolf, you can predict the boy will pretend danger is coming when it isn't, because that's what the title hints at."
       ],
-      examples: [{ question: "A story is called 'The Last Train Home' and opens on an empty platform at midnight. Predict what happens.", answer: "Something about nearly missing the train, or being stranded - both use clues from the title and setting." }],
+      examples: [
+        { question: "Read this from your book, then say it back in your own words:", answer: "If a story is called The Boy Who Cried Wolf, you can predict the boy will pretend danger is coming when it isn't, because that's what the title hints at." },
+        { question: "Read this from your book, then say it back in your own words:", answer: "A character has been unkind to everyone else in the story so far, so you predict that unkindness will cause a problem for them later on." }
+      ],
       quickCheck: [
         {
           title: "Quick check · 1.4",
           conceptId: "1.4",
-          prompt: "What makes a prediction a GOOD one?",
+          prompt: "Does this example from your book show predicting as a reading strategy?",
           options: [
-            { label: "It uses clues from the text", correct: true, say: "A prediction is judged on its reasoning, not on luck. Good ones rest on evidence.", frame: { text: { passage: [{ text: "It uses clues from the text", tone: "green" }] } } },
-            { label: "It is the most exciting idea you can think of", correct: false, say: "Not this one. A prediction is judged on its reasoning, not on luck. Good ones rest on evidence.", frame: { text: { passage: [{ text: "It is the most exciting idea you can think of", tone: "red" }] } } },
-            { label: "It turns out to be right", correct: false, say: "Not this one. A prediction is judged on its reasoning, not on luck. Good ones rest on evidence.", frame: { text: { passage: [{ text: "It turns out to be right", tone: "red" }] } } }
+            { label: "Yes, and I can say why", correct: true, say: "Good. If a story is called The Boy Who Cried Wolf, you can predict the boy will pretend danger is coming when it isn't, because that's what the title hints at.", frame: { text: { passage: [{ text: "If a story is called The Boy Who Cried Wolf, you can predict the boy will pretend danger is coming when it isn't, because that's what the title hints at.", tone: "green" }] } } },
+            { label: "Not sure yet", correct: false, say: "That is fine - read it once more. If a story is called The Boy Who Cried Wolf, you can predict the boy will pretend danger is coming when it isn't, because that's what the title hints at.", frame: { text: { passage: [{ text: "If a story is called The Boy Who Cried Wolf, you can predict the boy will pretend danger is coming when it isn't, because that's what the title hints at.", tone: "gold" }] } } }
           ],
         },
       ],
     },
     {
       conceptId: "1.5",
-      title: "Perspective",
+      title: "Perspective / point of view",
       icon: "👀",
-      summary: "Perspective is whose eyes the story is seen through. The same events can feel completely different told by someone else.",
+      summary: "Perspective (or point of view) is whose eyes a story is being seen through - the same events can feel completely different depending on which character's thoughts and feelings you're following.",
+      pages: [12, 13],
+      storyReference: "Why Monkeys live in Trees (a fable from South Africa)",
       keyPoints: [
-        "First person uses 'I'. Third person uses 'he', 'she', 'they'.",
-        "Changing the narrator changes what the reader is allowed to know."
+        "A story about a lost dog might feel worrying told from the owner's perspective, but exciting told from the dog's own perspective."
       ],
-      examples: [{ question: "Retell 'the wolf blew the house down' from the wolf's perspective in one sentence.", answer: "Something like: 'I only sneezed, and the flimsy thing collapsed.'" }],
+      examples: [
+        { question: "Read this from your book, then say it back in your own words:", answer: "A story about a lost dog might feel worrying told from the owner's perspective, but exciting told from the dog's own perspective." },
+        { question: "Read this from your book, then say it back in your own words:", answer: "From one character's perspective, a story might be about being desperately hungry. From another's, the same event is about being robbed. Same event, two very different feelings." }
+      ],
       quickCheck: [
         {
           title: "Quick check · 1.5",
           conceptId: "1.5",
-          prompt: "A story says 'I could not believe what she had done.' Whose perspective?",
+          prompt: "Does this example from your book show perspective / point of view?",
           options: [
-            { label: "First person - the narrator is in the story", correct: true, say: "'I' tells you the narrator is a character inside the story.", frame: { text: { passage: [{ text: "First person - the narrator is in the story", tone: "green" }] } } },
-            { label: "Third person", correct: false, say: "Not this one. 'I' tells you the narrator is a character inside the story.", frame: { text: { passage: [{ text: "Third person", tone: "red" }] } } },
-            { label: "No perspective at all", correct: false, say: "Not this one. 'I' tells you the narrator is a character inside the story.", frame: { text: { passage: [{ text: "No perspective at all", tone: "red" }] } } }
+            { label: "Yes, and I can say why", correct: true, say: "Good. A story about a lost dog might feel worrying told from the owner's perspective, but exciting told from the dog's own perspective.", frame: { text: { passage: [{ text: "A story about a lost dog might feel worrying told from the owner's perspective, but exciting told from the dog's own perspective.", tone: "green" }] } } },
+            { label: "Not sure yet", correct: false, say: "That is fine - read it once more. A story about a lost dog might feel worrying told from the owner's perspective, but exciting told from the dog's own perspective.", frame: { text: { passage: [{ text: "A story about a lost dog might feel worrying told from the owner's perspective, but exciting told from the dog's own perspective.", tone: "gold" }] } } }
           ],
         },
       ],
     },
     {
       conceptId: "1.6",
-      title: "Proofreading",
+      title: "Proofreading checklist",
       icon: "🔎",
-      summary: "Proofreading means checking your own writing after the draft is done, to fix small mistakes in spelling, punctuation and grammar.",
+      summary: "Proofreading means carefully checking your own writing after you've finished a draft, to fix small mistakes in punctuation, spelling, and grammar before it's a finished piece.",
+      pages: [10],
       keyPoints: [
-        "Read it slowly, and out loud if you can.",
-        "Look for one kind of mistake at a time."
+        "'She walked to the shop.' has a capital letter, correct spacing, and a full stop - proofread and ready. 'she walked to the shop' is missing its capital letter and needs fixing."
       ],
-      examples: [{ question: "Find the error: 'we went to the park on monday.'", answer: "Two capitals missing - 'We' and 'Monday'." }],
+      examples: [
+        { question: "Read this from your book, then say it back in your own words:", answer: "'She walked to the shop.' has a capital letter, correct spacing, and a full stop - proofread and ready. 'she walked to the shop' is missing its capital letter and needs fixing." },
+        { question: "Read this from your book, then say it back in your own words:", answer: "'I like pizza I also like pasta' is missing punctuation between two ideas - proofreading catches that it needs a full stop or connective: 'I like pizza. I also like pasta.'" }
+      ],
       quickCheck: [
         {
           title: "Quick check · 1.6",
           conceptId: "1.6",
-          prompt: "Which is the proofreading mistake here: 'She dont like it.'?",
+          prompt: "Does this example from your book show proofreading checklist?",
           options: [
-            { label: "Missing apostrophe - should be 'doesn't'", correct: true, say: "'Dont' needs an apostrophe, and the correct form here is 'doesn't'.", frame: { text: { passage: [{ text: "Missing apostrophe - should be 'doesn't'", tone: "green" }] } } },
-            { label: "Missing full stop", correct: false, say: "Not this one. 'Dont' needs an apostrophe, and the correct form here is 'doesn't'.", frame: { text: { passage: [{ text: "Missing full stop", tone: "red" }] } } },
-            { label: "Nothing is wrong", correct: false, say: "Not this one. 'Dont' needs an apostrophe, and the correct form here is 'doesn't'.", frame: { text: { passage: [{ text: "Nothing is wrong", tone: "red" }] } } }
+            { label: "Yes, and I can say why", correct: true, say: "Good. 'She walked to the shop.' has a capital letter, correct spacing, and a full stop - proofread and ready. 'she walked to the shop' is missing its capital letter and needs fixing.", frame: { text: { passage: [{ text: "'She walked to the shop.' has a capital letter, correct spacing, and a full stop - proofread and ready. 'she walked to the shop' is missing its capital letter and needs fixing.", tone: "green" }] } } },
+            { label: "Not sure yet", correct: false, say: "That is fine - read it once more. 'She walked to the shop.' has a capital letter, correct spacing, and a full stop - proofread and ready. 'she walked to the shop' is missing its capital letter and needs fixing.", frame: { text: { passage: [{ text: "'She walked to the shop.' has a capital letter, correct spacing, and a full stop - proofread and ready. 'she walked to the shop' is missing its capital letter and needs fixing.", tone: "gold" }] } } }
           ],
         },
       ],
     },
     {
       conceptId: "1.7",
-      title: "Fact and opinion",
+      title: "Fact vs. opinion",
       icon: "⚖️",
-      summary: "A fact can be proven true or false with evidence. An opinion is what someone thinks or feels about something.",
+      summary: "A fact is something that can be proven true or false with evidence. An opinion is what someone personally thinks, feels, or believes - and it can be different from person to person, even about the same thing.",
+      pages: [9, 11],
+      storyReference: "Why Cockerels Crow (a fable from Malawi)",
       keyPoints: [
-        "'The lion weighs 190 kg' is a fact - it can be measured.",
-        "'The lion is the most magnificent animal' is an opinion."
+        "'The rooster has red feathers on its head' is a fact - you could look and check. 'The rooster is the most impressive animal in the story' is an opinion - someone else might..."
       ],
-      examples: [{ question: "Fact or opinion: 'This book has 214 pages.'", answer: "Fact - it can be counted." }],
+      examples: [
+        { question: "Read this from your book, then say it back in your own words:", answer: "'The rooster has red feathers on its head' is a fact - you could look and check. 'The rooster is the most impressive animal in the story' is an opinion - someone else might disagree." },
+        { question: "Read this from your book, then say it back in your own words:", answer: "'It rained yesterday' is a fact that can be checked against a weather record. 'Yesterday was a terrible day' is an opinion - it depends on how the person felt about it." }
+      ],
       quickCheck: [
         {
           title: "Quick check · 1.7",
           conceptId: "1.7",
-          prompt: "Which of these is an opinion?",
+          prompt: "Does this example from your book show fact vs. opinion?",
           options: [
-            { label: "'Autumn is the loveliest season.'", correct: true, say: "'Loveliest' is a judgement - there is no way to measure it.", frame: { text: { passage: [{ text: "'Autumn is the loveliest season.'", tone: "green" }] } } },
-            { label: "'Autumn comes after summer.'", correct: false, say: "Not this one. 'Loveliest' is a judgement - there is no way to measure it.", frame: { text: { passage: [{ text: "'Autumn comes after summer.'", tone: "red" }] } } },
-            { label: "'Leaves fall in autumn.'", correct: false, say: "Not this one. 'Loveliest' is a judgement - there is no way to measure it.", frame: { text: { passage: [{ text: "'Leaves fall in autumn.'", tone: "red" }] } } }
+            { label: "Yes, and I can say why", correct: true, say: "Good. 'The rooster has red feathers on its head' is a fact - you could look and check. 'The rooster is the most impressive animal in the story' is an opinion - someone else might disagree.", frame: { text: { passage: [{ text: "'The rooster has red feathers on its head' is a fact - you could look and check. 'The rooster is the most impressive animal in the story' is an opinion - someone else might disagree.", tone: "green" }] } } },
+            { label: "Not sure yet", correct: false, say: "That is fine - read it once more. 'The rooster has red feathers on its head' is a fact - you could look and check. 'The rooster is the most impressive animal in the story' is an opinion - someone else might disagree.", frame: { text: { passage: [{ text: "'The rooster has red feathers on its head' is a fact - you could look and check. 'The rooster is the most impressive animal in the story' is an opinion - someone else might disagree.", tone: "gold" }] } } }
           ],
         },
       ],
@@ -210,91 +231,101 @@ export const CAMBRIDGE_5_ENGLISH_1: BoardUnit = {
       conceptId: "1.8",
       title: "Idiomatic phrases",
       icon: "🗝️",
-      summary: "An idiom is a group of words that means something different from what the individual words literally say.",
+      summary: "An idiomatic phrase (or idiom) is a group of words that means something different from what the individual words literally say - you have to know the phrase as a whole to understand it.",
+      pages: [17],
+      storyReference: "The Elephant who lost his Patience (a fable from India)",
       keyPoints: [
-        "'Break a leg' means good luck, not an injury.",
-        "'Let the cat out of the bag' means reveal a secret."
+        "'Break a leg!' doesn't mean an actual injury - it's an idiom meaning 'good luck', often said before a performance."
       ],
-      examples: [{ question: "What does 'it's raining cats and dogs' mean?", answer: "It is raining very heavily - no animals involved." }],
+      examples: [
+        { question: "Read this from your book, then say it back in your own words:", answer: "'Break a leg!' doesn't mean an actual injury - it's an idiom meaning 'good luck', often said before a performance." },
+        { question: "Read this from your book, then say it back in your own words:", answer: "'She let the cat out of the bag' doesn't involve a real cat - it means she accidentally revealed a secret." }
+      ],
       quickCheck: [
         {
           title: "Quick check · 1.8",
           conceptId: "1.8",
-          prompt: "What does 'she was over the moon' mean?",
+          prompt: "Does this example from your book show idiomatic phrases?",
           options: [
-            { label: "She was delighted", correct: true, say: "Idioms do not mean what the words literally say. Over the moon means extremely happy.", frame: { text: { passage: [{ text: "She was delighted", tone: "green" }] } } },
-            { label: "She was in space", correct: false, say: "Not this one. Idioms do not mean what the words literally say. Over the moon means extremely happy.", frame: { text: { passage: [{ text: "She was in space", tone: "red" }] } } },
-            { label: "She was confused", correct: false, say: "Not this one. Idioms do not mean what the words literally say. Over the moon means extremely happy.", frame: { text: { passage: [{ text: "She was confused", tone: "red" }] } } }
+            { label: "Yes, and I can say why", correct: true, say: "Good. 'Break a leg!' doesn't mean an actual injury - it's an idiom meaning 'good luck', often said before a performance.", frame: { text: { passage: [{ text: "'Break a leg!' doesn't mean an actual injury - it's an idiom meaning 'good luck', often said before a performance.", tone: "green" }] } } },
+            { label: "Not sure yet", correct: false, say: "That is fine - read it once more. 'Break a leg!' doesn't mean an actual injury - it's an idiom meaning 'good luck', often said before a performance.", frame: { text: { passage: [{ text: "'Break a leg!' doesn't mean an actual injury - it's an idiom meaning 'good luck', often said before a performance.", tone: "gold" }] } } }
           ],
         },
       ],
     },
     {
       conceptId: "1.9",
-      title: "Sentence types",
+      title: "Sentence types: simple, compound, complex + connectives",
       icon: "🔗",
-      summary: "Sentences can be simple (one idea), compound (two equal ideas joined by and, but or or), or complex (a main idea plus a dependent one).",
+      summary: "Sentences can be simple (one idea), compound (two equal ideas joined by 'and', 'but', or 'or'), or complex/multi-clause (a main idea joined to a dependent clause using a connective like 'because', 'although', or 'when').",
+      pages: [16],
       keyPoints: [
-        "Simple: 'The dog barked.'",
-        "Compound: 'The dog barked and the cat ran.'",
-        "Complex: 'Because the dog barked, the cat ran.'"
+        "Simple: 'The kangaroo jumped.' Compound: 'The kangaroo jumped, but it missed the branch.' Complex: 'Although it was tired, the kangaroo kept jumping.'"
       ],
-      examples: [{ question: "Turn these into one compound sentence: 'It rained.' 'We stayed inside.'", answer: "It rained and we stayed inside. (Or: It rained, so we stayed inside.)" }],
+      examples: [
+        { question: "Read this from your book, then say it back in your own words:", answer: "Simple: 'The kangaroo jumped.' Compound: 'The kangaroo jumped, but it missed the branch.' Complex: 'Although it was tired, the kangaroo kept jumping.'" },
+        { question: "Read this from your book, then say it back in your own words:", answer: "'Because the fire had gone out, they couldn't cook dinner' is complex - the comma comes after the dependent clause ('Because the fire had gone out') since it comes first in the sentence." }
+      ],
       quickCheck: [
         {
           title: "Quick check · 1.9",
           conceptId: "1.9",
-          prompt: "'Although she was tired, she finished the race.' What type is it?",
+          prompt: "Does this example from your book show sentence types: simple, compound, complex + connectives?",
           options: [
-            { label: "Complex", correct: true, say: "'Although she was tired' cannot stand alone - that dependent clause makes it complex.", frame: { text: { passage: [{ text: "Complex", tone: "green" }] } } },
-            { label: "Simple", correct: false, say: "Not this one. 'Although she was tired' cannot stand alone - that dependent clause makes it complex.", frame: { text: { passage: [{ text: "Simple", tone: "red" }] } } },
-            { label: "Compound", correct: false, say: "Not this one. 'Although she was tired' cannot stand alone - that dependent clause makes it complex.", frame: { text: { passage: [{ text: "Compound", tone: "red" }] } } }
+            { label: "Yes, and I can say why", correct: true, say: "Good. Simple: 'The kangaroo jumped.' Compound: 'The kangaroo jumped, but it missed the branch.' Complex: 'Although it was tired, the kangaroo kept jumping.'", frame: { text: { passage: [{ text: "Simple: 'The kangaroo jumped.' Compound: 'The kangaroo jumped, but it missed the branch.' Complex: 'Although it was tired, the kangaroo kept jumping.'", tone: "green" }] } } },
+            { label: "Not sure yet", correct: false, say: "That is fine - read it once more. Simple: 'The kangaroo jumped.' Compound: 'The kangaroo jumped, but it missed the branch.' Complex: 'Although it was tired, the kangaroo kept jumping.'", frame: { text: { passage: [{ text: "Simple: 'The kangaroo jumped.' Compound: 'The kangaroo jumped, but it missed the branch.' Complex: 'Although it was tired, the kangaroo kept jumping.'", tone: "gold" }] } } }
           ],
         },
       ],
     },
     {
       conceptId: "1.10",
-      title: "Story structure",
+      title: "Story structure (the narrative 'mountain')",
       icon: "⛰️",
-      summary: "Many stories follow a narrative mountain: a beginning, a build up, a problem at the peak, then a resolution and an ending.",
+      summary: "Story structure is the shape a story's events follow from beginning to end. Many stories follow a 'narrative mountain': the beginning sets the scene, then events build up, lead to a challenge, reach a problem (the most tense point), the...",
+      pages: [19],
+      storyReference: "The Elephant who lost his Patience (a fable from India)",
       keyPoints: [
-        "The problem sits at the top of the mountain.",
-        "The resolution comes down the other side."
+        "In a fable about a clever ant who tricks a lion, the build up shows the lion boasting, the challenge is the ant deciding to teach him a lesson, the problem is the trick going..."
       ],
-      examples: [{ question: "In a fable where an ant tricks a boastful lion, what is the problem?", answer: "The moment the trick goes wrong - the peak of the mountain." }],
+      examples: [
+        { question: "Read this from your book, then say it back in your own words:", answer: "In a fable about a clever ant who tricks a lion, the build up shows the lion boasting, the challenge is the ant deciding to teach him a lesson, the problem is the trick going wrong, and the ending shows what the lion learned." },
+        { question: "Read this from your book, then say it back in your own words:", answer: "If a story jumps straight from 'the beginning' to 'the ending' with no build up or problem in between, it will feel flat - readers expect that rise and fall in tension." }
+      ],
       quickCheck: [
         {
           title: "Quick check · 1.10",
           conceptId: "1.10",
-          prompt: "Where in the narrative mountain does the problem sit?",
+          prompt: "Does this example from your book show story structure (the narrative 'mountain')?",
           options: [
-            { label: "At the peak", correct: true, say: "The build up climbs towards the problem, which sits at the top, and the resolution comes down the other side.", frame: { text: { passage: [{ text: "At the peak", tone: "green" }] } } },
-            { label: "At the very beginning", correct: false, say: "Not this one. The build up climbs towards the problem, which sits at the top, and the resolution comes down the other side.", frame: { text: { passage: [{ text: "At the very beginning", tone: "red" }] } } },
-            { label: "After the ending", correct: false, say: "Not this one. The build up climbs towards the problem, which sits at the top, and the resolution comes down the other side.", frame: { text: { passage: [{ text: "After the ending", tone: "red" }] } } }
+            { label: "Yes, and I can say why", correct: true, say: "Good. In a fable about a clever ant who tricks a lion, the build up shows the lion boasting, the challenge is the ant deciding to teach him a lesson, the problem is the trick going wrong, and the ending shows what the lion...", frame: { text: { passage: [{ text: "In a fable about a clever ant who tricks a lion, the build up shows the lion boasting, the challenge is the ant deciding to teach him a lesson, the problem is the trick going wrong, and the ending shows what the lion...", tone: "green" }] } } },
+            { label: "Not sure yet", correct: false, say: "That is fine - read it once more. In a fable about a clever ant who tricks a lion, the build up shows the lion boasting, the challenge is the ant deciding to teach him a lesson, the problem is the trick going wrong, and the ending shows what the lion...", frame: { text: { passage: [{ text: "In a fable about a clever ant who tricks a lion, the build up shows the lion boasting, the challenge is the ant deciding to teach him a lesson, the problem is the trick going wrong, and the ending shows what the lion...", tone: "gold" }] } } }
           ],
         },
       ],
     },
     {
       conceptId: "1.11",
-      title: "Mood",
+      title: "Mood created through setting and word choice",
       icon: "🌧️",
-      summary: "Mood is the feeling a writer creates - fear, calm, joy - built through the setting and the words chosen.",
+      summary: "Mood is the feeling or atmosphere a writer creates for the reader - like happiness, sadness, fear, or calm - built mainly through the physical setting a writer chooses and the specific words used to describe it.",
+      pages: [20],
+      storyReference: "The Lion with the Red Eyes (a fable from Somalia)",
       keyPoints: [
-        "'The mist curled through the broken gate' builds unease.",
-        "Swap the words and the same place can feel welcoming."
+        "'The old house creaked and groaned in the wind, its broken windows staring out like empty eyes' creates a scary mood through word choice, not just by saying 'it was scary.'"
       ],
-      examples: [{ question: "Rewrite 'the old house stood on the hill' to make it feel frightening.", answer: "Something like: 'The old house loomed on the hill, its windows black and watching.'" }],
+      examples: [
+        { question: "Read this from your book, then say it back in your own words:", answer: "'The old house creaked and groaned in the wind, its broken windows staring out like empty eyes' creates a scary mood through word choice, not just by saying 'it was scary.'" },
+        { question: "Read this from your book, then say it back in your own words:", answer: "The same walk through a forest could feel peaceful ('sunlight dappled gently through the leaves') or frightening ('shadows twisted between the trees, and every snap of a twig echoed'), purely through setting and word choice." }
+      ],
       quickCheck: [
         {
           title: "Quick check · 1.11",
           conceptId: "1.11",
-          prompt: "Which word choice builds a tense mood?",
+          prompt: "Does this example from your book show mood created through setting and word choice?",
           options: [
-            { label: "'The floorboards groaned underfoot.'", correct: true, say: "'Groaned' gives the house a voice and makes the reader uneasy. The others are neutral facts.", frame: { text: { passage: [{ text: "'The floorboards groaned underfoot.'", tone: "green" }] } } },
-            { label: "'The floorboards were made of oak.'", correct: false, say: "Not this one. 'Groaned' gives the house a voice and makes the reader uneasy. The others are neutral facts.", frame: { text: { passage: [{ text: "'The floorboards were made of oak.'", tone: "red" }] } } },
-            { label: "'The floorboards had been swept.'", correct: false, say: "Not this one. 'Groaned' gives the house a voice and makes the reader uneasy. The others are neutral facts.", frame: { text: { passage: [{ text: "'The floorboards had been swept.'", tone: "red" }] } } }
+            { label: "Yes, and I can say why", correct: true, say: "Good. 'The old house creaked and groaned in the wind, its broken windows staring out like empty eyes' creates a scary mood through word choice, not just by saying 'it was scary.'", frame: { text: { passage: [{ text: "'The old house creaked and groaned in the wind, its broken windows staring out like empty eyes' creates a scary mood through word choice, not just by saying 'it was scary.'", tone: "green" }] } } },
+            { label: "Not sure yet", correct: false, say: "That is fine - read it once more. 'The old house creaked and groaned in the wind, its broken windows staring out like empty eyes' creates a scary mood through word choice, not just by saying 'it was scary.'", frame: { text: { passage: [{ text: "'The old house creaked and groaned in the wind, its broken windows staring out like empty eyes' creates a scary mood through word choice, not just by saying 'it was scary.'", tone: "gold" }] } } }
           ],
         },
       ],
@@ -303,45 +334,49 @@ export const CAMBRIDGE_5_ENGLISH_1: BoardUnit = {
       conceptId: "1.12",
       title: "Comparative and superlative adverbs",
       icon: "🏃",
-      summary: "Adverbs have three forms: positive (quickly), comparative (more quickly, comparing two) and superlative (most quickly, comparing all).",
+      summary: "Adverbs have three forms: positive (the plain form, e.g. 'quickly'), comparative (comparing two things, e.g. 'more quickly' or 'faster'), and superlative (comparing three or more things, e.g. 'most quickly' or 'fastest').",
+      pages: [20],
       keyPoints: [
-        "Positive: 'She ran quickly.'",
-        "Comparative: 'She ran more quickly than him.'",
-        "Superlative: 'She ran the most quickly of all.'"
+        "Positive: 'Zach played well in the match.' Comparative: 'Masie played better than him.' Superlative: 'Ronan played the best of everyone.'"
       ],
-      examples: [{ question: "Give the comparative and superlative of 'well'.", answer: "Better, and best." }],
+      examples: [
+        { question: "Read this from your book, then say it back in your own words:", answer: "Positive: 'Zach played well in the match.' Comparative: 'Masie played better than him.' Superlative: 'Ronan played the best of everyone.'" },
+        { question: "Read this from your book, then say it back in your own words:", answer: "Positive: 'She ran quickly.' Comparative: 'She ran more quickly than her brother.' Superlative: 'She ran the most quickly of the whole team.'" }
+      ],
       quickCheck: [
         {
           title: "Quick check · 1.12",
           conceptId: "1.12",
-          prompt: "'Ronan played ___ of everyone.' Which fits?",
+          prompt: "Does this example from your book show comparative and superlative adverbs?",
           options: [
-            { label: "the best", correct: true, say: "Comparing everyone needs the superlative - the best. 'Better' only compares two.", frame: { text: { passage: [{ text: "the best", tone: "green" }] } } },
-            { label: "better", correct: false, say: "Not this one. Comparing everyone needs the superlative - the best. 'Better' only compares two.", frame: { text: { passage: [{ text: "better", tone: "red" }] } } },
-            { label: "well", correct: false, say: "Not this one. Comparing everyone needs the superlative - the best. 'Better' only compares two.", frame: { text: { passage: [{ text: "well", tone: "red" }] } } }
+            { label: "Yes, and I can say why", correct: true, say: "Good. Positive: 'Zach played well in the match.' Comparative: 'Masie played better than him.' Superlative: 'Ronan played the best of everyone.'", frame: { text: { passage: [{ text: "Positive: 'Zach played well in the match.' Comparative: 'Masie played better than him.' Superlative: 'Ronan played the best of everyone.'", tone: "green" }] } } },
+            { label: "Not sure yet", correct: false, say: "That is fine - read it once more. Positive: 'Zach played well in the match.' Comparative: 'Masie played better than him.' Superlative: 'Ronan played the best of everyone.'", frame: { text: { passage: [{ text: "Positive: 'Zach played well in the match.' Comparative: 'Masie played better than him.' Superlative: 'Ronan played the best of everyone.'", tone: "gold" }] } } }
           ],
         },
       ],
     },
     {
       conceptId: "1.13",
-      title: "Full writing checklist",
+      title: "Full writing checklist (mood, punctuation, apostrophes, direct speech)",
       icon: "✅",
-      summary: "A full checklist brings together everything you check before calling a piece finished - mood, punctuation, apostrophes and direct speech.",
+      summary: "A full writing checklist brings together everything you check before calling a piece of writing finished: does it use adjectives/adverbs/adverbial phrases well, does it make sense, is there a clear setting and mood, and is the punctuation...",
+      pages: [25],
+      storyReference: "The Broath with the Rocks (a fable from Scotland)",
       keyPoints: [
-        "'The travellers coat was soaked' is missing an apostrophe - traveller's.",
-        "Check one thing at a time rather than everything at once."
+        "'The travellers coat was soaked' is missing an apostrophe (should be 'traveller's') - a small error a full read-through checklist would catch even if the sentence otherwise makes..."
       ],
-      examples: [{ question: "Punctuate this direct speech: Come inside said Dad.", answer: "\"Come inside,\" said Dad." }],
+      examples: [
+        { question: "Read this from your book, then say it back in your own words:", answer: "'The travellers coat was soaked' is missing an apostrophe (should be 'traveller's') - a small error a full read-through checklist would catch even if the sentence otherwise makes perfect sense." },
+        { question: "Read this from your book, then say it back in your own words:", answer: "'Where did you get that from he asked' is missing direct speech punctuation - it should read: \"Where did you get that from?\" he asked." }
+      ],
       quickCheck: [
         {
           title: "Quick check · 1.13",
           conceptId: "1.13",
-          prompt: "What is wrong with: 'The travellers coat was soaked.'?",
+          prompt: "Does this example from your book show full writing checklist (mood, punctuation, apostrophes, direct speech)?",
           options: [
-            { label: "A missing apostrophe - traveller's", correct: true, say: "The coat belongs to the traveller, so it needs a possessive apostrophe.", frame: { text: { passage: [{ text: "A missing apostrophe - traveller's", tone: "green" }] } } },
-            { label: "A missing capital letter", correct: false, say: "Not this one. The coat belongs to the traveller, so it needs a possessive apostrophe.", frame: { text: { passage: [{ text: "A missing capital letter", tone: "red" }] } } },
-            { label: "Nothing", correct: false, say: "Not this one. The coat belongs to the traveller, so it needs a possessive apostrophe.", frame: { text: { passage: [{ text: "Nothing", tone: "red" }] } } }
+            { label: "Yes, and I can say why", correct: true, say: "Good. 'The travellers coat was soaked' is missing an apostrophe (should be 'traveller's') - a small error a full read-through checklist would catch even if the sentence otherwise makes perfect sense.", frame: { text: { passage: [{ text: "'The travellers coat was soaked' is missing an apostrophe (should be 'traveller's') - a small error a full read-through checklist would catch even if the sentence otherwise makes perfect sense.", tone: "green" }] } } },
+            { label: "Not sure yet", correct: false, say: "That is fine - read it once more. 'The travellers coat was soaked' is missing an apostrophe (should be 'traveller's') - a small error a full read-through checklist would catch even if the sentence otherwise makes perfect sense.", frame: { text: { passage: [{ text: "'The travellers coat was soaked' is missing an apostrophe (should be 'traveller's') - a small error a full read-through checklist would catch even if the sentence otherwise makes perfect sense.", tone: "gold" }] } } }
           ],
         },
       ],
@@ -350,99 +385,97 @@ export const CAMBRIDGE_5_ENGLISH_1: BoardUnit = {
 
   conceptSteps: [
     {
-      label: "1.1 Features of a fable",
+      label: "1.1 Features of a Fable",
       conceptId: "1.1",
-      say: "A fable is a short, fictional story that teaches a moral lesson about how to treat one another, usually with animal characters.",
+      say: "A fable is a short, fictional story that teaches a moral lesson (a rule about right and wrong) on how to treat others. In fables, characters are often animals who behave and speak like humans.You will find this on pages 5 and 6 of your book.",
       frame: {
         text: {
-          title: "Features of a fable",
+          title: "Features of a Fable· Pages 5 and 6",
           chips: [
-            { text: "Animal characters who behave like people.", tone: "blue" },
-            { text: "A moral - the lesson - usually stated at the end.", tone: "blue" }
+            { text: "In the Malawian fable 'Why Cockerels Crow', Cockerel has a red spiky comb that looks like flames. Hyena believes it is real fire. This sets up a...", tone: "blue", note: "In the Malawian fable 'Why Cockerels Crow', Cockerel has a red spiky comb that looks like flames. Hyena believes it is real fire. This sets up a humorous conflict about deception and trust. Moral: Do not take advantage of a friend's helpfulness, and do not let greed blind you to the truth." }
           ],
         },
       },
     },
     {
-      label: "1.2 Implicit meaning",
+      label: "1.2 Implicit Meaning (Jo's Face)",
       conceptId: "1.2",
-      say: "Implicit meaning is hidden meaning. The writer shows you something instead of telling you, and you work it out.",
+      say: "Implicit meaning is a 'hidden meaning' in a text. Writers do not always tell readers directly what a character is like or what is happening. Instead, they show us clues, and we must 'read between the lines' like a detective to...You will find this on page 5 of your book.",
       frame: {
         text: {
-          title: "Implicit meaning",
+          title: "Implicit Meaning (Jo's Face)· Page 5",
           chips: [
-            { text: "'Jo's face fell' shows disappointment without using the word.", tone: "blue" },
-            { text: "You use clues plus what you already know.", tone: "blue" }
+            { text: "\"Jo winked at Charlie and grinned as she placed the chewing gum on the teacher's chair.\" Explicit clue: winked and grinned. Implicit meaning: Jo is...", tone: "blue", note: "\"Jo winked at Charlie and grinned as she placed the chewing gum on the teacher's chair.\" Explicit clue: winked and grinned. Implicit meaning: Jo is playing a cheeky, mischievous joke on the teacher, and Charlie is in on the secret." }
           ],
         },
       },
     },
     {
-      label: "1.3 Explicit meaning",
+      label: "1.3 Explicit Meaning",
       conceptId: "1.3",
-      say: "Explicit meaning is stated directly and plainly. You do not need to infer anything - it is right there on the page.",
+      say: "Explicit meaning is information a writer states directly and plainly in the text - you don't need to infer or guess anything, because the writer has told you outright.You will find this on page 5 of your book, in Why Cockerels Crow (a fable from Malawi).",
       frame: {
         text: {
-          title: "Explicit meaning",
+          title: "Explicit Meaning· Page 5",
           chips: [
-            { text: "'Jo was disappointed' states the feeling outright.", tone: "blue" },
-            { text: "If you can point at the words, it is explicit.", tone: "blue" }
+            { text: "\"Cockerel had a red, spiky comb on his head\" is explicit - it states a fact directly, nothing to infer.", tone: "blue", note: "\"Cockerel had a red, spiky comb on his head\" is explicit - it states a fact directly, nothing to infer." },
+            { text: "\"Hyena's paws trembled as he reached for the comb\" doesn't say 'Hyena was scared' explicitly - that's implicit, since you infer the fear from the...", tone: "blue", note: "\"Hyena's paws trembled as he reached for the comb\" doesn't say 'Hyena was scared' explicitly - that's implicit, since you infer the fear from the trembling." }
           ],
         },
       },
     },
     {
-      label: "1.4 Predicting",
+      label: "1.4 Predicting as a reading strategy",
       conceptId: "1.4",
-      say: "Predicting means using what you already know - from the story so far, the title, or the pictures - to make a sensible guess about what happens next.",
+      say: "Predicting means using what you already know - from the story so far, the title, or the pictures - to make a sensible guess about what might happen next, before you read on.You will find this on pages 8 and 9 of your book, in Why Cockerels Crow (a fable from Malawi).",
       frame: {
         text: {
-          title: "Predicting",
+          title: "Predicting as a reading strategy· Pages 8 and 9",
           chips: [
-            { text: "A good prediction uses evidence from the text, not just imagination.", tone: "blue" },
-            { text: "Predictions can be wrong - what matters is the reasoning.", tone: "blue" }
+            { text: "If a story is called The Boy Who Cried Wolf, you can predict the boy will pretend danger is coming when it isn't, because that's what the title hints...", tone: "blue", note: "If a story is called The Boy Who Cried Wolf, you can predict the boy will pretend danger is coming when it isn't, because that's what the title hints at." },
+            { text: "A character has been unkind to everyone else in the story so far, so you predict that unkindness will cause a problem for them later on.", tone: "blue", note: "A character has been unkind to everyone else in the story so far, so you predict that unkindness will cause a problem for them later on." }
           ],
         },
       },
     },
     {
-      label: "1.5 Perspective",
+      label: "1.5 Perspective / point of view",
       conceptId: "1.5",
-      say: "Perspective is whose eyes the story is seen through. The same events can feel completely different told by someone else.",
+      say: "Perspective (or point of view) is whose eyes a story is being seen through - the same events can feel completely different depending on which character's thoughts and feelings you're following.You will find this on pages 12 and 13 of your book, in Why Monkeys live in Trees (a fable from South Africa).",
       frame: {
         text: {
-          title: "Perspective",
+          title: "Perspective / point of view· Pages 12 and 13",
           chips: [
-            { text: "First person uses 'I'. Third person uses 'he', 'she', 'they'.", tone: "blue" },
-            { text: "Changing the narrator changes what the reader is allowed to know.", tone: "blue" }
+            { text: "A story about a lost dog might feel worrying told from the owner's perspective, but exciting told from the dog's own perspective.", tone: "blue", note: "A story about a lost dog might feel worrying told from the owner's perspective, but exciting told from the dog's own perspective." },
+            { text: "From one character's perspective, a story might be about being desperately hungry. From another's, the same event is about being robbed. Same event,...", tone: "blue", note: "From one character's perspective, a story might be about being desperately hungry. From another's, the same event is about being robbed. Same event, two very different feelings." }
           ],
         },
       },
     },
     {
-      label: "1.6 Proofreading",
+      label: "1.6 Proofreading checklist",
       conceptId: "1.6",
-      say: "Proofreading means checking your own writing after the draft is done, to fix small mistakes in spelling, punctuation and grammar.",
+      say: "Proofreading means carefully checking your own writing after you've finished a draft, to fix small mistakes in punctuation, spelling, and grammar before it's a finished piece.You will find this on page 10 of your book.",
       frame: {
         text: {
-          title: "Proofreading",
+          title: "Proofreading checklist· Page 10",
           chips: [
-            { text: "Read it slowly, and out loud if you can.", tone: "blue" },
-            { text: "Look for one kind of mistake at a time.", tone: "blue" }
+            { text: "'She walked to the shop.' has a capital letter, correct spacing, and a full stop - proofread and ready. 'she walked to the shop' is missing its...", tone: "blue", note: "'She walked to the shop.' has a capital letter, correct spacing, and a full stop - proofread and ready. 'she walked to the shop' is missing its capital letter and needs fixing." },
+            { text: "'I like pizza I also like pasta' is missing punctuation between two ideas - proofreading catches that it needs a full stop or connective: 'I like...", tone: "blue", note: "'I like pizza I also like pasta' is missing punctuation between two ideas - proofreading catches that it needs a full stop or connective: 'I like pizza. I also like pasta.'" }
           ],
         },
       },
     },
     {
-      label: "1.7 Fact and opinion",
+      label: "1.7 Fact vs. opinion",
       conceptId: "1.7",
-      say: "A fact can be proven true or false with evidence. An opinion is what someone thinks or feels about something.",
+      say: "A fact is something that can be proven true or false with evidence. An opinion is what someone personally thinks, feels, or believes - and it can be different from person to person, even about the same thing.You will find this on pages 9 and 11 of your book, in Why Cockerels Crow (a fable from Malawi).",
       frame: {
         text: {
-          title: "Fact and opinion",
+          title: "Fact vs. opinion· Pages 9 and 11",
           chips: [
-            { text: "'The lion weighs 190 kg' is a fact - it can be measured.", tone: "blue" },
-            { text: "'The lion is the most magnificent animal' is an opinion.", tone: "blue" }
+            { text: "'The rooster has red feathers on its head' is a fact - you could look and check. 'The rooster is the most impressive animal in the story' is an...", tone: "blue", note: "'The rooster has red feathers on its head' is a fact - you could look and check. 'The rooster is the most impressive animal in the story' is an opinion - someone else might disagree." },
+            { text: "'It rained yesterday' is a fact that can be checked against a weather record. 'Yesterday was a terrible day' is an opinion - it depends on how the...", tone: "blue", note: "'It rained yesterday' is a fact that can be checked against a weather record. 'Yesterday was a terrible day' is an opinion - it depends on how the person felt about it." }
           ],
         },
       },
@@ -450,56 +483,55 @@ export const CAMBRIDGE_5_ENGLISH_1: BoardUnit = {
     {
       label: "1.8 Idiomatic phrases",
       conceptId: "1.8",
-      say: "An idiom is a group of words that means something different from what the individual words literally say.",
+      say: "An idiomatic phrase (or idiom) is a group of words that means something different from what the individual words literally say - you have to know the phrase as a whole to understand it.You will find this on page 17 of your book, in The Elephant who lost his Patience (a fable from India).",
       frame: {
         text: {
-          title: "Idiomatic phrases",
+          title: "Idiomatic phrases· Page 17",
           chips: [
-            { text: "'Break a leg' means good luck, not an injury.", tone: "blue" },
-            { text: "'Let the cat out of the bag' means reveal a secret.", tone: "blue" }
+            { text: "'Break a leg!' doesn't mean an actual injury - it's an idiom meaning 'good luck', often said before a performance.", tone: "blue", note: "'Break a leg!' doesn't mean an actual injury - it's an idiom meaning 'good luck', often said before a performance." },
+            { text: "'She let the cat out of the bag' doesn't involve a real cat - it means she accidentally revealed a secret.", tone: "blue", note: "'She let the cat out of the bag' doesn't involve a real cat - it means she accidentally revealed a secret." }
           ],
         },
       },
     },
     {
-      label: "1.9 Sentence types",
+      label: "1.9 Sentence types: simple, compound, complex + connectives",
       conceptId: "1.9",
-      say: "Sentences can be simple (one idea), compound (two equal ideas joined by and, but or or), or complex (a main idea plus a dependent one).",
+      say: "Sentences can be simple (one idea), compound (two equal ideas joined by 'and', 'but', or 'or'), or complex/multi-clause (a main idea joined to a dependent clause using a connective like 'because', 'although', or 'when').You will find this on page 16 of your book.",
       frame: {
         text: {
-          title: "Sentence types",
+          title: "Sentence types: simple, compound, complex + connectives· Page 16",
           chips: [
-            { text: "Simple: 'The dog barked.'", tone: "blue" },
-            { text: "Compound: 'The dog barked and the cat ran.'", tone: "blue" },
-            { text: "Complex: 'Because the dog barked, the cat ran.'", tone: "blue" }
+            { text: "Simple: 'The kangaroo jumped.' Compound: 'The kangaroo jumped, but it missed the branch.' Complex: 'Although it was tired, the kangaroo kept jumping.'", tone: "blue", note: "Simple: 'The kangaroo jumped.' Compound: 'The kangaroo jumped, but it missed the branch.' Complex: 'Although it was tired, the kangaroo kept jumping.'" },
+            { text: "'Because the fire had gone out, they couldn't cook dinner' is complex - the comma comes after the dependent clause ('Because the fire had gone out')...", tone: "blue", note: "'Because the fire had gone out, they couldn't cook dinner' is complex - the comma comes after the dependent clause ('Because the fire had gone out') since it comes first in the sentence." }
           ],
         },
       },
     },
     {
-      label: "1.10 Story structure",
+      label: "1.10 Story structure (the narrative 'mountain')",
       conceptId: "1.10",
-      say: "Many stories follow a narrative mountain: a beginning, a build up, a problem at the peak, then a resolution and an ending.",
+      say: "Story structure is the shape a story's events follow from beginning to end. Many stories follow a 'narrative mountain': the beginning sets the scene, then events build up, lead to a challenge, reach a problem (the most tense...You will find this on page 19 of your book, in The Elephant who lost his Patience (a fable from India).",
       frame: {
         text: {
-          title: "Story structure",
+          title: "Story structure (the narrative 'mountain')· Page 19",
           chips: [
-            { text: "The problem sits at the top of the mountain.", tone: "blue" },
-            { text: "The resolution comes down the other side.", tone: "blue" }
+            { text: "In a fable about a clever ant who tricks a lion, the build up shows the lion boasting, the challenge is the ant deciding to teach him a lesson, the...", tone: "blue", note: "In a fable about a clever ant who tricks a lion, the build up shows the lion boasting, the challenge is the ant deciding to teach him a lesson, the problem is the trick going wrong, and the ending shows what the lion learned." },
+            { text: "If a story jumps straight from 'the beginning' to 'the ending' with no build up or problem in between, it will feel flat - readers expect that rise...", tone: "blue", note: "If a story jumps straight from 'the beginning' to 'the ending' with no build up or problem in between, it will feel flat - readers expect that rise and fall in tension." }
           ],
         },
       },
     },
     {
-      label: "1.11 Mood",
+      label: "1.11 Mood created through setting and word choice",
       conceptId: "1.11",
-      say: "Mood is the feeling a writer creates - fear, calm, joy - built through the setting and the words chosen.",
+      say: "Mood is the feeling or atmosphere a writer creates for the reader - like happiness, sadness, fear, or calm - built mainly through the physical setting a writer chooses and the specific words used to describe it.You will find this on page 20 of your book, in The Lion with the Red Eyes (a fable from Somalia).",
       frame: {
         text: {
-          title: "Mood",
+          title: "Mood created through setting and word choice· Page 20",
           chips: [
-            { text: "'The mist curled through the broken gate' builds unease.", tone: "blue" },
-            { text: "Swap the words and the same place can feel welcoming.", tone: "blue" }
+            { text: "'The old house creaked and groaned in the wind, its broken windows staring out like empty eyes' creates a scary mood through word choice, not just by...", tone: "blue", note: "'The old house creaked and groaned in the wind, its broken windows staring out like empty eyes' creates a scary mood through word choice, not just by saying 'it was scary.'" },
+            { text: "The same walk through a forest could feel peaceful ('sunlight dappled gently through the leaves') or frightening ('shadows twisted between the trees,...", tone: "blue", note: "The same walk through a forest could feel peaceful ('sunlight dappled gently through the leaves') or frightening ('shadows twisted between the trees, and every snap of a twig echoed'), purely through setting and word choice." }
           ],
         },
       },
@@ -507,28 +539,27 @@ export const CAMBRIDGE_5_ENGLISH_1: BoardUnit = {
     {
       label: "1.12 Comparative and superlative adverbs",
       conceptId: "1.12",
-      say: "Adverbs have three forms: positive (quickly), comparative (more quickly, comparing two) and superlative (most quickly, comparing all).",
+      say: "Adverbs have three forms: positive (the plain form, e.g. 'quickly'), comparative (comparing two things, e.g. 'more quickly' or 'faster'), and superlative (comparing three or more things, e.g. 'most quickly' or 'fastest').You will find this on page 20 of your book.",
       frame: {
         text: {
-          title: "Comparative and superlative adverbs",
+          title: "Comparative and superlative adverbs· Page 20",
           chips: [
-            { text: "Positive: 'She ran quickly.'", tone: "blue" },
-            { text: "Comparative: 'She ran more quickly than him.'", tone: "blue" },
-            { text: "Superlative: 'She ran the most quickly of all.'", tone: "blue" }
+            { text: "Positive: 'Zach played well in the match.' Comparative: 'Masie played better than him.' Superlative: 'Ronan played the best of everyone.'", tone: "blue", note: "Positive: 'Zach played well in the match.' Comparative: 'Masie played better than him.' Superlative: 'Ronan played the best of everyone.'" },
+            { text: "Positive: 'She ran quickly.' Comparative: 'She ran more quickly than her brother.' Superlative: 'She ran the most quickly of the whole team.'", tone: "blue", note: "Positive: 'She ran quickly.' Comparative: 'She ran more quickly than her brother.' Superlative: 'She ran the most quickly of the whole team.'" }
           ],
         },
       },
     },
     {
-      label: "1.13 Full writing checklist",
+      label: "1.13 Full writing checklist (mood, punctuation, apostrophes, direct speech)",
       conceptId: "1.13",
-      say: "A full checklist brings together everything you check before calling a piece finished - mood, punctuation, apostrophes and direct speech.",
+      say: "A full writing checklist brings together everything you check before calling a piece of writing finished: does it use adjectives/adverbs/adverbial phrases well, does it make sense, is there a clear setting and mood, and is the...You will find this on page 25 of your book, in The Broath with the Rocks (a fable from Scotland).",
       frame: {
         text: {
-          title: "Full writing checklist",
+          title: "Full writing checklist (mood, punctuation, apostrophes, direct speech)· Page 25",
           chips: [
-            { text: "'The travellers coat was soaked' is missing an apostrophe - traveller's.", tone: "blue" },
-            { text: "Check one thing at a time rather than everything at once.", tone: "blue" }
+            { text: "'The travellers coat was soaked' is missing an apostrophe (should be 'traveller's') - a small error a full read-through checklist would catch even if...", tone: "blue", note: "'The travellers coat was soaked' is missing an apostrophe (should be 'traveller's') - a small error a full read-through checklist would catch even if the sentence otherwise makes perfect sense." },
+            { text: "'Where did you get that from he asked' is missing direct speech punctuation - it should read: \"Where did you get that from?\" he asked.", tone: "blue", note: "'Where did you get that from he asked' is missing direct speech punctuation - it should read: \"Where did you get that from?\" he asked." }
           ],
         },
       },

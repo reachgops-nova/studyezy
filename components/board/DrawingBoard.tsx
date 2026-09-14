@@ -631,6 +631,15 @@ export default function DrawingBoard({ unit, paperTasks = [] }: { unit: BoardUni
                     {activeConcept.icon} {activeConcept.conceptId} {activeConcept.title}
                   </p>
                   <p className="rounded-xl bg-[#0f172a] px-3 py-2 text-[0.8rem] leading-snug text-slate-300">{activeConcept.summary}</p>
+                  {(activeConcept.pages?.length || activeConcept.storyReference) && (
+                    <p className="rounded-xl border border-[#38bdf8]/30 bg-[#38bdf8]/10 px-3 py-2 text-[0.76rem] font-semibold text-[#7dd3fc]">
+                      📖 In your book:{" "}
+                      {activeConcept.pages?.length
+                        ? `page${activeConcept.pages.length > 1 ? "s" : ""} ${activeConcept.pages.join(" and ")}`
+                        : ""}
+                      {activeConcept.storyReference ? ` · ${activeConcept.storyReference}` : ""}
+                    </p>
+                  )}
                   {/* Examples sit at the end of each concept, to try before
                       moving on - real user direction 2026-09-14: "we have to
                       have examples at the end of each concept, that will be
