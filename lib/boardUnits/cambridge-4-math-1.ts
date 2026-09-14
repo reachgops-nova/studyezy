@@ -94,15 +94,11 @@ export const CAMBRIDGE_4_MATH_1: BoardUnit = {
       say: "Look at the chocolate bar. One whole bar cut into ten equal pieces - each single piece is one tenth, and we write it 0.1.",
       frame: {
         image: {
-          src: "/board-art/math1-number-poster.jpg",
-          alt: "Four panels: tenths as a chocolate bar, decomposing 45.8, regrouping 3.4, and counting below zero.",
-          title: "Mastering numbers: decimals and below zero",
-          focus: { x: 1, y: 26, w: 25, h: 70 },
+          src: "/board-art/math1-tenths.jpg",
+          alt: "A chocolate bar cut into ten equal pieces, one piece labelled 0.1.",
+          title: "Tenths",
           hotspots: [
-            { label: "Tenths", at: [13, 20], note: "One piece of a ten-part chocolate bar is one tenth, written 0.1.", tone: "gold" },
-            { label: "Decompose", at: [38, 20], note: "Break the number into what each digit is really worth: 40, 5 and 0.8.", tone: "blue" },
-            { label: "Regroup", at: [62, 20], note: "3 wholes and 4 tenths is the same amount as 2 wholes and 14 tenths.", tone: "green" },
-            { label: "Below zero", at: [86, 20], note: "Count backwards in fives from 6, straight through zero, down to minus 9.", tone: "red" },
+            { label: "One tenth", at: [62, 55], note: "This single piece is one tenth of the whole bar - 0.1.", tone: "gold" },
           ],
         },
       },
@@ -113,15 +109,13 @@ export const CAMBRIDGE_4_MATH_1: BoardUnit = {
       say: "Decomposing means breaking a number into what each digit is really worth. 45.8 comes apart into 40, then 5, then 0.8.",
       frame: {
         image: {
-          src: "/board-art/math1-number-poster.jpg",
-          alt: "Four panels: tenths as a chocolate bar, decomposing 45.8, regrouping 3.4, and counting below zero.",
-          title: "Mastering numbers: decimals and below zero",
-          focus: { x: 25, y: 26, w: 25, h: 70 },
+          src: "/board-art/math1-decompose.jpg",
+          alt: "The number 45.8 breaking apart into 40, 5 and 0.8.",
+          title: "Decompose",
           hotspots: [
-            { label: "Tenths", at: [13, 20], note: "One piece of a ten-part chocolate bar is one tenth, written 0.1.", tone: "gold" },
-            { label: "Decompose", at: [38, 20], note: "Break the number into what each digit is really worth: 40, 5 and 0.8.", tone: "blue" },
-            { label: "Regroup", at: [62, 20], note: "3 wholes and 4 tenths is the same amount as 2 wholes and 14 tenths.", tone: "green" },
-            { label: "Below zero", at: [86, 20], note: "Count backwards in fives from 6, straight through zero, down to minus 9.", tone: "red" },
+            { label: "40", at: [30, 55], note: "The 4 sits in the tens column, so it is really worth forty.", tone: "blue" },
+            { label: "5", at: [55, 55], note: "The 5 is in the ones column - just five.", tone: "green" },
+            { label: "0.8", at: [82, 65], note: "The 8 is in the tenths column, so it is worth eight tenths.", tone: "gold" },
           ],
         },
       },
@@ -132,15 +126,12 @@ export const CAMBRIDGE_4_MATH_1: BoardUnit = {
       say: "Regrouping shuffles those parts without changing the total. Three wholes and four tenths is the very same amount as two wholes and fourteen tenths.",
       frame: {
         image: {
-          src: "/board-art/math1-number-poster.jpg",
-          alt: "Four panels: tenths as a chocolate bar, decomposing 45.8, regrouping 3.4, and counting below zero.",
-          title: "Mastering numbers: decimals and below zero",
-          focus: { x: 49, y: 26, w: 26, h: 70 },
+          src: "/board-art/math1-regroup.jpg",
+          alt: "3.4 shown as 3 wholes and 4 tenths, and again as 2 wholes and 14 tenths.",
+          title: "Regroup",
           hotspots: [
-            { label: "Tenths", at: [13, 20], note: "One piece of a ten-part chocolate bar is one tenth, written 0.1.", tone: "gold" },
-            { label: "Decompose", at: [38, 20], note: "Break the number into what each digit is really worth: 40, 5 and 0.8.", tone: "blue" },
-            { label: "Regroup", at: [62, 20], note: "3 wholes and 4 tenths is the same amount as 2 wholes and 14 tenths.", tone: "green" },
-            { label: "Below zero", at: [86, 20], note: "Count backwards in fives from 6, straight through zero, down to minus 9.", tone: "red" },
+            { label: "3 wholes + 4 tenths", at: [25, 72], note: "The usual way of writing it.", tone: "blue" },
+            { label: "2 wholes + 14 tenths", at: [75, 72], note: "One whole traded for ten tenths - the total has not changed.", tone: "green" },
           ],
         },
       },
@@ -151,15 +142,12 @@ export const CAMBRIDGE_4_MATH_1: BoardUnit = {
       say: "And here is counting below zero. Watch the hops of five going backwards from 6, straight through zero, all the way down to minus 9.",
       frame: {
         image: {
-          src: "/board-art/math1-number-poster.jpg",
-          alt: "Four panels: tenths as a chocolate bar, decomposing 45.8, regrouping 3.4, and counting below zero.",
-          title: "Mastering numbers: decimals and below zero",
-          focus: { x: 73, y: 26, w: 26, h: 70 },
+          src: "/board-art/math1-below-zero.jpg",
+          alt: "A number line with a thermometer, hopping backwards in fives from 6 through zero to minus 9.",
+          title: "Below zero",
           hotspots: [
-            { label: "Tenths", at: [13, 20], note: "One piece of a ten-part chocolate bar is one tenth, written 0.1.", tone: "gold" },
-            { label: "Decompose", at: [38, 20], note: "Break the number into what each digit is really worth: 40, 5 and 0.8.", tone: "blue" },
-            { label: "Regroup", at: [62, 20], note: "3 wholes and 4 tenths is the same amount as 2 wholes and 14 tenths.", tone: "green" },
-            { label: "Below zero", at: [86, 20], note: "Count backwards in fives from 6, straight through zero, down to minus 9.", tone: "red" },
+            { label: "Hops of 5", at: [50, 32], note: "Each hop is the same size - five - even when it crosses zero.", tone: "red" },
+            { label: "Zero", at: [50, 58], note: "Counting does not stop or change size at zero. It carries straight on.", tone: "gold" },
           ],
         },
       },
