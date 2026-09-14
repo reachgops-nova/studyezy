@@ -68,7 +68,18 @@ export default function RichSceneStage({ scene }: { scene: RichScene }) {
   return (
     <>
       <div className="rounded-lg bg-white p-2">
-        <svg viewBox={normalized.viewBox} className="w-full" role="img" aria-label={normalized.title}>
+        {/* Height-capped, because the board is pinned: left to its own
+            aspect ratio it grew tall enough that it and the composer between
+            them filled the viewport and squeezed the conversation out of
+            existence. preserveAspectRatio letterboxes rather than clips. */}
+        <svg
+          viewBox={normalized.viewBox}
+          className="w-full"
+          style={{ maxHeight: "26vh" }}
+          preserveAspectRatio="xMidYMid meet"
+          role="img"
+          aria-label={normalized.title}
+        >
           {normalized.defs ? <defs dangerouslySetInnerHTML={{ __html: normalized.defs }} /> : null}
           {normalized.layers.map((layer) => {
             const offset = state.offsets.get(layer.id) ?? { x: 0, y: 0 };

@@ -1151,7 +1151,7 @@ export default function AvatarChat({
             id,
             node: (
               // eslint-disable-next-line @next/next/no-img-element
-              <img src={url} alt="" className="w-full rounded-lg bg-white object-contain" />
+              <img src={url} alt="" className="max-h-[26vh] w-full rounded-lg bg-white object-contain" />
             ),
           },
         ]);
@@ -1581,7 +1581,7 @@ export default function AvatarChat({
               return (
                 <div
                   key={entry.id}
-                  className={`${isCurrent ? "w-[26rem]" : "w-48"} shrink-0 rounded-lg border bg-white p-2 transition-all ${
+                  className={`${isCurrent ? "w-[26rem]" : "w-48"} max-h-[34vh] shrink-0 overflow-hidden rounded-lg border bg-white p-2 transition-all ${
                     isCurrent ? "border-[#9c6f1f]/40 shadow-sm" : "border-slate-200 opacity-80"
                   }`}
                 >
