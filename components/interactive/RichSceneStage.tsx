@@ -2,6 +2,7 @@
 
 import React from "react";
 import { normalizeRichScene, type RichScene } from "@/lib/richScene";
+import { useBoardNarration } from "@/lib/boardNarration";
 
 /**
  * Plays a model-authored RichScene: illustrated SVG layers plus a step
@@ -11,6 +12,13 @@ import { normalizeRichScene, type RichScene } from "@/lib/richScene";
  */
 export default function RichSceneStage({ scene }: { scene: RichScene }) {
   const normalized = React.useMemo(() => normalizeRichScene(scene), [scene]);
+  const { narrate } = useBoardNarration();
+  // Tapping a labelled part of the drawing makes it explain itself, which is
+  // what turns a diagram into a board - see lib/boardNarration.tsx.
+  const hotspotFor = React.useMemo(
+    () => new Map((normalized.hotspots ?? []).map((h) => [h.layerId, h.say])),
+    [normalized],
+  );
   const [stepIndex, setStepIndex] = React.useState(-1);
   const timersRef = React.useRef<ReturnType<typeof setTimeout>[]>([]);
 
@@ -109,10 +117,21 @@ export default function RichSceneStage({ scene }: { scene: RichScene }) {
             const isDrawable = drawableIds.has(layer.id);
             const isDrawn = state.drawn.has(layer.id);
 
+            const hotspotLine = hotspotFor.get(layer.id);
+
             return (
               <g
                 key={layer.id}
                 dangerouslySetInnerHTML={{ __html: layer.svg }}
+                onClick={
+                  hotspotLine
+                    ? (e) => {
+                        e.stopPropagation();
+                        narrate(hotspotLine);
+                      }
+                    : undefined
+                }
+                className={hotspotLine ? "cursor-pointer [&>*]:transition-transform hover:[&>*]:opacity-90" : undefined}
                 style={{
                   transform: `translate(${offset.x}px, ${offset.y}px) scale(${state.pulsing.has(layer.id) ? 1.04 : 1})`,
                   transformOrigin: "center",

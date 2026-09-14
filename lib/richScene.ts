@@ -40,6 +40,13 @@ export type RichSceneStep = {
   holdMs?: number;
 };
 
+export type RichSceneHotspot = {
+  /** The layer that becomes tappable. */
+  layerId: string;
+  /** What Ezy says when a child taps it. */
+  say: string;
+};
+
 export type RichScene = {
   title: string;
   /** "0 0 W H". The stage scales to its container. */
@@ -50,6 +57,12 @@ export type RichScene = {
   steps: RichSceneStep[];
   /** Shown under the stage when no step is playing. */
   caption?: string;
+  /**
+   * Tappable parts of the drawing. A board a child can poke at and have it
+   * explain itself is the difference between a diagram and a lesson - see
+   * lib/boardNarration.tsx.
+   */
+  hotspots?: RichSceneHotspot[];
 };
 
 const FORBIDDEN_ELEMENTS = /<\s*\/?\s*(script|iframe|foreignObject|object|embed|link|meta|style|animate|set|handler)\b[^>]*>/gi;

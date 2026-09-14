@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode, useMemo } from "react";
 import type { Concept } from "@/lib/types";
 import Avatar from "./Avatar";
+import { BoardNarrationProvider } from "@/lib/boardNarration";
 import { Illustration, hasIllustration } from "./illustrations";
 import VoicePicker, { getSavedRate, getSavedVoiceName } from "./VoicePicker";
 
@@ -1550,6 +1551,22 @@ export default function AvatarChat({
   // Which RCRT phase the lesson is in, for the tabs across the top. Derived
   // from where the teaching actually is rather than tracked separately, so
   // the tabs cannot drift out of step with the lesson.
+  // A tap on the board speaks through the lesson's own voice and lands on the
+  // subtitle strip, so board and narration stay one thing rather than two.
+  const boardNarration = useMemo(
+    () => ({
+      narrate: (text: string) => {
+        stopSpeech();
+        const id = nextId();
+        setMessages((prev) => [...prev, { id, sender: "avatar", text, kind: "narration" }]);
+        speakText(text, id, () => {});
+      },
+    }),
+    // speakText/stopSpeech are stable function declarations in this component.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [],
+  );
+
   const rcrtPhase = inMicroCheck || awaitingConceptAdvance ? 3 : practiceSlot ? 2 : checkpointIndex === 0 ? 0 : 1;
   const RCRT_TABS = ["1. Recall", "2. Concept", "3. Reinforce", "4. Test"];
 
@@ -1559,19 +1576,20 @@ export default function AvatarChat({
     // the topic titled across the top, the spoken line along a lit strip at
     // its foot, a memory tray of what has been covered, and a light
     // assistant panel beside it holding readymade questions and the chat.
-    <div className="flex h-full min-h-0 flex-col gap-3">
+    <BoardNarrationProvider value={boardNarration}>
+    <div className="flex h-full min-h-0 flex-col gap-4 font-board">
       {/* RCRT phases across the top - the user asked repeatedly for RCRT to
           be part of the Learn stream, and the reference shows it as the
           spine of the lesson rather than a separate exercise. */}
-      <div className="flex shrink-0 flex-wrap items-center gap-2 rounded-xl bg-[#131c33] px-3 py-2">
-        <span className="mr-auto flex items-center gap-2 text-sm font-extrabold text-[#fbbf24]">
+      <div className="flex shrink-0 flex-wrap items-center gap-2 rounded-2xl border-b-4 border-[#f59e0b] bg-[#020617] px-5 py-3">
+        <span className="mr-auto flex items-center gap-2 text-lg font-bold text-[#f59e0b]">
           🏫 Drawing Board
         </span>
         {RCRT_TABS.map((label, i) => (
           <span
             key={label}
             className={`rounded-full px-3 py-1 text-[11px] font-bold transition-colors ${
-              i === rcrtPhase ? "bg-[#22d3ee] text-[#0b1220]" : "text-white/35"
+              i === rcrtPhase ? "scale-105 bg-[#06b6d4] font-bold text-white" : "bg-[#334155] text-white/40"
             }`}
           >
             {label}
@@ -1581,8 +1599,8 @@ export default function AvatarChat({
 
       <div className="flex min-h-0 flex-1 flex-col gap-3 lg:flex-row">
         {/* ---------------- The board ---------------- */}
-        <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl bg-[#1e2749] ring-2 ring-[#22d3ee]/40">
-          <h3 className="shrink-0 px-4 pt-4 text-center text-lg font-extrabold text-[#fbbf24]">
+        <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-3xl border-4 border-[#334155] bg-[#1e293b] shadow-[0_12px_30px_rgba(0,0,0,0.4)]">
+          <h3 className="shrink-0 px-4 pt-4 text-center text-2xl font-bold text-[#f59e0b]">
             {concept.concept_name}
           </h3>
 
@@ -1597,9 +1615,9 @@ export default function AvatarChat({
           </div>
 
           {/* The spoken line, on its own lit strip at the foot of the board. */}
-          <div className="shrink-0 border-t-2 border-[#22d3ee] bg-[#16203a] px-4 py-3">
+          <div className="shrink-0 border-t-4 border-[#06b6d4] bg-[#0f172a] px-4 py-3">
             <div className="flex items-center gap-3">
-              <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#22d3ee] text-sm">
+              <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#06b6d4] text-sm">
                 🎙️
               </span>
               <p className="min-w-0 flex-1 text-sm font-semibold leading-snug text-white">
@@ -1635,7 +1653,7 @@ export default function AvatarChat({
           </div>
 
           {/* Memory tray: everything covered so far, tap to put it back up. */}
-          <div className="flex shrink-0 items-center gap-2 overflow-x-auto bg-[#16203a] px-4 py-2.5">
+          <div className="flex shrink-0 items-center gap-2 overflow-x-auto bg-[#0f172a] px-4 py-2.5">
             <span className="shrink-0 text-[10px] font-bold uppercase tracking-wider text-white/40">Memory tray</span>
             {sceneBoard.length === 0 && <span className="text-[11px] text-white/30">Nothing covered yet</span>}
             {sceneBoard.map((entry, i) => (
@@ -1646,7 +1664,7 @@ export default function AvatarChat({
                 aria-pressed={i === activeBoardIndex}
                 className={`shrink-0 rounded-lg border-2 px-3 py-1.5 text-[11px] font-bold transition-colors ${
                   i === activeBoardIndex
-                    ? "border-[#fbbf24] bg-[#fbbf24]/15 text-[#fbbf24]"
+                    ? "border-[#f59e0b] bg-[#f59e0b]/15 text-[#f59e0b]"
                     : "border-white/10 bg-white/5 text-white/60 hover:border-white/30"
                 }`}
               >
@@ -1657,10 +1675,10 @@ export default function AvatarChat({
         </div>
 
         {/* ---------------- The assistant ---------------- */}
-        <div className="flex min-h-0 flex-col overflow-hidden rounded-2xl bg-white lg:w-[21rem]">
+        <div className="flex min-h-0 flex-col overflow-hidden rounded-3xl bg-white lg:w-[23rem]">
           <div className="shrink-0 px-4 pt-4">
             <h3 className="text-base font-extrabold text-[#16241f]">💡 RCRT Assistant</h3>
-            <div className="mt-2 rounded-xl border-2 border-[#f59e0b] bg-[#fef3c7] px-3 py-2 text-[12px] font-medium leading-snug text-[#78350f]">
+            <div className="mt-2 rounded-xl border-2 border-[#f59e0b] bg-[#fef9c3] px-3 py-2 text-[12px] font-medium leading-snug text-[#78350f]">
               <span className="font-extrabold">RCRT Tip:</span>{" "}
               {concept.tips_to_remember?.[0] ?? "Tap a question below if you get stuck - Ezy will take it slowly."}
             </div>
@@ -1706,7 +1724,7 @@ export default function AvatarChat({
                 </div>
               ) : (
                 <div key={m.id} className="message-enter flex justify-end">
-                  <div className="rounded-2xl rounded-tr-sm bg-[#22d3ee] px-3 py-2 text-[13px] font-medium text-[#0b1220]">
+                  <div className="rounded-2xl rounded-tr-sm bg-[#06b6d4] px-3 py-2 text-[13px] font-medium text-[#0b1220]">
                     {m.text}
                   </div>
                 </div>
@@ -1729,7 +1747,7 @@ export default function AvatarChat({
                 placeholder={
                   !readyForInput ? "Ezy is teaching..." : inMicroCheck ? "Type your answer..." : "Ask Ezy..."
                 }
-                className="min-w-0 flex-1 rounded-xl border-2 border-slate-200 px-3 py-2 text-[13px] focus:border-[#22d3ee] focus:outline-none disabled:bg-slate-50"
+                className="min-w-0 flex-1 rounded-xl border-2 border-slate-200 px-3 py-2 text-[13px] focus:border-[#06b6d4] focus:outline-none disabled:bg-slate-50"
               />
               {speechInputSupported && (
                 <button
@@ -1746,7 +1764,7 @@ export default function AvatarChat({
                 type="button"
                 onClick={() => sendMessage(inputText)}
                 disabled={!readyForInput || loading}
-                className="shrink-0 rounded-xl bg-[#22d3ee] px-3 text-[13px] font-bold text-[#0b1220] disabled:opacity-50"
+                className="shrink-0 rounded-xl bg-[#06b6d4] px-3 text-[13px] font-bold text-white disabled:opacity-50"
               >
                 Send
               </button>
@@ -1792,5 +1810,6 @@ export default function AvatarChat({
         </div>
       </div>
     </div>
+    </BoardNarrationProvider>
   );
 }

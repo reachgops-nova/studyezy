@@ -16,6 +16,8 @@ const config: Config = {
         // length. Both self-hosted via next/font in app/layout.tsx.
         sans: ["var(--font-body)", "ui-sans-serif", "system-ui", "sans-serif"],
         display: ["var(--font-display)", "var(--font-body)", "ui-sans-serif", "sans-serif"],
+        // Lesson board only - see app/layout.tsx.
+        board: ["var(--font-board)", "var(--font-body)", "ui-rounded", "sans-serif"],
       },
       boxShadow: {
         // One quiet shadow token used on every card app-wide - lower

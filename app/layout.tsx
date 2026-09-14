@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Bricolage_Grotesque, Manrope } from "next/font/google";
+import { Bricolage_Grotesque, Fredoka, Manrope } from "next/font/google";
 import "./globals.css";
 
 // Self-hosted via next/font (built at compile time, no runtime CDN request)
@@ -12,6 +12,18 @@ const bricolage = Bricolage_Grotesque({
   subsets: ["latin"],
   weight: ["500", "600", "700"],
   variable: "--font-display",
+  display: "swap",
+});
+
+// Fredoka is scoped to the lesson board only (font-board), not the app. The
+// reference the user shared uses it, and a rounded face is a real part of why
+// that page reads as a children's product - but the rest of the app has
+// deliberately moved away from "bubble-rounded, toy-app feel", so this does
+// not become the app-wide sans.
+const fredoka = Fredoka({
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+  variable: "--font-board",
   display: "swap",
 });
 
@@ -29,7 +41,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={`${bricolage.variable} ${manrope.variable}`}>
+    <html lang="en" className={`${bricolage.variable} ${fredoka.variable} ${manrope.variable}`}>
       <body className="min-h-screen font-sans">
         {/* No max-width here on purpose - the sidebar app shell (AppShell)
             and the narrower single-column pages (auth, landing, focused

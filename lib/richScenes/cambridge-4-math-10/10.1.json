@@ -75,5 +75,23 @@
       ],
       "holdMs": 2400
     }
+  ],
+  "hotspots": [
+    {
+      "layerId": "tri-original",
+      "say": "This is the shape we start with. Its corners are at 6 across and 7 up, 8 across and 7 up, and 7 across and 9 up."
+    },
+    {
+      "layerId": "tri-new",
+      "say": "This is the very same triangle after it slid. Same size, same shape, same way up - only its place on the grid changed."
+    },
+    {
+      "layerId": "arrows",
+      "say": "Each dashed arrow shows one corner's journey. Look how they are all the same length and all point the same way - that is what makes it a translation."
+    },
+    {
+      "layerId": "grid",
+      "say": "The grid is how we measure the slide. Count along the bottom first, then count up - four squares left and one square down."
+    }
   ]
 }
