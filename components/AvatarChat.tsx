@@ -625,6 +625,7 @@ export default function AvatarChat({
   const checkpointsRef = useRef<CheckpointStep[]>([]);
   const recognitionRef = useRef<SpeechRecognitionLike | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const endRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   // Pause/resume state - see togglePauseSpeech for why this exists instead
   // of just calling speechSynthesis.resume().
@@ -687,8 +688,12 @@ export default function AvatarChat({
     }
   }, []);
 
+  // scrollIntoView on a sentinel at the end of the thread, rather than
+  // scrollTo on a specific container - the thread is no longer its own
+  // scroller, so the element that actually needs to move is whichever
+  // ancestor is scrollable, which this resolves automatically.
   useEffect(() => {
-    scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
+    endRef.current?.scrollIntoView({ block: "end", behavior: "smooth" });
   }, [messages]);
 
   function clearSyntheticHighlighter() {
@@ -1475,6 +1480,14 @@ export default function AvatarChat({
   ].slice(0, 5);
   const quickReplies = dynamicFollowUps.length > 0 ? dynamicFollowUps : starterReplies;
 
+  // Subtitle under the board: whatever Ezy is saying right now, falling back
+  // to the last thing said so the line stays readable (and copyable) after
+  // the speech finishes rather than vanishing the moment audio stops.
+  const subtitleText =
+    messages.find((m) => m.id === speakingMessageId)?.text ??
+    [...messages].reverse().find((m) => m.sender === "avatar")?.text ??
+    "";
+
   return (
     <div className="grid grid-cols-1 gap-4">
       {/* A generated illustration (lib/conceptIllustration.ts) no longer
@@ -1528,16 +1541,47 @@ export default function AvatarChat({
 
       {sceneBoard.length > 0 && (
         <div className="mb-3 rounded-xl border border-practice-border bg-white/70 p-3">
-          <p className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-slate-500">
-            Drawing board - every example from this lesson, in one place
-          </p>
-          <div className="flex gap-3 overflow-x-auto pb-1">
-            {sceneBoard.map((entry) => (
-              <div key={entry.id} className="w-56 shrink-0 rounded-lg border border-slate-200 bg-white p-2">
-                {entry.node}
-              </div>
-            ))}
+          <div className="mb-2 flex items-center justify-between gap-2">
+            <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">
+              Drawing board - every example from this lesson, in one place
+            </p>
+            {subtitleText && (
+              <button
+                type="button"
+                onClick={() => navigator.clipboard?.writeText(subtitleText)}
+                className="shrink-0 rounded-md border border-slate-200 px-2 py-0.5 text-[10px] font-semibold text-slate-500 hover:bg-slate-50"
+              >
+                Copy line
+              </button>
+            )}
           </div>
+          {/* The newest example is the one being taught, so it gets the room
+              (real feedback 2026-09-14: "board is larger screen"); earlier
+              ones stay beside it, smaller, still replayable. */}
+          <div className="flex items-start gap-3 overflow-x-auto pb-1">
+            {sceneBoard.map((entry, i) => {
+              const isCurrent = i === sceneBoard.length - 1;
+              return (
+                <div
+                  key={entry.id}
+                  className={`${isCurrent ? "w-[26rem]" : "w-48"} shrink-0 rounded-lg border bg-white p-2 transition-all ${
+                    isCurrent ? "border-[#9c6f1f]/40 shadow-sm" : "border-slate-200 opacity-80"
+                  }`}
+                >
+                  {entry.node}
+                </div>
+              );
+            })}
+          </div>
+          {/* Subtitle: the line being spoken right now, under the picture it
+              belongs to, so a child can watch the board and read along instead
+              of looking away to the thread. Holds the last line after speech
+              ends so it stays on screen to re-read or copy. */}
+          {subtitleText && (
+            <p className="mt-2 rounded-lg bg-[#16241f]/90 px-3 py-2 text-center text-sm font-medium leading-snug text-white">
+              {subtitleText}
+            </p>
+          )}
         </div>
       )}
 
@@ -1559,7 +1603,14 @@ export default function AvatarChat({
             <p className="text-xs text-slate-500">This lesson&apos;s picture - scroll up to see it full size</p>
           </div>
         )}
-        <div ref={scrollRef} className="flex max-h-[420px] flex-col gap-3 overflow-y-auto p-4">
+        {/* One scroll context, not two - real feedback 2026-09-14: "chat does
+            not auto scroll... which makes it difficult to follow drawing board
+            and chat session". This used to be its own 420px-tall scroller
+            nested inside the page's scroller, so new lines scrolled inside a
+            small box the reader wasn't looking at while the board sat above in
+            the outer one. The thread now grows naturally and the page scrolls
+            as a single stream (see the endRef sentinel below). */}
+        <div ref={scrollRef} className="flex flex-col gap-3 p-4">
           {messages.map((m) =>
             m.sender === "avatar" ? (
               <div key={m.id} className="message-enter flex items-start gap-2">
@@ -1609,6 +1660,7 @@ export default function AvatarChat({
             </div>
           )}
           {practiceSlot && <div className="message-enter flex items-start gap-2">{practiceSlot}</div>}
+          <div ref={endRef} />
         </div>
 
         <div className="border-t border-practice-border p-4">
