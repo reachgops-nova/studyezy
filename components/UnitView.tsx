@@ -123,7 +123,14 @@ export function UnitView({
 
   const [activeConceptId, setActiveConceptId] = useState<string>(activeConcepts[0]?.id || '1.1');
   const [activePage, setActivePage] = useState(activeConcepts[0]?.page || firstAvailablePage);
-  const [isBookletCollapsed, setIsBookletCollapsed] = useState(false);
+  // Real user direction 2026-09-14: "everything in one single window" - the
+  // lesson opens as a single wide stream (textbook reference, examples, quiz,
+  // hints and recap all in the one thread) with a thin chooser rail beside
+  // it, rather than splitting the screen into a nav column, a 360px book
+  // column and a narrow chat column. The book is one click away from the
+  // "Sourced from page N" bar instead of permanently holding a third of the
+  // screen - which usually showed "No page image uploaded yet" anyway.
+  const [isBookletCollapsed, setIsBookletCollapsed] = useState(true);
 
   // Defaults collapsed on phone/tablet widths (checked once, client-side
   // only, so this never fights server-rendered markup) - the booklet stacks
@@ -649,7 +656,7 @@ export function UnitView({
             <span className="text-xs font-serif font-black text-[#16241f]">Sourced from Page {activePage}</span>
             <button
               onClick={() => setIsBookletCollapsed(false)}
-              className="text-xs font-bold text-[#9c6f1f] hover:underline flex items-center gap-1.5 animate-bounce"
+              className="text-xs font-bold text-[#9c6f1f] hover:underline flex items-center gap-1.5"
             >
               📖 Open Textbook Page Reference
             </button>
