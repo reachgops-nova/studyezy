@@ -192,13 +192,12 @@ export default async function LearnPage({ params }: { params: Promise<{ unitId: 
         bounded column: header sized by its content, lesson taking the rest.
         Below lg it stays an ordinary stacked, scrolling page.
 
-        The 10rem is the chrome this main actually sits inside, measured
-        rather than guessed: the layout's own vertical padding (3rem, the
-        same figure AppShell subtracts), AppShell's desktop account-menu row
-        above it (~4rem with its margin), and AppShell's main pb-12 below
-        (3rem). Subtracting only the 3rem left the composer about 60px under
-        the fold, which is these other two. */}
-    <main className="mx-auto grid w-full grid-cols-1 gap-6 lg:flex lg:h-[calc(100vh-10rem)] lg:flex-col lg:overflow-hidden">
+        The 6rem is the chrome this main actually sits inside, measured on
+        the deployed page rather than guessed: AppShell's desktop
+        account-menu row above it and its main pb-12 below. Subtracting the
+        3rem AppShell itself uses left the composer under the fold; 10rem
+        overshot and left dead space beneath the panel. */}
+    <main className="mx-auto grid w-full grid-cols-1 gap-6 lg:flex lg:h-[calc(100vh-6rem)] lg:flex-col lg:overflow-hidden">
       {/* flex-wrap + min-w-0: the action links were `shrink-0` beside an
           unconstrained title block, so the header's min-content was wider
           than a phone viewport and put the whole lesson page into a
