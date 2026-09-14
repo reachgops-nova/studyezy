@@ -87,7 +87,7 @@ export default function RichSceneStage({ scene }: { scene: RichScene }) {
         // has nothing definite to resolve against and collapses to zero, so
         // the board renders blank. The floor gives it something real while
         // flex-1 still lets it grow into whatever the board can spare.
-        className="flex min-h-[11rem] flex-1 cursor-pointer rounded-lg bg-white p-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#9c6f1f]"
+        className="flex min-h-[8rem] flex-1 cursor-pointer rounded-lg bg-white p-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#9c6f1f]"
       >
         {/* Fits the room it is given rather than claiming a fixed height.
             Every fixed value tried here was wrong in one state or another:

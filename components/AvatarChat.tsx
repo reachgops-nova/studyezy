@@ -710,9 +710,15 @@ export default function AvatarChat({
   // opens it, so a reply is never written somewhere the child cannot see.
   // Narration never triggers this - it is read on the board instead.
   const workbookCount = messages.reduce((n, m) => (m.kind === "narration" ? n : n + 1), 0);
+  // Only open itself once the child has actually said something. Opening on
+  // the very first checkpoint question meant the workbook took half the panel
+  // before the lesson had even begun, pushing the picture and its subtitle
+  // out of the room they need. Ezy's prompts are read on the board; a reply
+  // to something the child typed is what has to be surfaced.
+  const hasEngaged = messages.some((m) => m.sender === "kid");
   useEffect(() => {
-    if (workbookCount > 0) setIsWorkbookOpen(true);
-  }, [workbookCount]);
+    if (hasEngaged && workbookCount > 0) setIsWorkbookOpen(true);
+  }, [hasEngaged, workbookCount]);
 
   useEffect(() => {
     endRef.current?.scrollIntoView({ block: "end", behavior: "smooth" });
@@ -1637,7 +1643,7 @@ export default function AvatarChat({
           </div>
 
           {/* The example being explained, given the whole width. */}
-          <div className="flex min-h-[12rem] flex-1 items-stretch justify-center overflow-hidden rounded-lg border border-[#9c6f1f]/30 bg-white p-2">
+          <div className="flex min-h-[9rem] flex-1 items-stretch justify-center overflow-hidden rounded-lg border border-[#9c6f1f]/30 bg-white p-2">
             {(sceneBoard[activeBoardIndex] ?? sceneBoard[sceneBoard.length - 1])?.node}
           </div>
 
