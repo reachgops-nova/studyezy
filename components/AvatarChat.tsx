@@ -1616,7 +1616,7 @@ export default function AvatarChat({
         // pb leaves room for the collapsed workbook bar that floats over the
         // bottom edge, so the miniatures and the "need anything more" row are
         // never hidden underneath it.
-        <div className="flex min-h-0 flex-1 flex-col rounded-xl border border-practice-border bg-[#f4f6f1] p-3 pb-[8rem] shadow-sm">
+        <div className="flex min-h-0 flex-1 flex-col rounded-xl border border-practice-border bg-[#f4f6f1] p-3 pb-[7rem] shadow-sm">
           <div className="mb-2 flex items-center justify-between gap-2">
             <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">
               Drawing board{sceneBoard.length > 1 ? ` - example ${activeBoardIndex + 1} of ${sceneBoard.length}` : ""}
@@ -1653,7 +1653,7 @@ export default function AvatarChat({
           )}
 
           {/* Covered already: miniatures, click to put one back on the stage. */}
-          {sceneBoard.length > 1 && (
+          {sceneBoard.length > 1 && !isWorkbookOpen && (
             <div className="mt-2 flex shrink-0 items-center gap-2 overflow-x-auto pb-1">
               <span className="shrink-0 text-[10px] font-semibold uppercase tracking-wide text-slate-400">Covered</span>
               {sceneBoard.map((entry, i) => (
@@ -1678,7 +1678,7 @@ export default function AvatarChat({
           {/* Real user direction 2026-09-14: "and ask if you need anything
               more here" - offered per example, on the board, rather than
               making the child think to ask. */}
-          {!speaking && (
+          {!speaking && !isWorkbookOpen && (
             <div className="mt-2 flex shrink-0 flex-wrap items-center gap-2">
               <span className="text-[11px] font-medium text-slate-500">Need anything more on this one?</span>
               <button
@@ -1712,7 +1712,7 @@ export default function AvatarChat({
 
       <div
         className={`absolute inset-x-0 bottom-0 z-20 flex flex-col rounded-xl border border-practice-border bg-practice-bg/95 shadow-lg backdrop-blur-sm transition-[max-height] duration-200 ${
-          isWorkbookOpen ? "max-h-[62%]" : "max-h-[7.5rem]"
+          isWorkbookOpen ? "max-h-[48%]" : "max-h-[7.5rem]"
         }`}
       >
         <button

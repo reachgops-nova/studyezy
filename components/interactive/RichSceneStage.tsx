@@ -75,7 +75,7 @@ export default function RichSceneStage({ scene }: { scene: RichScene }) {
         <svg
           viewBox={normalized.viewBox}
           className="w-full"
-          style={{ maxHeight: "44vh" }}
+          style={{ maxHeight: "30vh" }}
           preserveAspectRatio="xMidYMid meet"
           role="img"
           aria-label={normalized.title}
