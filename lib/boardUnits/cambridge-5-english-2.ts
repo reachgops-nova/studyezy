@@ -167,8 +167,8 @@ export const CAMBRIDGE_5_ENGLISH_2: BoardUnit = {
           alt: "An open book about a real person's life, with a photograph dated 2023",
           title: "A book about a real person",
           hotspots: [
-            { label: "A real person", at: [33, 30], note: "Always someone who really lived. Your book's example is Poorna Malavath, the youngest girl to climb Everest. Page 26.", tone: "blue" },
-            { label: "Real dates", at: [76, 66], note: "'Poorna Malavath was born on 10 June 2000 in a village in Telangana, India.' Real, and checkable. Page 26.", tone: "green" },
+            { label: "A real person", at: [63, 48], note: "Always someone who really lived. Your book's example is Poorna Malavath, the youngest girl to climb Everest. Page 26.", tone: "blue" },
+            { label: "Real dates", at: [81, 80], note: "'Poorna Malavath was born on 10 June 2000 in a village in Telangana, India.' Real, and checkable. Page 26.", tone: "green" },
           ],
         },
       },

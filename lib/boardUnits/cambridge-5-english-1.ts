@@ -394,7 +394,7 @@ export const CAMBRIDGE_5_ENGLISH_1: BoardUnit = {
           alt: "Fox, owl and tortoise talking in a forest around an open book marked LESSON",
           title: "A short animal tale",
           hotspots: [
-            { label: "A short animal tale", at: [48, 12], note: "Fables are short on purpose. There is no room for anything that does not carry the lesson.", tone: "blue" },
+            { label: "A short animal tale", at: [21, 88], note: "Fables are short on purpose. There is no room for anything that does not carry the lesson.", tone: "blue" },
             { label: "Animals that talk", at: [27, 44], note: "Fox, Owl and Tortoise speak and argue exactly like people. That is what makes the lesson easy to see.", tone: "gold" },
             { label: "The lesson", at: [48, 74], note: "The moral sits open in the middle of everything, because it is the reason the story exists.", tone: "green" },
           ],
