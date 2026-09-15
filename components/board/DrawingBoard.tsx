@@ -175,6 +175,9 @@ export default function DrawingBoard({ unit, paperTasks = [] }: { unit: BoardUni
 
   const activeConcept = unit.concepts.find((c) => c.conceptId === unit.conceptSteps[step]?.conceptId);
 
+  /** The full concept list, hidden by default so the board keeps its height. */
+  const [pickerOpen, setPickerOpen] = useState(false);
+
   function loadStep(i: number) {
     const s = unit.conceptSteps[i];
     if (!s) return;
@@ -451,26 +454,49 @@ export default function DrawingBoard({ unit, paperTasks = [] }: { unit: BoardUni
               concept is the one being read. */}
           {phase === 1 && (
             <div className="shrink-0 border-b border-slate-800 px-3 py-2">
-              <div className="flex flex-wrap justify-center gap-2">
-                {conceptGroups.map((g) => {
-                  const isHere = g.indexes.includes(step);
-                  return (
-                    <button
-                      key={g.key}
-                      type="button"
-                      onClick={() => loadStep(g.indexes[0])}
-                      className={`rounded-xl border-2 px-3 py-1.5 text-xs font-bold transition-colors ${
-                        isHere
-                          ? "border-[#f59e0b] bg-[#f59e0b] text-[#020617]"
-                          : "border-slate-700 bg-slate-900/95 text-slate-300 hover:border-[#38bdf8] hover:text-white"
-                      }`}
-                    >
-                      {g.label}
-                      {g.indexes.length > 1 ? ` · ${g.indexes.length}` : ""}
-                    </button>
-                  );
-                })}
+              {/* Thirteen concepts laid flat ran to four rows and left the
+                  board barely 230px tall, which is what was cropping the
+                  artwork. Collapsed to the concept being read, with the full
+                  list one tap away. */}
+              <div className="flex items-center justify-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setPickerOpen((v) => !v)}
+                  aria-expanded={pickerOpen}
+                  className="rounded-xl border-2 border-slate-700 bg-slate-900/95 px-2.5 py-1.5 text-xs font-bold text-slate-300 transition-colors hover:border-[#38bdf8] hover:text-white"
+                  title="Show every concept in this chapter"
+                >
+                  {pickerOpen ? "✕" : "☰"} {conceptGroups.length}
+                </button>
+                <span className="rounded-xl border-2 border-[#f59e0b] bg-[#f59e0b] px-3 py-1.5 text-xs font-bold text-[#020617]">
+                  {activeGroup ? activeGroup.label : "Read"}
+                </span>
               </div>
+              {pickerOpen && (
+                <div className="mt-2 flex max-h-32 flex-wrap justify-center gap-2 overflow-y-auto">
+                  {conceptGroups.map((g) => {
+                    const isHere = g.indexes.includes(step);
+                    return (
+                      <button
+                        key={g.key}
+                        type="button"
+                        onClick={() => {
+                          loadStep(g.indexes[0]);
+                          setPickerOpen(false);
+                        }}
+                        className={`rounded-xl border-2 px-3 py-1.5 text-xs font-bold transition-colors ${
+                          isHere
+                            ? "border-[#f59e0b] bg-[#f59e0b] text-[#020617]"
+                            : "border-slate-700 bg-slate-900/95 text-slate-300 hover:border-[#38bdf8] hover:text-white"
+                        }`}
+                      >
+                        {g.label}
+                        {g.indexes.length > 1 ? ` · ${g.indexes.length}` : ""}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
               {activeGroup && activeGroup.indexes.length > 1 && (
                 <div className="mt-2 flex flex-wrap justify-center gap-1.5">
                   {activeGroup.indexes.map((idx, n) => (
