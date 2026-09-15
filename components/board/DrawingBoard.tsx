@@ -1017,6 +1017,16 @@ function ImageStage({ frame, onTap }: { frame: BoardFrame; onTap?: (t: string) =
           <img
             src={I.src}
             alt={I.alt}
+            /* onLoad alone misses the common case: the img is in the server
+               HTML, so the browser has usually finished loading it before
+               React hydrates and the handler never fires. The ref measures
+               whatever is already there; returning the previous object when
+               nothing changed keeps this from re-rendering in a loop. */
+            ref={(img) => {
+              if (!img || !img.complete || !img.naturalWidth || !img.naturalHeight) return;
+              const r = img.naturalWidth / img.naturalHeight;
+              setShape((prev) => (prev && prev.src === I.src && prev.ratio === r ? prev : { src: I.src, ratio: r }));
+            }}
             onLoad={(e) => {
               const img = e.currentTarget;
               if (img.naturalWidth && img.naturalHeight)
