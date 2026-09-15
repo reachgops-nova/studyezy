@@ -385,20 +385,34 @@ export const CAMBRIDGE_5_ENGLISH_1: BoardUnit = {
 
   conceptSteps: [
     {
-      label: "1.1 Poster · what makes a fable",
+      label: "1.1 Poster · a short animal tale",
       conceptId: "1.1",
-      say: "Look at the poster. Three things make a story a fable. It is short, and the characters are animals. Those animals talk and act like people. And at the end there is a lesson. Tap any label to hear more about it.",
+      say: "Look at who is in this story. A fox, an owl, a tortoise - animals, but standing and talking and arguing exactly like people. And right in the middle, open on the grass, the lesson. That is a fable.",
       frame: {
         image: {
-          src: "/board-art/en1-fable-features.jpg",
-          alt: "Poster panel: what makes a fable - a short animal tale, human attributes, a lesson at the end",
-          title: "What makes a fable",
+          src: "/board-art/en1-fable-scene.jpg",
+          alt: "Fox, owl and tortoise talking in a forest around an open book marked LESSON",
+          title: "A short animal tale",
           hotspots: [
-            { label: "A short animal tale", at: [50, 13], note: "Fables are short on purpose. There is no room for anything that does not carry the lesson.", tone: "blue" },
-            { label: "Animals that talk", at: [30, 34], note: "Fox, Owl, Tortoise - they speak and argue exactly like people. That is what makes the lesson easy to see.", tone: "gold" },
-            { label: "The lesson", at: [50, 46], note: "The moral sits open in the middle of everything, because it is the reason the story exists.", tone: "green" },
-            { label: "A lesson at the end", at: [27, 76], note: "In 'Why Cockerels Crow', the lesson lands last: deception and arrogance destroy trust. Page 5.", tone: "green" },
-            { label: "Human attributes", at: [74, 82], note: "The characters have human strengths and weaknesses, so they end up in some sort of conflict. Page 5.", tone: "red" },
+            { label: "A short animal tale", at: [48, 12], note: "Fables are short on purpose. There is no room for anything that does not carry the lesson.", tone: "blue" },
+            { label: "Animals that talk", at: [27, 44], note: "Fox, Owl and Tortoise speak and argue exactly like people. That is what makes the lesson easy to see.", tone: "gold" },
+            { label: "The lesson", at: [48, 74], note: "The moral sits open in the middle of everything, because it is the reason the story exists.", tone: "green" },
+          ],
+        },
+      },
+    },
+    {
+      label: "1.1 Poster · and what it leaves you with",
+      conceptId: "1.1",
+      say: "Two more things every fable has. A lesson waiting at the end, about right and wrong. And characters with human strengths and human weaknesses, which is exactly why they end up in conflict.",
+      frame: {
+        image: {
+          src: "/board-art/en1-fable-lesson.jpg",
+          alt: "A scroll reading a lesson at the end, beside a child weighing up right and wrong",
+          title: "A lesson at the end",
+          hotspots: [
+            { label: "A lesson at the end", at: [26, 52], note: "In 'Why Cockerels Crow' the lesson lands last: deception and arrogance destroy trust. Page 5.", tone: "green" },
+            { label: "Human attributes", at: [78, 62], note: "The characters have human strengths and weaknesses, so they end up in some sort of conflict. Page 5.", tone: "red" },
           ],
         },
       },
@@ -423,13 +437,28 @@ export const CAMBRIDGE_5_ENGLISH_1: BoardUnit = {
       say: "Two ways to say the same thing. On the left the writer tells you: I am hungry. On the right the writer shows you: my stomach rumbled like thunder. Nobody said hungry, but you knew. That hidden half is implicit meaning.",
       frame: {
         image: {
-          src: "/board-art/en1-shown-told.jpg",
-          alt: "Poster panel: telling directly versus showing through actions, with hidden meanings",
+          src: "/board-art/en1-told-shown.jpg",
+          alt: "Telling a feeling directly beside showing the same feeling through an action",
           title: "Shown or told",
           hotspots: [
-            { label: "Telling", at: [30, 17], note: "The writer tells you exactly how a character feels: 'He was hungry.' Nothing left to work out.", tone: "blue" },
-            { label: "Showing", at: [72, 18], note: "'My stomach rumbled like thunder.' The writer describes an action, and you do the working out.", tone: "gold" },
-            { label: "Hidden meanings", at: [50, 80], note: "The same face can be read more than one way - mischievous, or just pleased with itself. More than one reading can be right.", tone: "green" },
+            { label: "Telling", at: [28, 10], note: "The writer tells you exactly how a character feels: 'He was hungry.' Nothing left to work out.", tone: "blue" },
+            { label: "Showing", at: [72, 10], note: "'My stomach rumbled like thunder.' The writer describes an action, and you do the working out.", tone: "gold" },
+          ],
+        },
+      },
+    },
+    {
+      label: "1.2 Poster · more than one reading",
+      conceptId: "1.2",
+      say: "Here is the tricky part. Look at these two faces. Is that one being mischievous, or just pleased with itself? Implicit meaning can have more than one answer, and more than one of them can be right - as long as you can point at your evidence.",
+      frame: {
+        image: {
+          src: "/board-art/en1-hidden-meanings.jpg",
+          alt: "Two similar faces labelled mischievous and winking and grinning",
+          title: "Hidden meanings",
+          hotspots: [
+            { label: "Mischievous?", at: [36, 52], note: "Jo winked at Charlie and grinned. Naughty? Mischievous? Or mean? The text does not say. Page 5.", tone: "gold" },
+            { label: "Or just pleased?", at: [69, 52], note: "There may be more than one interpretation of implicit meaning - that is what pulls a reader in. Page 5.", tone: "green" },
           ],
         },
       },
@@ -454,13 +483,13 @@ export const CAMBRIDGE_5_ENGLISH_1: BoardUnit = {
       say: "Now zoom in on the telling side. Explicit means the writer has already done the work for you. Hyena brought back some water and Cockerel drank it. There is nothing hidden there - it simply happened.",
       frame: {
         image: {
-          src: "/board-art/en1-shown-told.jpg",
-          alt: "Poster panel zoomed on the telling side: the writer states the feeling directly",
+          src: "/board-art/en1-told-shown.jpg",
+          alt: "Zoomed on the telling side: the writer states the feeling directly",
           title: "Told outright · explicit",
-          focus: { x: 4, y: 4, w: 46, h: 68 },
+          focus: { x: 2, y: 2, w: 47, h: 96 },
           hotspots: [
-            { label: "Stated directly", at: [30, 17], note: "'I am hungry.' The feeling is named. You do not have to infer anything.", tone: "green" },
-            { label: "No detective work", at: [30, 58], note: "Explicit meaning is the writer telling you exactly how a character feels, e.g. 'He was hungry.' Page 5.", tone: "blue" },
+            { label: "Stated directly", at: [27, 20], note: "'I am hungry.' The feeling is named. You do not have to infer anything.", tone: "green" },
+            { label: "No detective work", at: [27, 86], note: "Explicit meaning is the writer telling you exactly how a character feels, e.g. 'He was hungry.' Page 5.", tone: "blue" },
           ],
         },
       },

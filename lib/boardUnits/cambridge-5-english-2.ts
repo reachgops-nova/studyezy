@@ -158,18 +158,34 @@ export const CAMBRIDGE_5_ENGLISH_2: BoardUnit = {
 
   conceptSteps: [
     {
-      label: "1. Poster · what a biography is",
+      label: "1. Poster · a real person's life",
       conceptId: "2.1",
-      say: "A biography is a book about a real person's life. Not invented - real. It carries real dates and real photographs. And it is written in the third person: he, or she, and never I. The moment you see I, you are reading an autobiography instead.",
+      say: "A biography is a book about a real person's life. Not invented - real. It carries real dates and real photographs, which is how you can go and check any part of it.",
       frame: {
         image: {
-          src: "/board-art/en2-what-is-biography.jpg",
-          alt: "Poster panel: a biography is a book about a real person's life, written in the third person",
-          title: "What is a biography?",
+          src: "/board-art/en2-biography-book.jpg",
+          alt: "An open book about a real person's life, with a photograph dated 2023",
+          title: "A book about a real person",
           hotspots: [
-            { label: "A real person", at: [50, 22], note: "Always about someone who really lived. Your book's example is Poorna Malavath, the youngest girl to climb Everest. Page 26.", tone: "blue" },
-            { label: "Dates and photographs", at: [50, 40], note: "'Poorna Malavath was born on 10 June 2000 in a village in Telangana, India.' Real, and checkable. Page 26.", tone: "green" },
-            { label: "He or she, never I", at: [50, 64], note: "The book's first feature of a biography: it is written in the third person - he or she, and not I. Page 26.", tone: "gold" },
+            { label: "A real person", at: [33, 30], note: "Always someone who really lived. Your book's example is Poorna Malavath, the youngest girl to climb Everest. Page 26.", tone: "blue" },
+            { label: "Real dates", at: [76, 66], note: "'Poorna Malavath was born on 10 June 2000 in a village in Telangana, India.' Real, and checkable. Page 26.", tone: "green" },
+          ],
+        },
+      },
+    },
+    {
+      label: "2. Poster · he or she, never I",
+      conceptId: "2.1",
+      say: "Here is the quickest test of all. A biography is written in the third person - he, or she. Never I. The moment you see I, you are reading an autobiography instead, because the person is writing about themselves.",
+      frame: {
+        image: {
+          src: "/board-art/en2-third-person.jpg",
+          alt: "Two children pointing at speech bubbles reading he and she",
+          title: "Use the third person",
+          hotspots: [
+            { label: "he", at: [40, 62], note: "The first feature of a biography in your book: it is written in the third person. Page 26.", tone: "blue" },
+            { label: "she", at: [64, 62], note: "'She grew up to be the youngest girl to climb to the peak of Mount Everest.' Page 26.", tone: "gold" },
+            { label: "Never I", at: [50, 22], note: "Written BY the person instead? Then it is an autobiography, and it says I and my.", tone: "red" },
           ],
         },
       },
