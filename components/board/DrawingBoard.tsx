@@ -937,6 +937,17 @@ export default function DrawingBoard({ unit, paperTasks = [] }: { unit: BoardUni
  */
 function ImageStage({ frame, onTap }: { frame: BoardFrame; onTap?: (t: string) => void }) {
   const I = frame.image;
+  /**
+   * Hotspots are percentages of the PICTURE, so the box they sit in has to be
+   * the picture's own shape. Left to object-contain, a portrait panel in a wide
+   * box paints a narrow strip down the middle while the labels stay spread
+   * across the whole box - every one of them detached from the thing it names.
+   * So measure the artwork and let it set the box's aspect ratio.
+   */
+  const [ratio, setRatio] = useState<number | null>(null);
+  const src = I?.src;
+  // A new picture is a new shape - forget the last one until this one loads.
+  useEffect(() => setRatio(null), [src]);
   if (!I) return null;
   const f = I.focus;
   // Zoom so the focused region fills the stage, then shift it to the middle.
@@ -945,15 +956,26 @@ function ImageStage({ frame, onTap }: { frame: BoardFrame; onTap?: (t: string) =
   const originY = f ? f.y + f.h / 2 : 50;
 
   return (
-    <div className="flex h-full w-full select-none flex-col items-center gap-2 p-3">
+    <div className="flex h-full w-full select-none flex-col items-center gap-2 overflow-y-auto p-3">
       {I.title && <h3 className="shrink-0 text-center text-xl font-bold text-[#f59e0b]">{I.title}</h3>}
-      <div className="relative min-h-0 w-full flex-1 overflow-hidden rounded-2xl border-[3px] border-slate-700 bg-[#0b1329]">
+      <div
+        className="relative mx-auto min-h-[15rem] w-full max-w-full flex-1 overflow-hidden rounded-2xl border-[3px] border-slate-700 bg-[#0b1329]"
+        style={ratio ? { aspectRatio: String(ratio), width: "auto", maxWidth: "100%" } : undefined}
+      >
         <div
           className="absolute inset-0 motion-safe:transition-transform motion-safe:duration-700 motion-safe:ease-out"
           style={{ transform: `scale(${scale})`, transformOrigin: `${originX}% ${originY}%` }}
         >
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={I.src} alt={I.alt} className="h-full w-full object-contain" />
+          <img
+            src={I.src}
+            alt={I.alt}
+            onLoad={(e) => {
+              const img = e.currentTarget;
+              if (img.naturalWidth && img.naturalHeight) setRatio(img.naturalWidth / img.naturalHeight);
+            }}
+            className="h-full w-full object-contain"
+          />
           {/* Counter-scaled: the labels live in the image's coordinate space
               so they stay pinned to their features, but they must not
               magnify with it - at a 3x zoom a fixed-size label balloons and
