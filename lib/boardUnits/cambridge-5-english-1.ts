@@ -681,6 +681,23 @@ export const CAMBRIDGE_5_ENGLISH_1: BoardUnit = {
       },
     },
     {
+      label: "1.11 Poster · mood from words",
+      conceptId: "1.11",
+      say: "One room, drawn twice. Same window, same armchair, same fire. Above, the words are perfect, tiny village, gentle crackling, and it feels safe. Below, the words are menacing, trembling, frightful, and the very same room turns frightening. Nothing moved. Only the words changed.",
+      frame: {
+        image: {
+          src: "/board-art/en1-mood-words.jpg",
+          alt: "Poster panel: the same fireside room shown calm and then tense, labelled with the words that create each mood",
+          title: "Mood from words",
+          hotspots: [
+            { label: "Calm and gentle", at: [50, 22], note: "Perfect, tiny village, gentle crackling. Your book uses that exact phrase: 'The only sound was the gentle crackling of the logs.' Page 20.", tone: "green" },
+            { label: "Same room", at: [20, 48], note: "Look hard at the window and the armchair. Nothing in the room has changed at all.", tone: "blue" },
+            { label: "Tense and scary", at: [50, 74], note: "Menacing, trembling, frightful. The writer chose different adjectives, and the safe room became a frightening one.", tone: "red" },
+          ],
+        },
+      },
+    },
+    {
       label: "1.11 Mood created through setting and word choice",
       conceptId: "1.11",
       say: "Mood is the feeling or atmosphere a writer creates for the reader - like happiness, sadness, fear, or calm - built mainly through the physical setting a writer chooses and the specific words used to describe it.You will find this on page 20 of your book, in The Lion with the Red Eyes (a fable from Somalia).",
@@ -705,6 +722,23 @@ export const CAMBRIDGE_5_ENGLISH_1: BoardUnit = {
           chips: [
             { text: "Positive: 'Zach played well in the match.' Comparative: 'Masie played better than him.' Superlative: 'Ronan played the best of everyone.'", tone: "blue", note: "Positive: 'Zach played well in the match.' Comparative: 'Masie played better than him.' Superlative: 'Ronan played the best of everyone.'" },
             { text: "Positive: 'She ran quickly.' Comparative: 'She ran more quickly than her brother.' Superlative: 'She ran the most quickly of the whole team.'", tone: "blue", note: "Positive: 'She ran quickly.' Comparative: 'She ran more quickly than her brother.' Superlative: 'She ran the most quickly of the whole team.'" }
+          ],
+        },
+      },
+    },
+    {
+      label: "1.13 Poster · which end mark?",
+      conceptId: "1.13",
+      say: "Before the full checklist, the easiest thing to check is the very last mark of every sentence. A statement ends with a full stop. A question ends with a question mark. An exclamation, showing strong feeling, ends with an exclamation mark. Get the last mark right and half your punctuation is already correct.",
+      frame: {
+        image: {
+          src: "/board-art/en1-sentence-types.jpg",
+          alt: "Poster panel: three children speaking a statement, a question and an exclamation, each with its end punctuation drawn large",
+          title: "Which end mark?",
+          hotspots: [
+            { label: "Full stop", at: [80, 20], note: "'The sun rose.' A statement gives information and stops with a plain full stop.", tone: "blue" },
+            { label: "Question mark", at: [80, 48], note: "'Where are you?' A question asks for information, so it ends with a question mark. Your book's example: \"Where did you get that from?\" he asked. Page 25.", tone: "gold" },
+            { label: "Exclamation mark", at: [84, 77], note: "'What a liar!' An exclamation shows strong emotion or surprise, and ends with an exclamation mark.", tone: "red" },
           ],
         },
       },
