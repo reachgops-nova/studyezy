@@ -158,6 +158,23 @@ export const CAMBRIDGE_5_ENGLISH_2: BoardUnit = {
 
   conceptSteps: [
     {
+      label: "1. Poster · what a biography is",
+      conceptId: "2.1",
+      say: "A biography is a book about a real person's life. Not invented - real. It carries real dates and real photographs. And it is written in the third person: he, or she, and never I. The moment you see I, you are reading an autobiography instead.",
+      frame: {
+        image: {
+          src: "/board-art/en2-what-is-biography.jpg",
+          alt: "Poster panel: a biography is a book about a real person's life, written in the third person",
+          title: "What is a biography?",
+          hotspots: [
+            { label: "A real person", at: [50, 22], note: "Always about someone who really lived. Your book's example is Poorna Malavath, the youngest girl to climb Everest. Page 26.", tone: "blue" },
+            { label: "Dates and photographs", at: [50, 40], note: "'Poorna Malavath was born on 10 June 2000 in a village in Telangana, India.' Real, and checkable. Page 26.", tone: "green" },
+            { label: "He or she, never I", at: [50, 64], note: "The book's first feature of a biography: it is written in the third person - he or she, and not I. Page 26.", tone: "gold" },
+          ],
+        },
+      },
+    },
+    {
       label: "1. A real life",
       conceptId: "2.1",
       say: "A biography is a true record of someone's real life, written by another person about them. Every part of it should be checkable.",
@@ -189,6 +206,24 @@ export const CAMBRIDGE_5_ENGLISH_2: BoardUnit = {
       },
     },
     {
+      label: "3. Poster · in order",
+      conceptId: "2.2",
+      say: "Here is one life laid out left to right. First, Poorna was born. Afterwards, she went to school. Later, she climbed Everest. Eventually, she won an award. Those four words - first, afterwards, later, eventually - are what hold the order together.",
+      frame: {
+        image: {
+          src: "/board-art/en2-in-order.jpg",
+          alt: "Poster panel: a life timeline with first, afterwards, later and eventually",
+          title: "In order",
+          hotspots: [
+            { label: "First", at: [10, 78], note: "Where the life starts. In a biography this is the opening statement that says who the person is.", tone: "blue" },
+            { label: "Afterwards", at: [35, 78], note: "'Afterwards' always means something came before it. It can never be the first event.", tone: "gold" },
+            { label: "Later", at: [61, 78], note: "The middle of the story. On page 28 your book asks you to build exactly this timeline for Malavath.", tone: "green" },
+            { label: "Eventually", at: [87, 78], note: "The end. If you are looking for the last event in a life story, look for eventually or finally.", tone: "red" },
+          ],
+        },
+      },
+    },
+    {
       label: "3. In order",
       conceptId: "2.2",
       say: "Chronological order means the events come in the sequence they really happened. Time connectives hold them together.",
@@ -205,6 +240,23 @@ export const CAMBRIDGE_5_ENGLISH_2: BoardUnit = {
       },
     },
     {
+      label: "4. Poster · formal or informal",
+      conceptId: "2.3",
+      say: "The same brave deed, said two ways. Texting a friend: he was rly brave and did a gr8 job. Printed in a reference book: he demonstrated significant bravery during his difficult journey. Neither one is wrong. They are aimed at different readers.",
+      frame: {
+        image: {
+          src: "/board-art/en2-register.jpg",
+          alt: "Poster panel: the same message written informally in a text and formally in a reference book",
+          title: "Formal or informal?",
+          hotspots: [
+            { label: "Informal", at: [30, 52], note: "Casual words for someone who knows you. Shortcuts like rly and gr8 are fine in a text and nowhere else.", tone: "gold" },
+            { label: "Formal", at: [72, 52], note: "Careful words for readers who do not know you. Your book: a news report needs a formal register. Page 31.", tone: "blue" },
+            { label: "Why it matters", at: [50, 24], note: "Register is the tone and level of language you choose. Pick it for your audience and your purpose. Page 31.", tone: "green" },
+          ],
+        },
+      },
+    },
+    {
       label: "4. Register",
       conceptId: "2.3",
       say: "Register is how formal your words are. The same message can be dressed up or down, depending on who is reading it.",
@@ -214,6 +266,23 @@ export const CAMBRIDGE_5_ENGLISH_2: BoardUnit = {
           columns: [
             { label: "Formal", items: ["I would be grateful if you could provide further information.", "The athlete subsequently retired."], tone: "blue" },
             { label: "Informal", items: ["Can you tell me more about it?", "Then he packed it in."], tone: "gold" },
+          ],
+        },
+      },
+    },
+    {
+      label: "5. Poster · split the sentence",
+      conceptId: "2.5",
+      say: "Watch one sentence split in two. Poorna Malavath was born on 10 June 2000 - that half you can check, so it is a fact. And she is the most amazing climber ever - that half is a judgement, so it is an opinion. Both halves, one sentence.",
+      frame: {
+        image: {
+          src: "/board-art/en2-fact-opinion.jpg",
+          alt: "Poster panel: one sentence split into a checkable fact and a personal opinion",
+          title: "Fact or opinion?",
+          hotspots: [
+            { label: "The fact", at: [33, 62], note: "Checkable and countable. A date is a fact because you could look it up and prove it. Page 35.", tone: "green" },
+            { label: "The opinion", at: [66, 60], note: "'Most amazing' is a personal judgement. Your book's test: I believe it is true, but I can't prove it. Page 35.", tone: "red" },
+            { label: "Check your evidence", at: [50, 24], note: "Biographies are mostly facts, but opinions creep in to show the writer's admiration. Page 35.", tone: "blue" },
           ],
         },
       },
