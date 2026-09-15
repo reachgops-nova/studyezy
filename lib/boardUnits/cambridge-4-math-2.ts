@@ -127,7 +127,8 @@ export const CAMBRIDGE_4_MATH_2: BoardUnit = {
           prompt: "The mirror line is vertical at 5. The shape on the left has a corner at (2,3). Where does that corner reflect to?",
           setup: {
             shapes: [{ points: [[1, 2], [4, 2], [4, 5], [1, 5]], look: "live" }],
-            dots: [{ at: [2, 3], label: "(2,3)", tone: "gold" }, { at: [5, 0], label: "mirror line", tone: "blue" }, { at: [5, 10], tone: "blue" }],
+            guides: [{ from: [5, 0], to: [5, 10], label: "mirror", tone: "blue" }],
+            dots: [{ at: [2, 3], label: "(2,3)", tone: "gold" }],
           },
           options: [
             {
@@ -271,7 +272,7 @@ export const CAMBRIDGE_4_MATH_2: BoardUnit = {
       say: "A line of symmetry is a mirror. Every square on one side has a partner the same distance away on the other. Here the mirror runs down the middle, and the shape on the left has a matching shape on the right.",
       frame: {
         shapes: [{ points: [[1, 2], [4, 2], [4, 6], [1, 6]], look: "live" }],
-        dots: [{ at: [5, 1], label: "mirror line", tone: "blue" }, { at: [5, 9], tone: "blue" }],
+        guides: [{ from: [5, 0], to: [5, 10], label: "mirror", tone: "blue" }],
       },
     },
     {
@@ -283,7 +284,7 @@ export const CAMBRIDGE_4_MATH_2: BoardUnit = {
           { points: [[1, 2], [4, 2], [4, 6], [1, 6]], look: "ghost" },
           { points: [[9, 2], [6, 2], [6, 6], [9, 6]], look: "correct" },
         ],
-        dots: [{ at: [5, 1], label: "mirror line", tone: "blue" }, { at: [5, 9], tone: "blue" }],
+        guides: [{ from: [5, 0], to: [5, 10], label: "mirror", tone: "blue" }],
         arrows: [{ from: [4, 4], to: [6, 4] }],
       },
     },
@@ -293,8 +294,7 @@ export const CAMBRIDGE_4_MATH_2: BoardUnit = {
       say: "Your book makes one extra point on page twenty-one. A line of symmetry does not have to be upright or flat. It can run diagonally, corner to corner - and a pattern can have more than one at the same time.",
       frame: {
         shapes: [{ points: [[2, 2], [6, 2], [6, 6], [2, 6]], look: "live" }],
-        arrows: [{ from: [1, 1], to: [8, 8] }],
-        dots: [{ at: [8, 8], label: "diagonal mirror", tone: "gold" }],
+        guides: [{ from: [0, 0], to: [10, 10], label: "diagonal mirror", tone: "gold" }],
       },
     },
     {
@@ -356,7 +356,8 @@ export const CAMBRIDGE_4_MATH_2: BoardUnit = {
       conceptId: "2.1",
       setup: {
         shapes: [{ points: [[1, 3], [3, 3], [3, 7], [1, 7]], look: "live" }],
-        dots: [{ at: [3, 5], label: "(3,5)", tone: "gold" }, { at: [5, 1], label: "mirror", tone: "blue" }, { at: [5, 9], tone: "blue" }],
+        guides: [{ from: [5, 0], to: [5, 10], label: "mirror", tone: "blue" }],
+        dots: [{ at: [3, 5], label: "(3,5)", tone: "gold" }],
       },
       drag: { from: [3, 5], to: [7, 5], hint: "drag me" },
       prompt: "The mirror line is vertical at 5. Where does the corner at (3,5) reflect to?",
@@ -453,7 +454,7 @@ export const CAMBRIDGE_4_MATH_2: BoardUnit = {
         title: "Q1 · Reflect it",
         conceptId: "2.1",
         prompt: "A vertical mirror line sits at 4. A corner is at (1,6). Where does it reflect to?",
-        setup: { dots: [{ at: [1, 6], label: "(1,6)", tone: "gold" }, { at: [4, 1], label: "mirror", tone: "blue" }, { at: [4, 9], tone: "blue" }] },
+        setup: { guides: [{ from: [4, 0], to: [4, 10], label: "mirror", tone: "blue" }], dots: [{ at: [1, 6], label: "(1,6)", tone: "gold" }] },
         options: [
           { label: "(7, 6)", correct: true, say: "Correct - three squares from the line becomes three squares the other side, and the height stays at six.", frame: { dots: [{ at: [1, 6], label: "3 away", tone: "gold" }, { at: [7, 6], label: "(7,6) ✓", tone: "green" }] } },
           { label: "(6, 6)", correct: false, say: "Count again. From 1 to the mirror at 4 is three squares, so the reflection is three past 4, which is 7.", frame: { dots: [{ at: [6, 6], label: "(6,6) ✗ only 2 away", tone: "red" }] } },

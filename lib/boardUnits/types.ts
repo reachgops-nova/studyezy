@@ -52,6 +52,19 @@ export type BoardShape = {
 /** A dashed vector arrow from one grid point to another. */
 export type BoardArrow = { from: [number, number]; to: [number, number] };
 
+/**
+ * A plain dashed guide line - a mirror line, an axis of symmetry, a fold.
+ * Unlike an arrow it has no head, because it is scenery the shapes sit
+ * against rather than a movement being pointed out. Drawn beneath everything
+ * else for the same reason.
+ */
+export type BoardGuide = {
+  from: [number, number];
+  to: [number, number];
+  label?: string;
+  tone?: "gold" | "green" | "red" | "blue";
+};
+
 /** A labelled dot, for calling out a specific vertex or coordinate. */
 export type BoardDot = { at: [number, number]; label?: string; tone?: "gold" | "green" | "red" | "blue" };
 
@@ -159,6 +172,7 @@ export type ImageFrame = {
 export type BoardFrame = {
   shapes?: BoardShape[];
   arrows?: BoardArrow[];
+  guides?: BoardGuide[];
   dots?: BoardDot[];
   line?: NumberLineFrame;
   text?: TextFrame;

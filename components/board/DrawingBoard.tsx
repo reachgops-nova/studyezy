@@ -645,6 +645,28 @@ export default function DrawingBoard({ unit, paperTasks = [] }: { unit: BoardUni
                   style={{ transition: "all .7s cubic-bezier(.34,1.56,.64,1)" }}
                 />
               ))}
+              {/* Guides are drawn under everything else: a mirror line is
+                  scenery the shapes sit against, not a thing being pointed
+                  at, so it gets no arrowhead. */}
+              {(frame.guides ?? []).map((g, i) => (
+                <g key={`g${i}`}>
+                  <line
+                    x1={gx(g.from[0])} y1={gy(g.from[1])} x2={gx(g.to[0])} y2={gy(g.to[1])}
+                    stroke={dotFill[g.tone ?? "blue"]} strokeWidth={2.5} strokeDasharray="8,6" strokeLinecap="round"
+                  />
+                  {g.label && (
+                    <text
+                      x={gx(g.to[0]) + 8}
+                      y={gy(g.to[1]) + 4}
+                      fill={dotFill[g.tone ?? "blue"]}
+                      fontSize={12}
+                      fontWeight="bold"
+                    >
+                      {g.label}
+                    </text>
+                  )}
+                </g>
+              ))}
               {(frame.arrows ?? []).map((a, i) => (
                 <line
                   key={`a${i}`}

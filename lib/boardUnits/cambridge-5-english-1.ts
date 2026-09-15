@@ -66,10 +66,12 @@ export const CAMBRIDGE_5_ENGLISH_1: BoardUnit = {
         {
           title: "Quick check · 1.1",
           conceptId: "1.1",
-          prompt: "Does this example from your book show features of a fable?",
+          prompt: "Which of these makes a story a fable?",
+          setup: { text: { title: "Is it a fable?" } },
           options: [
-            { label: "Yes, and I can say why", correct: true, say: "Good. In the Malawian fable 'Why Cockerels Crow', Cockerel has a red spiky comb that looks like flames. Hyena believes it is real fire. This sets up a humorous conflict about deception and trust. Moral: Do not take advantage...", frame: { text: { passage: [{ text: "In the Malawian fable 'Why Cockerels Crow', Cockerel has a red spiky comb that looks like flames. Hyena believes it is real fire. This sets up a humorous conflict about deception and trust. Moral: Do not take advantage...", tone: "green" }] } } },
-            { label: "Not sure yet", correct: false, say: "That is fine - read it once more. In the Malawian fable 'Why Cockerels Crow', Cockerel has a red spiky comb that looks like flames. Hyena believes it is real fire. This sets up a humorous conflict about deception and trust. Moral: Do not take advantage...", frame: { text: { passage: [{ text: "In the Malawian fable 'Why Cockerels Crow', Cockerel has a red spiky comb that looks like flames. Hyena believes it is real fire. This sets up a humorous conflict about deception and trust. Moral: Do not take advantage...", tone: "gold" }] } } }
+            { label: "It teaches a moral, and the animals act like people", correct: true, say: "Right. Short, animal characters who behave like humans, and a lesson at the end - that is a fable.", frame: { text: { title: "A fable", passage: [{ text: "Why Cockerels Crow teaches that deception and arrogance destroy trust. Page 5.", tone: "green" }] } } },
+            { label: "It is set a long time ago", correct: false, say: "Lots of stories are set long ago without being fables. The test is the moral and the animals who act like people.", frame: { text: { title: "Not the test", passage: [{ text: "Plenty of stories are old. Only some carry a lesson about right and wrong.", tone: "red" }] } } },
+            { label: "It is very long", correct: false, say: "The opposite - fables are short on purpose, so nothing gets in the way of the lesson.", frame: { text: { title: "Fables are short", passage: [{ text: "There is no room for anything that does not carry the moral.", tone: "red" }] } } },
           ],
         },
       ],
@@ -90,10 +92,12 @@ export const CAMBRIDGE_5_ENGLISH_1: BoardUnit = {
         {
           title: "Quick check · 1.2",
           conceptId: "1.2",
-          prompt: "Does this example from your book show implicit meaning (jo's face)?",
+          prompt: "'Cockerel sat with his feet up on the table while Hyena fetched the water.' What does that SHOW you about Cockerel?",
+          setup: { text: { title: "Read between the lines" } },
           options: [
-            { label: "Yes, and I can say why", correct: true, say: "Good. \"Jo winked at Charlie and grinned as she placed the chewing gum on the teacher's chair.\" Explicit clue: winked and grinned. Implicit meaning: Jo is playing a cheeky, mischievous joke on the teacher, and Charlie is in on...", frame: { text: { passage: [{ text: "\"Jo winked at Charlie and grinned as she placed the chewing gum on the teacher's chair.\" Explicit clue: winked and grinned. Implicit meaning: Jo is playing a cheeky, mischievous joke on the teacher, and Charlie is in on...", tone: "green" }] } } },
-            { label: "Not sure yet", correct: false, say: "That is fine - read it once more. \"Jo winked at Charlie and grinned as she placed the chewing gum on the teacher's chair.\" Explicit clue: winked and grinned. Implicit meaning: Jo is playing a cheeky, mischievous joke on the teacher, and Charlie is in on...", frame: { text: { passage: [{ text: "\"Jo winked at Charlie and grinned as she placed the chewing gum on the teacher's chair.\" Explicit clue: winked and grinned. Implicit meaning: Jo is playing a cheeky, mischievous joke on the teacher, and Charlie is in on...", tone: "gold" }] } } }
+            { label: "He is lazy and takes advantage of others", correct: true, say: "Exactly. The writer never says lazy - you worked it out from what he did. That is implicit meaning.", frame: { text: { title: "Implicit meaning", passage: [{ text: "'Cockerel was sitting with his feet up on an old table under the trees.' Page 5.", tone: "green" }] } } },
+            { label: "He is tired after a long walk", correct: false, say: "That would need evidence from the text. Nothing says he walked anywhere - but it does say Hyena is doing the work.", frame: { text: { title: "Check the evidence", passage: [{ text: "An inference still has to be backed by something on the page.", tone: "red" }] } } },
+            { label: "Nothing - it just says where he sat", correct: false, say: "It says more than that. Who is working while he rests? That contrast is the writer showing you his character.", frame: { text: { title: "Look at the contrast", passage: [{ text: "One character works, the other puts his feet up.", tone: "red" }] } } },
           ],
         },
       ],
@@ -116,10 +120,12 @@ export const CAMBRIDGE_5_ENGLISH_1: BoardUnit = {
         {
           title: "Quick check · 1.3",
           conceptId: "1.3",
-          prompt: "Does this example from your book show explicit meaning?",
+          prompt: "Which of these is explicit - stated outright, with nothing to work out?",
+          setup: { text: { title: "Told, or shown?" } },
           options: [
-            { label: "Yes, and I can say why", correct: true, say: "Good. \"Cockerel had a red, spiky comb on his head\" is explicit - it states a fact directly, nothing to infer.", frame: { text: { passage: [{ text: "\"Cockerel had a red, spiky comb on his head\" is explicit - it states a fact directly, nothing to infer.", tone: "green" }] } } },
-            { label: "Not sure yet", correct: false, say: "That is fine - read it once more. \"Cockerel had a red, spiky comb on his head\" is explicit - it states a fact directly, nothing to infer.", frame: { text: { passage: [{ text: "\"Cockerel had a red, spiky comb on his head\" is explicit - it states a fact directly, nothing to infer.", tone: "gold" }] } } }
+            { label: "'Hyena brought back some water and Cockerel drank it.'", correct: true, say: "Yes - it simply tells you what happened. Nothing hidden, nothing to infer.", frame: { text: { title: "Explicit", passage: [{ text: "The writer states it directly. Page 5.", tone: "green" }] } } },
+            { label: "'Cockerel's comb glowed red like flames.'", correct: false, say: "That one is doing extra work - it makes you picture fire, and it sets up Hyena's mistake. There is something to infer.", frame: { text: { title: "That one implies", passage: [{ text: "The comb only LOOKS like fire. Hyena infers wrongly - and that is the plot.", tone: "red" }] } } },
+            { label: "'Hyena's shoulders sagged as he walked away.'", correct: false, say: "Sagging shoulders is showing, not telling. You have to work out that he feels defeated.", frame: { text: { title: "That one shows", passage: [{ text: "Explicit would be: Hyena was disappointed.", tone: "red" }] } } },
           ],
         },
       ],
@@ -142,10 +148,12 @@ export const CAMBRIDGE_5_ENGLISH_1: BoardUnit = {
         {
           title: "Quick check · 1.4",
           conceptId: "1.4",
-          prompt: "Does this example from your book show predicting as a reading strategy?",
+          prompt: "A story is called 'The Boy Who Cried Wolf'. Before reading, what is a sensible prediction?",
+          setup: { text: { title: "Predict from evidence" } },
           options: [
-            { label: "Yes, and I can say why", correct: true, say: "Good. If a story is called The Boy Who Cried Wolf, you can predict the boy will pretend danger is coming when it isn't, because that's what the title hints at.", frame: { text: { passage: [{ text: "If a story is called The Boy Who Cried Wolf, you can predict the boy will pretend danger is coming when it isn't, because that's what the title hints at.", tone: "green" }] } } },
-            { label: "Not sure yet", correct: false, say: "That is fine - read it once more. If a story is called The Boy Who Cried Wolf, you can predict the boy will pretend danger is coming when it isn't, because that's what the title hints at.", frame: { text: { passage: [{ text: "If a story is called The Boy Who Cried Wolf, you can predict the boy will pretend danger is coming when it isn't, because that's what the title hints at.", tone: "gold" }] } } }
+            { label: "Someone will raise a false alarm", correct: true, say: "Good prediction - and you can say why: the title tells you he cries wolf, which means calling danger that is not there.", frame: { text: { title: "Backed by the title", passage: [{ text: "A prediction is a sensible guess made from evidence you already have.", tone: "green" }] } } },
+            { label: "The boy will become a vet", correct: false, say: "There is nothing in the title pointing that way. A prediction has to be built on evidence, not invented.", frame: { text: { title: "No evidence", passage: [{ text: "Predicting is using what you know, not guessing at random.", tone: "red" }] } } },
+            { label: "You cannot predict before reading", correct: false, say: "You can, and good readers always do. The title, the pictures and the story so far are all evidence.", frame: { text: { title: "Always predict", passage: [{ text: "It is one of the strategies your book teaches on page 9.", tone: "red" }] } } },
           ],
         },
       ],
@@ -168,10 +176,12 @@ export const CAMBRIDGE_5_ENGLISH_1: BoardUnit = {
         {
           title: "Quick check · 1.5",
           conceptId: "1.5",
-          prompt: "Does this example from your book show perspective / point of view?",
+          prompt: "The same lost-dog story, told by the dog instead of the owner. What changes?",
+          setup: { text: { title: "Whose eyes?" } },
           options: [
-            { label: "Yes, and I can say why", correct: true, say: "Good. A story about a lost dog might feel worrying told from the owner's perspective, but exciting told from the dog's own perspective.", frame: { text: { passage: [{ text: "A story about a lost dog might feel worrying told from the owner's perspective, but exciting told from the dog's own perspective.", tone: "green" }] } } },
-            { label: "Not sure yet", correct: false, say: "That is fine - read it once more. A story about a lost dog might feel worrying told from the owner's perspective, but exciting told from the dog's own perspective.", frame: { text: { passage: [{ text: "A story about a lost dog might feel worrying told from the owner's perspective, but exciting told from the dog's own perspective.", tone: "gold" }] } } }
+            { label: "How the events feel to the reader", correct: true, say: "Yes. The events are the same - what changes is whose eyes you see them through. Worried owner, excited dog.", frame: { text: { title: "Perspective", passage: [{ text: "The same events can feel completely different depending on who tells them.", tone: "green" }] } } },
+            { label: "The events themselves change", correct: false, say: "The dog still gets lost and still comes home. Perspective changes the feeling, not the facts.", frame: { text: { title: "Same events", passage: [{ text: "What happened stays the same. How it feels does not.", tone: "red" }] } } },
+            { label: "Nothing changes at all", correct: false, say: "A great deal changes. To the owner it is frightening; to the dog it might be the best afternoon of its life.", frame: { text: { title: "A lot changes", passage: [{ text: "That is exactly why writers choose their narrator carefully.", tone: "red" }] } } },
           ],
         },
       ],
@@ -193,10 +203,12 @@ export const CAMBRIDGE_5_ENGLISH_1: BoardUnit = {
         {
           title: "Quick check · 1.6",
           conceptId: "1.6",
-          prompt: "Does this example from your book show proofreading checklist?",
+          prompt: "Which sentence still needs proofreading?",
+          setup: { text: { title: "Spot the slip" } },
           options: [
-            { label: "Yes, and I can say why", correct: true, say: "Good. 'She walked to the shop.' has a capital letter, correct spacing, and a full stop - proofread and ready. 'she walked to the shop' is missing its capital letter and needs fixing.", frame: { text: { passage: [{ text: "'She walked to the shop.' has a capital letter, correct spacing, and a full stop - proofread and ready. 'she walked to the shop' is missing its capital letter and needs fixing.", tone: "green" }] } } },
-            { label: "Not sure yet", correct: false, say: "That is fine - read it once more. 'She walked to the shop.' has a capital letter, correct spacing, and a full stop - proofread and ready. 'she walked to the shop' is missing its capital letter and needs fixing.", frame: { text: { passage: [{ text: "'She walked to the shop.' has a capital letter, correct spacing, and a full stop - proofread and ready. 'she walked to the shop' is missing its capital letter and needs fixing.", tone: "gold" }] } } }
+            { label: "'she walked to the shop'", correct: true, say: "Correct - no capital letter at the start and no full stop at the end. Both are checklist items.", frame: { text: { title: "Two fixes needed", passage: [{ text: "She walked to the shop.", tone: "green" }] } } },
+            { label: "'She walked to the shop.'", correct: false, say: "That one is already right - capital letter, correct spacing, full stop. Nothing to fix.", frame: { text: { title: "Already correct", passage: [{ text: "Capital, spacing, full stop - all present.", tone: "red" }] } } },
+            { label: "Both are fine", correct: false, say: "Look again at the first one. It starts lower case and never ends.", frame: { text: { title: "Check the first", passage: [{ text: "A capital letter and a full stop are the two easiest things to miss.", tone: "red" }] } } },
           ],
         },
       ],
@@ -219,10 +231,12 @@ export const CAMBRIDGE_5_ENGLISH_1: BoardUnit = {
         {
           title: "Quick check · 1.7",
           conceptId: "1.7",
-          prompt: "Does this example from your book show fact vs. opinion?",
+          prompt: "'The rooster is the most impressive animal in the story.' Fact or opinion?",
+          setup: { text: { title: "Can you prove it?" } },
           options: [
-            { label: "Yes, and I can say why", correct: true, say: "Good. 'The rooster has red feathers on its head' is a fact - you could look and check. 'The rooster is the most impressive animal in the story' is an opinion - someone else might disagree.", frame: { text: { passage: [{ text: "'The rooster has red feathers on its head' is a fact - you could look and check. 'The rooster is the most impressive animal in the story' is an opinion - someone else might disagree.", tone: "green" }] } } },
-            { label: "Not sure yet", correct: false, say: "That is fine - read it once more. 'The rooster has red feathers on its head' is a fact - you could look and check. 'The rooster is the most impressive animal in the story' is an opinion - someone else might disagree.", frame: { text: { passage: [{ text: "'The rooster has red feathers on its head' is a fact - you could look and check. 'The rooster is the most impressive animal in the story' is an opinion - someone else might disagree.", tone: "gold" }] } } }
+            { label: "Opinion", correct: true, say: "Right - 'most impressive' is a judgement. Someone else could disagree and neither of you could prove it.", frame: { text: { title: "Opinion", passage: [{ text: "It cannot be checked, only argued about.", tone: "green" }] } } },
+            { label: "Fact", correct: false, say: "Ask yourself how you would prove it. There is no measurement for impressive - that makes it an opinion.", frame: { text: { title: "Not provable", passage: [{ text: "'The rooster has red feathers' is a fact. This is not.", tone: "red" }] } } },
+            { label: "Both", correct: false, say: "There is no checkable part here at all. Every word of it rests on someone's judgement.", frame: { text: { title: "All judgement", passage: [{ text: "Compare: 'red feathers' can be checked, 'most impressive' cannot.", tone: "red" }] } } },
           ],
         },
       ],
@@ -245,10 +259,12 @@ export const CAMBRIDGE_5_ENGLISH_1: BoardUnit = {
         {
           title: "Quick check · 1.8",
           conceptId: "1.8",
-          prompt: "Does this example from your book show idiomatic phrases?",
+          prompt: "Your friend says 'break a leg' before your school play. What do they mean?",
+          setup: { text: { title: "Idioms" } },
           options: [
-            { label: "Yes, and I can say why", correct: true, say: "Good. 'Break a leg!' doesn't mean an actual injury - it's an idiom meaning 'good luck', often said before a performance.", frame: { text: { passage: [{ text: "'Break a leg!' doesn't mean an actual injury - it's an idiom meaning 'good luck', often said before a performance.", tone: "green" }] } } },
-            { label: "Not sure yet", correct: false, say: "That is fine - read it once more. 'Break a leg!' doesn't mean an actual injury - it's an idiom meaning 'good luck', often said before a performance.", frame: { text: { passage: [{ text: "'Break a leg!' doesn't mean an actual injury - it's an idiom meaning 'good luck', often said before a performance.", tone: "gold" }] } } }
+            { label: "Good luck", correct: true, say: "Yes. The words say one thing and the phrase means another - that is what makes it an idiom.", frame: { text: { title: "An idiom", passage: [{ text: "You have to know the phrase; the words alone will not tell you.", tone: "green" }] } } },
+            { label: "They want you to get hurt", correct: false, say: "Taking the words literally is exactly the trap. An idiom means something different from what its words say.", frame: { text: { title: "Not literal", passage: [{ text: "That is why idioms are hard until someone teaches you them.", tone: "red" }] } } },
+            { label: "They think the stage is unsafe", correct: false, say: "Nothing to do with the stage. It is a set phrase that performers say to each other for luck.", frame: { text: { title: "A set phrase", passage: [{ text: "Its meaning is fixed by custom, not by the words.", tone: "red" }] } } },
           ],
         },
       ],
@@ -270,10 +286,12 @@ export const CAMBRIDGE_5_ENGLISH_1: BoardUnit = {
         {
           title: "Quick check · 1.9",
           conceptId: "1.9",
-          prompt: "Does this example from your book show sentence types: simple, compound, complex + connectives?",
+          prompt: "'Although it was tired, the kangaroo kept jumping.' What kind of sentence is that?",
+          setup: { text: { title: "Name the sentence" } },
           options: [
-            { label: "Yes, and I can say why", correct: true, say: "Good. Simple: 'The kangaroo jumped.' Compound: 'The kangaroo jumped, but it missed the branch.' Complex: 'Although it was tired, the kangaroo kept jumping.'", frame: { text: { passage: [{ text: "Simple: 'The kangaroo jumped.' Compound: 'The kangaroo jumped, but it missed the branch.' Complex: 'Although it was tired, the kangaroo kept jumping.'", tone: "green" }] } } },
-            { label: "Not sure yet", correct: false, say: "That is fine - read it once more. Simple: 'The kangaroo jumped.' Compound: 'The kangaroo jumped, but it missed the branch.' Complex: 'Although it was tired, the kangaroo kept jumping.'", frame: { text: { passage: [{ text: "Simple: 'The kangaroo jumped.' Compound: 'The kangaroo jumped, but it missed the branch.' Complex: 'Although it was tired, the kangaroo kept jumping.'", tone: "gold" }] } } }
+            { label: "Complex", correct: true, say: "Correct. 'Although it was tired' cannot stand alone - it depends on the main idea, which makes the sentence complex.", frame: { text: { title: "Complex", passage: [{ text: "A main idea joined to a dependent one.", tone: "green" }] } } },
+            { label: "Compound", correct: false, say: "Compound joins two ideas that could each stand alone, with and, but or or. 'Although it was tired' could not stand alone.", frame: { text: { title: "Compound needs two equals", passage: [{ text: "The kangaroo jumped, but it missed the branch.", tone: "red" }] } } },
+            { label: "Simple", correct: false, say: "A simple sentence has one idea. This one has two, and one of them leans on the other.", frame: { text: { title: "Simple is one idea", passage: [{ text: "The kangaroo jumped.", tone: "red" }] } } },
           ],
         },
       ],
@@ -296,10 +314,12 @@ export const CAMBRIDGE_5_ENGLISH_1: BoardUnit = {
         {
           title: "Quick check · 1.10",
           conceptId: "1.10",
-          prompt: "Does this example from your book show story structure (the narrative 'mountain')?",
+          prompt: "Where on the narrative mountain does the problem sit?",
+          setup: { text: { title: "The narrative mountain" } },
           options: [
-            { label: "Yes, and I can say why", correct: true, say: "Good. In a fable about a clever ant who tricks a lion, the build up shows the lion boasting, the challenge is the ant deciding to teach him a lesson, the problem is the trick going wrong, and the ending shows what the lion...", frame: { text: { passage: [{ text: "In a fable about a clever ant who tricks a lion, the build up shows the lion boasting, the challenge is the ant deciding to teach him a lesson, the problem is the trick going wrong, and the ending shows what the lion...", tone: "green" }] } } },
-            { label: "Not sure yet", correct: false, say: "That is fine - read it once more. In a fable about a clever ant who tricks a lion, the build up shows the lion boasting, the challenge is the ant deciding to teach him a lesson, the problem is the trick going wrong, and the ending shows what the lion...", frame: { text: { passage: [{ text: "In a fable about a clever ant who tricks a lion, the build up shows the lion boasting, the challenge is the ant deciding to teach him a lesson, the problem is the trick going wrong, and the ending shows what the lion...", tone: "gold" }] } } }
+            { label: "At the peak", correct: true, say: "Yes - the problem is the top of the mountain, the most exciting part, before things start to be put right.", frame: { text: { title: "The peak", passage: [{ text: "Beginning, build up, problem, resolution, ending.", tone: "green" }] } } },
+            { label: "At the very start", correct: false, say: "The start is the beginning, where you meet the characters and see the setting. The problem comes after the build up.", frame: { text: { title: "That is the beginning", passage: [{ text: "The beginning sets the scene.", tone: "red" }] } } },
+            { label: "At the very end", correct: false, say: "The end is where everything comes together. The problem has to come before it, or there is nothing to resolve.", frame: { text: { title: "That is the ending", passage: [{ text: "Resolution first, then the ending.", tone: "red" }] } } },
           ],
         },
       ],
@@ -322,10 +342,12 @@ export const CAMBRIDGE_5_ENGLISH_1: BoardUnit = {
         {
           title: "Quick check · 1.11",
           conceptId: "1.11",
-          prompt: "Does this example from your book show mood created through setting and word choice?",
+          prompt: "Which word choice creates a frightening mood?",
+          setup: { text: { title: "Mood from words" } },
           options: [
-            { label: "Yes, and I can say why", correct: true, say: "Good. 'The old house creaked and groaned in the wind, its broken windows staring out like empty eyes' creates a scary mood through word choice, not just by saying 'it was scary.'", frame: { text: { passage: [{ text: "'The old house creaked and groaned in the wind, its broken windows staring out like empty eyes' creates a scary mood through word choice, not just by saying 'it was scary.'", tone: "green" }] } } },
-            { label: "Not sure yet", correct: false, say: "That is fine - read it once more. 'The old house creaked and groaned in the wind, its broken windows staring out like empty eyes' creates a scary mood through word choice, not just by saying 'it was scary.'", frame: { text: { passage: [{ text: "'The old house creaked and groaned in the wind, its broken windows staring out like empty eyes' creates a scary mood through word choice, not just by saying 'it was scary.'", tone: "gold" }] } } }
+            { label: "The old house creaked and groaned in the wind", correct: true, say: "Yes. Creaked and groaned make the house sound almost alive - the mood comes from word choice, not from saying 'it was scary'.", frame: { text: { title: "Scary mood", passage: [{ text: "Your book's own phrase is 'the gentle crackling of the logs' for the opposite. Page 20.", tone: "green" }] } } },
+            { label: "The old house stood at the end of the lane", correct: false, say: "That is neutral. It tells you where the house is without making you feel anything about it.", frame: { text: { title: "No mood yet", passage: [{ text: "Same house, no atmosphere.", tone: "red" }] } } },
+            { label: "The house was scary", correct: false, say: "That tells rather than shows. It names the feeling instead of creating it, so the reader does not actually feel it.", frame: { text: { title: "Told, not shown", passage: [{ text: "Creaked and groaned does the work that 'scary' only claims.", tone: "red" }] } } },
           ],
         },
       ],
@@ -347,10 +369,12 @@ export const CAMBRIDGE_5_ENGLISH_1: BoardUnit = {
         {
           title: "Quick check · 1.12",
           conceptId: "1.12",
-          prompt: "Does this example from your book show comparative and superlative adverbs?",
+          prompt: "'Ronan played ___ of everyone.' Which form fits?",
+          setup: { text: { title: "Three forms" } },
           options: [
-            { label: "Yes, and I can say why", correct: true, say: "Good. Positive: 'Zach played well in the match.' Comparative: 'Masie played better than him.' Superlative: 'Ronan played the best of everyone.'", frame: { text: { passage: [{ text: "Positive: 'Zach played well in the match.' Comparative: 'Masie played better than him.' Superlative: 'Ronan played the best of everyone.'", tone: "green" }] } } },
-            { label: "Not sure yet", correct: false, say: "That is fine - read it once more. Positive: 'Zach played well in the match.' Comparative: 'Masie played better than him.' Superlative: 'Ronan played the best of everyone.'", frame: { text: { passage: [{ text: "Positive: 'Zach played well in the match.' Comparative: 'Masie played better than him.' Superlative: 'Ronan played the best of everyone.'", tone: "gold" }] } } }
+            { label: "the best", correct: true, say: "Correct - comparing more than two, so you need the superlative: the best.", frame: { text: { title: "Superlative", passage: [{ text: "Positive: well. Comparative: better. Superlative: best.", tone: "green" }] } } },
+            { label: "better", correct: false, say: "Better compares just two. Here it is everyone, so you need the superlative form.", frame: { text: { title: "Comparative", passage: [{ text: "Masie played better than him - that is two people.", tone: "red" }] } } },
+            { label: "well", correct: false, say: "Well is the plain form. It describes how he played without comparing him to anyone.", frame: { text: { title: "Positive", passage: [{ text: "Zach played well in the match.", tone: "red" }] } } },
           ],
         },
       ],
@@ -373,10 +397,12 @@ export const CAMBRIDGE_5_ENGLISH_1: BoardUnit = {
         {
           title: "Quick check · 1.13",
           conceptId: "1.13",
-          prompt: "Does this example from your book show full writing checklist (mood, punctuation, apostrophes, direct speech)?",
+          prompt: "'The travellers coat was soaked.' What does the checklist catch?",
+          setup: { text: { title: "Full writing checklist" } },
           options: [
-            { label: "Yes, and I can say why", correct: true, say: "Good. 'The travellers coat was soaked' is missing an apostrophe (should be 'traveller's') - a small error a full read-through checklist would catch even if the sentence otherwise makes perfect sense.", frame: { text: { passage: [{ text: "'The travellers coat was soaked' is missing an apostrophe (should be 'traveller's') - a small error a full read-through checklist would catch even if the sentence otherwise makes perfect sense.", tone: "green" }] } } },
-            { label: "Not sure yet", correct: false, say: "That is fine - read it once more. 'The travellers coat was soaked' is missing an apostrophe (should be 'traveller's') - a small error a full read-through checklist would catch even if the sentence otherwise makes perfect sense.", frame: { text: { passage: [{ text: "'The travellers coat was soaked' is missing an apostrophe (should be 'traveller's') - a small error a full read-through checklist would catch even if the sentence otherwise makes perfect sense.", tone: "gold" }] } } }
+            { label: "A missing apostrophe", correct: true, say: "Yes - it should be traveller's coat. The sentence makes perfect sense, which is exactly why a checklist catches it and your ear does not.", frame: { text: { title: "traveller's", passage: [{ text: "An apostrophe shows the coat belongs to the traveller.", tone: "green" }] } } },
+            { label: "Nothing - it is correct", correct: false, say: "It reads fine, and that is the trap. Whose coat is it? The apostrophe is doing that job and it is missing.", frame: { text: { title: "Read it again", passage: [{ text: "travellers \u2192 traveller's", tone: "red" }] } } },
+            { label: "A spelling mistake", correct: false, say: "Every word is spelled correctly. What is missing is punctuation, not letters.", frame: { text: { title: "Punctuation, not spelling", passage: [{ text: "The checklist covers both - this one is the apostrophe.", tone: "red" }] } } },
           ],
         },
       ],
