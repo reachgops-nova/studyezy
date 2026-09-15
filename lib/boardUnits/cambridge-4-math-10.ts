@@ -53,6 +53,59 @@ export const CAMBRIDGE_4_MATH_10: BoardUnit = {
         { question: "Describe the translation from (9,7) to (9,2).", answer: "5 down. The across number never changed." },
         { question: "A triangle has corners (1,1), (3,1), (2,3). Write its corners after 2 right and 3 up.", answer: "(3,4), (5,4) and (4,6)." },
       ],
+      quickCheck: [
+        {
+          title: "Quick check · 10.1",
+          conceptId: "10.1",
+          prompt: "This triangle's bottom-left corner sits at (2,1). Slide the shape 4 right and 2 up. Drag the corner to where it lands, or pick below.",
+          setup: {
+            shapes: [{ points: [[2, 1], [4, 1], [3, 3]], look: "live" }],
+            dots: [{ at: [2, 1], label: "start (2,1)", tone: "gold" }],
+          },
+          drag: { from: [2, 1], to: [6, 3], hint: "drag me" },
+          options: [
+            {
+              label: "(6, 3)",
+              correct: true,
+              say: "Yes. Two plus four is six across, and one plus two is three up. Every other corner moved exactly the same way.",
+              frame: {
+                shapes: [
+                  { points: [[2, 1], [4, 1], [3, 3]], look: "ghost" },
+                  { points: [[6, 3], [8, 3], [7, 5]], look: "correct" },
+                ],
+                arrows: [{ from: [2, 1], to: [6, 3] }, { from: [4, 1], to: [8, 3] }, { from: [3, 3], to: [7, 5] }],
+                dots: [{ at: [6, 3], label: "(6,3) ✓", tone: "green" }],
+              },
+            },
+            {
+              label: "(3, 5)",
+              correct: false,
+              say: "That is the two numbers the wrong way round - you went 2 across and 4 up. The first number is always the across one.",
+              frame: {
+                shapes: [
+                  { points: [[2, 1], [4, 1], [3, 3]], look: "ghost" },
+                  { points: [[3, 5], [5, 5], [4, 7]], look: "wrong" },
+                ],
+                arrows: [{ from: [2, 1], to: [3, 5] }],
+                dots: [{ at: [3, 5], label: "(3,5) ✗ swapped", tone: "red" }],
+              },
+            },
+            {
+              label: "(4, 2)",
+              correct: false,
+              say: "You moved, but only half as far. Count the squares again: four to the right, then two up.",
+              frame: {
+                shapes: [
+                  { points: [[2, 1], [4, 1], [3, 3]], look: "ghost" },
+                  { points: [[4, 2], [6, 2], [5, 4]], look: "wrong" },
+                ],
+                arrows: [{ from: [2, 1], to: [4, 2] }],
+                dots: [{ at: [4, 2], label: "(4,2) ✗ too short", tone: "red" }],
+              },
+            },
+          ],
+        },
+      ],
     },
     {
       conceptId: "10.2",
@@ -70,12 +123,73 @@ export const CAMBRIDGE_4_MATH_10: BoardUnit = {
         { question: "Three corners of a rectangle are (1,1), (6,1), (6,4). Where is the fourth?", answer: "(1,4)" },
         { question: "Is (3,8) the same place as (8,3)?", answer: "No - across always comes first, so they are two different points." },
       ],
+      quickCheck: [
+        {
+          title: "Quick check · 10.2",
+          conceptId: "10.2",
+          prompt: "Three corners of a rectangle are plotted at (2,2), (7,2) and (7,5). Drag the last corner into place, or pick below.",
+          setup: {
+            dots: [
+              { at: [2, 2], label: "(2,2)", tone: "blue" },
+              { at: [7, 2], label: "(7,2)", tone: "blue" },
+              { at: [7, 5], label: "(7,5)", tone: "blue" },
+            ],
+          },
+          drag: { from: [5, 8], to: [2, 5], hint: "drag me" },
+          options: [
+            {
+              label: "(2, 5)",
+              correct: true,
+              say: "That is it. The bottom edge runs from 2 to 7, so the top edge must too - and it sits level with the corner at height five.",
+              frame: {
+                shapes: [{ points: [[2, 2], [7, 2], [7, 5], [2, 5]], look: "correct" }],
+                dots: [{ at: [2, 5], label: "(2,5) ✓", tone: "green" }],
+              },
+            },
+            {
+              label: "(5, 2)",
+              correct: false,
+              say: "Across and up are swapped. Five across and two up puts the corner back down on the bottom edge, where there is already a line.",
+              frame: {
+                shapes: [{ points: [[2, 2], [7, 2], [7, 5], [5, 2]], look: "wrong" }],
+                dots: [{ at: [5, 2], label: "(5,2) ✗ on the bottom edge", tone: "red" }],
+              },
+            },
+            {
+              label: "(2, 7)",
+              correct: false,
+              say: "Too high. The third corner is at height five, and the top of a rectangle has to be level all the way along.",
+              frame: {
+                shapes: [{ points: [[2, 2], [7, 2], [7, 5], [2, 7]], look: "wrong" }],
+                dots: [{ at: [2, 7], label: "(2,7) ✗ not level", tone: "red" }],
+              },
+            },
+          ],
+        },
+      ],
     },
   ],
 
   // Phase 1. One idea per press - the child sets the pace, nothing auto-plays
   // past them ("one by one and steady for the kids").
   conceptSteps: [
+    {
+      label: "0. Poster · across comes first",
+      conceptId: "10.2",
+      say: "Look at the two dots. One is at three across and eight up. The other is at eight across and three up. Same two numbers, completely different places. That is why the order matters - the across number is always written first.",
+      frame: {
+        image: {
+          src: "/board-art/math10-order-xy.jpg",
+          alt: "A grid with a dot at (3,8) and another at (8,3), showing they are different places",
+          title: "Across always comes first",
+          hotspots: [
+            { label: "(3, 8)", at: [30, 30], note: "Three across, then eight up. High on the grid and near the left.", tone: "gold" },
+            { label: "(8, 3)", at: [72, 60], note: "Eight across, then three up. Low on the grid and far to the right. The same two numbers, nowhere near the same place.", tone: "red" },
+            { label: "Across first", at: [50, 95], note: "Walk along the bottom before you climb. Across, then up - every single time.", tone: "blue" },
+          ],
+        },
+      },
+    },
     {
       label: "1. Start at (1,2)",
       conceptId: "10.1",
