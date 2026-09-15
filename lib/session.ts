@@ -45,7 +45,28 @@ export async function getCurrentUser(): Promise<User | null> {
   });
   if (!session || session.expiresAt < new Date()) return null;
 
+  touchLastSeen(session.id, session.lastSeenAt);
+
   return session.user;
+}
+
+/** How stale a last-seen stamp may get before it is worth a write. */
+const LAST_SEEN_THROTTLE_MS = 5 * 60 * 1000;
+
+/**
+ * Records that this session is in use, at most once every five minutes.
+ *
+ * getCurrentUser runs on essentially every request, so an unconditional write
+ * here would put a row update in front of every page load for no extra
+ * information - five-minute resolution is far finer than "active today" needs.
+ * Deliberately not awaited, and failures are swallowed: knowing when someone
+ * was last seen is never worth failing a page load over.
+ */
+function touchLastSeen(sessionId: string, lastSeenAt: Date): void {
+  if (Date.now() - lastSeenAt.getTime() < LAST_SEEN_THROTTLE_MS) return;
+  void db.session
+    .update({ where: { id: sessionId }, data: { lastSeenAt: new Date() } })
+    .catch(() => {});
 }
 
 export async function destroySession(): Promise<void> {

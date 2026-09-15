@@ -43,6 +43,13 @@ model Session {
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   expiresAt DateTime
   createdAt DateTime @default(now())
+  // Touched at most once every 5 minutes by getCurrentUser, so the admin panel
+  // can tell "signed in three weeks ago and never logged out" apart from
+  // "using the app right now". A session lasts 30 days, so createdAt alone
+  // cannot answer that.
+  lastSeenAt DateTime @default(now())
+
+  @@index([userId, lastSeenAt])
 }
 
 // Admin-triggered "reset this user's password" flow (2026-09-06) - same

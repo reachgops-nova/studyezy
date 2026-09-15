@@ -7,6 +7,7 @@ import ConfirmSubmitButton from "@/components/ConfirmSubmitButton";
 import { isEmailConfigured } from "@/lib/email";
 import { EMAIL_TEMPLATES } from "@/lib/emailTemplates";
 import { toggleAdminRole, deleteAccount, resetUserPassword, sendTemplatedEmail } from "./actions";
+import { presenceFromSessions, formatAgo, PRESENCE_STYLES, PRESENCE_DOTS } from "@/lib/presence";
 
 const ERROR_MESSAGES: Record<string, string> = {
   cannot_change_self: "You can't change or delete your own account from here.",
@@ -36,8 +37,21 @@ export default async function AdminPage({
 
   const users = await db.user.findMany({
     orderBy: { createdAt: "asc" },
-    include: { studentProfiles: true, _count: { select: { studentProfiles: true } } },
+    include: {
+      studentProfiles: true,
+      _count: { select: { studentProfiles: true } },
+      // Sessions carry the activity signal: createdAt is a sign-in, and
+      // lastSeenAt is stamped while someone is actually making requests.
+      sessions: { select: { createdAt: true, expiresAt: true, lastSeenAt: true } },
+    },
   });
+
+  const now = new Date();
+  const rows = users.map((u) => ({ user: u, presence: presenceFromSessions(u.sessions, now) }));
+  const onlineNow = rows.filter((r) => r.presence.state === "online").length;
+  const activeToday = rows.filter((r) => r.presence.state === "online" || r.presence.state === "today").length;
+  const signedIn = rows.filter((r) => r.presence.liveSessions > 0).length;
+  const neverSignedIn = rows.filter((r) => r.presence.state === "never").length;
 
   return (
     <AppShell profile={profile} active="admin" isAdmin>
@@ -62,11 +76,28 @@ export default async function AdminPage({
         </p>
       )}
 
+      <div className="grid gap-3 sm:grid-cols-4">
+        {[
+          { label: "Online now", value: onlineNow, hint: "seen in the last 5 minutes", tone: "text-green-700" },
+          { label: "Active today", value: activeToday, hint: "seen in the last 24 hours", tone: "text-emerald-700" },
+          { label: "Signed in", value: signedIn, hint: "has a session that has not expired", tone: "text-slate-700" },
+          { label: "Never signed in", value: neverSignedIn, hint: "registered but never used", tone: "text-slate-500" },
+        ].map((c) => (
+          <div key={c.label} className="rounded-xl border border-slate-200 bg-white px-4 py-3">
+            <p className={`text-2xl font-bold tabular-nums ${c.tone}`}>{c.value}</p>
+            <p className="text-sm font-medium text-slate-700">{c.label}</p>
+            <p className="text-xs text-slate-400">{c.hint}</p>
+          </div>
+        ))}
+      </div>
+
       <div className="overflow-x-auto rounded-xl border border-slate-200 bg-white">
         <table className="w-full min-w-[640px] text-left text-sm">
           <thead className="border-b border-slate-200 bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
             <tr>
               <th className="px-4 py-3">Email</th>
+              <th className="px-4 py-3">Status</th>
+              <th className="px-4 py-3">Last sign-in</th>
               <th className="px-4 py-3">Role</th>
               <th className="px-4 py-3">Kids</th>
               <th className="px-4 py-3">Joined</th>
@@ -74,11 +105,26 @@ export default async function AdminPage({
             </tr>
           </thead>
           <tbody>
-            {users.map((u) => (
+            {rows.map(({ user: u, presence }) => (
               <tr key={u.id} className="border-b border-slate-100 last:border-0">
                 <td className="px-4 py-3 font-medium text-slate-800">
                   {u.email}
                   {u.id === admin.id && <span className="ml-2 text-xs text-slate-400">(you)</span>}
+                </td>
+                <td className="px-4 py-3">
+                  <span
+                    className={`inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-xs font-medium ${PRESENCE_STYLES[presence.state]}`}
+                    title={presence.lastSeenAt ? `Last seen ${presence.lastSeenAt.toLocaleString()}` : "No sign-in recorded"}
+                  >
+                    <span className={`h-1.5 w-1.5 rounded-full ${PRESENCE_DOTS[presence.state]}`} />
+                    {presence.label}
+                  </span>
+                  {presence.liveSessions > 1 && (
+                    <span className="ml-1.5 text-xs text-slate-400">{presence.liveSessions} devices</span>
+                  )}
+                </td>
+                <td className="px-4 py-3 text-slate-500">
+                  {presence.lastSignInAt ? formatAgo(now.getTime() - presence.lastSignInAt.getTime()) : "-"}
                 </td>
                 <td className="px-4 py-3">
                   <span
