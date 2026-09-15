@@ -959,8 +959,20 @@ function ImageStage({ frame, onTap }: { frame: BoardFrame; onTap?: (t: string) =
     <div className="flex h-full w-full select-none flex-col items-center gap-2 overflow-y-auto p-3">
       {I.title && <h3 className="shrink-0 text-center text-xl font-bold text-[#f59e0b]">{I.title}</h3>}
       <div
-        className="relative mx-auto min-h-[15rem] w-full max-w-full flex-1 overflow-hidden rounded-2xl border-[3px] border-slate-700 bg-[#0b1329]"
-        style={ratio ? { aspectRatio: String(ratio), width: "auto", maxWidth: "100%" } : undefined}
+        className="relative mx-auto min-h-[15rem] w-full max-w-full shrink-0 flex-1 overflow-hidden rounded-2xl border-[3px] border-slate-700 bg-[#0b1329]"
+        style={
+          ratio
+            ? {
+                aspectRatio: String(ratio),
+                width: "auto",
+                maxWidth: "100%",
+                // A tall panel in a short stage would be squeezed to a
+                // thumbnail. Give it real height and let the stage scroll -
+                // a picture too small to read teaches nothing.
+                minHeight: ratio < 0.9 ? "28rem" : "15rem",
+              }
+            : undefined
+        }
       >
         <div
           className="absolute inset-0 motion-safe:transition-transform motion-safe:duration-700 motion-safe:ease-out"
@@ -980,22 +992,29 @@ function ImageStage({ frame, onTap }: { frame: BoardFrame; onTap?: (t: string) =
               so they stay pinned to their features, but they must not
               magnify with it - at a 3x zoom a fixed-size label balloons and
               drifts away from the thing it names. */}
-          {(I.hotspots ?? []).map((h, i) => (
+          {(I.hotspots ?? []).map((h, i) => {
+            // A label centred on a feature near the edge hangs off the picture
+            // and gets clipped, so near an edge it anchors inwards instead.
+            const [hx, hy] = h.at;
+            const shiftX = hx < 18 ? "0%" : hx > 82 ? "-100%" : "-50%";
+            const shiftY = hy < 10 ? "0%" : hy > 90 ? "-100%" : "-50%";
+            return (
             <button
               key={i}
               type="button"
               onClick={() => onTap?.(`${h.label}. ${h.note}`)}
               style={{
-                left: `${h.at[0]}%`,
-                top: `${h.at[1]}%`,
+                left: `${hx}%`,
+                top: `${hy}%`,
                 borderColor: TONE[h.tone ?? "gold"],
-                transform: `translate(-50%, -50%) scale(${1 / scale})`,
+                transform: `translate(${shiftX}, ${shiftY}) scale(${1 / scale})`,
               }}
               className="absolute whitespace-nowrap rounded-full border-2 bg-[#0b1329]/85 px-2 py-0.5 text-[0.7rem] font-bold text-white backdrop-blur-sm hover:bg-[#0b1329]"
             >
               {h.label}
             </button>
-          ))}
+            );
+          })}
         </div>
       </div>
       <p className="shrink-0 text-[0.78rem] text-slate-500">Tap a label to hear more.</p>
