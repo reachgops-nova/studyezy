@@ -480,10 +480,10 @@ export default function DrawingBoard({ unit, paperTasks = [] }: { unit: BoardUni
                       <button
                         key={g.key}
                         type="button"
-                        onClick={() => {
-                          loadStep(g.indexes[0]);
-                          setPickerOpen(false);
-                        }}
+                        /* Stays open on pick: finishing one concept is exactly
+                           when a child reaches for the next, so closing the
+                           list every time makes them re-open it every time. */
+                        onClick={() => loadStep(g.indexes[0])}
                         className={`rounded-xl border-2 px-3 py-1.5 text-xs font-bold transition-colors ${
                           isHere
                             ? "border-[#f59e0b] bg-[#f59e0b] text-[#020617]"
