@@ -1,0 +1,658 @@
+<title>Learning Board Handover</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+
+<style>
+  :root {
+    --paper:      #fbfaf7;
+    --paper-2:    #f4f1ea;
+    --ink:        #16202e;
+    --ink-soft:   #4e5a68;
+    --ink-faint:  #7d8794;
+    --rule:       #e4ded2;
+    --navy:       #0b1329;
+    --amber:      #a4650a;
+    --sky:        #1a6489;
+    --good:       #15662f;
+    --warn:       #9a3412;
+    --stop:       #9f1239;
+    --code-bg:    #f1ece1;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --paper:     #12161c;
+      --paper-2:   #191f27;
+      --ink:       #e8e4dc;
+      --ink-soft:  #a8b0bb;
+      --ink-faint: #78818d;
+      --rule:      #2a323c;
+      --navy:      #070c18;
+      --amber:     #e0a33f;
+      --sky:       #63b6dd;
+      --good:      #5fc27e;
+      --warn:      #f0935f;
+      --stop:      #f4728f;
+      --code-bg:   #1c232c;
+    }
+  }
+  :root[data-theme="dark"] {
+    --paper:     #12161c;
+    --paper-2:   #191f27;
+    --ink:       #e8e4dc;
+    --ink-soft:  #a8b0bb;
+    --ink-faint: #78818d;
+    --rule:      #2a323c;
+    --navy:      #070c18;
+    --amber:     #e0a33f;
+    --sky:       #63b6dd;
+    --good:      #5fc27e;
+    --warn:      #f0935f;
+    --stop:      #f4728f;
+    --code-bg:   #1c232c;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    background: var(--paper);
+    color: var(--ink);
+    font-family: "IBM Plex Sans", ui-sans-serif, system-ui, sans-serif;
+    font-size: 16px;
+    line-height: 1.62;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .wrap { max-width: 980px; margin: 0 auto; padding: 0 clamp(18px, 5vw, 56px) 96px; }
+
+  /* ---- masthead ---- */
+  header.mast { padding: clamp(40px, 8vw, 88px) 0 28px; border-bottom: 2px solid var(--ink); }
+  .kicker {
+    font-family: "IBM Plex Mono", monospace; font-size: 11px; letter-spacing: .16em;
+    text-transform: uppercase; color: var(--amber); margin: 0 0 14px;
+  }
+  h1 {
+    font-family: Fraunces, Georgia, serif; font-weight: 600;
+    font-size: clamp(2.1rem, 5.4vw, 3.4rem); line-height: 1.04; letter-spacing: -0.02em;
+    margin: 0 0 16px; text-wrap: balance;
+  }
+  .standfirst {
+    font-size: clamp(1rem, 2.2vw, 1.16rem); color: var(--ink-soft);
+    max-width: 62ch; margin: 0 0 22px;
+  }
+  .meta {
+    display: flex; flex-wrap: wrap; gap: 6px 22px;
+    font-family: "IBM Plex Mono", monospace; font-size: 12px; color: var(--ink-faint);
+    padding-bottom: 6px;
+  }
+  .meta b { color: var(--ink-soft); font-weight: 500; }
+
+  /* ---- sections ---- */
+  section { padding-top: 52px; }
+  .eyebrow {
+    font-family: "IBM Plex Mono", monospace; font-size: 11px; letter-spacing: .15em;
+    text-transform: uppercase; color: var(--ink-faint); margin: 0 0 8px;
+  }
+  h2 {
+    font-family: Fraunces, Georgia, serif; font-weight: 600;
+    font-size: clamp(1.4rem, 3.2vw, 1.95rem); line-height: 1.16; letter-spacing: -0.015em;
+    margin: 0 0 18px; text-wrap: balance;
+  }
+  h3 {
+    font-family: Fraunces, Georgia, serif; font-weight: 600;
+    font-size: 1.12rem; line-height: 1.3; margin: 30px 0 8px; letter-spacing: -0.01em;
+  }
+  p { margin: 0 0 15px; max-width: 70ch; }
+  ul, ol { margin: 0 0 15px; padding-left: 1.15rem; max-width: 70ch; }
+  li { margin-bottom: 7px; }
+  a { color: var(--sky); }
+  strong { font-weight: 600; }
+
+  code, .mono {
+    font-family: "IBM Plex Mono", monospace; font-size: .87em;
+    background: var(--code-bg); padding: 1px 5px; border-radius: 4px;
+    word-break: break-word;
+  }
+  pre {
+    background: var(--navy); color: #d8e2f0; border-radius: 10px;
+    padding: 14px 16px; overflow-x: auto; margin: 0 0 18px;
+    font-family: "IBM Plex Mono", monospace; font-size: 13px; line-height: 1.6;
+  }
+  pre code { background: none; padding: 0; color: inherit; font-size: inherit; }
+
+  /* ---- tables ---- */
+  .scroll { overflow-x: auto; margin: 0 0 18px; border: 1px solid var(--rule); border-radius: 10px; }
+  table { border-collapse: collapse; width: 100%; min-width: 580px; font-size: 14px; }
+  th, td { text-align: left; padding: 9px 13px; border-bottom: 1px solid var(--rule); vertical-align: top; }
+  thead th {
+    font-family: "IBM Plex Mono", monospace; font-size: 10.5px; letter-spacing: .1em;
+    text-transform: uppercase; color: var(--ink-faint); background: var(--paper-2);
+    border-bottom: 1px solid var(--rule); white-space: nowrap;
+  }
+  tbody tr:last-child td { border-bottom: none; }
+  td.num, th.num { font-variant-numeric: tabular-nums; }
+  .unit { font-family: "IBM Plex Mono", monospace; font-size: 12.5px; white-space: nowrap; }
+
+  .pill {
+    display: inline-block; font-size: 11.5px; font-weight: 600; padding: 1px 8px;
+    border-radius: 999px; white-space: nowrap;
+  }
+  .pill.ok   { color: var(--good); border: 1px solid color-mix(in srgb, var(--good) 40%, transparent); }
+  .pill.gap  { color: var(--warn); border: 1px solid color-mix(in srgb, var(--warn) 42%, transparent); }
+  .pill.none { color: var(--ink-faint); border: 1px solid var(--rule); }
+
+  /* ---- rule callouts ---- */
+  .rulebox {
+    border: 1px solid var(--rule); border-left: 4px solid var(--amber);
+    border-radius: 0 10px 10px 0; padding: 16px 18px; margin: 0 0 18px; background: var(--paper-2);
+  }
+  .rulebox.stop { border-left-color: var(--stop); }
+  .rulebox.good { border-left-color: var(--good); }
+  .rulebox h4 {
+    margin: 0 0 7px; font-family: Fraunces, Georgia, serif; font-size: 1.02rem; font-weight: 600;
+  }
+  .rulebox p:last-child, .rulebox ul:last-child { margin-bottom: 0; }
+  .rulebox .why {
+    font-size: 13.5px; color: var(--ink-soft); border-top: 1px dashed var(--rule);
+    margin-top: 11px; padding-top: 9px;
+  }
+
+  .evidence { list-style: none; padding-left: 0; margin: 10px 0 0; }
+  .evidence li {
+    font-family: "IBM Plex Mono", monospace; font-size: 12.5px; color: var(--ink-soft);
+    padding-left: 18px; position: relative;
+  }
+  .evidence li::before { content: "→"; position: absolute; left: 0; color: var(--stop); }
+
+  /* ---- at-a-glance cards ---- */
+  .cards { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); margin: 0 0 20px; }
+  .card { border: 1px solid var(--rule); border-radius: 10px; padding: 13px 15px; background: var(--paper-2); }
+  .card .n {
+    font-family: Fraunces, Georgia, serif; font-size: 1.85rem; font-weight: 600;
+    line-height: 1; font-variant-numeric: tabular-nums;
+  }
+  .card .l { font-size: 13px; font-weight: 600; margin-top: 5px; }
+  .card .h { font-size: 12px; color: var(--ink-faint); line-height: 1.45; }
+
+  /* ---- next actions ---- */
+  .action { display: grid; grid-template-columns: auto 1fr; gap: 0 14px; padding: 14px 0; border-bottom: 1px solid var(--rule); }
+  .action:last-child { border-bottom: none; }
+  .action .tag {
+    font-family: "IBM Plex Mono", monospace; font-size: 10.5px; letter-spacing: .08em;
+    text-transform: uppercase; padding: 3px 8px; border-radius: 5px; height: fit-content;
+    white-space: nowrap; border: 1px solid var(--rule); color: var(--ink-soft); background: var(--paper-2);
+  }
+  .action .tag.you { color: var(--warn); border-color: color-mix(in srgb, var(--warn) 40%, transparent); }
+  .action h4 { margin: 0 0 4px; font-size: 1rem; font-weight: 600; font-family: "IBM Plex Sans", sans-serif; }
+  .action p { margin: 0; font-size: 14px; color: var(--ink-soft); }
+
+  hr.soft { border: none; border-top: 1px solid var(--rule); margin: 44px 0 0; }
+
+  footer { margin-top: 56px; padding-top: 18px; border-top: 2px solid var(--ink); font-size: 13px; color: var(--ink-faint); }
+</style>
+
+<div class="wrap">
+
+<header class="mast">
+  <p class="kicker">StudyEzy · Engineering handover</p>
+  <h1>The Learning Board</h1>
+  <p class="standfirst">
+    Everything needed to pick this up cold: how the board is built, what shipped,
+    the rules that were learned the hard way, and exactly what is left.
+  </p>
+  <div class="meta">
+    <span><b>Repo</b> /Users/gopsair/studyezy · main</span>
+    <span><b>Live</b> studyezy-production.up.railway.app</span>
+    <span><b>Template</b> RCRT_GUI_V1</span>
+    <span><b>Date</b> 15 Sep 2026</span>
+  </div>
+</header>
+
+<!-- ─────────────────────────────  STATE  ───────────────────────────── -->
+<section>
+  <p class="eyebrow">Where things stand</p>
+  <h2>At a glance</h2>
+
+  <div class="cards">
+    <div class="card"><div class="n">6</div><div class="l">Board units</div><div class="h">2 built this session</div></div>
+    <div class="card"><div class="n">19</div><div class="l">Commits</div><div class="h">all deployed &amp; verified live</div></div>
+    <div class="card"><div class="n">13</div><div class="l">Artwork panels</div><div class="h">generated + hand-authored</div></div>
+    <div class="card"><div class="n">3</div><div class="l">Open decisions</div><div class="h">all need you, not code</div></div>
+  </div>
+
+  <p>
+    The Learning Board is a five-phase lesson surface — <strong>Read → Cover → Recite → Test → Results</strong> —
+    that renders any unit from a single data file. It lives at <code>/board/[unitKey]</code>, separate from the
+    older lesson flow so the two can run side by side.
+  </p>
+
+  <h3>Unit inventory</h3>
+  <div class="scroll">
+    <table>
+      <thead>
+        <tr>
+          <th>Unit</th><th>Title</th><th>Textbook</th>
+          <th>Concepts</th><th>Page refs</th><th>Quick checks</th><th>Artwork</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="unit">cambridge-5-english-1</td><td>Fiction: stories from other cultures</td>
+          <td class="num">p5–25</td><td class="num">13</td>
+          <td><span class="pill ok">all</span></td><td><span class="pill ok">13</span></td><td><span class="pill ok">7 panels</span></td>
+        </tr>
+        <tr>
+          <td class="unit">cambridge-5-english-2</td><td>Non-fiction: biography</td>
+          <td class="num">p26–40</td><td class="num">6</td>
+          <td><span class="pill ok">all</span></td><td><span class="pill gap">none</span></td><td><span class="pill ok">5 panels</span></td>
+        </tr>
+        <tr>
+          <td class="unit">cambridge-5-english-3</td><td>Poetry: narrative poems</td>
+          <td class="num">p41–55</td><td class="num">9</td>
+          <td><span class="pill ok">all</span></td><td><span class="pill ok">9</span></td><td><span class="pill gap">none yet</span></td>
+        </tr>
+        <tr>
+          <td class="unit">cambridge-4-math-1</td><td>Number</td>
+          <td class="num">p6–20</td><td class="num">4</td>
+          <td><span class="pill ok">all</span></td><td><span class="pill gap">none</span></td><td><span class="pill none">n/a — number line</span></td>
+        </tr>
+        <tr>
+          <td class="unit">cambridge-4-math-2</td><td>Angles and shapes</td>
+          <td class="num">p21–29</td><td class="num">4</td>
+          <td><span class="pill ok">all</span></td><td><span class="pill ok">4</span></td><td><span class="pill ok">hand-authored SVG</span></td>
+        </tr>
+        <tr>
+          <td class="unit">cambridge-4-math-10</td><td>Location and movement</td>
+          <td class="num"><span class="pill gap">unresolved</span></td><td class="num">2</td>
+          <td><span class="pill gap">blocked</span></td><td><span class="pill ok">2</span></td><td><span class="pill ok">1 panel</span></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <p style="font-size:14px;color:var(--ink-soft)">
+    Three real gaps sit in that table: <strong>Maths 1 and English 2 have no quick checks at all</strong>,
+    English 3 has no artwork, and Maths 10 has no page references because its textbook mapping is unresolved
+    (see <em>Open decisions</em>).
+  </p>
+</section>
+
+<hr class="soft">
+
+<!-- ─────────────────────────────  ARCHITECTURE  ───────────────────────────── -->
+<section>
+  <p class="eyebrow">How it is built</p>
+  <h2>Architecture in one page</h2>
+
+  <p>
+    The whole design rests on one boundary: <strong>units are data, the player is code.</strong>
+    Adding a unit means writing one data file and adding one line to a registry. It should never mean
+    touching a component.
+  </p>
+
+  <div class="scroll">
+    <table>
+      <thead><tr><th>File</th><th>Role</th></tr></thead>
+      <tbody>
+        <tr><td class="unit">lib/boardUnits/types.ts</td><td>The contract. Every shape a unit can express. Read this first — it is documented and it is the spec.</td></tr>
+        <tr><td class="unit">components/board/DrawingBoard.tsx</td><td>The player. Renders all five phases and every stage. Subject-agnostic; never edited per unit.</td></tr>
+        <tr><td class="unit">lib/boardUnits/&lt;unit&gt;.ts</td><td>One file per unit. All content lives here.</td></tr>
+        <tr><td class="unit">lib/boardUnits/index.ts</td><td>Registry — <code>BOARD_UNITS</code>, keyed by <code>unitKey</code>. One line per unit.</td></tr>
+        <tr><td class="unit">public/board-art/</td><td>Cropped artwork panels, referenced by path from unit files.</td></tr>
+        <tr><td class="unit">app/board/[unitId]/page.tsx</td><td>Route. Resolves from <code>BOARD_UNITS</code>; pulls existing question papers from the DB if a row exists.</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>Stages</h3>
+  <p>
+    A unit declares a default <code>stage</code>, but <strong>any individual frame overrides it</strong> by carrying its own
+    shape — a frame with <code>diagram</code> draws a diagram whatever the unit says. That is what lets one unit
+    mix a number line with a photograph.
+  </p>
+  <p>
+    Available: <code>grid</code> · <code>numberLine</code> · <code>text</code> · <code>diagram</code> ·
+    <code>bar</code> · <code>chart</code> · <code>timeline</code> · <code>image</code>.
+  </p>
+
+  <h3>Two rules inside the player worth knowing</h3>
+  <ul>
+    <li><strong>Grid units in, pixels out.</strong> Unit files use grid coordinates (0–10) only. The player owns
+      the mapping to SVG space. Breaking this is what previously put shapes off their own grid.</li>
+    <li><strong>First answer is final.</strong> Grading locks on the first press; later presses change the
+      explanation only. This was an explicit product decision — a wrong answer scores zero even though it is
+      still explained.</li>
+  </ul>
+
+  <h3>Adding a unit</h3>
+  <pre><code>1. lib/boardUnits/cambridge-5-english-4.ts   # the content
+2. lib/boardUnits/index.ts                  # import + one registry line
+3. npx tsc --noEmit && npm run build        # both must be clean
+4. git push                                 # Railway deploys from main</code></pre>
+  <p>
+    The board is then reachable at <code>/board/&lt;unitKey&gt;</code> immediately. It will <em>not</em> appear in the
+    student unit list until a matching <code>Unit</code> row exists in the production database — see
+    <em>Open decisions</em>.
+  </p>
+</section>
+
+<hr class="soft">
+
+<!-- ─────────────────────────────  RULES  ───────────────────────────── -->
+<section>
+  <p class="eyebrow">Learned the hard way</p>
+  <h2>Rules that will bite you</h2>
+  <p>
+    These are not style preferences. Each one came from something that shipped wrong and had to be pulled back.
+  </p>
+
+  <div class="rulebox stop">
+    <h4>Verify any figure that asserts a number</h4>
+    <p>
+      NotebookLM is fine for any subject. The dividing line is not English versus maths — it is whether the
+      picture <em>asserts a value</em>. Image models cannot reliably hold an exact count, coordinate or angle,
+      and the generated figures were confidently wrong in ways a child would catch by counting:
+    </p>
+    <ul class="evidence">
+      <li>dot labelled (4,3) — plotted at (7,6)</li>
+      <li>corner labelled (2,6) — plotted at (2,7)</li>
+      <li>triangle captioned “1 up” — moved about 3 up</li>
+      <li>“a 10-part chocolate bar” — drawn with 7 pieces</li>
+      <li>“14 tenths” — drawn as 8 rods</li>
+    </ul>
+    <p class="why">
+      <strong>The test to apply:</strong> could a child count, measure or read a value off this picture and get a
+      different answer from its own caption? If yes, it must be hand-authored and checked numerically —
+      Maths Unit 2 does this, with a computed 60° ray and an equilateral apex at
+      <code>190 − √(140² − 70²)</code> so all three sides are exactly 140 (drawn by eye it was 0.04 out).
+      If no — a fable scene, a mood contrast, a labelled diagram of a process — generate it freely.
+      That applies to science, geography and history figures just as much as maths ones.
+    </p>
+  </div>
+
+  <div class="rulebox">
+    <h4>Textbook page offsets drift — always read the printed folio</h4>
+    <p>
+      Both textbooks are <strong>scans with no extractable text</strong>, and the scan index does not map to the
+      printed page by any constant. Some sheets are two-page spreads, so the offset shifts mid-book.
+    </p>
+    <ul>
+      <li>English: index <b>+3</b> up to about page 21, then <b>+5</b> from page 26 on.</li>
+      <li>Maths: <b>+2</b> through the early units, but <b>+0</b> by page 151.</li>
+    </ul>
+    <p class="why">
+      <strong>Method that works:</strong> render each page, crop the bottom 8% of the image, and read the printed
+      folio directly. A naive constant offset would have put every Unit 2 reference two pages out — which
+      defeats the entire purpose of page references, since a child is meant to open the book and check.
+    </p>
+  </div>
+
+  <div class="rulebox">
+    <h4>Set texts are in copyright — reference, never reprint</h4>
+    <p>
+      English Unit 3 is taught from Valerie Bloom’s <em>Sandwich</em> (p42) and Alan Smith’s
+      <em>Emily Hurricane</em> (p53). The board points the child at the page and works from the book’s own
+      glossary, rhyme pairs and syllable table, quoting only short fragments with attribution.
+    </p>
+    <p class="why">
+      For the Test, an original poem (<em>The Last Bus</em>) was written for the board. That serves the
+      pedagogy too — the Test is supposed to be unseen material.
+    </p>
+  </div>
+
+  <div class="rulebox good">
+    <h4>Verify on the live page, not in the code</h4>
+    <p>
+      The image stage had <strong>four separate defects stacked on top of each other</strong>, each only visible
+      once the one above it was fixed:
+    </p>
+    <ol>
+      <li>Hotspots positioned against the container, not the picture — every label pointed at empty background.</li>
+      <li>The measurement was wiped by an effect that ran <em>after</em> it.</li>
+      <li>The stage was starved of height by a four-row concept stepper.</li>
+      <li>The measurement was never taken at all on first paint.</li>
+    </ol>
+    <p class="why">
+      <strong>#4 is the subtle one and will recur elsewhere:</strong> the <code>&lt;img&gt;</code> is in the server HTML,
+      so the browser usually finishes loading it <em>before React hydrates</em> — <code>onLoad</code> never fires.
+      Measure from a <code>ref</code> (checking <code>img.complete</code>) and keep <code>onLoad</code> only for images
+      that genuinely arrive later. Reading the code would not have found any of these.
+    </p>
+  </div>
+
+  <div class="rulebox">
+    <h4>A session is not a person being active</h4>
+    <p>
+      Sessions last <strong>30 days</strong>. Treating “has an unexpired session” as “logged in” would badge someone
+      who signed in three weeks ago and closed the tab as active. Live data proved it: 3 accounts had live
+      sessions, only 1 was actually present.
+    </p>
+    <p class="why">
+      Presence is therefore derived from <code>Session.lastSeenAt</code>, stamped by <code>getCurrentUser</code> at most
+      once every 5 minutes. Signed-in and active are shown as the two separate facts they are.
+    </p>
+  </div>
+</section>
+
+<hr class="soft">
+
+<!-- ─────────────────────────────  SHIPPED  ───────────────────────────── -->
+<section>
+  <p class="eyebrow">This session</p>
+  <h2>What shipped</h2>
+
+  <h3>Content</h3>
+  <ul>
+    <li><strong>English Unit 3 (new)</strong> — 9 concepts, p41–55. Built first at 5 concepts from p41–43, then
+      corrected: the folios showed the unit runs to p55 and four taught concepts were missing entirely
+      (characters, dialogue, metaphor, personification).</li>
+    <li><strong>Maths Unit 2 (new)</strong> — 4 concepts, p21–29, with hand-authored verified SVG figures.</li>
+    <li><strong>Maths Unit 10</strong> — brought up to standard: real quick checks on both concepts, answerable by
+      dragging as well as picking, with wrong answers that draw where that answer actually lands.</li>
+    <li><strong>English Units 1 &amp; 2</strong> — illustrated (12 panels) and grounded in real textbook pages.</li>
+    <li><strong>Maths Unit 1</strong> — grounded in p6–19; the book’s own worked examples replaced invented ones.</li>
+  </ul>
+
+  <h3>Defects found and fixed in existing content</h3>
+  <ul>
+    <li>Two concepts were <strong>missing while steps already pointed at them</strong> — English <code>2.4</code> and
+      Maths <code>1.5</code>. Their mastery had nowhere to land.</li>
+    <li>All 13 English Unit 1 quick checks were boilerplate: <em>“Does this example show features of a fable?”</em>
+      with options <em>“Yes, and I can say why”</em> / <em>“Not sure yet”</em> — neither tested anything, and
+      <strong>the honest answer was scored wrong</strong>. All rewritten.</li>
+    <li>A self-contradictory answer in Maths 1.2 (“They are equal” followed by “so one is bigger”).</li>
+    <li>Two misspellings baked into shipped artwork (<em>Fistional</em>, <em>teuting</em>), repaired in-image.</li>
+  </ul>
+
+  <h3>Player and platform</h3>
+  <ul>
+    <li><strong>Image stage</strong> — aspect-correct sizing, edge-aware hotspot anchoring, hydration-safe measurement.</li>
+    <li><strong>Concept stepper collapsed</strong> to one row; it was eating ~110px and cropping the artwork.
+      It now stays open when you pick, because finishing one concept is when you reach for the next.</li>
+    <li><strong>New <code>BoardGuide</code></strong> — a dashed line with no arrowhead for mirror lines and axes.</li>
+    <li><strong>Admin presence</strong> — <code>Session.lastSeenAt</code> plus a Status column
+      (Online now / Active today / Last seen / Never), four counters, and 7 tests.</li>
+  </ul>
+</section>
+
+<hr class="soft">
+
+<!-- ─────────────────────────────  OPEN  ───────────────────────────── -->
+<section>
+  <p class="eyebrow">Not done</p>
+  <h2>Open decisions &amp; next actions</h2>
+
+  <div class="action">
+    <span class="tag you">You</span>
+    <div>
+      <h4>Maths Unit 10 — which textbook?</h4>
+      <p>
+        Every other unit maps cleanly to the Stage 5 book. This one does not: “Location and movement” is
+        <strong>Unit 14 (p151)</strong> there, and the Stage 5 Unit 10 is something else — suggesting this board was
+        authored from the Stage 4 book, which isn’t available locally. The Stage 5 unit also teaches reflection,
+        while our 10.1/10.2 are translation and coordinates. Page references are deliberately withheld until you
+        say which book the child holds; a wrong page number defeats their whole purpose.
+      </p>
+    </div>
+  </div>
+
+  <div class="action">
+    <span class="tag you">You</span>
+    <div>
+      <h4>Database rows for the two new units</h4>
+      <p>
+        <code>cambridge-5-english-3</code> and <code>cambridge-4-math-2</code> render at their board URLs, but need
+        <code>Unit</code> rows to appear in the student unit list. Production writes are blocked for the assistant,
+        so this runs from your side.
+      </p>
+    </div>
+  </div>
+
+  <div class="action">
+    <span class="tag you">You</span>
+    <div>
+      <h4>Olympiad mode — approved, unstarted</h4>
+      <p>
+        A full plan exists at <code>~/.claude/plans/silly-munching-sprout.md</code>: practice sets plus two exam
+        sets, no Learn phase, switched by a per-unit <code>contentMode</code> flag. Nothing has been built.
+      </p>
+    </div>
+  </div>
+
+  <div class="action">
+    <span class="tag">Content</span>
+    <div>
+      <h4>Fill the quick-check gaps</h4>
+      <p>
+        <strong>Maths Unit 1 and English Unit 2 have none.</strong> Every other unit has one per concept. These are the
+        clearest next content task and need no new artwork.
+      </p>
+    </div>
+  </div>
+
+  <div class="action">
+    <span class="tag">Content</span>
+    <div>
+      <h4>Artwork for English Unit 3</h4>
+      <p>
+        Nine concepts, no panels yet. Metaphor and personification are strong candidates — both are visual ideas
+        and both are safe for generated art (English, not maths).
+      </p>
+    </div>
+  </div>
+
+  <div class="action">
+    <span class="tag">Content</span>
+    <div>
+      <h4>Continue the rollout</h4>
+      <p>
+        Next in sequence: English Unit 4 (from p56, after “Review 1: Fiction”) and Maths Unit 3, “Calculation”
+        (from p30).
+      </p>
+    </div>
+  </div>
+</section>
+
+<hr class="soft">
+
+<!-- ─────────────────────────────  RUNBOOK  ───────────────────────────── -->
+<section>
+  <p class="eyebrow">Runbook</p>
+  <h2>How to do the recurring things</h2>
+
+  <h3>Deploy</h3>
+  <p>
+    Railway deploys from <code>main</code> on push. The start command is
+    <code>npx prisma migrate deploy &amp;&amp; npm run start</code>, so <strong>migrations apply themselves</strong> —
+    commit the migration folder and it runs before the app starts. Budget roughly 4–5 minutes.
+  </p>
+
+  <h3>Verifying a deploy — and what does <em>not</em> work</h3>
+  <p>
+    The board pages require auth, so <code>curl</code> returns a ~6KB login shell, not the page. Two verification
+    methods that were tried and are useless: checking for HTTP 307 (the old build returns it too) and diffing
+    <code>buildId</code> (App Router never emits it). What works:
+  </p>
+  <ul>
+    <li><strong>New artwork:</strong> poll the asset path for a 200.</li>
+    <li><strong>Code changes:</strong> open the page in the browser and inspect the DOM.</li>
+  </ul>
+
+  <h3>Mapping a new chapter to real textbook pages</h3>
+  <pre><code>1. Render a contact sheet of candidate pages     (PyMuPDF, ~60 dpi)
+2. Crop the bottom ~8% of each page              # the printed folio
+3. Read the folios to fix the offset for THAT range
+4. Render the 3–5 teaching pages at ~115 dpi and read them
+5. Write concepts with pages[] + storyReference + the book's own examples</code></pre>
+
+  <h3>Generating artwork — NotebookLM (any subject)</h3>
+  <p>
+    All 13 artwork panels came from <strong>Google NotebookLM’s Infographic generator</strong>, in a notebook whose
+    sources include the two textbook PDFs. It is used for <em>pictures only</em> — never for text, answers or
+    teaching content, which all come from the book itself.
+  </p>
+  <p>
+    <strong>Use it for any subject.</strong> So far it has only been used on English units, but nothing about the
+    tool is English-specific: a science apparatus scene, a geography map, a history timeline illustration are
+    all good candidates. The one constraint is the rule above — if the figure asserts a countable or measurable
+    value, generate it only if you are willing to verify every number on it, and hand-author it otherwise.
+  </p>
+  <p><strong>The click path:</strong> Studio panel → <code>Infographic</code> → the Customise dialog → scroll down to
+    “Describe the infographic that you want to create” → paste the prompt → <code>Generate now</code>.
+    It takes 1–4 minutes and appears at the top of the Studio list; download via the row’s
+    <code>⋮</code> → <code>Download</code>.</p>
+  <ol>
+    <li><strong>One wide poster, four clearly separated panels</strong>, each with its own bold title — one
+      generation covers 3–4 concepts, so the whole cycle is ~10 minutes per poster.</li>
+    <li><strong>State that spelling is critical and list the risky words.</strong> Without that line, posters came back
+      with <em>Statament</em>, <em>shaw</em>, <em>menasing</em>. With it, clean. This is the single highest-value
+      sentence in the prompt.</li>
+    <li>The download lands as a <strong>hidden</strong> <code>~/Downloads/.com.google.Chrome.XXXXXX</code> file
+      (a named <code>.png</code> may also appear). Sort by time to find it.</li>
+    <li>Crop per panel, trim the watermark at the bottom-right, target ~150–250KB.</li>
+    <li><strong>Keep panels landscape or square.</strong> Portrait panels cannot be both large and fully visible on a
+      wide, short stage — split a tall panel into its two teaching moments instead.</li>
+    <li>Proofread every panel at full size before wiring it. Several defects were caught only this way.</li>
+  </ol>
+  <p class="why" style="font-size:13.5px;color:var(--ink-soft)">
+    Worth knowing: because the textbooks are sources, it sometimes pulls <em>real</em> content — the biography
+    poster independently chose Poorna Malavath and quoted the book’s own sentence. Pleasant, but it still has to
+    be checked; the same model produced every one of the wrong maths figures.
+  </p>
+
+  <h3>Testing with the Claude Chrome plugin</h3>
+  <p>
+    Board pages require auth, so <code>curl</code> cannot see them. <strong>Every live verification this session was
+    done through the Chrome plugin</strong> against the real deployed site.
+  </p>
+  <ul>
+    <li><code>tabs_context_mcp</code> first, every session, to get valid tab IDs — never reuse IDs from a previous
+      session.</li>
+    <li><code>browser_batch</code> to combine navigate → wait → screenshot in <em>one</em> round trip. Doing these as
+      separate calls is markedly slower and costs more; batch whenever the next 2+ steps are predictable.</li>
+    <li><code>javascript_tool</code> to measure the DOM.</li>
+    <li>Screenshot last, to confirm what a child would actually see.</li>
+  </ul>
+  <div class="rulebox good" style="margin-top:14px">
+    <h4>Measure the DOM — do not infer from a screenshot</h4>
+    <p>
+      I twice read a screenshot wrongly, mistaking a wide container border for the edge of the picture, and
+      reported a bug fixed when it was not. One <code>javascript_tool</code> call settled it in seconds:
+      <code>boxInline: null, aspectRatio: "auto"</code> proved the sizing had never applied, and after the fix
+      <code>307×448 with min-height 448px</code> proved it had.
+    </p>
+    <p class="why">
+      Screenshots answer “does this look right”. Only the DOM answers “is this actually doing what I wrote”.
+      Use both, in that order, and trust the second.
+    </p>
+  </div>
+</section>
+
+<footer>
+  <p>
+    StudyEzy Learning Board · handover as of 15 September 2026 · template RCRT_GUI_V1<br>
+    Last commit on <code>main</code>: <code>e8ad4bb</code> — “Complete English Unit 3 — it runs to page 55, not page 43”.
+    Typecheck, 13 tests and build all clean at time of writing.
+  </p>
+</footer>
+
+</div>
