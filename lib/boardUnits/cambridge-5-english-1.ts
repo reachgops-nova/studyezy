@@ -385,6 +385,25 @@ export const CAMBRIDGE_5_ENGLISH_1: BoardUnit = {
 
   conceptSteps: [
     {
+      label: "1.1 Poster · what makes a fable",
+      conceptId: "1.1",
+      say: "Look at the poster. Three things make a story a fable. It is short, and the characters are animals. Those animals talk and act like people. And at the end there is a lesson. Tap any label to hear more about it.",
+      frame: {
+        image: {
+          src: "/board-art/en1-fable-features.jpg",
+          alt: "Poster panel: what makes a fable - a short animal tale, human attributes, a lesson at the end",
+          title: "What makes a fable",
+          hotspots: [
+            { label: "A short animal tale", at: [50, 13], note: "Fables are short on purpose. There is no room for anything that does not carry the lesson.", tone: "blue" },
+            { label: "Animals that talk", at: [30, 34], note: "Fox, Owl, Tortoise - they speak and argue exactly like people. That is what makes the lesson easy to see.", tone: "gold" },
+            { label: "The lesson", at: [50, 46], note: "The moral sits open in the middle of everything, because it is the reason the story exists.", tone: "green" },
+            { label: "A lesson at the end", at: [27, 76], note: "In 'Why Cockerels Crow', the lesson lands last: deception and arrogance destroy trust. Page 5.", tone: "green" },
+            { label: "Human attributes", at: [74, 82], note: "The characters have human strengths and weaknesses, so they end up in some sort of conflict. Page 5.", tone: "red" },
+          ],
+        },
+      },
+    },
+    {
       label: "1.1 Features of a Fable",
       conceptId: "1.1",
       say: "A fable is a short, fictional story that teaches a moral lesson (a rule about right and wrong) on how to treat others. In fables, characters are often animals who behave and speak like humans.You will find this on pages 5 and 6 of your book.",
@@ -399,6 +418,23 @@ export const CAMBRIDGE_5_ENGLISH_1: BoardUnit = {
       },
     },
     {
+      label: "1.2 Poster · shown or told",
+      conceptId: "1.2",
+      say: "Two ways to say the same thing. On the left the writer tells you: I am hungry. On the right the writer shows you: my stomach rumbled like thunder. Nobody said hungry, but you knew. That hidden half is implicit meaning.",
+      frame: {
+        image: {
+          src: "/board-art/en1-shown-told.jpg",
+          alt: "Poster panel: telling directly versus showing through actions, with hidden meanings",
+          title: "Shown or told",
+          hotspots: [
+            { label: "Telling", at: [30, 17], note: "The writer tells you exactly how a character feels: 'He was hungry.' Nothing left to work out.", tone: "blue" },
+            { label: "Showing", at: [72, 18], note: "'My stomach rumbled like thunder.' The writer describes an action, and you do the working out.", tone: "gold" },
+            { label: "Hidden meanings", at: [50, 80], note: "The same face can be read more than one way - mischievous, or just pleased with itself. More than one reading can be right.", tone: "green" },
+          ],
+        },
+      },
+    },
+    {
       label: "1.2 Implicit Meaning (Jo's Face)",
       conceptId: "1.2",
       say: "Implicit meaning is a 'hidden meaning' in a text. Writers do not always tell readers directly what a character is like or what is happening. Instead, they show us clues, and we must 'read between the lines' like a detective to...You will find this on page 5 of your book.",
@@ -408,6 +444,23 @@ export const CAMBRIDGE_5_ENGLISH_1: BoardUnit = {
           cards: [
             { tag: "Implicit Meaning", title: "Hidden traits - shown, not told", desc: "Cockerel sat in the shade with his feet up while Hyena worked. That shows he is lazy and arrogant without ever saying so.", quote: "'Cockerel was sitting with his feet up on an old table under the trees.'" },
             { tag: "Character Motive", title: "Monkey's trickery", desc: "Monkey winked and tied Lioness's tail to a tree - the wink shows he is a clever trickster.", quote: "Why Monkeys Live in Trees (South Africa)" },
+          ],
+        },
+      },
+    },
+    {
+      label: "1.3 Poster · told outright",
+      conceptId: "1.3",
+      say: "Now zoom in on the telling side. Explicit means the writer has already done the work for you. Hyena brought back some water and Cockerel drank it. There is nothing hidden there - it simply happened.",
+      frame: {
+        image: {
+          src: "/board-art/en1-shown-told.jpg",
+          alt: "Poster panel zoomed on the telling side: the writer states the feeling directly",
+          title: "Told outright · explicit",
+          focus: { x: 4, y: 4, w: 46, h: 68 },
+          hotspots: [
+            { label: "Stated directly", at: [30, 17], note: "'I am hungry.' The feeling is named. You do not have to infer anything.", tone: "green" },
+            { label: "No detective work", at: [30, 58], note: "Explicit meaning is the writer telling you exactly how a character feels, e.g. 'He was hungry.' Page 5.", tone: "blue" },
           ],
         },
       },

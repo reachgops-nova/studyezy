@@ -46,11 +46,15 @@ export const CAMBRIDGE_5_ENGLISH_2: BoardUnit = {
       keyPoints: [
         "Biography is written ABOUT a person by another author; autobiography is written BY that person.",
         "Everything in it should be true and checkable, not invented.",
+        "The book's list of features: third person (he/she, not I), an opening statement, chronological order, dates and facts, paragraphs for different sections, pictures with captions, and comments as direct speech.",
       ],
+      pages: [26, 27, 28],
+      storyReference: "Poorna Malavath, the youngest girl to climb Mount Everest (page 26)",
       examples: [
-        { question: "Nelson Mandela writes the story of his own life. Biography or autobiography?", answer: "Autobiography - he is writing about himself." },
-        { question: "Name one thing you would expect to find in a biography but never in a fairy tale.", answer: "Real dates and real places that can be checked." },
-        { question: "Poorna Malavath was born on 10 June 2000. Is that a fact or an opinion?", answer: "A fact - it is a date that can be checked." },
+        { question: "The book says a biography is written in the third person. Which words tell you that?", answer: "He or she, and not I. (page 26)" },
+        { question: "'Poorna Malavath was born on 10 June 2000 in a village in Telangana, India.' Which biography feature is this?", answer: "An opening statement with dates and facts - it tells you who the person is. (page 26)" },
+        { question: "Malavath said, 'It's not that tall. We can climb it in a day.' Which feature is that?", answer: "A comment given as direct speech, inside speech marks. (page 26)" },
+        { question: "Turn 'Yes, I made good friends' into the third person, as the book does on page 28.", answer: "At school, Poorna Malavath made good friends. (page 28)" },
       ],
     },
     {
@@ -62,7 +66,10 @@ export const CAMBRIDGE_5_ENGLISH_2: BoardUnit = {
       keyPoints: [
         "Time connectives include first, afterwards, later, eventually and finally.",
         "Usain Bolt: first he won races locally, afterwards he was injured, eventually he became the fastest man on Earth.",
+        "Page 28 asks you to build a timeline of Poorna Malavath's life - that timeline IS chronological order drawn out.",
       ],
+      pages: [28, 29, 30],
+      storyReference: "Usain Bolt's career (page 29); Poorna Malavath's timeline (page 28)",
       examples: [
         { question: "Put these in order: 'he broke the world record', 'he was born in Jamaica', 'he joined a running club'.", answer: "Born in Jamaica, joined a running club, broke the world record." },
         { question: "Which time connective would you use for the very last event in a life story?", answer: "Finally, or eventually." },
@@ -74,16 +81,37 @@ export const CAMBRIDGE_5_ENGLISH_2: BoardUnit = {
       title: "Register",
       icon: "🎩",
       summary:
-        "Register is the level of formality you choose, depending on who you are writing for and why.",
+        "Register is the tone and level of language you choose, depending on your audience and your purpose.",
       keyPoints: [
-        "Formal: 'I would be grateful if you could provide further information.'",
-        "Informal: 'Can you tell me more about it?'",
-        "A biography for a school reference book stays formal throughout.",
+        "The book's words: register is 'the tone and level of language (for example, formal or informal) when you are speaking or writing'.",
+        "Choose it for your audience AND your purpose: a news report needs a formal register; a humorous poem needs a fast, lively pace.",
+        "Talking to a young audience? Slow your pace but keep your tone expressive.",
       ],
+      pages: [31],
+      storyReference: "The Learn panel on register, page 31, beside Usain Bolt's 'Did you know?'",
       examples: [
-        { question: "Rewrite 'Give us a shout if you need owt' in a formal register.", answer: "Please contact me if you require anything further." },
+        { question: "Page 31 asks you to read a biography aloud 'as if you are talking on radio or television'. Which register would you choose?", answer: "A formal, clear register with an expressive tone - it is a public audience who do not know you." },
         { question: "You are texting a friend about a film. Formal or informal?", answer: "Informal - you know them well and it is a casual purpose." },
-        { question: "Why does a school reference book stay formal?", answer: "Because it is written for many readers who do not know the author, and it needs to sound reliable." },
+        { question: "Bolt says, 'Worrying gets you nowhere.' Is that formal or informal register?", answer: "Informal - it is his own speech, plain and direct, not the careful wording of the biography around it. (page 31)" },
+      ],
+    },
+    {
+      conceptId: "2.4",
+      title: "Sharper words",
+      icon: "✂️",
+      summary:
+        "A thesaurus gives you synonyms - words with very similar meanings - so you can replace overused vocabulary and keep a reader interested.",
+      keyPoints: [
+        "The book's own examples: winner → champion, victor; hit → strike, blast; best → most excellent, highest placed.",
+        "A synonym should add meaning, never take it away.",
+        "Page 32 shows one passage rewritten: 'Andre had the strength / power / might to hit / strike / blast the ball...'",
+      ],
+      pages: [32, 33, 34],
+      storyReference: "The Andre tennis passage and Usain Bolt's comeback after his 2005 injury (page 32)",
+      examples: [
+        { question: "The book replaces 'beat his opponent'. What two synonyms does it give?", answer: "Wipe out and annihilate. (page 32)" },
+        { question: "The Bolt passage on page 32 uses 'won' five times. Give two synonyms you could swap in.", answer: "Triumphed, claimed, took, secured - any word that still means winning." },
+        { question: "Why is swapping 'beat' for 'do' a bad choice?", answer: "'Do' is vaguer than 'beat'. A synonym should sharpen the meaning, not blur it." },
       ],
     },
     {
@@ -94,12 +122,16 @@ export const CAMBRIDGE_5_ENGLISH_2: BoardUnit = {
         "Writers sometimes phrase opinions in a confident, fact-like tone using strong descriptive words - spotting them is the skill.",
       keyPoints: [
         "'She became a sensation overnight' sounds fact-like but 'sensation' is a judgement, not something measurable.",
-        "'She performed at 17 national concerts in one year' is a fact - it can be counted and checked.",
+        "The book's test: 'I have a sister' is a fact - I can show you my sister. 'I have the best sister in the world' is an opinion - I believe it, but I can't prove it.",
+        "Biographies are mostly facts, but opinions creep in to show the writer's admiration or dislike.",
       ],
+      pages: [35, 36, 37],
+      storyReference: "Joey Alexander, the Indonesian child jazz prodigy (page 35)",
       examples: [
-        { question: "Fact or opinion: 'He scored 42 goals that season.'", answer: "Fact - it is countable and checkable." },
-        { question: "Fact or opinion: 'He was the greatest player ever to wear the shirt.'", answer: "Opinion - 'greatest' is a judgement." },
-        { question: "Which word makes 'an astonishing 12 medals' part opinion?", answer: "'Astonishing' - the 12 medals is the fact, the astonishment is the writer's view." },
+        { question: "Fact or opinion: 'He was born on 25 June 2003 in Denpasar, Bali.'", answer: "Fact - a date and a place you can check. (page 35)" },
+        { question: "Fact or opinion: 'Joey Alexander became an international jazz piano sensation at the age of 11.'", answer: "Both. 'At the age of 11' is a fact; 'sensation' is the writer's judgement. (page 35)" },
+        { question: "'Many people believed he was the world's best young musician.' Fact or opinion?", answer: "Opinion - 'believed' and 'best' are judgements, not measurements. (page 35)" },
+        { question: "'He competed with 43 musicians from 17 nations.' Fact or opinion?", answer: "Fact - both numbers can be counted and checked. (page 35)" },
       ],
     },
     {
@@ -108,11 +140,18 @@ export const CAMBRIDGE_5_ENGLISH_2: BoardUnit = {
       icon: "🧱",
       summary:
         "Prefixes go on the beginning of a root word to change its meaning, often to the opposite. Suffixes go on the end.",
-      keyPoints: ["patient + im- → impatient (not patient)", "regular + ir- → irregular (not regular)"],
+      keyPoints: [
+        "The book's table: dis + agree, im + possible, in + correct, ir + responsible, il + legal.",
+        "Most words take in-. But before l it becomes il- (illegal), before m or p it becomes im- (impossible), and before r it becomes ir- (irresponsible).",
+        "Prefixes never change the spelling of the root word. Suffixes sometimes do: swim → swimming, prefer → preferred, enter → entered.",
+      ],
+      pages: [38, 39, 40],
+      storyReference: "The prefix table and the three suffix rules, page 38",
       examples: [
-        { question: "Add a prefix to 'possible' to mean 'not possible'.", answer: "impossible" },
-        { question: "Add a prefix to 'lucky' to mean 'not lucky'.", answer: "unlucky" },
-        { question: "What does the prefix 'ir-' do in 'irresponsible'?", answer: "It makes it the opposite - not responsible." },
+        { question: "Add a prefix to 'possible' to mean 'not possible'.", answer: "impossible - in- becomes im- before p. (page 38)" },
+        { question: "Why is it 'illegal' and not 'inlegal'?", answer: "Before a root word starting with l, the prefix in- becomes il-. (page 38)" },
+        { question: "Rule 1: 'swim' + -ing. What happens and why?", answer: "Swimming - one syllable, vowel then consonant, so the final letter doubles. (page 38)" },
+        { question: "Rule 3: 'enter' + -ed. Does the r double?", answer: "No - entered. The first syllable is the emphasised one, so the final letter stays single. (page 38)" },
       ],
     },
   ],
@@ -199,13 +238,13 @@ export const CAMBRIDGE_5_ENGLISH_2: BoardUnit = {
     {
       label: "6. Build a word",
       conceptId: "2.6",
-      say: "A prefix goes on the front of a root word and changes its meaning, usually to the opposite. Patient becomes impatient. Regular becomes irregular.",
+      say: "A prefix goes on the front of a root word and changes its meaning, usually to the opposite. Correct becomes incorrect. Responsible becomes irresponsible.",
       frame: {
         text: {
           title: "Prefix + root",
           chips: [
             { text: "im- + patient → impatient", tone: "green", note: "im- means not. Not patient." },
-            { text: "ir- + regular → irregular", tone: "blue", note: "ir- means not. Not regular." },
+            { text: "ir- + responsible → irresponsible", tone: "blue", note: "Before r, in- becomes ir-. Page 38." },
             { text: "un- + kind → unkind", tone: "gold", note: "un- means not. Not kind." },
           ],
         },
@@ -260,12 +299,12 @@ export const CAMBRIDGE_5_ENGLISH_2: BoardUnit = {
     {
       title: "Task 5 · Add the prefix",
       conceptId: "2.6",
-      prompt: "Which prefix turns 'regular' into its opposite?",
-      setup: { text: { title: "Build the word", chips: [{ text: "regular", tone: "blue" }] } },
+      prompt: "Which prefix turns 'responsible' into its opposite?",
+      setup: { text: { title: "Build the word", chips: [{ text: "responsible", tone: "blue" }] } },
       options: [
-        { label: "ir-", correct: true, say: "Correct - ir- plus regular makes irregular, meaning not regular.", frame: { text: { title: "irregular", chips: [{ text: "ir- + regular → irregular", tone: "green", note: "Not regular." }] } } },
-        { label: "im-", correct: false, say: "im- works on words like patient, giving impatient. It does not fit regular.", frame: { text: { title: "im- belongs elsewhere", chips: [{ text: "im- + patient → impatient", tone: "gold" }, { text: "im- + regular → imregular ✗", tone: "red" }] } } },
-        { label: "dis-", correct: false, say: "dis- makes words like disagree. The one that fits regular is ir-.", frame: { text: { title: "Try again", chips: [{ text: "ir- + regular → irregular", tone: "green" }] } } },
+        { label: "ir-", correct: true, say: "Correct - before a root word starting with r, in- becomes ir-, so you get irresponsible.", frame: { text: { title: "irresponsible", chips: [{ text: "ir- + responsible → irresponsible", tone: "green", note: "Page 38." }] } } },
+        { label: "im-", correct: false, say: "im- is the form used before m or p, as in impossible. It does not fit responsible.", frame: { text: { title: "im- belongs elsewhere", chips: [{ text: "im- + possible → impossible", tone: "gold" }, { text: "im- + responsible → imresponsible ✗", tone: "red" }] } } },
+        { label: "dis-", correct: false, say: "dis- makes words like disagree. The one that fits responsible is ir-.", frame: { text: { title: "Try again", chips: [{ text: "ir- + responsible → irresponsible", tone: "green" }] } } },
       ],
     },
     {
