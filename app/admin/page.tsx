@@ -120,7 +120,7 @@ export default async function AdminPage({
                     {presence.label}
                   </span>
                   {presence.liveSessions > 1 && (
-                    <span className="ml-1.5 text-xs text-slate-400">{presence.liveSessions} devices</span>
+                    <span className="ml-1.5 text-xs text-slate-400">{presence.liveSessions} sessions</span>
                   )}
                 </td>
                 <td className="px-4 py-3 text-slate-500">

@@ -27,7 +27,7 @@ export type Presence = {
   lastSeenAt: Date | null;
   /** When they most recently signed in, if ever. */
   lastSignInAt: Date | null;
-  /** Unexpired sessions - roughly, devices still signed in. */
+  /** Unexpired sessions. Not a device count - each sign-in makes a new one. */
   liveSessions: number;
 };
 
