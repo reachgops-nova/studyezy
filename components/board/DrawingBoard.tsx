@@ -944,10 +944,15 @@ function ImageStage({ frame, onTap }: { frame: BoardFrame; onTap?: (t: string) =
    * across the whole box - every one of them detached from the thing it names.
    * So measure the artwork and let it set the box's aspect ratio.
    */
-  const [ratio, setRatio] = useState<number | null>(null);
-  const src = I?.src;
-  // A new picture is a new shape - forget the last one until this one loads.
-  useEffect(() => setRatio(null), [src]);
+  /**
+   * Measured shape, tagged with the picture it was measured from. It has to be
+   * one piece of state: clearing it from an effect on src change loses the
+   * measurement entirely for a cached image, whose onLoad fires during the
+   * commit - before effects run - so the reset lands after the measurement and
+   * wipes it.
+   */
+  const [shape, setShape] = useState<{ src: string; ratio: number } | null>(null);
+  const ratio = shape && shape.src === I?.src ? shape.ratio : null;
   if (!I) return null;
   const f = I.focus;
   // Zoom so the focused region fills the stage, then shift it to the middle.
@@ -959,17 +964,21 @@ function ImageStage({ frame, onTap }: { frame: BoardFrame; onTap?: (t: string) =
     <div className="flex h-full w-full select-none flex-col items-center gap-2 overflow-y-auto p-3">
       {I.title && <h3 className="shrink-0 text-center text-xl font-bold text-[#f59e0b]">{I.title}</h3>}
       <div
-        className="relative mx-auto min-h-[15rem] w-full max-w-full shrink-0 flex-1 overflow-hidden rounded-2xl border-[3px] border-slate-700 bg-[#0b1329]"
+        className={`relative mx-auto overflow-hidden rounded-2xl border-[3px] border-slate-700 bg-[#0b1329] ${
+          ratio ? "" : "min-h-[15rem] w-full max-w-full flex-1"
+        }`}
         style={
           ratio
             ? {
                 aspectRatio: String(ratio),
+                height: "100%",
                 width: "auto",
                 maxWidth: "100%",
                 // A tall panel in a short stage would be squeezed to a
                 // thumbnail. Give it real height and let the stage scroll -
                 // a picture too small to read teaches nothing.
                 minHeight: ratio < 0.9 ? "28rem" : "15rem",
+                flex: "0 1 auto",
               }
             : undefined
         }
@@ -984,7 +993,8 @@ function ImageStage({ frame, onTap }: { frame: BoardFrame; onTap?: (t: string) =
             alt={I.alt}
             onLoad={(e) => {
               const img = e.currentTarget;
-              if (img.naturalWidth && img.naturalHeight) setRatio(img.naturalWidth / img.naturalHeight);
+              if (img.naturalWidth && img.naturalHeight)
+                setShape({ src: I.src, ratio: img.naturalWidth / img.naturalHeight });
             }}
             className="h-full w-full object-contain"
           />
