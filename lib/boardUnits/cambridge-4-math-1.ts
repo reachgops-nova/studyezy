@@ -46,10 +46,14 @@ export const CAMBRIDGE_4_MATH_1: BoardUnit = {
       keyPoints: [
         "A 1-metre rod split into 10 identical pieces gives pieces of 0.1 metres each.",
         "The number 2.6 represents 2 whole units and 6 additional tenths.",
+        "Your book opens this unit with a long jumper and a tape measure marked 5, 6, 7, 8 - the tenths are the little marks in between. Page 6.",
       ],
+      pages: [6, 7, 8],
+      storyReference: "The long jump on the opening page of Unit 1 Number, page 6",
       examples: [
+        { question: "The book says the athlete jumped further than seven metres. Give a jump length that fits.", answer: "Anything past 7, such as 7.3 or 7.5 metres. (page 6)" },
+        { question: "Which two whole numbers is 7.5 positioned between on the book's tape measure?", answer: "7 and 8 - it sits exactly halfway. (page 6)" },
         { question: "A 2-metre rope is split into 10 equal pieces. How long is each piece?", answer: "0.2 metres. Each tenth of 2 metres is 0.2." },
-        { question: "Write the number that is 4 wholes and 7 tenths.", answer: "4.7" },
         { question: "How many tenths are in 1.3?", answer: "13 tenths." },
       ],
     },
@@ -62,11 +66,15 @@ export const CAMBRIDGE_4_MATH_1: BoardUnit = {
       keyPoints: [
         "Decomposing 45.8 gives 40 plus 5 plus 0.8.",
         "Regrouping 3.4 could be shown as 2 wholes and 14 tenths, which still totals 3.4.",
+        "Your book regroups 42.4 three ways on one line: 42 ones and 4 tenths, 42 + 0.4, and 4 tens and 24 tenths. Page 9.",
       ],
+      pages: [9, 10],
+      storyReference: "The Gattegno chart and place value chart, page 9",
       examples: [
+        { question: "The book asks which number decomposes as 40 000 + 5 000 + 0 + 40 + 3. What is it?", answer: "45 043. (page 9)" },
+        { question: "'4 tens and 24 tenths' - what number is that, and why does it still work?", answer: "42.4. The 24 tenths are 2 wholes and 4 tenths, so 40 + 2 + 0.4. Regrouping moves value about without changing the total. (page 9)" },
         { question: "Decompose 38.6 into place values.", answer: "30 + 8 + 0.6" },
-        { question: "Regroup 6.1 so it has only 5 wholes.", answer: "5 wholes and 11 tenths." },
-        { question: "Which is bigger: 2 wholes and 13 tenths, or 3.2?", answer: "They are equal - 2 + 1.3 makes 3.3, which is bigger than 3.2. So 2 wholes and 13 tenths is bigger." },
+        { question: "Which is bigger: 2 wholes and 13 tenths, or 3.2?", answer: "2 wholes and 13 tenths. 13 tenths is 1.3, so the number is 3.3 - bigger than 3.2." },
       ],
     },
     {
@@ -78,11 +86,34 @@ export const CAMBRIDGE_4_MATH_1: BoardUnit = {
       keyPoints: [
         "Counting back in steps of 5 from 6 gives 1, then -4, then -9.",
         "A temperature starting at -2 degrees that rises by 5 degrees crosses 0 and reaches 3 degrees.",
+        "Your book's thermometer runs from 50 right down past 0 to -20, which is why temperature is the easiest place to meet negative numbers. Page 14.",
       ],
+      pages: [14, 15, 16],
+      storyReference: "Counting on and back, with Banko's thermometer, page 14",
       examples: [
+        { question: "The book asks: could Banko have been counting back in steps of 5 degrees from 15 C? Write his count.", answer: "15, 10, 5, 0, -5, -10, -15. Yes - equal steps carry straight on through zero. (page 14)" },
         { question: "Count back in steps of 3 from 4. Write the first five numbers.", answer: "4, 1, -2, -5, -8." },
         { question: "The temperature is -7 and rises by 4. What is it now?", answer: "-3 degrees." },
         { question: "Which is colder, -9 or -2?", answer: "-9, because it is further to the left of zero." },
+      ],
+    },
+    {
+      conceptId: "1.5",
+      title: "Linear sequences",
+      icon: "📚",
+      summary:
+        "A linear sequence steps by the same amount every time, and that step is called the difference.",
+      keyPoints: [
+        "Each number in a sequence is a term. The gap between one term and the next is the difference.",
+        "In 3, 11, 19, 27 the difference is always 8, so the rule is add 8.",
+        "Working out the next term from the one before it is called a recursion rule.",
+      ],
+      pages: [17, 18, 19],
+      storyReference: "The growing piles of books, page 17",
+      examples: [
+        { question: "The book asks how many books are in the first six piles without counting them all. How would you do it?", answer: "Find the difference between one pile and the next, then keep adding it. That is quicker and less error-prone than counting. (page 17)" },
+        { question: "What is the difference in 5, 12, 19, 26?", answer: "7 - and the rule is add 7." },
+        { question: "A sequence starts at 40 and the rule is subtract 6. Write the first five terms.", answer: "40, 34, 28, 22, 16." },
       ],
     },
   ],
