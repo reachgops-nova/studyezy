@@ -11,9 +11,13 @@ import type { ManageCurriculum } from "./types";
 export default function AddTextbookForm({
   action,
   curricula,
+  lockedSubjectIds = [],
+  isAdmin = false,
 }: {
   action: (formData: FormData) => void;
   curricula: ManageCurriculum[];
+  lockedSubjectIds?: string[];
+  isAdmin?: boolean;
 }) {
   const [contentMode, setContentMode] = useState<"curriculum" | "olympiad">("curriculum");
   const [fileError, setFileError] = useState<string | null>(null);
@@ -29,6 +33,7 @@ export default function AddTextbookForm({
 
   const [subjectId, setSubjectId] = useState(stage?.subjects[0]?.id ?? "");
   const subject = stage?.subjects.find((s) => s.id === subjectId);
+  const textbookLocked = Boolean(subject && lockedSubjectIds.includes(subject.id) && !isAdmin);
 
   if (curriculaWithSubjects.length === 0) {
     return (
@@ -109,6 +114,12 @@ export default function AddTextbookForm({
         </div>
       )}
 
+      {textbookLocked && (
+        <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-800">
+          This subject already has a selected textbook, so textbook upload is closed. You can use the existing book from the textbook list.
+        </div>
+      )}
+
       <label className="grid gap-1 text-sm font-medium text-slate-700">
         Textbook title (optional)
         <input type="text" name="bookTitle" placeholder="e.g. Cambridge Primary Mathematics" className="rounded-xl border border-slate-300 px-3 py-2 text-base" />
@@ -123,7 +134,8 @@ export default function AddTextbookForm({
         <input
           type="file"
           name="textbook"
-          required
+          required={!textbookLocked}
+          disabled={textbookLocked}
           accept="application/pdf"
           onChange={(e) => {
             const file = e.target.files?.[0];
@@ -181,7 +193,7 @@ export default function AddTextbookForm({
 
       <button
         type="submit"
-        disabled={!!fileError || submitting}
+        disabled={!!fileError || submitting || textbookLocked}
         className="justify-self-start rounded-full bg-gradient-to-br from-brand-gold-bright to-brand-gold px-5 py-2.5 text-sm font-medium text-white transition active:scale-95 disabled:opacity-50"
       >
         {submitting ? "Reading the table of contents..." : "Add units from this textbook"}

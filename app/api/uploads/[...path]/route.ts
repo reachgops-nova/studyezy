@@ -21,7 +21,11 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ pat
 
   const file = storageKey.startsWith("resources/")
     ? await db.unitResource.findFirst({ where: { storageKey } })
-    : await db.uploadedPage.findFirst({ where: { storageKey } });
+    : storageKey.startsWith("textbook-submissions/")
+      ? await db.textbookSubmission.findFirst({ where: { storageKey } })
+      : storageKey.startsWith("references/")
+        ? await db.referenceUpload.findFirst({ where: { storageKey } })
+      : await db.uploadedPage.findFirst({ where: { storageKey } });
   if (!file) {
     return NextResponse.json({ error: "Not found." }, { status: 404 });
   }

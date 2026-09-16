@@ -347,6 +347,49 @@ export async function createUnitsFromTextbook(formData: FormData) {
 
   const bytes = Buffer.from(await file.arrayBuffer());
 
+  // Once a canonical textbook is approved for this subject, families should
+  // use that book rather than upload a competing copy. Admins can still
+  // replace or curate material from the admin resources workflow.
+  const existingApprovedBook = await db.unitResource.findFirst({
+    where: { unit: { subjectId }, resourceType: "textbook", status: "approved" },
+    select: { id: true },
+  });
+  if (existingApprovedBook && user.role !== "admin") {
+    redirect(`/manage?error=textbook_already_selected`);
+  }
+
+  // Keep duplicate family submissions from creating multiple validation jobs
+  // for the same subject while the first one is being reviewed.
+  const existingPendingSubmission = await db.textbookSubmission.findFirst({
+    where: { subjectId, status: { in: ["pending", "validating"] } },
+    select: { id: true },
+  });
+  if (existingPendingSubmission && user.role !== "admin") {
+    redirect(`/manage?error=textbook_pending_review`);
+  }
+
+  // Non-admin uploads stop here. The book is stored for validation, but no
+  // units are created and nothing becomes visible to students until review.
+  if (user.role !== "admin") {
+    const targetDir = path.join(UPLOADS_DIR, "textbook-submissions");
+    await mkdir(targetDir, { recursive: true });
+    const filename = sanitizeFilename(file.name);
+    const storageKey = `textbook-submissions/${subject.id}-${filename}`;
+    await writeFile(path.join(UPLOADS_DIR, storageKey), bytes);
+    await db.textbookSubmission.create({
+      data: {
+        subjectId: subject.id,
+        uploadedByUserId: user.id,
+        storageKey,
+        originalFilename: file.name,
+        mimeType: file.type,
+        byteSize: file.size,
+        status: "pending",
+      },
+    });
+    redirect("/manage?success=textbook_submitted_for_validation");
+  }
+
   let detected: { title: string }[];
   try {
     detected = await extractTextbookUnits({ path: file.name, mediaType: "application/pdf", base64: bytes.toString("base64") });

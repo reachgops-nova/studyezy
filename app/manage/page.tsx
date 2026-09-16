@@ -26,6 +26,8 @@ const ERROR_MESSAGES: Record<string, string> = {
   // Real per-reason message travels in `detail` (e.g. "no table of contents
   // found") - this is only the fallback if that's somehow missing.
   toc_extraction_failed: "Couldn't read a clear unit list from that textbook.",
+  textbook_already_selected: "This subject already has a validated textbook. Upload is disabled for this subject.",
+  textbook_pending_review: "A textbook for this subject is already waiting for validation.",
 };
 
 export default async function ManagePage({
@@ -57,6 +59,21 @@ export default async function ManagePage({
       },
     },
   });
+  const subjectIds = curricula.flatMap((c) => c.stages.flatMap((s) => s.subjects.map((subject) => subject.id)));
+  const [approvedTextbookUnits, pendingTextbookSubmissions] = await Promise.all([
+    db.unitResource.findMany({
+      where: { resourceType: "textbook", status: "approved", unit: { subjectId: { in: subjectIds } } },
+      select: { unit: { select: { subjectId: true } } },
+    }),
+    db.textbookSubmission.findMany({
+      where: { status: { in: ["pending", "validating"] }, subjectId: { in: subjectIds } },
+      select: { subjectId: true },
+    }),
+  ]);
+  const lockedSubjectIds = Array.from(new Set([
+    ...approvedTextbookUnits.map((row) => row.unit.subjectId),
+    ...pendingTextbookSubmissions.map((row) => row.subjectId),
+  ]));
 
   return (
     <AppShell profile={profile} active="manage" isAdmin={user.role === "admin"}>
@@ -87,11 +104,16 @@ export default async function ManagePage({
           Board added - pick it below to add a subject under it.
         </p>
       )}
-      {success === "textbook_units_created" && (
+  {success === "textbook_units_created" && (
         <p className="rounded-xl bg-green-50 px-3 py-2 text-sm text-green-700">
           {count ?? "The"} unit{count !== "1" ? "s" : ""} added from that textbook&apos;s table of contents - the same
           file is waiting on Curriculum Materials (admin) for each one, ready to approve and extract real content
           from.
+      </p>
+      )}
+      {success === "textbook_submitted_for_validation" && (
+        <p className="rounded-xl bg-blue-50 px-3 py-2 text-sm text-blue-700">
+          Textbook uploaded for validation. Units will be created only after an administrator confirms that it is a real textbook.
         </p>
       )}
 
@@ -111,7 +133,7 @@ export default async function ManagePage({
           actually contains gets created from its own table of contents, not typed in one at a
           time.
         </p>
-        <AddTextbookForm action={createUnitsFromTextbook} curricula={curricula} />
+        <AddTextbookForm action={createUnitsFromTextbook} curricula={curricula} lockedSubjectIds={lockedSubjectIds} isAdmin={user.role === "admin"} />
         <details className="mt-4 rounded-xl border border-dashed border-slate-300 p-3 text-sm text-slate-600">
           <summary className="cursor-pointer font-medium">Or add a single unit manually (no textbook)</summary>
           <p className="mt-1 text-xs text-slate-500">

@@ -26,23 +26,25 @@ model User {
   state        String?
   district     String?
 
-  sessions             Session[]
-  passwordResetTokens  PasswordResetToken[]
-  studentProfiles   StudentProfile[]
-  uploadedPages     UploadedPage[]
-  createdSubjects   Subject[]      @relation("SubjectCreatedBy")
-  createdUnits      Unit[]         @relation("UnitCreatedBy")
-  uploadedResources UnitResource[] @relation("ResourceUploadedBy")
-  approvedResources UnitResource[] @relation("ResourceApprovedBy")
+  sessions            Session[]
+  passwordResetTokens PasswordResetToken[]
+  studentProfiles     StudentProfile[]
+  uploadedPages       UploadedPage[]
+  createdSubjects     Subject[]            @relation("SubjectCreatedBy")
+  createdUnits        Unit[]               @relation("UnitCreatedBy")
+  uploadedResources   UnitResource[]       @relation("ResourceUploadedBy")
+  approvedResources   UnitResource[]       @relation("ResourceApprovedBy")
+  textbookSubmissions TextbookSubmission[]
+  referenceUploads    ReferenceUpload[]
 }
 
 model Session {
-  id        String   @id @default(cuid())
-  tokenHash String   @unique
-  userId    String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  expiresAt DateTime
-  createdAt DateTime @default(now())
+  id         String   @id @default(cuid())
+  tokenHash  String   @unique
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
   // Touched at most once every 5 minutes by getCurrentUser, so the admin panel
   // can tell "signed in three weeks ago and never logged out" apart from
   // "using the app right now". A session lasts 30 days, so createdAt alone
@@ -81,7 +83,7 @@ model StudentProfile {
   // shared, centralized curriculum data itself - every kid on the same
   // Stage still reads the exact same Concept rows.
   assignedStageId String?
-  assignedStage   Stage?   @relation(fields: [assignedStageId], references: [id], onDelete: SetNull)
+  assignedStage   Stage?  @relation(fields: [assignedStageId], references: [id], onDelete: SetNull)
 
   // Optional, self-reported "intelligence" fields (2026-08-20 decision) - not
   // used to gate or select content (assignedStageId still does that), just
@@ -128,36 +130,37 @@ model Stage {
 }
 
 model Subject {
-  id              String   @id @default(cuid())
-  stageId         String
-  stage           Stage    @relation(fields: [stageId], references: [id], onDelete: Cascade)
-  slug            String
-  name            String
-  available       Boolean  @default(false)
-  createdByUserId String?
-  createdBy       User?    @relation("SubjectCreatedBy", fields: [createdByUserId], references: [id])
-  createdAt       DateTime @default(now())
-  units           Unit[]
+  id                  String               @id @default(cuid())
+  stageId             String
+  stage               Stage                @relation(fields: [stageId], references: [id], onDelete: Cascade)
+  slug                String
+  name                String
+  available           Boolean              @default(false)
+  createdByUserId     String?
+  createdBy           User?                @relation("SubjectCreatedBy", fields: [createdByUserId], references: [id])
+  textbookSubmissions TextbookSubmission[]
+  createdAt           DateTime             @default(now())
+  units               Unit[]
 
   @@unique([stageId, slug])
 }
 
 model Unit {
-  id                   String   @id @default(cuid())
-  subjectId            String
-  subject              Subject  @relation(fields: [subjectId], references: [id], onDelete: Cascade)
-  unitKey              String   @unique // e.g. "cambridge-5-english-1" - preserves current URL scheme
-  number               Int
-  title                String
-  board                String   @default("Cambridge") // exam board label, e.g. "Cambridge" - independent of the curriculum pathway name
-  available            Boolean  @default(false)
-  unitStatus           String   @default("in_progress") // "in_progress" | "complete"
-  contentMode          String   @default("curriculum") // "curriculum" (Learn -> workbook -> tiered test) | "olympiad" (skip Learn, practice sets -> 2 exam sets)
-  sourcePublisher      String?
-  sourceTitle          String?
-  sourceAuthors        String[]
-  sourceSeriesEditors  String[]
-  sourceNote           String?
+  id                  String   @id @default(cuid())
+  subjectId           String
+  subject             Subject  @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  unitKey             String   @unique // e.g. "cambridge-5-english-1" - preserves current URL scheme
+  number              Int
+  title               String
+  board               String   @default("Cambridge") // exam board label, e.g. "Cambridge" - independent of the curriculum pathway name
+  available           Boolean  @default(false)
+  unitStatus          String   @default("in_progress") // "in_progress" | "complete"
+  contentMode         String   @default("curriculum") // "curriculum" (Learn -> workbook -> tiered test) | "olympiad" (skip Learn, practice sets -> 2 exam sets)
+  sourcePublisher     String?
+  sourceTitle         String?
+  sourceAuthors       String[]
+  sourceSeriesEditors String[]
+  sourceNote          String?
   // This unit's own page range within its attached whole-textbook
   // UnitResource (lib/textbookToc.ts's upload flow attaches ONE shared PDF
   // to every unit in the subject) - set once during Learn-phase concept
@@ -166,22 +169,23 @@ model Unit {
   // doesn't need its own separate page-range detection call every time.
   // Null for a unit that was never textbook-sourced, or whose extraction
   // couldn't determine a clear range.
-  textbookPageStart    Int?
-  textbookPageEnd      Int?
-  masteryChecklist     Json? // UnitMasteryChecklist passthrough
-  createdByUserId      String?
-  createdBy            User?    @relation("UnitCreatedBy", fields: [createdByUserId], references: [id])
-  createdAt            DateTime @default(now())
+  textbookPageStart   Int?
+  textbookPageEnd     Int?
+  masteryChecklist    Json? // UnitMasteryChecklist passthrough
+  createdByUserId     String?
+  createdBy           User?    @relation("UnitCreatedBy", fields: [createdByUserId], references: [id])
+  createdAt           DateTime @default(now())
 
-  concepts        Concept[]
-  uploadedPages   UploadedPage[]
-  testAttempts    TestAttempt[]
-  examSubmissions ExamSubmission[]
-  resources       UnitResource[]
-  questionPapers  QuestionPaper[]
-  contentPacks    ContentPack[]
+  concepts          Concept[]
+  uploadedPages     UploadedPage[]
+  testAttempts      TestAttempt[]
+  examSubmissions   ExamSubmission[]
+  resources         UnitResource[]
+  referenceUploads  ReferenceUpload[]
+  questionPapers    QuestionPaper[]
+  contentPacks      ContentPack[]
   worksheetAttempts WorksheetAttempt[]
-  progressMarkers UnitProgress[]
+  progressMarkers   UnitProgress[]
 
   @@unique([subjectId, number])
 }
@@ -195,13 +199,13 @@ model Unit {
 // unit's 1.1/1.2/1.3... numbering. Used to exempt concepts at or before the
 // mark from the out-of-sequence readiness check in UnitView.tsx.
 model UnitProgress {
-  id                   String   @id @default(cuid())
+  id                   String         @id @default(cuid())
   studentProfileId     String
   studentProfile       StudentProfile @relation(fields: [studentProfileId], references: [id], onDelete: Cascade)
   unitId               String
-  unit                 Unit     @relation(fields: [unitId], references: [id], onDelete: Cascade)
+  unit                 Unit           @relation(fields: [unitId], references: [id], onDelete: Cascade)
   taughtUpToConceptKey String?
-  updatedAt            DateTime @updatedAt
+  updatedAt            DateTime       @updatedAt
 
   @@unique([studentProfileId, unitId])
 }
@@ -260,7 +264,7 @@ model ContentPack {
 // tougher an older unit's recommended test tier should be
 // (lib/adaptiveDifficulty.ts).
 model WorksheetAttempt {
-  id               String   @id @default(cuid())
+  id               String         @id @default(cuid())
   studentProfileId String
   studentProfile   StudentProfile @relation(fields: [studentProfileId], references: [id], onDelete: Cascade)
   contentPackId    String
@@ -270,8 +274,8 @@ model WorksheetAttempt {
   correctCount     Int
   totalCount       Int
   scorePct         Int
-  answers          Json     // snapshot of {questionId: {value, correct}}, for later review
-  attemptedAt      DateTime @default(now())
+  answers          Json // snapshot of {questionId: {value, correct}}, for later review
+  attemptedAt      DateTime       @default(now())
 
   @@index([studentProfileId, unitId])
 }
@@ -389,16 +393,16 @@ model Concept {
 // --- uploads ---
 
 model UploadedPage {
-  id               String   @id @default(cuid())
+  id               String          @id @default(cuid())
   unitId           String
-  unit             Unit     @relation(fields: [unitId], references: [id], onDelete: Cascade)
+  unit             Unit            @relation(fields: [unitId], references: [id], onDelete: Cascade)
   uploadedByUserId String
-  uploadedBy       User     @relation(fields: [uploadedByUserId], references: [id], onDelete: Cascade)
+  uploadedBy       User            @relation(fields: [uploadedByUserId], references: [id], onDelete: Cascade)
   storageKey       String // relative path under UPLOADS_DIR, e.g. "cambridge-5-english-1/171...-ab12.jpg"
   originalFilename String
   mimeType         String
   byteSize         Int
-  purpose          String   @default("textbook_source") // "textbook_source" | "exam_page"
+  purpose          String          @default("textbook_source") // "textbook_source" | "exam_page"
   // The real printed textbook page this image shows, when known (2026-09-06
   // - real bug found while seeding Units 2-9's galleries: UnitView.tsx's
   // booklet jumped to a concept's cited page via `pageImages[page - 1]`,
@@ -410,7 +414,7 @@ model UploadedPage {
   pageNumber       Int?
   examSubmissionId String?
   examSubmission   ExamSubmission? @relation(fields: [examSubmissionId], references: [id], onDelete: SetNull)
-  createdAt        DateTime @default(now())
+  createdAt        DateTime        @default(now())
 }
 
 // Admin-curated curriculum content (PLATFORM_PLAN.md §2.7): the canonical
@@ -429,7 +433,7 @@ model UnitResource {
   id               String    @id @default(cuid())
   unitId           String
   unit             Unit      @relation(fields: [unitId], references: [id], onDelete: Cascade)
-  resourceType     String    // "textbook" | "worksheet" | "classwork" | "homework" | "exam_question_paper" | "answer_sheet"
+  resourceType     String // "textbook" | "worksheet" | "classwork" | "homework" | "exam_question_paper" | "answer_sheet"
   storageKey       String
   originalFilename String
   mimeType         String
@@ -445,23 +449,69 @@ model UnitResource {
   @@index([unitId, resourceType, status])
 }
 
+// A whole textbook uploaded for validation before its units become live.
+// The file is intentionally kept separate from UnitResource: a pending book
+// must not appear as canonical curriculum material or create student-visible
+// units until an admin confirms that it is a real, usable textbook.
+model TextbookSubmission {
+  id               String    @id @default(cuid())
+  subjectId        String
+  subject          Subject   @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  uploadedByUserId String
+  uploadedBy       User      @relation(fields: [uploadedByUserId], references: [id], onDelete: Cascade)
+  storageKey       String    @unique
+  originalFilename String
+  mimeType         String
+  byteSize         Int
+  status           String    @default("pending") // "pending" | "validating" | "approved" | "rejected"
+  validationNote   String?
+  detectedUnits    Json?
+  createdAt        DateTime  @default(now())
+  reviewedAt       DateTime?
+
+  @@index([subjectId, status])
+  @@index([uploadedByUserId, createdAt])
+}
+
+// Family-provided worksheets, questions, and homework references uploaded
+// from the lesson chat. These are research material for improving generated
+// hints/homework and are never canonical textbook content by themselves.
+model ReferenceUpload {
+  id               String   @id @default(cuid())
+  unitId           String?
+  unit             Unit?    @relation(fields: [unitId], references: [id], onDelete: SetNull)
+  uploadedByUserId String
+  uploadedBy       User     @relation(fields: [uploadedByUserId], references: [id], onDelete: Cascade)
+  conceptId        String?
+  storageKey       String   @unique
+  originalFilename String
+  mimeType         String
+  byteSize         Int
+  referenceType    String   @default("worksheet") // "worksheet" | "question" | "homework" | "other"
+  status           String   @default("pending") // "pending" | "processed" | "rejected"
+  createdAt        DateTime @default(now())
+
+  @@index([unitId, status])
+  @@index([uploadedByUserId, createdAt])
+}
+
 // Written Exam Capture & Coaching (PLATFORM_PLAN.md §2.5): a kid photographs
 // a real handwritten practice paper and gets feedback on exam technique
 // (working shown, time use) before marks - marks are one data point among
 // several, not the headline.
 model ExamSubmission {
-  id                String         @id @default(cuid())
-  studentProfileId  String
-  studentProfile    StudentProfile @relation(fields: [studentProfileId], references: [id], onDelete: Cascade)
-  unitId            String
-  unit              Unit           @relation(fields: [unitId], references: [id], onDelete: Cascade)
-  timeSpentMinutes  Int?
-  status            String         @default("pending") // "pending" | "coached" | "failed"
-  techniqueNotes     String[]
-  overallNote        String?       @db.Text
-  marksNote          String?       @db.Text
-  pages             UploadedPage[]
-  createdAt         DateTime       @default(now())
+  id               String         @id @default(cuid())
+  studentProfileId String
+  studentProfile   StudentProfile @relation(fields: [studentProfileId], references: [id], onDelete: Cascade)
+  unitId           String
+  unit             Unit           @relation(fields: [unitId], references: [id], onDelete: Cascade)
+  timeSpentMinutes Int?
+  status           String         @default("pending") // "pending" | "coached" | "failed"
+  techniqueNotes   String[]
+  overallNote      String?        @db.Text
+  marksNote        String?        @db.Text
+  pages            UploadedPage[]
+  createdAt        DateTime       @default(now())
 }
 
 // --- progress / mastery ---
@@ -496,8 +546,8 @@ model ReasoningLog {
   studentAnswer    String // what the kid originally answered
   explanation      String // how they explain their thinking, in their own words
   classification   String // "correct_reasoning" | "conceptual_gap" | "careless_slip" | "misread_question"
-  note             String @db.Text // brief, kind, actionable feedback
-  createdAt        DateTime @default(now())
+  note             String         @db.Text // brief, kind, actionable feedback
+  createdAt        DateTime       @default(now())
 
   @@index([studentProfileId, createdAt])
 }
@@ -527,8 +577,8 @@ model ConceptMastery {
 // lib/pricing.ts, not a DB relation.
 model PricingPlan {
   id                 String   @id @default(cuid())
-  curriculumLabel    String   // "Matric / State Board" | "CBSE" | "ICSE" | "Cambridge IGCSE" | "IB"
-  gradeBandLabel     String   // "Grade 3-5" | "Grade 6-8" | "Grade 9-10" | "Grade 11-12"
+  curriculumLabel    String // "Matric / State Board" | "CBSE" | "ICSE" | "Cambridge IGCSE" | "IB"
+  gradeBandLabel     String // "Grade 3-5" | "Grade 6-8" | "Grade 9-10" | "Grade 11-12"
   minGrade           Int
   maxGrade           Int
   pricePerSubjectInr Int

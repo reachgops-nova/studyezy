@@ -593,6 +593,8 @@ export default function AvatarChat({
   const [highlightRange, setHighlightRange] = useState<[number, number] | null>(null);
   const [inputText, setInputText] = useState("");
   const [loading, setLoading] = useState(false);
+  const [referenceUploading, setReferenceUploading] = useState(false);
+  const [referenceMessage, setReferenceMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [listening, setListening] = useState(false);
   const [speechInputSupported, setSpeechInputSupported] = useState(false);
@@ -642,6 +644,7 @@ export default function AvatarChat({
   const scrollRef = useRef<HTMLDivElement>(null);
   const endRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const referenceInputRef = useRef<HTMLInputElement>(null);
   // Pause/resume state - see togglePauseSpeech for why this exists instead
   // of just calling speechSynthesis.resume().
   const currentUtteranceRef = useRef<{
@@ -1494,6 +1497,27 @@ export default function AvatarChat({
     }
   }
 
+  async function uploadReference(file: File) {
+    setReferenceUploading(true);
+    setReferenceMessage(null);
+    const formData = new FormData();
+    formData.append("unitKey", unitKey);
+    formData.append("conceptId", concept.concept_id);
+    formData.append("referenceType", "worksheet");
+    formData.append("file", file);
+    try {
+      const response = await fetch("/api/chat/references", { method: "POST", body: formData });
+      const body = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(body.error || "Reference upload failed.");
+      setReferenceMessage("Saved for future homework and hints.");
+    } catch (error) {
+      setReferenceMessage(error instanceof Error ? error.message : "Reference upload failed.");
+    } finally {
+      setReferenceUploading(false);
+      if (referenceInputRef.current) referenceInputRef.current.value = "";
+    }
+  }
+
   function startListening() {
     const SpeechRecognitionCtor = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     if (!SpeechRecognitionCtor) return;
@@ -1738,6 +1762,25 @@ export default function AvatarChat({
           <div className="shrink-0 space-y-2 p-3">
             <div className="flex gap-1.5">
               <input
+                ref={referenceInputRef}
+                type="file"
+                accept="application/pdf,image/jpeg,image/png,image/webp"
+                className="hidden"
+                onChange={(event) => {
+                  const file = event.target.files?.[0];
+                  if (file) void uploadReference(file);
+                }}
+              />
+              <button
+                type="button"
+                onClick={() => referenceInputRef.current?.click()}
+                disabled={referenceUploading}
+                title="Upload a worksheet or question for reference"
+                className="shrink-0 rounded-xl bg-slate-100 px-2.5 text-sm hover:bg-slate-200 disabled:opacity-50"
+              >
+                {referenceUploading ? "…" : "📎"}
+              </button>
+              <input
                 ref={inputRef}
                 type="text"
                 value={inputText}
@@ -1769,6 +1812,7 @@ export default function AvatarChat({
                 Send
               </button>
             </div>
+            {referenceMessage && <p className="text-[11px] text-slate-500">{referenceMessage}</p>}
 
             <div className="flex gap-2">
               <button

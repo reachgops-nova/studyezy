@@ -79,7 +79,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: `"${file.name}" isn't a supported image type.` }, { status: 400 });
     }
     if (file.size > MAX_UPLOAD_FILE_BYTES) {
-      return NextResponse.json({ error: `"${file.name}" is too large (max 12MB).` }, { status: 400 });
+      return NextResponse.json({ error: `"${file.name}" is too large (max 200MB).` }, { status: 400 });
     }
   }
 

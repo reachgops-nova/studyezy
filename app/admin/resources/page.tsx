@@ -13,7 +13,7 @@ import AppShell from "@/components/AppShell";
 import ResourceUploadButton from "@/components/ResourceUploadButton";
 import GeneratePaperButton from "@/components/GeneratePaperButton";
 import ConfirmSubmitButton from "@/components/ConfirmSubmitButton";
-import { approveResource, rejectResource, assignConceptImage, clearUnitAnswerCache } from "./actions";
+import { approveResource, rejectResource, approveTextbookSubmission, rejectTextbookSubmission, assignConceptImage, clearUnitAnswerCache } from "./actions";
 
 export default async function AdminResourcesPage({
   searchParams,
@@ -26,7 +26,15 @@ export default async function AdminResourcesPage({
   if (!profile) redirect("/profiles");
 
   const { unitKey: selectedUnitKey } = await searchParams;
-  const [catalog, pending] = await Promise.all([getCatalog(), getAllPendingResources()]);
+  const [catalog, pending, pendingTextbooks] = await Promise.all([
+    getCatalog(),
+    getAllPendingResources(),
+    db.textbookSubmission.findMany({
+      where: { status: { in: ["pending", "validating"] } },
+      include: { subject: { include: { stage: { include: { curriculum: true } } } }, uploadedBy: { select: { email: true } } },
+      orderBy: { createdAt: "desc" },
+    }),
+  ]);
   const unitOptions = catalog.flatMap((c) =>
     c.stages.flatMap((s) =>
       s.subjects.flatMap((subj) =>
@@ -59,6 +67,47 @@ export default async function AdminResourcesPage({
           stay open for families always, since those are each student&apos;s own practice attempt, not shared
           material.
         </p>
+      </div>
+
+      <div className="rounded-2xl border border-slate-200/70 bg-white p-4 shadow-soft">
+        <div className="flex items-center justify-between">
+          <h2 className="font-semibold text-slate-800">Textbooks awaiting validation</h2>
+          <span className="rounded-full bg-blue-100 px-2.5 py-0.5 text-xs font-medium text-blue-700">
+            {pendingTextbooks.length} pending
+          </span>
+        </div>
+        {pendingTextbooks.length === 0 ? (
+          <p className="mt-2 text-sm text-slate-400">No whole textbooks are waiting for validation.</p>
+        ) : (
+          <ul className="mt-3 grid gap-2">
+            {pendingTextbooks.map((book) => (
+              <li key={book.id} className="grid gap-2 rounded-xl bg-blue-50 px-3 py-2 text-sm sm:flex sm:items-center sm:justify-between">
+                <div className="min-w-0">
+                  <a href={`/api/uploads/${book.storageKey}`} target="_blank" rel="noreferrer" className="truncate font-medium text-blue-900 hover:underline">
+                    {book.originalFilename}
+                  </a>
+                  <p className="text-xs text-slate-500">
+                    {book.subject.stage.curriculum.name} · {book.subject.stage.label} · {book.subject.name} · uploaded by {book.uploadedBy.email}
+                  </p>
+                </div>
+                <div className="flex shrink-0 gap-2">
+                  <form action={approveTextbookSubmission}>
+                    <input type="hidden" name="id" value={book.id} />
+                    <button type="submit" className="rounded-md bg-brand-ink px-2.5 py-1 text-xs font-medium text-white">
+                      Validate &amp; process units
+                    </button>
+                  </form>
+                  <form action={rejectTextbookSubmission}>
+                    <input type="hidden" name="id" value={book.id} />
+                    <button type="submit" className="rounded-md border border-slate-300 px-2.5 py-1 text-xs font-medium text-slate-600 hover:bg-white">
+                      Reject
+                    </button>
+                  </form>
+                </div>
+              </li>
+            ))}
+          </ul>
+        )}
       </div>
 
       <div className="rounded-2xl border border-slate-200/70 bg-white p-4 shadow-soft">
