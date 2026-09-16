@@ -62,8 +62,11 @@ const LAST_SEEN_THROTTLE_MS = 5 * 60 * 1000;
  * Deliberately not awaited, and failures are swallowed: knowing when someone
  * was last seen is never worth failing a page load over.
  */
-function touchLastSeen(sessionId: string, lastSeenAt: Date): void {
-  if (Date.now() - lastSeenAt.getTime() < LAST_SEEN_THROTTLE_MS) return;
+function touchLastSeen(sessionId: string, lastSeenAt: Date | null | undefined): void {
+  // Be tolerant of sessions created before the lastSeenAt migration (or a
+  // partially migrated local database). Authentication must never fail just
+  // because this admin-presence timestamp is unavailable.
+  if (lastSeenAt && Date.now() - lastSeenAt.getTime() < LAST_SEEN_THROTTLE_MS) return;
   void db.session
     .update({ where: { id: sessionId }, data: { lastSeenAt: new Date() } })
     .catch(() => {});
