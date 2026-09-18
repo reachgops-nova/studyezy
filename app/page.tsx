@@ -1,165 +1,48 @@
-import { redirect } from "next/navigation";
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { getActiveProfileId } from "@/lib/auth";
 import { getCurrentUser } from "@/lib/session";
-import Logo, { LogoMark, Banner } from "@/components/Logo";
+import Logo, { LogoMark } from "@/components/Logo";
 
 export default async function Home() {
   const user = await getCurrentUser();
-  if (user) {
-    const profileId = await getActiveProfileId();
-    redirect(profileId ? "/select" : "/profiles");
-  }
-
+  if (user) redirect((await getActiveProfileId()) ? "/select" : "/profiles");
   return <LandingPage />;
 }
 
 function LandingPage() {
   return (
-    <div className="mx-auto grid w-full max-w-3xl gap-20 pb-16">
-      <nav className="flex items-center justify-between gap-2 pt-2">
-        <Logo textClassName="text-base sm:text-xl" className="h-8 sm:h-9" />
-        <div className="flex shrink-0 items-center gap-2 sm:gap-4">
-          <Link
-            href="/login"
-            className="whitespace-nowrap text-sm font-medium text-slate-600 hover:text-slate-900"
-          >
-            Sign in
-          </Link>
-          <Link
-            href="/register"
-            className="whitespace-nowrap rounded-full bg-gradient-to-br from-brand-gold-bright to-brand-gold px-3.5 py-2 text-sm font-medium text-white transition active:scale-95 hover:brightness-110 sm:px-5 sm:py-2.5"
-          >
-            Get started free
-          </Link>
-        </div>
+    <main className="mx-auto max-w-7xl overflow-hidden rounded-[2rem] bg-[#fffaf0] text-[#16241f] shadow-[0_24px_80px_rgba(22,36,31,0.12)]">
+      <nav className="flex items-center justify-between px-5 py-5 sm:px-10 lg:px-14">
+        <Logo className="h-9 sm:h-10" textClassName="text-lg sm:text-xl" />
+        <div className="flex items-center gap-3 sm:gap-6"><a href="#how" className="hidden text-sm font-bold text-[#52625a] sm:inline">How it works</a><a href="#parents" className="hidden text-sm font-bold text-[#52625a] sm:inline">For parents</a><Link href="/login" className="text-sm font-bold text-[#52625a]">Sign in</Link><Link href="/register" className="rounded-full bg-[#16241f] px-4 py-2.5 text-sm font-bold text-white shadow-lg">Try free</Link></div>
       </nav>
 
-      <header className="grid gap-6 pt-4 text-center">
-        <Banner className="mx-auto h-auto w-full max-w-xl rounded-2xl sm:max-w-2xl" />
-        <h1 className="mx-auto max-w-2xl text-4xl font-bold tracking-tight text-slate-900 sm:text-5xl">
-          Homework help that actually checks if it clicked.
-        </h1>
-        <p className="mx-auto max-w-xl text-lg text-slate-600">
-          StudyEzy is a voice-led tutor built from your kid&apos;s own textbook. It pauses to make sure
-          they understood, adapts to what they already know, and never turns practice into pressure.
-        </p>
-        <div className="flex flex-wrap items-center justify-center gap-3">
-          <Link
-            href="/register"
-            className="rounded-full bg-gradient-to-br from-brand-gold-bright to-brand-gold px-7 py-3.5 text-base font-medium text-white transition hover:brightness-110 active:scale-95"
-          >
-            Get started free
-          </Link>
-          <Link
-            href="/login"
-            className="rounded-xl border border-slate-300 bg-white px-6 py-3 text-base font-medium text-slate-700 hover:bg-slate-50"
-          >
-            Sign in
-          </Link>
-        </div>
-      </header>
-
-      <section className="grid gap-8">
-        <h2 className="text-center text-2xl font-bold text-slate-900">What makes it different</h2>
-        <div className="grid gap-4 sm:grid-cols-2">
-          <DifferentiatorCard
-            title="Pauses to check understanding"
-            body="Ezy teaches in short chunks and stops to ask if it made sense before moving on - not a wall of narration read straight through."
-          />
-          <DifferentiatorCard
-            title="Adapts to your kid, not a calendar"
-            body="A quick diagnostic finds what they already know. Retesting happens concept by concept, only when it's actually due - not on a fixed schedule."
-          />
-          <DifferentiatorCard
-            title="Built from their real textbook"
-            body="Upload the pages your kid's class is using and StudyEzy teaches to exactly what's being covered - not generic worksheets."
-          />
-          <DifferentiatorCard
-            title="Practice and tests feel different, on purpose"
-            body="A wrong answer in practice mode gets 'let's look at this together,' never a red X. Test mode looks different so your kid always knows which one they're in."
-          />
-        </div>
+      <section className="relative grid gap-10 px-5 pb-16 pt-8 sm:px-10 lg:grid-cols-[1.05fr_.95fr] lg:items-center lg:px-14 lg:pb-24 lg:pt-14">
+        <div className="absolute -right-24 -top-20 h-72 w-72 rounded-full bg-[#f6c453]/25 blur-3xl" />
+        <div className="relative grid gap-7"><p className="w-fit rounded-full border border-[#e3bd68] bg-[#fff1c7] px-3.5 py-1.5 text-xs font-extrabold uppercase tracking-[.18em] text-[#84601b]">A calmer way to learn at home</p><h1 className="max-w-3xl font-display text-5xl font-bold leading-[.98] tracking-[-.045em] sm:text-6xl lg:text-7xl">Turn “I don&apos;t get it” into <span className="text-[#c47b21]">“I can explain it.”</span></h1><p className="max-w-2xl text-lg leading-8 text-[#52625a] sm:text-xl">StudyEzy is a voice-first learning companion that teaches from a child&apos;s real textbook, checks understanding one idea at a time, and gives parents a clear view of what is still pending.</p><div className="flex flex-wrap gap-3"><Link href="/register" className="rounded-full bg-[#d8902f] px-7 py-3.5 font-extrabold text-white shadow-xl shadow-[#d8902f]/25">Start learning free</Link><a href="#board" className="rounded-full border-2 border-[#dbe2db] bg-white px-6 py-3 font-bold text-[#29453b]">See the learning journey ↓</a></div><div className="flex flex-wrap gap-5 text-sm font-semibold text-[#66766d]"><span>✓ Textbook-aligned</span><span>✓ Voice questions</span><span>✓ No shame, no rushing</span></div></div>
+        <BoardPreview />
       </section>
 
-      <section className="grid gap-8">
-        <h2 className="text-center text-2xl font-bold text-slate-900">How it works</h2>
-        <div className="grid gap-6 sm:grid-cols-4">
-          <StepCard number={1} body="Add a subject and unit, and upload a few pages from the textbook." />
-          <StepCard number={2} body="Ezy reads them and builds the lesson - checkpoints, examples, and practice questions." />
-          <StepCard number={3} body="Your kid learns at their own pace, pausing anytime to ask something." />
-          <StepCard number={4} body="A short test adapts what to revisit next, tracked on a simple dashboard." />
-        </div>
-      </section>
+      <section id="parents" className="grid gap-8 bg-[#f1f6ef] px-5 py-14 sm:px-10 lg:grid-cols-[.8fr_1.2fr] lg:px-14 lg:py-20"><div><Eyebrow>For the moments at home</Eyebrow><h2 className="mt-3 max-w-md font-display text-4xl font-bold leading-tight">The homework struggle is a learning signal.</h2><p className="mt-4 max-w-md leading-7 text-[#66766d]">A child may be stuck on one small idea while the worksheet makes everything feel difficult. Parents deserve more than a score and a guess.</p></div><div className="grid gap-4 sm:grid-cols-2"><Pain pain="“I explained it three times.”" answer="Ezy changes the explanation, uses a visual model, and asks the child to say it back." /><Pain pain="“I don&apos;t know what they missed.”" answer="Each topic is marked Read, Cover, Recite, and Test so the next step is visible." /><Pain pain="“They freeze when I ask.”" answer="Voice-led, low-pressure practice lets children ask without feeling judged." /><Pain pain="“It doesn&apos;t match our book.”" answer="Lessons are grounded in the textbook concepts your family is actually using." /></div></section>
 
-      <section className="rounded-2xl border border-slate-200/70 bg-white p-8 shadow-soft">
-        <h2 className="text-2xl font-bold text-slate-900">Also included</h2>
-        <p className="mt-1 text-slate-600">Beyond the daily lesson loop, already built and live.</p>
-        <div className="mt-6 grid gap-4 sm:grid-cols-3">
-          <RoadmapItem
-            title="Reasoning Interview"
-            body="A quick voice chat after each test to find out why an answer was wrong - not just that it was."
-          />
-          <RoadmapItem
-            title="Written Exam Coaching"
-            body="Photograph a real handwritten paper and get feedback on exam technique before the marks."
-          />
-          <RoadmapItem
-            title="Prep Planner"
-            body="A simple weekly view of what's worth revisiting before the next test."
-          />
-        </div>
-      </section>
+      <section id="board" className="grid gap-10 px-5 py-16 sm:px-10 lg:grid-cols-[.9fr_1.1fr] lg:items-center lg:px-14 lg:py-24"><div className="rounded-[2rem] bg-[#16241f] p-5 text-white shadow-2xl sm:p-8"><Eyebrow light>One topic at a time</Eyebrow><div className="mt-6 grid gap-3"><Journey n="01" title="Read" text="A short explanation, worked example, and visual." active /><Journey n="02" title="Cover" text="The explanation closes. The child tries the relevant question." /><Journey n="03" title="Recite" text="They retrieve the rule in their own words." /><Journey n="04" title="Test" text="A final check shows what is ready and what needs care." /></div></div><div><Eyebrow>The StudyEzy Board</Eyebrow><h2 className="mt-3 max-w-xl font-display text-4xl font-bold leading-tight sm:text-5xl">A learning room, not another worksheet.</h2><p className="mt-5 max-w-xl text-lg leading-8 text-[#66766d]">Explanation, interaction, retrieval, and assessment live in one calm sequence. The child always knows what they are doing now—and why they are not moving on too early.</p><div className="mt-7 grid gap-3 sm:grid-cols-2"><Feature title="Synced visuals" text="Number lines, diagrams, text cards, charts, and worked models appear with the exact idea being taught." /><Feature title="Local-language support" text="Ask and hear answers in Tamil, Hindi, Telugu, Kannada, Malayalam, or English." /><Feature title="Clear progress" text="When a topic is complete, Ezy brings the child back to the next one." /><Feature title="Parent visibility" text="See what is complete, pending, or worth revisiting." /></div></div></section>
 
-      <section className="text-center">
-        <h2 className="text-2xl font-bold text-slate-900">Plans</h2>
-        <p className="mx-auto mt-2 max-w-md text-slate-600">
-          Free while we&apos;re in pilot. Paid plans arrive as we grow - nothing changes for families
-          already on the platform without fair notice.
-        </p>
-        <Link
-          href="/register"
-          className="mt-6 inline-block rounded-full bg-gradient-to-br from-brand-gold-bright to-brand-gold px-7 py-3.5 text-base font-medium text-white transition hover:brightness-110 active:scale-95"
-        >
-          Get started free
-        </Link>
-      </section>
+      <section id="how" className="border-y border-[#e4e9e1] bg-white px-5 py-16 sm:px-10 lg:px-14 lg:py-20"><div className="mx-auto max-w-3xl text-center"><Eyebrow>Simple to start</Eyebrow><h2 className="mt-3 font-display text-4xl font-bold sm:text-5xl">From textbook page to confident next step.</h2><p className="mt-4 text-lg leading-8 text-[#66766d]">A book on the table, a question in a child&apos;s voice, and a parent who wants to help without becoming the teacher every evening.</p></div><div className="mx-auto mt-12 grid max-w-6xl gap-5 md:grid-cols-4"><Step n="01" title="Choose" text="Pick the subject and unit your child is working on." /><Step n="02" title="Learn" text="Follow the Board through the textbook concepts in order." /><Step n="03" title="Ask" text="Type or speak when something does not make sense." /><Step n="04" title="Grow" text="Use the result to decide what to revisit next." /></div></section>
 
-      <footer className="flex flex-col items-center gap-2 border-t border-slate-200 pt-8 text-center">
-        <LogoMark className="h-8 w-8" />
-        <p className="text-sm text-slate-500">
-          Original teaching content aligned to your family&apos;s own textbook - never copied from it.
-        </p>
-      </footer>
-    </div>
+      <section className="grid gap-8 px-5 py-16 sm:px-10 lg:grid-cols-2 lg:px-14 lg:py-20"><div className="rounded-[2rem] bg-[#fff1c7] p-7 sm:p-9"><Eyebrow>The thinking behind it</Eyebrow><h2 className="mt-3 font-display text-3xl font-bold">Built for the child who needs one more way in.</h2><p className="mt-4 leading-7 text-[#685a3d]">Struggling students are often not lacking effort. They may need smaller steps, a different explanation, time to retrieve, or permission to ask the same question again.</p><p className="mt-4 leading-7 text-[#685a3d]">We are building a patient bridge between the textbook, the child, and the parent—so practice can feel like progress instead of a nightly conflict.</p></div><div className="rounded-[2rem] bg-[#e8f2ea] p-7 sm:p-9"><Eyebrow>A promise to families</Eyebrow><h2 className="mt-3 font-display text-3xl font-bold">Helpful, honest, and age-appropriate.</h2><div className="mt-5 grid gap-4 text-[#52625a]"><p>🌿 <strong className="text-[#16241f]">No shame in a wrong answer.</strong> Practice feedback explains the next step.</p><p>🔐 <strong className="text-[#16241f]">Parents stay in control.</strong> We explain what the platform can and cannot know.</p><p>🧭 <strong className="text-[#16241f]">AI supports teaching.</strong> It does not replace a parent, teacher, or school.</p></div></div></section>
+
+      <section className="bg-[#16241f] px-5 py-16 text-center text-white sm:px-10 lg:px-14 lg:py-20"><LogoMark className="mx-auto h-14 w-14" /><h2 className="mx-auto mt-5 max-w-2xl font-display text-4xl font-bold sm:text-5xl">Give your child a calmer way to begin.</h2><p className="mx-auto mt-4 max-w-xl text-lg leading-8 text-[#c9d9ce]">Start with one subject, one unit, and one small win. StudyEzy grows from there.</p><Link href="/register" className="mt-7 inline-flex rounded-full bg-[#f6c453] px-8 py-3.5 font-extrabold text-[#16241f]">Create your free family account</Link><p className="mt-4 text-xs text-[#9fb5a9]">Pilot access and future pricing are explained clearly before any paid change.</p></section>
+
+      <footer className="grid gap-8 bg-[#102019] px-5 py-10 text-[#b6c8bc] sm:px-10 lg:grid-cols-[1fr_auto] lg:px-14"><div><Logo textClassName="text-lg text-white" className="h-8" /><p className="mt-4 max-w-md text-sm leading-6">Making complexity easier—from kids to grown-ups. Original teaching content is aligned to family textbooks and not copied from them.</p></div><div className="grid content-start gap-2 text-sm sm:grid-cols-2 sm:gap-x-10"><a href="#parents">For parents</a><a href="#how">How it works</a><Link href="/terms">Terms &amp; conditions</Link><Link href="/privacy">Privacy</Link><Link href="/login">Sign in</Link><Link href="/register">Create account</Link></div><p className="border-t border-white/10 pt-5 text-xs text-[#80968a] lg:col-span-2">© {new Date().getFullYear()} StudyEzy. Study support, not a replacement for a qualified teacher or school.</p></footer>
+    </main>
   );
 }
 
-function DifferentiatorCard({ title, body }: { title: string; body: string }) {
-  return (
-    <div className="rounded-2xl border border-slate-200/70 bg-white p-5 shadow-soft">
-      <h3 className="font-semibold text-slate-900">{title}</h3>
-      <p className="mt-1.5 text-sm text-slate-600">{body}</p>
-    </div>
-  );
-}
-
-function StepCard({ number, body }: { number: number; body: string }) {
-  return (
-    <div className="grid gap-2">
-      <span className="flex h-8 w-8 items-center justify-center rounded-full bg-brand-ink text-sm font-bold text-white">
-        {number}
-      </span>
-      <p className="text-sm text-slate-600">{body}</p>
-    </div>
-  );
-}
-
-function RoadmapItem({ title, body }: { title: string; body: string }) {
-  return (
-    <div className="rounded-xl bg-slate-50 p-4">
-      <h3 className="text-sm font-semibold text-slate-800">{title}</h3>
-      <p className="mt-1 text-xs text-slate-500">{body}</p>
-    </div>
-  );
-}
+function BoardPreview() { return <div className="relative mx-auto w-full max-w-xl rounded-[2rem] border border-white/80 bg-white/75 p-4 shadow-[0_22px_60px_rgba(22,36,31,.14)] sm:p-6"><div className="rounded-[1.5rem] bg-[#16241f] p-4 text-white sm:p-5"><div className="mb-5 flex items-center justify-between"><span className="text-xs font-bold uppercase tracking-[.18em] text-[#f6c453]">Today&apos;s learning board</span><span className="rounded-full bg-[#24463a] px-2.5 py-1 text-xs font-bold text-[#bdebd5]">Topic 1.3</span></div><div className="grid gap-3 sm:grid-cols-3"><Card icon="👀" title="READ" text="See the idea" /><Card icon="✋" title="COVER" text="Try it yourself" /><Card icon="🎯" title="TEST" text="Show what stuck" /></div><div className="mt-5 rounded-2xl border border-white/10 bg-[#20362e] p-4"><div className="flex items-center gap-3"><span className="grid h-10 w-10 place-items-center rounded-full bg-[#f6c453] text-xl">🦊</span><div><p className="text-sm font-bold text-[#f6c453]">Ezy says</p><p className="text-sm text-[#e1eee7]">Let&apos;s solve this one small step together.</p></div></div><div className="mt-4 h-2 overflow-hidden rounded-full bg-[#385247]"><div className="h-full w-2/3 rounded-full bg-[#f6c453]" /></div></div></div><div className="absolute -bottom-4 -left-3 rounded-2xl border border-[#dbe2db] bg-white px-4 py-3 text-sm font-bold text-[#29453b] shadow-lg sm:-left-8">🌱 Progress, not pressure</div></div>; }
+function Card({ icon, title, text }: { icon: string; title: string; text: string }) { return <div className="rounded-2xl border border-white/20 bg-[#214038] p-3"><span className="text-2xl">{icon}</span><p className="mt-3 text-[10px] font-extrabold tracking-[.15em] text-[#c9d9ce]">{title}</p><p className="mt-1 text-sm font-bold">{text}</p></div>; }
+function Eyebrow({ children, light = false }: { children: React.ReactNode; light?: boolean }) { return <p className={`text-sm font-extrabold uppercase tracking-[.18em] ${light ? "text-[#f6c453]" : "text-[#c47b21]"}`}>{children}</p>; }
+function Pain({ pain, answer }: { pain: string; answer: string }) { return <div className="rounded-2xl border border-[#dce7dc] bg-white p-5 shadow-sm"><p className="font-display text-lg font-bold text-[#c47b21]">{pain}</p><p className="mt-2 text-sm leading-6 text-[#66766d]">{answer}</p></div>; }
+function Journey({ n, title, text, active = false }: { n: string; title: string; text: string; active?: boolean }) { return <div className={`flex items-center gap-4 rounded-2xl border p-4 ${active ? "border-[#f6c453]/60 bg-[#24463a]" : "border-white/10 bg-white/5"}`}><span className="text-xs font-extrabold text-[#f6c453]">{n}</span><div><p className="font-bold">{title}</p><p className="text-sm text-[#c9d9ce]">{text}</p></div><span className="ml-auto text-[#f6c453]">→</span></div>; }
+function Feature({ title, text }: { title: string; text: string }) { return <div className="rounded-2xl border border-[#e4e9e1] bg-white p-4"><h3 className="font-bold text-[#29453b]">{title}</h3><p className="mt-1 text-sm leading-6 text-[#66766d]">{text}</p></div>; }
+function Step({ n, title, text }: { n: string; title: string; text: string }) { return <div className="rounded-2xl border border-[#e4e9e1] bg-[#fffaf0] p-5"><span className="text-sm font-extrabold text-[#c47b21]">{n}</span><h3 className="mt-5 text-xl font-bold">{title}</h3><p className="mt-2 text-sm leading-6 text-[#66766d]">{text}</p></div>; }
