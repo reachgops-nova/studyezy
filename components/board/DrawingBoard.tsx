@@ -5,6 +5,7 @@ import React from "react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { BoardFrame, BoardTask, BoardUnit } from "@/lib/boardUnits/types";
 import { sanitizeSvgFragment } from "@/lib/richScene";
+import VoiceReciteCheck from "./VoiceReciteCheck";
 
 /**
  * The Drawing Board: a five-phase lesson surface built to the reference the
@@ -1131,7 +1132,7 @@ export default function DrawingBoard({ unit, paperTasks = [] }: { unit: BoardUni
               </p>
               <div className="flex flex-col gap-2">
                 {topicRecitePrompts.map((r) => (
-                  <ReciteCard key={r.ask} prompt={r} onSay={say} onComplete={() => activeConceptId && markReciteComplete(activeConceptId)} />
+                  <ReciteCard key={r.ask} prompt={r} onSay={say} unitKey={unit.unitKey} conceptId={activeConceptId ?? unit.concepts[0]?.conceptId ?? ""} languageCode={language} languageLabel={BOARD_LANGUAGES.find((item) => item.code === language)?.label ?? "English"} onComplete={() => activeConceptId && markReciteComplete(activeConceptId)} />
                 ))}
               </div>
               <p className="pt-1 text-[0.7rem] font-extrabold uppercase tracking-wider text-slate-500">
@@ -1826,11 +1827,19 @@ function NumberLineStage({
 function ReciteCard({
   prompt,
   onSay,
+  unitKey,
+  conceptId,
+  languageCode,
+  languageLabel,
   onComplete,
   revealLabel = "I've said it - show me",
 }: {
   prompt: { ask: string; answer: string };
   onSay: (t: string) => void;
+  unitKey?: string;
+  conceptId?: string;
+  languageCode?: string;
+  languageLabel?: string;
   onComplete?: () => void;
   revealLabel?: string;
 }) {
@@ -1841,17 +1850,13 @@ function ReciteCard({
       {shown ? (
         <p className="mt-2 rounded-xl bg-[#38bdf8]/10 px-3 py-2 text-[0.8rem] leading-snug text-[#7dd3fc]">{prompt.answer}</p>
       ) : (
-        <button
-          type="button"
-          onClick={() => {
-            setShown(true);
-            onComplete?.();
-            onSay(prompt.answer);
-          }}
-          className="mt-2 rounded-xl border-2 border-slate-600 px-3 py-1.5 text-[0.78rem] font-bold text-slate-300 hover:border-[#38bdf8] hover:text-[#38bdf8]"
-        >
-          {revealLabel}
-        </button>
+        <>
+          {unitKey && conceptId ? (
+            <VoiceReciteCheck prompt={prompt.ask} answer={prompt.answer} unitKey={unitKey} conceptId={conceptId} languageCode={languageCode ?? "en-IN"} languageLabel={languageLabel ?? "English"} onSay={onSay} onComplete={() => { setShown(true); onComplete?.(); }} />
+          ) : (
+            <button type="button" onClick={() => { setShown(true); onComplete?.(); onSay(prompt.answer); }} className="mt-2 rounded-xl border-2 border-slate-600 px-3 py-1.5 text-[0.78rem] font-bold text-slate-300 hover:border-[#38bdf8] hover:text-[#38bdf8]">{revealLabel}</button>
+          )}
+        </>
       )}
     </div>
   );

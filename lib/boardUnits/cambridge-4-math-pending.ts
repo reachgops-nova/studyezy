@@ -178,6 +178,55 @@ const MATH_DEFINITIONS: MathDefinition[] = [
 ];
 
 function conceptFrame(definition: MathDefinition, index: number): BoardFrame {
+  if (definition.number === 3 && definition.concepts[index]?.id === "3.1") {
+    return {
+      line: {
+        min: -5,
+        max: 9,
+        step: 1,
+        marks: [
+          { at: -4, label: "start −4", tone: "blue" },
+          { at: 0, label: "zero", tone: "gold" },
+          { at: 5, label: "finish 5", tone: "green" },
+        ],
+        jumps: [
+          { from: -4, to: 0, label: "+4 to zero" },
+          { from: 0, to: 5, label: "+5 more" },
+        ],
+      },
+    };
+  }
+  if (definition.number === 18 && definition.concepts[index]?.id === "18.1") {
+    return {
+      timeline: {
+        title: "World time zones · east and west",
+        events: [
+          { when: "12:00 noon", what: "Lagos", note: "Starting time.", tone: "blue" },
+          { when: "+5 hours", what: "Move east to Delhi", note: "East is ahead, so add 5 hours.", tone: "gold" },
+          { when: "17:00 / 5:00 pm", what: "Delhi", note: "12:00 + 5 = 17:00.", tone: "green" },
+          { when: "Previous day", what: "Moving west", note: "West is behind, so subtract hours; the date may change.", tone: "red" },
+        ],
+      },
+    };
+  }
+  if (definition.number === 18 && definition.concepts[index]?.id === "18.2") {
+    return {
+      line: {
+        min: 0,
+        max: 90,
+        step: 15,
+        marks: [
+          { at: 0, label: "11:20 start", tone: "blue" },
+          { at: 40, label: "12:00", tone: "gold" },
+          { at: 45, label: "12:05 finish", tone: "green" },
+        ],
+        jumps: [
+          { from: 0, to: 40, label: "+40 min" },
+          { from: 40, to: 45, label: "+5 min" },
+        ],
+      },
+    };
+  }
   if (definition.visual === "bars") {
     return {
       bar: {
@@ -206,22 +255,61 @@ function conceptFrame(definition: MathDefinition, index: number): BoardFrame {
       min: 0,
       max: 10,
       step: 1,
-      marks: [{ at: mark, label: "look here", tone: "green" }],
-      jumps: [{ from: 0, to: mark, label: "explore the move" }],
+      marks: [{ at: mark, label: definition.concepts[index]?.title ?? "example", tone: "green" }],
+      jumps: [{ from: 0, to: mark, label: `show ${definition.concepts[index]?.title ?? "the change"}` }],
     },
   };
 }
 
 function makeTask(definition: MathDefinition, concept: MathDefinition["concepts"][number], index: number, title: string): BoardTask {
   const frame = conceptFrame(definition, index);
+  if (definition.number === 3 && concept.id === "3.1") {
+    return {
+      title,
+      prompt: "Start at −4 on the number line and add 9. Where do you land?",
+      conceptId: concept.id,
+      setup: frame,
+      options: [
+        { label: "5", correct: true, say: "Correct. Move 4 steps right to 0, then 5 more steps right to land on 5.", frame },
+        { label: "−13", correct: false, say: "Adding 9 moves right, not left. From −4, cross zero and land on 5.", frame },
+        { label: "−5", correct: false, say: "That is only one step left of −4. Adding 9 means nine steps to the right.", frame },
+      ],
+    };
+  }
+  if (definition.number === 18 && concept.id === "18.1") {
+    return {
+      title,
+      prompt: "It is 12:00 noon in Lagos. Delhi is 5 hours east. What time is it in Delhi?",
+      conceptId: concept.id,
+      setup: frame,
+      options: [
+        { label: "17:00 (5:00 pm)", correct: true, say: "Correct. East is ahead, so add 5 hours: 12:00 + 5 = 17:00.", frame },
+        { label: "07:00 (7:00 am)", correct: false, say: "That moved in the wrong direction. Delhi is east and ahead, so add 5 hours.", frame },
+        { label: "12:00 noon", correct: false, say: "Different time zones do not keep the same local time. Add the 5-hour difference.", frame },
+      ],
+    };
+  }
+  if (definition.number === 18 && concept.id === "18.2") {
+    return {
+      title,
+      prompt: "A show starts at 11:20 am and lasts 45 minutes. What time does it finish?",
+      conceptId: concept.id,
+      setup: frame,
+      options: [
+        { label: "12:05 pm", correct: true, say: "Correct. Jump 40 minutes to 12:00, then 5 more minutes to 12:05.", frame },
+        { label: "11:65 am", correct: false, say: "Minutes stop at 60. Regroup 40 minutes to reach 12:00, then add 5 minutes.", frame },
+        { label: "10:35 am", correct: false, say: "That subtracted the duration. To find an end time, add the duration and work forward.", frame },
+      ],
+    };
+  }
   return {
     title,
-    prompt: `Which idea is this practice for: ${concept.title}?`,
+    prompt: `Use the board model to show one worked example of ${concept.title}. Which response follows the rule?`,
     conceptId: concept.id,
     setup: frame,
     options: [
-      { label: concept.title, correct: true, say: `Yes. This is the ${concept.title} idea. Explain it in your own words before moving on.`, frame },
-      { label: "A different topic", correct: false, say: `Not this time. Look at the visual clue and return to ${concept.title}.`, frame: {} },
+      { label: `The model shows ${concept.title} correctly`, correct: true, say: `Yes. Now explain each step and check the result against the example.`, frame },
+      { label: "Skip the model and guess", correct: false, say: `Use the visible model first, then explain why the result fits ${concept.title}.`, frame: {} },
     ],
   };
 }
@@ -232,12 +320,30 @@ function makeBoardUnit(definition: MathDefinition): BoardUnit {
     title: concept.title,
     icon: concept.icon,
     summary: concept.summary,
-    keyPoints: [concept.summary, "Tap the board, talk through the example, then check your thinking."],
-    examples: [
-      { question: `What does ${concept.title} mean?`, answer: concept.summary },
-      { question: `How could you show ${concept.title} on paper?`, answer: "Draw a model, label the important parts, and explain each step aloud." },
-      { question: `What should you check when working with ${concept.title}?`, answer: "Check the units, the operation, and whether the answer makes sense in the model." },
-    ],
+    keyPoints: definition.number === 18 && concept.id === "18.1"
+      ? ["The world is divided into 24 hourly time zones.", "East is ahead: add hours. West is behind: subtract hours.", "Subtracting across midnight can move the date to the previous day."]
+      : definition.number === 18 && concept.id === "18.2"
+        ? ["To find an end time, add the duration and work forward.", "Jump to the next round hour first, then add the remaining minutes.", "To find a start time, subtract the duration and work backward."]
+        : [concept.summary, "Tap the board, talk through the example, then check your thinking."],
+    examples: definition.number === 3 && concept.id === "3.1"
+      ? [
+          { question: "Start at −4 and add 9. Where do you land?", answer: "5: move 4 steps right to 0, then 5 more steps right." },
+          { question: "Start at 5 and subtract 9. Where do you land?", answer: "−4: move 5 steps left to 0, then 4 more steps left." },
+        ]
+      : definition.number === 18 && concept.id === "18.1"
+      ? [
+          { question: "12:00 noon in Lagos; Delhi is 5 hours east. Find Delhi time.", answer: "17:00 (5:00 pm), because 12:00 + 5 hours = 17:00." },
+          { question: "7:00 am on 13 July in Sydney; another city is 14 hours behind. Find its local time.", answer: "5:00 pm on 12 July: subtract 14 hours and cross into the previous day." },
+        ]
+      : definition.number === 18 && concept.id === "18.2"
+        ? [
+            { question: "A show starts at 11:20 am and lasts 45 minutes.", answer: "12:05 pm: +40 minutes reaches 12:00, then +5 minutes." },
+            { question: "A film finishes at 8:15 pm and lasts 90 minutes.", answer: "6:45 pm: subtract 60 minutes to 7:15, then 30 minutes." },
+          ]
+        : [
+            { question: `Use the board model to show one worked example of ${concept.title}.`, answer: `${concept.summary} Show the operation, label the units, and check that the answer makes sense.` },
+            { question: `What should you check when working with ${concept.title}?`, answer: "Check the units, the operation, and whether the answer makes sense in the model." },
+          ],
     quickCheck: [makeTask(definition, concept, index, `Ready check · ${concept.id}`)],
   }));
 
@@ -261,7 +367,9 @@ function makeBoardUnit(definition: MathDefinition): BoardUnit {
     concepts,
     conceptSteps,
     guidedTasks,
-    lab: { prompt: `Move the point and describe how the ${definition.title.toLowerCase()} idea changes.`, start: [2, 2], shape: [[0, 0], [2, 0], [2, 2], [0, 2]], range: { min: -2, max: 6 } },
+    lab: { prompt: definition.number === 18
+      ? "Use the visible time jumps to explain whether you are adding eastward or subtracting westward."
+      : `Use the highlighted model to work one ${definition.title.toLowerCase()} example and explain each change.`, start: [2, 2], shape: [[0, 0], [2, 0], [2, 2], [0, 2]], range: { min: -2, max: 6 } },
     recitePrompts: definition.concepts.map((concept) => ({ ask: `Say the rule for ${concept.title}.`, answer: concept.summary })),
     writtenPractice: definition.concepts.slice(0, 4).map((concept) => ({ question: `Write one worked example for ${concept.title}.`, answer: concept.summary })),
     assessmentStory: conceptFrame(definition, 0),

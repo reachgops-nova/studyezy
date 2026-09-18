@@ -78,12 +78,12 @@ function taskFor(definition: EnglishDefinition, concept: EnglishDefinition["conc
   const frame = frameFor(concept);
   return {
     title: `${prefix} · ${concept.id}`,
-    prompt: `Which idea are you practising: ${concept.title}?`,
+    prompt: `Use Notice → Evidence → Explain for this ${concept.title} example. Which response follows the method?`,
     conceptId: concept.id,
     setup: frame,
     options: [
-      { label: concept.title, correct: true, say: `Yes. This is ${concept.title}. Explain the clue in your own words.`, frame },
-      { label: "A different English idea", correct: false, say: `Look again at the highlighted clue. It belongs to ${concept.title}.`, frame: {} },
+      { label: `The evidence supports ${concept.title}`, correct: true, say: `Yes. Name the feature, point to the exact clue, and explain its effect or meaning.`, frame },
+      { label: "Make a claim without evidence", correct: false, say: `Return to the highlighted clue. An answer needs a precise word or phrase as evidence.`, frame: {} },
     ],
   };
 }
@@ -96,8 +96,8 @@ function makeEnglishUnit(definition: EnglishDefinition): BoardUnit {
     summary: concept.summary,
     keyPoints: [concept.summary, "Use a word or phrase from the passage as evidence."],
     examples: [
-      { question: `What does ${concept.title} mean?`, answer: concept.summary },
-      { question: `How would you show ${concept.title} in your answer?`, answer: "Name the feature, quote a short clue, and explain the effect or meaning." },
+      { question: `Use Notice → Evidence → Explain to show ${concept.title}.`, answer: `${concept.summary} Name the feature, quote a short clue, and explain the effect or meaning.` },
+      { question: `What exact evidence would you choose for ${concept.title}?`, answer: "Choose the relevant word, phrase, punctuation or stage/text detail, then explain why it matters." },
       { question: `What should you check for ${concept.title}?`, answer: "Check the exact words, the audience, and the evidence before deciding." },
     ],
     quickCheck: [taskFor(definition, concept, index, "Ready check")],
@@ -121,7 +121,7 @@ function makeEnglishUnit(definition: EnglishDefinition): BoardUnit {
     concepts,
     conceptSteps,
     guidedTasks,
-    lab: { prompt: "Move the sliders to make a visible writing plan: idea, evidence, explanation.", start: [2, 2], shape: [[0, 0], [2, 0], [2, 2], [0, 2]], range: { min: -2, max: 6 } },
+    lab: { prompt: "Build a visible answer plan: identify the feature, point to evidence, then explain its effect.", start: [2, 2], shape: [[0, 0], [2, 0], [2, 2], [0, 2]], range: { min: -2, max: 6 } },
     recitePrompts: definition.concepts.map((concept) => ({ ask: `Say the rule for ${concept.title}.`, answer: concept.summary })),
     writtenPractice: definition.concepts.slice(0, 4).map((concept) => ({ question: `Write a short example showing ${concept.title}.`, answer: `${concept.summary} Use a short quotation or detail as evidence.` })),
     assessmentStory: frameFor(definition.concepts[0]),

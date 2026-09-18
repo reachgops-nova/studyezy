@@ -115,6 +115,173 @@ pilot pricing language, and CTAs. New public legal pages are
 `app/terms/page.tsx` and `app/privacy/page.tsx`. Commit `96ab666` is live and
 the homepage, `/terms`, and `/privacy` returned HTTP 200.
 
+## Tamil Nadu Grade 9 Science audit (2026-09-18)
+
+The supplied textbook is present and readable at:
+
+`/Users/gopsair/Downloads/Class_9_Science_English_2024_Edition-www.tntextbooks.in.pdf`
+
+It is the Government of Tamil Nadu Standard IX Science revised/reprint
+edition, 328 PDF pages. The contents page lists 25 units: Measurement,
+Motion, Fluids, Electric charge and Electric current, Magnetism and
+Electromagnetism, Light, Heat, Sound, Universe, Matter Around Us, Atomic
+Structure, Periodic Classification of Elements, Chemical Bonding, Acids Bases
+and Salts, Carbon and its Compounds, Applied Chemistry, Animal Kingdom,
+Organisation of Tissues, Plant Physiology, Organ Systems in Animals, Nutrition
+and Health, World of Microbes, Economic Biology, Environmental Science, and
+LibreOffice Impress; Practicals and Glossary follow.
+
+The repository already has bespoke interactive pilots for
+`tamilnadustateboard-9-science-1` and `-2` (Measurement and Motion), but no
+complete DB-backed Tamil Nadu curriculum/catalog entry for all 25 units. Start
+implementation with Unit 1 Measurement, use Unit 2 as the existing visual
+reference, and keep the shared Read -> Cover -> Recite -> Test -> Results
+progression and topic gating intact.
+
+## Unit 1 implementation handoff (2026-09-18)
+
+Unit 1 Measurement's Board lesson layer is implemented in
+`lib/boardUnits/tamilnadustateboard-9-science-1.ts` and registered in
+`lib/boardUnits/index.ts`. The five concepts are `1.1` Physical quantities
+and SI units, `1.2` prefixes and astronomical units, `1.3` vernier caliper,
+`1.4` screw gauge, and `1.5` mass/weight/accuracy. Each includes textbook
+page references, key points, worked practice, quick check, guided task,
+recitation, written practice, and final test coverage.
+
+Visuals are Board-native and interactive: SI concept cards, a powers-of-ten
+timeline, labelled vernier-caliper and screw-gauge diagrams, and a mass versus
+weight comparison. They use the shared Board's animated transitions and safe
+SVG handling. NotebookLM/AI-generated artwork must remain a visual brief or
+analogy only; factual labels, equations, and assessed answers stay in typed
+data/UI.
+
+`hasBoardRoute` recognises `tamilnadustateboard-9-science-1`, making the static
+Board available at `/board/tamilnadustateboard-9-science-1` after login. The
+static Board layer is complete, but DB-backed curriculum/catalog rows are still
+needed for `/select`; page-gallery attachment and a final Unit 1 audit against
+the existing interactive players are next.
+
+Validation: `npx tsc --noEmit --pretty false`, `git diff --check`, and
+`npm run build` pass. Both handoff files are intentionally uncommitted until
+the next content/deployment checkpoint.
+
+NotebookLM check at the end of this unit: authentication is healthy for the
+active `StudyEzy` notebook, but a targeted Unit 1 query returned unrelated
+Cambridge Unit 17 implementation notes. Do not use the current notebook as a
+Science source until its uploads are repaired; the local Tamil Nadu PDF is the
+source of truth for this unit.
+
+## Cambridge Board visual/content audit (2026-09-18)
+
+The Math Unit 18.1 issue was confirmed and fixed. The generic pending-unit
+factory had rendered `explore the move` instead of a world-time-zone example.
+`lib/boardUnits/cambridge-4-math-pending.ts` now gives 18.1 a concrete Lagos
+12:00 -> Delhi +5 hours -> 17:00 timeline, east/add and west/subtract rule,
+and Sydney 7:00 am on 13 July -> 5:00 pm on 12 July date-crossing example.
+Unit 18.2 now has the concrete 11:20 am + 45 minutes -> 12:05 pm timeline,
+with +40 and +5 minute jumps and backward-duration practice.
+
+The cross-unit source fix is in `lib/boardUnits/curriculumAdapter.ts`: for
+all DB-backed Cambridge units using the generic Board factory, the first Cover
+task now comes from the first real textbook example for each concept. This
+puts a real example on the Board before progression, while preserving typed
+visuals and separate graded tests; bespoke visual units keep their authored
+steps.
+
+Validation passed: `npx tsc --noEmit --pretty false`, `git diff --check`, and
+`npm run build`. NotebookLM auth remains healthy, but its current notebook
+still returns unrelated Unit 17 notes for a targeted Unit 1 query, so it was
+not used as the factual source for this correction.
+
+## Cambridge end-to-end visual/content audit (2026-09-18)
+
+Added `scripts/audit-board-coverage.ts`. The audit covers all 27 registered
+Cambridge Math/English Board units and passes: every concept has a Read step,
+worked example, topic quick check, Cover task, and Test coverage, with no known
+generic placeholder prompt in surfaced Board data.
+
+`lib/boardUnits/index.ts` now normalizes static Board units so a missing
+concept step, quick check, or Cover task cannot silently skip a topic. The
+DB-backed adapter still puts the real textbook example first, so the fallback
+is only for unlinked/static use.
+
+Math and English pending-unit factories now use visible model/evidence tasks
+instead of abstract topic-identification prompts. Math Unit 18 keeps its
+explicit world-time-zone and start/end-time visuals and examples.
+
+Validation passed: `node -r tsx/cjs scripts/audit-board-coverage.ts`,
+`npx tsc --noEmit --pretty false`, `git diff --check`, and `npm run build`.
+
+NotebookLM authentication is healthy, but the existing StudyEzy notebook is
+grounded to mismatched content. The current connector cannot create a new
+notebook and requires a new NotebookLM share URL from the user. Use that new
+notebook for source-grounded visual briefs once supplied; it does not directly
+export animated image assets, so factual Board visuals remain typed
+SVG/React scenes and generated art stays decorative/non-factual.
+
+## Shared voice Recite implementation (2026-09-18)
+
+Added `components/board/VoiceReciteCheck.tsx` and integrated it into
+`components/board/DrawingBoard.tsx`. Every Board recitation prompt can now be
+spoken, transcribed, shown as `I heard: ...`, and checked before the learner
+can mark that recitation item complete. Browser speech recognition is tried
+first and uses no StudyEzy LLM tokens.
+
+The component performs a local keyword/number check for clear answers. Only
+uncertain answers call `/api/micro-check`, which gives corrective feedback and
+keeps partial/incorrect answers in Recite for another try. A browser without
+microphone speech support can still reveal the reference answer.
+
+`app/api/micro-check/route.ts` caches successful uncertain recite verdicts and
+feedback in the existing persistent `AnswerCache`; repeated matching answers
+produce a zero-token cache hit. The selected language is passed to the
+existing provider/TTS path. This is a shared Board-template capability, so
+future books only need normal `recitePrompts` and `writtenPractice` data.
+
+Validation: 27-unit Board audit, `npx tsc --noEmit --pretty false`,
+`git diff --check`, and `npm run build` pass.
+
+## Math Unit 3.1 signed-number visual fix (2026-09-18)
+
+Fixed the reported gap in `lib/boardUnits/cambridge-4-math-pending.ts`.
+Concept 3.1 now uses a signed number line from `-5` to `9`, visibly marks
+`-4`, `0`, and `5`, and shows the worked jumps `-4 -> 0 -> 5`. Its Cover,
+quick-check, and Test task ask the concrete calculation `-4 + 9 = 5`, while
+the concept examples also cover `5 - 9 = -4`.
+
+`scripts/audit-board-coverage.ts` now asserts that Math 3.1 includes values
+below zero and a negative-number worked example. Audit, TypeScript, diff check,
+and production build pass.
+
+## Per-topic RCRT phase ownership fix (2026-09-18)
+
+Fixed the reported Recite leak where one topic displayed prompts from all
+subtopics. Legacy `recitePrompts` and `writtenPractice` entries without a
+`conceptId` had been treated as unit-wide, while Results counted only owned
+entries. The shared `completeBoardUnit` normalizer in
+`lib/boardUnits/index.ts` now:
+
+- assigns unowned Recite/written items to the closest concept using topic
+  vocabulary, with a deterministic fallback;
+- adds an owned Recite prompt and written practice item for every concept;
+- adds an owned Test task when the authored unit omitted one;
+- preserves authored concept IDs/content;
+- keeps the active topic isolated through Read, Cover, Recite, Test, and
+  Results.
+
+The audit now checks ownership in all five phases for every Cambridge concept.
+All 27 Cambridge Board units pass. TypeScript, diff check, and production
+build pass.
+
+## Release-readiness verification (2026-09-18)
+
+`npm test` reports 2 test files and 13 tests passing. The 27-unit phase audit,
+TypeScript, `git diff --check`, and `npm run build` also pass. Ready for a
+controlled live push. A manual browser click-through of every unit was not
+performed in this session; after deployment, smoke test a negative-number Math
+unit, Math Unit 18, an English unit, and voice Recite in the target
+browser/language.
+
 ## Resume instruction
 
 Continue StudyEzy Board coverage from

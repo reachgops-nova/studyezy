@@ -3,6 +3,8 @@ import { getActiveProfileId } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { groqMicroCheckGrade, isGroqConfigured, type MicroCheckVerdict } from "@/lib/groq";
 import { checkRateLimit } from "@/lib/rateLimit";
+import { getCachedAnswer, saveCachedAnswer } from "@/lib/answerCache";
+import { logCacheHit } from "@/lib/aiCost";
 
 const UNIT_KEY_PATTERN = /^[a-z0-9]+-\d+-[a-z0-9]+-\d+$/i;
 const MAX_LEN = 2000;
@@ -111,9 +113,28 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ verdict, feedback: LOW_EFFORT_FEEDBACK[ackIndex % LOW_EFFORT_FEEDBACK.length] });
   }
 
+  // A spoken answer can be repeated by the same child or another child. Keep
+  // the expected answer and normalized transcript in the existing persistent
+  // cache so an uncertain recitation that already received feedback never
+  // spends another provider call.
+  const cacheQuestion = `recite question: ${question}\nexpected: ${resolvedExpectedAnswer}\nstudent: ${trimmedAnswer}`.slice(0, 5000);
+  const cached = await getCachedAnswer(unitKey, conceptId, resolvedLanguage, cacheQuestion);
+  if (cached) {
+    try {
+      const parsed = JSON.parse(cached.answer) as { verdict?: MicroCheckVerdict; feedback?: string };
+      if (parsed.verdict && parsed.feedback) {
+        logCacheHit("micro-check");
+        return NextResponse.json(parsed);
+      }
+    } catch {
+      // Ignore older/non-micro-check cache rows sharing this key shape.
+    }
+  }
+
   if (isGroqConfigured()) {
     try {
       const grade = await groqMicroCheckGrade(question, resolvedExpectedAnswer, trimmedAnswer, resolvedLanguage, resolvedAttempt);
+      await saveCachedAnswer(unitKey, conceptId, resolvedLanguage, cacheQuestion, JSON.stringify(grade));
       return NextResponse.json(grade);
     } catch (err) {
       console.error("groqMicroCheckGrade failed, defaulting to a lenient pass", err);

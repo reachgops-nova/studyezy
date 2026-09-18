@@ -45,7 +45,7 @@ function toBoardConcept(concept: Concept, existing?: BoardConcept): BoardConcept
     pages: concept.book_pages,
     storyReference: concept.story_reference?.title,
     examples: textbookExamples.length ? textbookExamples : existing?.examples ?? [],
-    quickCheck: existing?.quickCheck,
+    quickCheck: existing?.quickCheck?.length ? existing.quickCheck : [taskFor(concept, 0, "Quick check")],
   };
 }
 
@@ -67,7 +67,10 @@ export function enrichBoardUnit(board: BoardUnit, source: CurriculumUnit): Board
   }, concept));
   const textbookSteps = source.concepts.flatMap((sourceConcept) => {
     const frame = board.conceptSteps.find((step) => step.conceptId === sourceConcept.concept_id)?.frame ?? conceptFrame(sourceConcept);
-    return (sourceConcept.key_points ?? []).map((point, index) => ({
+    const points = sourceConcept.key_points?.length
+      ? sourceConcept.key_points
+      : [sourceConcept.definition ?? `Explain ${sourceConcept.concept_name} in your own words.`];
+    return points.map((point, index) => ({
       label: `${sourceConcept.concept_id} · Key point ${index + 1}`,
       conceptId: sourceConcept.concept_id,
       say: point,
@@ -83,10 +86,31 @@ export function enrichBoardUnit(board: BoardUnit, source: CurriculumUnit): Board
     answer: example,
     conceptId: concept.concept_id,
   })));
+  // Pending Board units previously left their generic factory task first
+  // ("Which idea is this practice for?") even when the DB already contained
+  // the real textbook example. That made a topic such as world time zones
+  // look like an abstract number-line move. Put one concrete source example
+  // into Cover for every concept; the final Test remains separate and graded.
+  const sourceGuidedTasks: BoardTask[] = source.concepts.map((concept) => {
+    const example = concept.examples?.[0] ?? concept.definition ?? concept.key_points?.[0] ?? `Explain ${concept.concept_name} in your own words.`;
+    const frame = board.conceptSteps.find((step) => step.conceptId === concept.concept_id)?.frame ?? conceptFrame(concept);
+    return {
+      title: `Textbook example · ${concept.concept_id}`,
+      prompt: example,
+      conceptId: concept.concept_id,
+      setup: frame,
+      options: [
+        { label: "I can explain this example", correct: true, say: `Good. Explain each step and check the result against this source example: ${example}`, frame },
+        { label: "I need the walkthrough again", correct: false, say: `Return to the Read step for ${concept.concept_name}, then try this example again.`, frame },
+      ],
+    };
+  });
+  const genericFactoryBoard = board.conceptSteps.some((step) => step.label.includes("Meet the idea"));
   return {
     ...board,
     concepts,
-    conceptSteps: [...board.conceptSteps, ...textbookSteps],
+    conceptSteps: genericFactoryBoard ? [...textbookSteps, ...board.conceptSteps] : [...board.conceptSteps, ...textbookSteps],
+    guidedTasks: sourceGuidedTasks.length ? sourceGuidedTasks : board.guidedTasks,
     recitePrompts: [...board.recitePrompts, ...textbookRecite],
     writtenPractice: [...board.writtenPractice, ...textbookWritten],
     intro: {
