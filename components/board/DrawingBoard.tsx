@@ -462,6 +462,12 @@ export default function DrawingBoard({ unit, paperTasks = [] }: { unit: BoardUni
     };
   }, [unit.lab, dx, dy]);
 
+  // The coordinate equation and arrows are part of the board lesson, not a
+  // hidden result behind a button. Keep them synced while either slider moves.
+  useEffect(() => {
+    if (phase === 3 && unit.lab.kind !== "timeZone") setFrame(labFrame);
+  }, [phase, unit.lab.kind, labFrame]);
+
   function goPhase(p: number) {
     if (phase === 1 && p > 1 && !examplesComplete()) {
       setFocusPanel("lesson");
@@ -488,6 +494,7 @@ export default function DrawingBoard({ unit, paperTasks = [] }: { unit: BoardUni
       setFrame(topicGuidedTasks.find((t) => !answers[t.title])?.setup ?? {});
       say("Cover. The explanation is put away - try these from memory. Even a wrong answer will show you where it would land.");
     } else if (p === 3) {
+      setFrame(unit.conceptSteps[step]?.frame ?? {});
       say("Recite. Say the rule back in your own words first, then play with the sliders and watch the shape travel.");
     } else if (p === 4) {
       setFrame(unit.assessmentStory ?? {});
@@ -957,6 +964,24 @@ export default function DrawingBoard({ unit, paperTasks = [] }: { unit: BoardUni
             )}
           </div>
 
+          {/* Keep the exact worked example visible during Recite. The child
+              should never have to remember which side-panel question a
+              generic prompt was pointing at. */}
+          {phase === 3 && activeConcept?.examples?.length ? (
+            <div className="mx-3 mb-2 shrink-0 rounded-2xl border-2 border-[#34d399] bg-[#052e2b] px-3 py-2 shadow-lg shadow-emerald-950/30">
+              <div className="flex items-center justify-between gap-2">
+                <p className="text-[0.68rem] font-extrabold uppercase tracking-wider text-[#6ee7b7]">📌 Recite from this board example</p>
+                <span className="text-[0.68rem] font-bold text-emerald-200">{activeConcept.conceptId} · {activeConcept.title}</span>
+              </div>
+              {activeConcept.examples.map((example, index) => (
+                <div key={example.question} className="mt-1.5 rounded-xl bg-[#064e3b]/70 px-2.5 py-1.5 text-[0.78rem] leading-snug">
+                  <p className="font-bold text-white">{index + 1}. {example.question}</p>
+                  <p className="text-emerald-100">Answer: {example.answer}</p>
+                </div>
+              ))}
+            </div>
+          ) : null}
+
           {/* Narration */}
           <div className="flex shrink-0 items-center gap-3 border-t-[3px] border-[#38bdf8] bg-[#020617]/95 px-4 py-3">
             <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#38bdf8] text-lg">🎙️</span>
@@ -1127,8 +1152,7 @@ export default function DrawingBoard({ unit, paperTasks = [] }: { unit: BoardUni
             <>
               <h2 className="border-b-2 border-slate-700 pb-2 text-lg font-bold text-[#f59e0b]">🗣️ Recite</h2>
               <p className="text-[0.8rem] text-slate-400">
-                Have a go at saying each one out loud before you reveal the answer. Nothing here is marked - it is for
-                you to hear whether you have really got it.
+                Say the rule and the worked example shown on the board. Each prompt belongs to <strong className="text-slate-200">{activeConcept?.conceptId} {activeConcept?.title}</strong>; nothing from the next topic is included.
               </p>
               <div className="flex flex-col gap-2">
                 {topicRecitePrompts.map((r) => (
@@ -1145,7 +1169,14 @@ export default function DrawingBoard({ unit, paperTasks = [] }: { unit: BoardUni
               </div>
               <p className="pt-1 text-[0.7rem] font-extrabold uppercase tracking-wider text-slate-500">Then play with it</p>
               <p className="text-[0.82rem] leading-snug text-slate-400">{unit.lab.prompt}</p>
-              <div className="flex flex-col gap-3 rounded-2xl border border-slate-700 bg-[#0f172a] p-3">
+              {unit.lab.kind === "timeZone" ? (
+                <div className="rounded-2xl border-2 border-[#38bdf8] bg-[#082f49]/60 p-3 text-[0.82rem] leading-snug text-slate-200">
+                  <p className="font-extrabold text-[#7dd3fc]">🌍 Direction rule</p>
+                  <p className="mt-1"><strong className="text-[#fbbf24]">EAST → add hours</strong> because east is ahead.</p>
+                  <p><strong className="text-[#fb7185]">WEST ← subtract hours</strong> because west is behind.</p>
+                  <p className="mt-2 font-bold text-white">Example: 7:00 am − 14 hours = 5:00 pm on the previous day.</p>
+                </div>
+              ) : <div className="flex flex-col gap-3 rounded-2xl border border-slate-700 bg-[#0f172a] p-3">
                 <label className="flex items-center justify-between gap-3 text-[0.82rem] font-bold">
                   <span>Across</span>
                   <input type="range" min={unit.lab.range.min} max={unit.lab.range.max} value={dx}
@@ -1158,15 +1189,16 @@ export default function DrawingBoard({ unit, paperTasks = [] }: { unit: BoardUni
                     onChange={(e) => setDy(Number(e.target.value))} className="flex-1 accent-[#f59e0b]" />
                   <strong className="w-20 text-right text-[#f59e0b] tabular-nums">{dy >= 0 ? `${dy} up` : `${-dy} down`}</strong>
                 </label>
-              </div>
-              <div className="rounded-2xl border-2 border-[#f59e0b] bg-[#f59e0b]/10 px-3.5 py-2.5 text-[0.85rem] font-bold text-[#fef08a]">
-                📍 ({unit.lab.start[0]} + {dx}, {unit.lab.start[1]} + {dy}) ={" "}
-                <strong className="text-white">({unit.lab.start[0] + dx}, {unit.lab.start[1] + dy})</strong>
-              </div>
-              <button type="button" onClick={() => { setFrame(labFrame); say(`Landed at ${unit.lab.start[0] + dx}, ${unit.lab.start[1] + dy}.`); }}
+                <div className="rounded-2xl border-2 border-[#f59e0b] bg-[#f59e0b]/10 px-3.5 py-2.5 text-[0.85rem] font-bold text-[#fef08a]">
+                  📍 Across {Math.abs(dx)} {dx >= 0 ? "right" : "left"}; Up {Math.abs(dy)} {dy >= 0 ? "up" : "down"}.<br />
+                  ({unit.lab.start[0]} {dx >= 0 ? "+" : "−"} {Math.abs(dx)}, {unit.lab.start[1]} {dy >= 0 ? "+" : "−"} {Math.abs(dy)}) ={" "}
+                  <strong className="text-white">({unit.lab.start[0] + dx}, {unit.lab.start[1] + dy})</strong>
+                </div>
+              </div>}
+              {unit.lab.kind !== "timeZone" && <button type="button" onClick={() => { setFrame(labFrame); say(`Landed at ${unit.lab.start[0] + dx}, ${unit.lab.start[1] + dy}.`); }}
                 className="rounded-xl border-2 border-slate-600 bg-[#0f172a] px-4 py-2 text-sm font-bold text-slate-200 hover:border-[#38bdf8]">
                 Show it on the board
-              </button>
+              </button>}
               <button type="button" onClick={() => goPhase(4)} className="mt-auto rounded-xl bg-[#ec4899] px-4 py-2.5 font-bold text-white shadow-[0_4px_0_#be185d] transition-transform hover:-translate-y-0.5">
                 I'm ready for the test ➔
               </button>

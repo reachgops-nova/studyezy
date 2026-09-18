@@ -199,12 +199,13 @@ function conceptFrame(definition: MathDefinition, index: number): BoardFrame {
   if (definition.number === 18 && definition.concepts[index]?.id === "18.1") {
     return {
       timeline: {
-        title: "World time zones · east and west",
+        title: "World time zones · add eastward, subtract westward",
         events: [
-          { when: "12:00 noon", what: "Lagos", note: "Starting time.", tone: "blue" },
-          { when: "+5 hours", what: "Move east to Delhi", note: "East is ahead, so add 5 hours.", tone: "gold" },
-          { when: "17:00 / 5:00 pm", what: "Delhi", note: "12:00 + 5 = 17:00.", tone: "green" },
-          { when: "Previous day", what: "Moving west", note: "West is behind, so subtract hours; the date may change.", tone: "red" },
+          { when: "12:00 noon", what: "Lagos", note: "Start here.", tone: "blue", direction: "neutral" },
+          { when: "＋5 hours · EAST →", what: "Lagos to Delhi", note: "Moving east means add 5 hours: 12:00 + 5 = 17:00.", tone: "gold", direction: "east" },
+          { when: "17:00 / 5:00 pm", what: "Delhi", note: "East is ahead, so the local clock is later.", tone: "green", direction: "neutral" },
+          { when: "7:00 am · Sydney", what: "Starting westward example", note: "A second example from the book.", tone: "blue", direction: "neutral" },
+          { when: "−14 hours · WEST ←", what: "Move west", note: "Moving west means subtract 14 hours: 7:00 am − 14 h = 5:00 pm on the previous day.", tone: "red", direction: "west" },
         ],
       },
     };
@@ -367,11 +368,14 @@ function makeBoardUnit(definition: MathDefinition): BoardUnit {
     concepts,
     conceptSteps,
     guidedTasks,
-    lab: { prompt: definition.number === 18
+    lab: { kind: definition.number === 18 ? "timeZone" : "coordinate", prompt: definition.number === 18
       ? "Use the visible time jumps to explain whether you are adding eastward or subtracting westward."
       : `Use the highlighted model to work one ${definition.title.toLowerCase()} example and explain each change.`, start: [2, 2], shape: [[0, 0], [2, 0], [2, 2], [0, 2]], range: { min: -2, max: 6 } },
-    recitePrompts: definition.concepts.map((concept) => ({ ask: `Say the rule for ${concept.title}.`, answer: concept.summary })),
-    writtenPractice: definition.concepts.slice(0, 4).map((concept) => ({ question: `Write one worked example for ${concept.title}.`, answer: concept.summary })),
+    recitePrompts: concepts.flatMap((concept) => [
+      { ask: `Say the rule for ${concept.title}.`, answer: concept.summary, conceptId: concept.conceptId },
+      ...(concept.examples[0] ? [{ ask: `Recite this worked example: ${concept.examples[0].question}`, answer: concept.examples[0].answer, conceptId: concept.conceptId }] : []),
+    ]),
+    writtenPractice: concepts.flatMap((concept) => concept.examples[1] ? [{ question: `Write and explain: ${concept.examples[1].question}`, answer: concept.examples[1].answer, conceptId: concept.conceptId }] : []),
     assessmentStory: conceptFrame(definition, 0),
     assessment: { partA: assessmentTasks, partB: [] },
     readymade: definition.concepts.slice(0, 4).map((concept) => ({ q: `What is ${concept.title}?`, a: concept.summary })),

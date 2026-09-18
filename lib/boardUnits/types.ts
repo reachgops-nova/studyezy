@@ -144,7 +144,7 @@ export type ChartFrame = {
 /** Dated events along a line - history, or the story of an idea. */
 export type TimelineFrame = {
   title?: string;
-  events: { when: string; what: string; note?: string; tone?: Tone }[];
+  events: { when: string; what: string; note?: string; tone?: Tone; direction?: "east" | "west" | "neutral" }[];
 };
 
 /**
@@ -244,6 +244,8 @@ export type BoardTask = {
 /** Phase 3: the slider lab. */
 export type BoardLab = {
   prompt: string;
+  /** The shared lab can teach coordinate movement or time-zone jumps. */
+  kind?: "coordinate" | "timeZone";
   /** Bottom-left anchor of the shape being dragged around, in grid units. */
   start: [number, number];
   /** Offsets from the anchor that define the shape, e.g. a 2x2 square. */

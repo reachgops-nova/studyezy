@@ -282,6 +282,22 @@ performed in this session; after deployment, smoke test a negative-number Math
 unit, Math Unit 18, an English unit, and voice Recite in the target
 browser/language.
 
+## Board-visible Recite examples and directional labs (2026-09-18)
+
+The shared `DrawingBoard` now displays the active concept’s exact worked
+examples on the main board during Recite, with the concept ID/title visible;
+the side-panel prompts explicitly belong to that one topic. Cambridge Math’s
+pending-unit factory now creates concept-owned rule and worked-example Recite
+prompts plus a second worked example for written practice.
+
+Unit 18.1 now has visible `+5 hours EAST` and `-14 hours WEST` jumps, including
+the previous-day result and the rule “east: add; west: subtract.” Coordinate
+labs continuously show the `Across`/`Up` labels and equation/result on the
+board, including `(2 + 2, 2 + 3) = (4, 5)`.
+
+Verified with `npm test` (13 tests), the 27-unit Board audit, TypeScript,
+`git diff --check`, and `npm run build`.
+
 ## Resume instruction
 
 Continue StudyEzy Board coverage from

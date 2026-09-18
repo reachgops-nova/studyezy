@@ -396,3 +396,21 @@ for a controlled live push. A manual browser click-through of every unit was
 not performed in this session; after deployment, smoke test a negative-number
 Math unit, Math Unit 18, an English unit, and voice Recite in the target
 browser/language.
+
+## Board-visible Recite examples and directional labs (2026-09-18)
+
+Fixed the reported Unit 18 gap in the shared `DrawingBoard` template. During
+Recite, the main board now keeps the active concept ID/title and every exact
+worked example visible, while the side-panel prompts explicitly say which
+active topic they belong to. The pending Cambridge Math factory now gives each
+concept an owned rule prompt, an owned worked-example Recite prompt, and a
+second worked example for written practice.
+
+Math Unit 18.1 now visibly shows `+5 hours EAST` (Lagos 12:00 -> Delhi
+17:00) and `-14 hours WEST` (Sydney 7:00 am -> 5:00 pm on the previous day),
+with the explicit rule “east: add; west: subtract.” Coordinate labs now keep
+their live `Across`/`Up` equation and result synced on the board as sliders
+move, including `(2 + 2, 2 + 3) = (4, 5)`.
+
+Validation: `npm test` (13 passed), Cambridge 27-unit audit, TypeScript,
+`git diff --check`, and `npm run build` pass.
