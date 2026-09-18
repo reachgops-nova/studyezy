@@ -1,6 +1,6 @@
 # StudyEzy — Codex Handoff
 
-Updated: 2026-09-18
+Updated: 2026-09-18 (latest session)
 
 ## Project
 
@@ -111,6 +111,11 @@ the cache/provider route so the displayed text and speech are translated.
   strengthened native-script requirements in `lib/groq.ts` and `lib/claude.ts`.
 - Added Gemini text Q&A/translation as the free-tier fallback before Claude in
   `lib/gemini.ts` and `app/api/ask/route.ts`.
+- Added Cerebras `gpt-oss-120b` as the next free/credit fallback. Its supplied
+  key was tested without printing it; Cerebras returned `payment_required/quota`,
+  so the key is recognized but the account has no usable inference quota yet.
+- Added the ignored private `STUDYEZY-API-CONNECTIONS.local.md` reference and
+  documented setup variable names in `.env.example`. Never commit raw keys.
 - Added Cerebras `gpt-oss-120b` as the next free/credit fallback, configured by
   the server-only `CEREBRAS_API_KEY` environment variable. The raw key remains
   only in ignored local/Railway secret storage, never Git.
@@ -184,6 +189,12 @@ and signed in at `https://notebook.google.com/?pli=1` while restarting Codex;
 Google has rebranded NotebookLM as Gemini Notebook and moved the live app to
 that host. Codex CLI is not installed on this Mac; do not assume `codex mcp`
 shell commands are available.
+
+## Handoff policy
+
+Update both handoff files after every meaningful work session: this file for
+ChatGPT/Codex and `STUDYEZY-CLAUDE-HANDOFF.md` for Claude. Never put raw API
+keys in either handoff or in Git.
 
 ## Resume instruction
 

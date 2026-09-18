@@ -1,6 +1,6 @@
 # StudyEzy — Claude Code Handoff
 
-Updated: 2026-09-18
+Updated: 2026-09-18 (latest session)
 
 Repository: `/Users/gopsair/studyezy`
 
@@ -68,6 +68,12 @@ language is selected; they must not bypass translation.
 Speech uses matching browser voices and falls back to `/api/tts` for Indian
 languages.
 
+The supplied Cerebras key was tested without exposing it and returned
+`payment_required/quota`: the key is recognized, but the account currently has
+no usable inference quota. Enable Cerebras quota/credits and rotate the key
+because it was pasted into chat; then update Railway's `CEREBRAS_API_KEY`.
+The application safely falls through when Cerebras is unavailable.
+
 ## NotebookLM status
 
 Authentication was verified on 2026-09-18. Active notebook:
@@ -93,6 +99,12 @@ The user requested production deployment after verification. Check git status,
 review the diff, commit the intended changes, and push the current branch to
 `origin`. Railway is the deployment target and uses the repository's existing
 build/start configuration. Never print or commit `.env.local` secrets.
+
+## Handoff policy
+
+Every meaningful work session must update both handoff files: this file for
+Claude and `STUDYEZY-CODEX-HANDOFF.md` for ChatGPT/Codex. Never put raw API
+keys in either file or in Git.
 
 ## Resume instruction
 
