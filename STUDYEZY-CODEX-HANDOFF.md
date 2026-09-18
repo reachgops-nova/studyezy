@@ -196,6 +196,15 @@ Update both handoff files after every meaningful work session: this file for
 ChatGPT/Codex and `STUDYEZY-CLAUDE-HANDOFF.md` for Claude. Never put raw API
 keys in either handoff or in Git.
 
+## Latest homepage work
+
+The public `/` page was redesigned as a parent-facing marketing site in
+`app/page.tsx`: stronger promise, parent pain points, Board journey, local
+language support, mission, trust boundaries, pilot pricing language, and CTAs.
+Public legal pages were added at `/terms` and `/privacy`. Commit:
+`96ab666`. Live smoke checks returned HTTP 200 for the homepage, Terms, and
+Privacy pages.
+
 ## Resume instruction
 
 When returning, say:

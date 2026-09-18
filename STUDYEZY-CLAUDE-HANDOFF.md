@@ -106,6 +106,15 @@ Every meaningful work session must update both handoff files: this file for
 Claude and `STUDYEZY-CODEX-HANDOFF.md` for ChatGPT/Codex. Never put raw API
 keys in either file or in Git.
 
+## Latest homepage work
+
+The public `/` route was redesigned in `app/page.tsx` as a polished
+parent-facing marketing page covering family pain points, the Board journey,
+local-language voice support, textbook grounding, mission, trust boundaries,
+pilot pricing language, and CTAs. New public legal pages are
+`app/terms/page.tsx` and `app/privacy/page.tsx`. Commit `96ab666` is live and
+the homepage, `/terms`, and `/privacy` returned HTTP 200.
+
 ## Resume instruction
 
 Continue StudyEzy Board coverage from
