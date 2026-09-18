@@ -805,7 +805,7 @@ export default function DrawingBoard({ unit, paperTasks = [] }: { unit: BoardUni
               <ChartStage frame={frame} onTap={(t) => say(t)} />
             ) : frame.timeline ? (
               <TimelineStage frame={frame} onTap={(t) => say(t)} />
-            ) : unit.stage === "text" ? (
+            ) : frame.text || unit.stage === "text" ? (
               <TextStage
                 frame={frame}
                 onTap={(t) => say(t)}
@@ -962,25 +962,9 @@ export default function DrawingBoard({ unit, paperTasks = [] }: { unit: BoardUni
               ))}
             </svg>
             )}
-          </div>
 
-          {/* Keep the exact worked example visible during Recite. The child
-              should never have to remember which side-panel question a
-              generic prompt was pointing at. */}
-          {phase === 3 && activeConcept?.examples?.length ? (
-            <div className="mx-3 mb-2 shrink-0 rounded-2xl border-2 border-[#34d399] bg-[#052e2b] px-3 py-2 shadow-lg shadow-emerald-950/30">
-              <div className="flex items-center justify-between gap-2">
-                <p className="text-[0.68rem] font-extrabold uppercase tracking-wider text-[#6ee7b7]">📌 Recite from this board example</p>
-                <span className="text-[0.68rem] font-bold text-emerald-200">{activeConcept.conceptId} · {activeConcept.title}</span>
-              </div>
-              {activeConcept.examples.map((example, index) => (
-                <div key={example.question} className="mt-1.5 rounded-xl bg-[#064e3b]/70 px-2.5 py-1.5 text-[0.78rem] leading-snug">
-                  <p className="font-bold text-white">{index + 1}. {example.question}</p>
-                  <p className="text-emerald-100">Answer: {example.answer}</p>
-                </div>
-              ))}
-            </div>
-          ) : null}
+            {phase === 3 && activeConcept ? <ReciteBoardCard concept={activeConcept} /> : null}
+          </div>
 
           {/* Narration */}
           <div className="flex shrink-0 items-center gap-3 border-t-[3px] border-[#38bdf8] bg-[#020617]/95 px-4 py-3">
@@ -1367,6 +1351,29 @@ export default function DrawingBoard({ unit, paperTasks = [] }: { unit: BoardUni
  * turns one big picture into a walkthrough - each step focuses a region, and
  * the move between them is the animation.
  */
+function ReciteBoardCard({ concept }: { concept: { conceptId: string; title: string; icon: string; summary: string; examples: { question: string; answer: string }[] } }) {
+  const examples = concept.examples.length
+    ? concept.examples
+    : [{ question: `Show one example of ${concept.title}.`, answer: `${concept.summary} Say the rule, show the steps, and check the result.` }];
+  return (
+    <div className="pointer-events-none absolute inset-x-5 bottom-3 z-10 max-h-[48%] overflow-y-auto rounded-2xl border-2 border-[#34d399] bg-[#052e2b]/95 p-3 shadow-2xl shadow-emerald-950/50 backdrop-blur-sm">
+      <div className="flex items-center justify-between gap-2">
+        <p className="text-[0.7rem] font-extrabold uppercase tracking-wider text-[#6ee7b7]">📌 Recite from this example</p>
+        <span className="text-[0.68rem] font-bold text-emerald-200">{concept.icon} {concept.conceptId} · {concept.title}</span>
+      </div>
+      <p className="mt-1 text-[0.78rem] font-semibold leading-snug text-emerald-100">Say the rule, then talk through the worked example before checking the answer.</p>
+      <div className="mt-2 grid gap-1.5 sm:grid-cols-2">
+        {examples.map((example, index) => (
+          <div key={`${example.question}-${index}`} className="rounded-xl bg-[#064e3b]/80 px-2.5 py-1.5 text-[0.76rem] leading-snug">
+            <p className="font-bold text-white">{index + 1}. {example.question}</p>
+            <p className="text-emerald-100">Answer: {example.answer}</p>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 function ImageStage({ frame, onTap }: { frame: BoardFrame; onTap?: (t: string) => void }) {
   const I = frame.image;
   /**

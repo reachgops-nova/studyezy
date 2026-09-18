@@ -282,6 +282,17 @@ performed in this session; after deployment, smoke test a negative-number Math
 unit, Math Unit 18, an English unit, and voice Recite in the target
 browser/language.
 
+## Universal non-blank Recite board (2026-09-18)
+
+`DrawingBoard` now renders the active concept’s Recite card directly inside
+the board viewport. It names the topic and displays the exact worked examples;
+when a concept has no authored example, it falls back to a clear sample task
+based on the concept summary. This fixes blank Recite visuals such as Math
+10.1 and is inherited by every current and future subject.
+
+Validation: `npm test` (13 tests), 27-unit Board audit, TypeScript,
+`git diff --check`, and `npm run build` pass.
+
 ## Board-visible Recite examples and directional labs (2026-09-18)
 
 The shared `DrawingBoard` now displays the active concept’s exact worked
