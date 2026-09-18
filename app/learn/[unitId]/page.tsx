@@ -12,6 +12,7 @@ import type { MasteryBand } from "@/lib/types";
 import { LogoMark } from "@/components/Logo";
 import UnitView, { type UnitContentPack } from "@/components/UnitView";
 import AppShell from "@/components/AppShell";
+import { hasBoardRoute } from "@/lib/boardUnits";
 
 export default async function LearnPage({ params }: { params: Promise<{ unitId: string }> }) {
   const user = await getCurrentUser();
@@ -20,6 +21,10 @@ export default async function LearnPage({ params }: { params: Promise<{ unitId: 
   if (!profile) redirect("/profiles");
 
   const { unitId } = await params;
+  // The Board is now the single student-facing teaching route. Keep this URL
+  // as a compatibility link for bookmarks and old progress records, while
+  // preserving the older page only for units that do not yet have a Board.
+  if (hasBoardRoute(unitId)) redirect(`/board/${unitId}`);
   const parts = unitId.split("-");
   if (parts.length !== 4) notFound();
   const [curriculumId, stageIdStr, subjectId, unitIdStr] = parts;

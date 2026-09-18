@@ -45,6 +45,23 @@ export function isConfigured(): boolean {
   return Boolean(process.env.ANTHROPIC_API_KEY);
 }
 
+/** Ensures parent-language answers are native-script before display/TTS when
+ * the grounded tutor answered in English despite the language hint. */
+export async function translateAnswerClaude(answer: string, language: string): Promise<string> {
+  const response = await getClient().messages.create({
+    model: MODEL,
+    max_tokens: 300,
+    system:
+      `Translate the following school-tutor answer entirely into ${language}. ` +
+      `Return only the translation in ${language} script. Do not add English, explanations, or transliteration. ` +
+      `Preserve every number and mathematical expression exactly. Keep only essential school terms in English parentheses.`,
+    messages: [{ role: "user", content: answer }],
+  });
+  logAiCost("ask", MODEL, response.usage.input_tokens, response.usage.output_tokens);
+  const textBlock = response.content.find((block) => block.type === "text");
+  return textBlock && textBlock.type === "text" ? textBlock.text.trim() : answer;
+}
+
 /**
  * Curriculum-aware voice Q&A. Grounds the answer in the specific concept the
  * kid is studying (not a generic web answer) and keeps it short and simple,
@@ -72,10 +89,10 @@ export async function askConceptQuestion(
   // school and exams use English terminology either way.
   const languageInstruction =
     language !== "English"
-      ? ` Respond in ${language}, not English - the student or parent needs this explanation in ${language} to ` +
-        `really understand it. When you use the important ${subject} term or vocabulary word being taught, say ` +
-        `the ${language} explanation first and then give that key term in English too (in parentheses), so ` +
-        `they still pick up the English vocabulary for it.`
+      ? ` Respond entirely in ${language}, not English. Every explanatory sentence must be written in ${language} script ` +
+        `so it displays and can be read aloud naturally to the parent or student. Keep only essential ${subject} ` +
+        `school terms in English parentheses after their ${language} explanation; do not write an English paragraph, ` +
+        `and do not transliterate ${language} into English letters.`
       : "";
 
   // Lets the tutor actually show a matching picture instead of just

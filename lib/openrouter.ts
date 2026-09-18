@@ -10,6 +10,7 @@ import {
   type ExtractionSourceFile,
 } from "./claude";
 import type { Concept, ProgressionTestDraft, QuestionPaperDifficulty } from "./types";
+import { buildConceptContextBlock } from "./conceptContext";
 import {
   loadTextbookConceptExtractionSystem,
   textbookConceptExtractionUserText,
@@ -41,6 +42,33 @@ const OPENROUTER_MODEL = "openai/gpt-4o";
 
 export function isOpenRouterConfigured(): boolean {
   return Boolean(process.env.OPENROUTER_API_KEY);
+}
+
+export async function askConceptQuestionOpenRouter(
+  concept: Concept,
+  question: string,
+  language = "English",
+  subject = "English",
+  allConcepts: Concept[] = [],
+): Promise<string> {
+  const languageRule = language === "English"
+    ? "Respond in English."
+    : `Respond entirely in ${language} script, not English. Keep only essential ${subject} school terms in English parentheses; do not transliterate.`;
+  return openRouterChat(
+    "ask",
+    `You are a patient school tutor. Answer only from the supplied concept context. Explain simply to a 9-10 year old in under 100 words. ${languageRule} Return plain spoken text only, with no markdown or lists.`,
+    [{ type: "text", text: `${buildConceptContextBlock(concept, allConcepts)}\n\nStudent's question: ${question.trim().slice(0, 500)}` }],
+    false,
+  );
+}
+
+export async function translateAnswerOpenRouter(answer: string, language: string): Promise<string> {
+  return openRouterChat(
+    "ask",
+    `Translate this school-tutor answer entirely into ${language}. Return only ${language} script. Do not add English, explanations, or transliteration. Preserve all numbers and mathematical expressions exactly.`,
+    [{ type: "text", text: answer }],
+    false,
+  );
 }
 
 interface OpenRouterMessageContentPart {

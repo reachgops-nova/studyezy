@@ -6,6 +6,8 @@ import { CAMBRIDGE_4_MATH_10 } from "./cambridge-4-math-10";
 import { CAMBRIDGE_5_ENGLISH_1 } from "./cambridge-5-english-1";
 import { CAMBRIDGE_5_ENGLISH_2 } from "./cambridge-5-english-2";
 import { CAMBRIDGE_5_ENGLISH_3 } from "./cambridge-5-english-3";
+import { PENDING_MATH_BOARD_UNITS } from "./cambridge-4-math-pending";
+import { PENDING_ENGLISH_BOARD_UNITS } from "./cambridge-5-english-pending";
 
 /**
  * Every unit that has a Drawing Board, keyed by unitKey. Adding a unit is
@@ -20,4 +22,12 @@ export const BOARD_UNITS: Record<string, BoardUnit> = {
   [CAMBRIDGE_5_ENGLISH_1.unitKey]: CAMBRIDGE_5_ENGLISH_1,
   [CAMBRIDGE_5_ENGLISH_2.unitKey]: CAMBRIDGE_5_ENGLISH_2,
   [CAMBRIDGE_5_ENGLISH_3.unitKey]: CAMBRIDGE_5_ENGLISH_3,
+  ...PENDING_MATH_BOARD_UNITS,
+  ...PENDING_ENGLISH_BOARD_UNITS,
 };
+
+/** Cambridge textbook units are DB-processed and can use the generic Board
+ * adapter even before a bespoke visual file is authored. */
+export function hasBoardRoute(unitKey: string): boolean {
+  return Boolean(BOARD_UNITS[unitKey]) || /^cambridge-(?:4-math|5-english)-\d+$/.test(unitKey);
+}

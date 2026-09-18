@@ -8,7 +8,7 @@ import type { ResourceGroup } from "@/lib/queries/unitResources";
 import UnitResources from "./UnitResources";
 import Booklet from "./Booklet";
 import { Illustration, hasIllustration } from "./illustrations";
-import { BOARD_UNITS } from "@/lib/boardUnits";
+import { hasBoardRoute } from "@/lib/boardUnits";
 
 interface LatestTestAttempt {
   band: MasteryBand;
@@ -206,7 +206,7 @@ export default function UnitOverview({
             </div>
             {latestTestAttempt.band === "mastered" && nextUnit ? (
               <Link
-                href={`/learn/${nextUnit.unitKey}`}
+                href={hasBoardRoute(nextUnit.unitKey) ? `/board/${nextUnit.unitKey}` : `/learn/${nextUnit.unitKey}`}
                 className="shrink-0 rounded-xl bg-gradient-to-br from-brand-gold-bright to-brand-gold px-4 py-2 text-sm font-medium text-white"
               >
                 Continue to Unit {nextUnit.title} →
@@ -264,7 +264,7 @@ export default function UnitOverview({
           It was unreachable from here when it first shipped (real feedback
           2026-09-14: "it has not synced up with our old link portion"), so
           the unit now opens onto it wherever one exists. */}
-      {BOARD_UNITS[unitKey] && (
+      {hasBoardRoute(unitKey) && (
         <Link
           href={`/board/${unitKey}`}
           className="group flex items-center gap-4 rounded-2xl border-2 border-[#38bdf8]/40 bg-[#0f172a] p-5 text-white shadow-soft transition-colors hover:border-[#38bdf8]"

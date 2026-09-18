@@ -56,6 +56,18 @@ export const CAMBRIDGE_4_MATH_1: BoardUnit = {
         { question: "A 2-metre rope is split into 10 equal pieces. How long is each piece?", answer: "0.2 metres. Each tenth of 2 metres is 0.2." },
         { question: "How many tenths are in 1.3?", answer: "13 tenths." },
       ],
+      quickCheck: [
+        {
+          title: "Ready check · read 2.6",
+          prompt: "What does the 6 mean in 2.6?",
+          conceptId: "1.1",
+          options: [
+            { label: "6 tenths", correct: true, say: "Yes. The 6 is in the tenths place, so 2.6 is 2 wholes and 6 tenths.", frame: { line: { min: 2, max: 3, step: 0.1, marks: [{ at: 2.6, label: "6 tenths ✓", tone: "green" }], jumps: [{ from: 2, to: 2.6, label: "6 tenths" }] } } },
+            { label: "6 wholes", correct: false, say: "Look just after the decimal point: that place is tenths, not wholes.", frame: { line: { min: 2, max: 3, step: 0.1, marks: [{ at: 2.6, label: "tenths, not wholes", tone: "red" }] } } },
+            { label: "6 hundredths", correct: false, say: "Hundredths use two places after the decimal. The 6 here is in the first place, tenths.", frame: { line: { min: 2, max: 3, step: 0.1, marks: [{ at: 2.6, label: "tenths, not hundredths", tone: "red" }] } } },
+          ],
+        },
+      ],
     },
     {
       conceptId: "1.2",
@@ -75,6 +87,37 @@ export const CAMBRIDGE_4_MATH_1: BoardUnit = {
         { question: "'4 tens and 24 tenths' - what number is that, and why does it still work?", answer: "42.4. The 24 tenths are 2 wholes and 4 tenths, so 40 + 2 + 0.4. Regrouping moves value about without changing the total. (page 9)" },
         { question: "Decompose 38.6 into place values.", answer: "30 + 8 + 0.6" },
         { question: "Which is bigger: 2 wholes and 13 tenths, or 3.2?", answer: "2 wholes and 13 tenths. 13 tenths is 1.3, so the number is 3.3 - bigger than 3.2." },
+      ],
+    },
+    {
+      conceptId: "1.3",
+      title: "Multiplying and dividing by powers of ten",
+      icon: "🔁",
+      summary:
+        "Multiplying or dividing by 10, 100 or 1000 shifts every digit the same number of place-value columns.",
+      keyPoints: [
+        "Multiplying by a power of ten makes a number larger: ×10 shifts one place left, ×100 two places, and ×1000 three places.",
+        "Dividing by a power of ten makes a number smaller: ÷10 shifts one place right, ÷100 two places, and ÷1000 three places.",
+        "The digits keep their order; only their place values change. For example, 36 × 100 = 3600 and 5380 ÷ 10 = 538.",
+      ],
+      pages: [11, 12, 13],
+      storyReference: "Place-value shifts when multiplying and dividing by powers of ten",
+      examples: [
+        { question: "What is 36 × 100?", answer: "3600. Each digit shifts two places to the left." },
+        { question: "What is 5380 ÷ 10?", answer: "538. Each digit shifts one place to the right." },
+        { question: "Which way does a digit shift when dividing by 100?", answer: "Two places to the right, because the number becomes 100 times smaller." },
+      ],
+      quickCheck: [
+        {
+          title: "Ready check · shift by 100",
+          prompt: "What is 36 × 100?",
+          conceptId: "1.3",
+          options: [
+            { label: "3600", correct: true, say: "Yes. Multiplying by 100 shifts every digit two places to the left: 36 becomes 3600.", frame: { line: { min: 0, max: 4000, step: 1000, marks: [{ at: 36, label: "36", tone: "gold" }, { at: 3600, label: "3600 ✓", tone: "green" }] } } },
+            { label: "360", correct: false, say: "That is a shift by 10. Multiplying by 100 needs two place-value shifts.", frame: { line: { min: 0, max: 4000, step: 1000, marks: [{ at: 360, label: "×10", tone: "red" }, { at: 3600, label: "×100", tone: "green" }] } } },
+            { label: "3.6", correct: false, say: "That makes the number smaller. Multiplication by 100 makes it larger and shifts left.", frame: { line: { min: 0, max: 4000, step: 1000, marks: [{ at: 3.6, label: "too small", tone: "red" }, { at: 3600, label: "3600", tone: "green" }] } } },
+          ],
+        },
       ],
     },
     {
@@ -175,7 +218,19 @@ export const CAMBRIDGE_4_MATH_1: BoardUnit = {
       },
     },
     {
-      label: "6. Below zero",
+      label: "6. Shift by powers of ten",
+      conceptId: "1.3",
+      say: "Multiplying by 100 shifts every digit two places to the left, so 36 becomes 3600. Dividing shifts digits to the right, so 5380 divided by 10 becomes 538.",
+      frame: {
+        line: {
+          min: 0, max: 4000, step: 1000,
+          marks: [{ at: 36, label: "36", tone: "gold" }, { at: 3600, label: "3600", tone: "green" }],
+          jumps: [{ from: 36, to: 3600, label: "×100" }],
+        },
+      },
+    },
+    {
+      label: "7. Below zero",
       conceptId: "1.4",
       say: "Negative numbers live to the left of zero. Counting back in steps of 5 from 6 gives 1, then minus 4, then minus 9 - the steps never change size just because we passed zero.",
       frame: {
@@ -192,7 +247,7 @@ export const CAMBRIDGE_4_MATH_1: BoardUnit = {
       },
     },
     {
-      label: "7. Rising past 0",
+      label: "8. Rising past 0",
       conceptId: "1.4",
       say: "It works upward too. A temperature of minus 2 degrees that rises by 5 crosses zero and lands on 3.",
       frame: {
@@ -204,7 +259,7 @@ export const CAMBRIDGE_4_MATH_1: BoardUnit = {
       },
     },
     {
-      label: "8. Sequences",
+      label: "9. Sequences",
       conceptId: "1.5",
       say: "A linear sequence steps by the same amount every time. In 3, 11, 19, 27 the difference is always 8, so the rule is add 8.",
       frame: {
@@ -280,7 +335,20 @@ export const CAMBRIDGE_4_MATH_1: BoardUnit = {
       ],
     },
     {
-      title: "Task 5 · Count back past zero",
+      title: "Task 5 · Shift the digits",
+      prompt: "What is 36 × 100?",
+      conceptId: "1.3",
+      options: [
+        { label: "3600", correct: true, say: "Correct. ×100 shifts every digit two places to the left, so 36 becomes 3600.",
+          frame: { line: { min: 0, max: 4000, step: 1000, marks: [{ at: 36, label: "36", tone: "gold" }, { at: 3600, label: "3600 ✓", tone: "green" }], jumps: [{ from: 36, to: 3600, label: "×100" }] } } },
+        { label: "360", correct: false, say: "That is only one place shift, which is ×10. ×100 needs two shifts.",
+          frame: { line: { min: 0, max: 4000, step: 1000, marks: [{ at: 360, label: "×10 ✗", tone: "red" }, { at: 3600, label: "×100", tone: "green" }] } } },
+        { label: "3.6", correct: false, say: "That is smaller than 36. Multiplying by 100 makes the number larger, not smaller.",
+          frame: { line: { min: 0, max: 4000, step: 1000, marks: [{ at: 3.6, label: "too small ✗", tone: "red" }, { at: 3600, label: "3600", tone: "green" }] } } },
+      ],
+    },
+    {
+      title: "Task 6 · Count back past zero",
       setup: { line: { min: -10, max: 8, step: 2, marks: [{ at: 1, label: "you are here", tone: "gold" }] } },
       drag: { from: [1], to: [-4], hint: "drag back 5" },
       prompt: "Counting back in steps of 5 from 6: what comes after 1?",
@@ -295,7 +363,7 @@ export const CAMBRIDGE_4_MATH_1: BoardUnit = {
       ],
     },
     {
-      title: "Task 6 · Find the rule",
+      title: "Task 7 · Find the rule",
       prompt: "In the sequence 3, 11, 19, 27, what is the term-to-term rule?",
       conceptId: "1.5",
       options: [
@@ -312,21 +380,22 @@ export const CAMBRIDGE_4_MATH_1: BoardUnit = {
   lab: { prompt: "Slide the two numbers and watch the jump between them.", start: [2, 2], shape: [[0, 0], [2, 0], [2, 2], [0, 2]], range: { min: -3, max: 5 } },
 
   recitePrompts: [
-    { ask: "What is one tenth, and how do you write it?", answer: "One whole split into 10 equal parts. Each part is one tenth, written 0.1." },
-    { ask: "What does decomposing a number mean?", answer: "Breaking it into the exact value each digit is worth - 45.8 becomes 40 plus 5 plus 0.8." },
-    { ask: "What does regrouping do that decomposing does not?", answer: "It rearranges the parts flexibly - 3.4 can be 3 wholes and 4 tenths, or 2 wholes and 14 tenths. The total never changes." },
-    { ask: "Where do negative numbers sit, and what happens to the step size at zero?", answer: "To the left of 0 on the line. The step size does not change at all - counting carries straight through zero." },
-    { ask: "How do you find the term-to-term rule of a sequence?", answer: "Find the difference between two numbers next to each other. If it is the same every time, that difference is the rule." },
+    { ask: "What is one tenth, and how do you write it?", answer: "One whole split into 10 equal parts. Each part is one tenth, written 0.1.", conceptId: "1.1" },
+    { ask: "What does decomposing a number mean?", answer: "Breaking it into the exact value each digit is worth - 45.8 becomes 40 plus 5 plus 0.8.", conceptId: "1.2" },
+    { ask: "What does regrouping do that decomposing does not?", answer: "It rearranges the parts flexibly - 3.4 can be 3 wholes and 4 tenths, or 2 wholes and 14 tenths. The total never changes.", conceptId: "1.2" },
+    { ask: "How do digits shift when multiplying or dividing by 10, 100 or 1000?", answer: "Multiplying shifts digits left; dividing shifts them right. The number of places matches the number of zeros.", conceptId: "1.3" },
+    { ask: "Where do negative numbers sit, and what happens to the step size at zero?", answer: "To the left of 0 on the line. The step size does not change at all - counting carries straight through zero.", conceptId: "1.4" },
+    { ask: "How do you find the term-to-term rule of a sequence?", answer: "Find the difference between two numbers next to each other. If it is the same every time, that difference is the rule.", conceptId: "1.5" },
   ],
 
   writtenPractice: [
-    { question: "Write 7.3 as a decomposition into place values.", answer: "7 + 0.3." },
-    { question: "Regroup 5.2 so it has only 4 wholes. How many tenths are there?", answer: "4 wholes and 12 tenths. One whole was traded for ten tenths." },
-    { question: "Count back in steps of 4 from 5. Write the first five numbers.", answer: "5, 1, -3, -7, -11." },
-    { question: "A temperature is -6 degrees and rises by 9 degrees. What is it now?", answer: "3 degrees. It crosses zero after 6 of the 9 degrees." },
-    { question: "Fill the gap: 4, 10, __, 22, 28. What is the rule?", answer: "16. The rule is add 6." },
-    { question: "Multiply 36 by 100, then divide the answer by 10. Write both results.", answer: "3600, then 360." },
-    { question: "Between 8 and 14 there is one missing number, with equal steps. What is it?", answer: "11. The difference is 6, shared into 2 equal steps of 3." },
+    { question: "Write 7.3 as a decomposition into place values.", answer: "7 + 0.3.", conceptId: "1.2" },
+    { question: "Regroup 5.2 so it has only 4 wholes. How many tenths are there?", answer: "4 wholes and 12 tenths. One whole was traded for ten tenths.", conceptId: "1.2" },
+    { question: "Multiply 36 by 100, then divide the answer by 10. Write both results.", answer: "3600, then 360.", conceptId: "1.3" },
+    { question: "Count back in steps of 4 from 5. Write the first five numbers.", answer: "5, 1, -3, -7, -11.", conceptId: "1.4" },
+    { question: "A temperature is -6 degrees and rises by 9 degrees. What is it now?", answer: "3 degrees. It crosses zero after 6 of the 9 degrees.", conceptId: "1.4" },
+    { question: "Fill the gap: 4, 10, __, 22, 28. What is the rule?", answer: "16. The rule is add 6.", conceptId: "1.5" },
+    { question: "Between 8 and 14 there is one missing number, with equal steps. What is it?", answer: "11. The difference is 6, shared into 2 equal steps of 3.", conceptId: "1.5" },
   ],
 
   assessment: {
@@ -403,5 +472,16 @@ export const CAMBRIDGE_4_MATH_1: BoardUnit = {
     { q: "What is the difference between decomposing and regrouping?", a: "Decomposing breaks a number into what each digit is worth. Regrouping rearranges those parts flexibly - the total stays the same either way." },
     { q: "Why do negative numbers go to the left?", a: "Because the line gets smaller as you go left, and negative numbers are smaller than zero." },
     { q: "How do I find a sequence rule?", a: "Find the difference between two numbers next to each other. If every gap is the same, that difference is the term-to-term rule." },
+  ],
+
+  // Pilot answer bank for Topic 1. These replies are immediate and work
+  // without spending an AI request on a question we already understand.
+  chatAnswers: [
+    { question: "What is a tenth?", answer: "A tenth is one whole split into 10 equal parts. Each part is written 0.1.", keywords: ["tenth", "split", "equal", "0.1"], conceptId: "1.1" },
+    { question: "How many tenths make one whole?", answer: "Ten tenths make one whole: 0.1 + 0.1 + 0.1 + 0.1 + 0.1 + 0.1 + 0.1 + 0.1 + 0.1 + 0.1 = 1.", keywords: ["how many", "tenths", "whole", "ten"], conceptId: "1.1" },
+    { question: "How do I read 2.6?", answer: "Read 2.6 as 2 wholes and 6 tenths. On the number line, start at 2 and count six small tenth-steps towards 3.", keywords: ["read", "2.6", "six", "wholes"], conceptId: "1.1" },
+    { question: "What does the 6 mean in 2.6?", answer: "The 6 is in the tenths place, so it means 6 tenths, or 0.6.", keywords: ["6", "2.6", "place", "tenths"], conceptId: "1.1" },
+    { question: "What is the difference between 0.1 and 0.01?", answer: "0.1 is one tenth. 0.01 is one hundredth, which is ten times smaller because the whole is split into 100 parts.", keywords: ["difference", "0.1", "0.01", "tenth", "hundredth"], conceptId: "1.1" },
+    { question: "Where is 2.6 on the number line?", answer: "It is between 2 and 3, six tenths after 2. That puts it closer to 3 than to 2.", keywords: ["where", "2.6", "number line", "between", "2", "3"], conceptId: "1.1" },
   ],
 };

@@ -153,10 +153,10 @@ export async function askConceptQuestionGroq(
 
   const languageInstruction =
     language !== "English"
-      ? ` Respond in ${language}, not English - the student or parent needs this explanation in ${language} to ` +
-        `really understand it. When you use the important ${subject} term or vocabulary word being taught, say ` +
-        `the ${language} explanation first and then give that key term in English too (in parentheses), so ` +
-        `they still pick up the English vocabulary for it.`
+      ? ` Respond entirely in ${language}, not English. Every explanatory sentence must be written in ${language} script ` +
+        `so it displays and can be read aloud naturally to the parent or student. Keep only essential ${subject} ` +
+        `school terms in English parentheses after their ${language} explanation; do not write an English paragraph, ` +
+        `and do not transliterate ${language} into English letters.`
       : "";
 
   // Lets the tutor actually show a matching picture instead of just
@@ -209,6 +209,23 @@ export async function askConceptQuestionGroq(
     // grounding answers in real multi-step problems - confirmed live
     // 2026-08-22 against the exact reported bug's question.
     600
+  );
+  return result.text;
+}
+
+/** Repair a response when a model follows the English textbook context but
+ * misses the requested parent language. Kept separate so the UI receives
+ * actual native-script text before it is sent to browser/server TTS. */
+export async function translateAnswerGroq(answer: string, language: string): Promise<string> {
+  const result = await groqChat(
+    "ask",
+    QA_MODEL,
+    `You are a precise translator for a parent-facing school tutor. Translate the answer into ${language}. ` +
+      `Return only the translated plain-text answer in ${language} script. Do not explain the translation, do not ` +
+      `add an English version, and do not transliterate. Preserve every number and mathematical expression exactly. ` +
+      `Keep only essential English school terms in parentheses after their translation.`,
+    answer,
+    300,
   );
   return result.text;
 }

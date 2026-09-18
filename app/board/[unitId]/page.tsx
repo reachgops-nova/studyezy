@@ -3,6 +3,8 @@ import { requireUser } from "@/lib/auth";
 import { db } from "@/lib/db";
 import DrawingBoard from "@/components/board/DrawingBoard";
 import { BOARD_UNITS } from "@/lib/boardUnits";
+import { boardUnitFromCurriculum, enrichBoardUnit } from "@/lib/boardUnits/curriculumAdapter";
+import { getUnit } from "@/lib/content";
 import type { BoardTask } from "@/lib/boardUnits/types";
 import type { TestQuestion } from "@/lib/types";
 
@@ -18,7 +20,14 @@ export default async function BoardPage({ params }: { params: Promise<{ unitId: 
   const user = await requireUser();
   if (!user) redirect("/login");
 
-  const unit = BOARD_UNITS[unitId];
+  const parts = unitId.split("-");
+  const sourceUnit = parts.length === 4
+    ? await getUnit(parts[0], Number(parts[1]), parts[2], Number(parts[3]))
+    : null;
+  const registeredUnit = BOARD_UNITS[unitId];
+  const unit = registeredUnit && sourceUnit
+    ? enrichBoardUnit(registeredUnit, sourceUnit)
+    : registeredUnit ?? (sourceUnit ? boardUnitFromCurriculum(sourceUnit, unitId) : null);
   if (!unit) notFound();
 
   // The Test phase draws on the question papers this unit already has rather

@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { BookIcon, ChevronDownIcon } from "./NavIcons";
 import type { SwitcherGroup } from "@/lib/catalog";
+import { hasBoardRoute } from "@/lib/boardUnits";
 
 // Persistent subject/unit switcher, always available from AppShell's header
 // (2026-08-26) - a parent reported the app feeling like a separate silo per
@@ -34,7 +35,7 @@ export default function UnitSwitcher({ groups }: { groups: SwitcherGroup[] }) {
     };
   }, [open]);
 
-  const currentUnitKey = pathname?.match(/^\/(?:learn|test|exam)\/([a-z0-9-]+)/)?.[1];
+  const currentUnitKey = pathname?.match(/^\/(?:learn|board|test|exam)\/([a-z0-9-]+)/)?.[1];
   const currentLabel = groups
     .flatMap((g) => g.units)
     .find((u) => u.unitKey === currentUnitKey)?.label;
@@ -70,7 +71,7 @@ export default function UnitSwitcher({ groups }: { groups: SwitcherGroup[] }) {
               {g.units.map((u) => (
                 <Link
                   key={u.unitKey}
-                  href={`/learn/${u.unitKey}`}
+                  href={hasBoardRoute(u.unitKey) ? `/board/${u.unitKey}` : `/learn/${u.unitKey}`}
                   role="menuitem"
                   onClick={() => setOpen(false)}
                   className={`block rounded-xl px-3 py-2 text-sm font-medium transition ${

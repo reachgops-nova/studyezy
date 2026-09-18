@@ -287,10 +287,21 @@ export type RecitePrompt = {
   ask: string;
   /** Revealed after they have had a go, to check themselves against. */
   answer: string;
+  /** Optional topic owner. When present, only this concept's prompts show. */
+  conceptId?: string;
 };
 
 /** Written practice: work it in a rough book, then check yourself. */
-export type WrittenPractice = { question: string; answer: string };
+export type WrittenPractice = { question: string; answer: string; conceptId?: string };
+
+/** Stored, unit-specific help for the board chat. Keeps common questions fast,
+ * predictable, and usable when an AI provider is unavailable. */
+export type BoardChatAnswer = {
+  question: string;
+  answer: string;
+  keywords: string[];
+  conceptId?: string;
+};
 
 export type BoardUnit = {
   unitKey: string;
@@ -325,4 +336,6 @@ export type BoardUnit = {
   assessment: { partA: BoardTask[]; partB: BoardTask[] };
   /** Tappable readymade questions in the assistant panel. */
   readymade: { q: string; a: string }[];
+  /** Questions matched locally before any future AI fallback is considered. */
+  chatAnswers?: BoardChatAnswer[];
 };

@@ -55,6 +55,34 @@ const PAD_B = 44;
 const VB_W = 460;
 const VB_H = 396;
 
+type SpeechRecognitionResultLike = { 0: { transcript: string }; length: number };
+type SpeechRecognitionEventLike = { results: { [index: number]: SpeechRecognitionResultLike } };
+type SpeechRecognitionLike = {
+  lang: string;
+  continuous: boolean;
+  interimResults: boolean;
+  start: () => void;
+  stop: () => void;
+  onresult: ((event: SpeechRecognitionEventLike) => void) | null;
+  onend: (() => void) | null;
+  onerror: (() => void) | null;
+};
+type SpeechRecognitionConstructor = new () => SpeechRecognitionLike;
+
+const BOARD_LANGUAGES = [
+  { code: "en-IN", label: "English", ttsCode: "en-GB" },
+  { code: "ta-IN", label: "Tamil", ttsCode: "ta-IN" },
+  { code: "hi-IN", label: "Hindi", ttsCode: "hi-IN" },
+  { code: "te-IN", label: "Telugu", ttsCode: "te-IN" },
+  { code: "kn-IN", label: "Kannada", ttsCode: "kn-IN" },
+  { code: "ml-IN", label: "Malayalam", ttsCode: "ml-IN" },
+] as const;
+
+function getSavedBoardLanguage(): string {
+  if (typeof window === "undefined") return "en-IN";
+  return localStorage.getItem("studyezy_language") || "en-IN";
+}
+
 export default function DrawingBoard({ unit, paperTasks = [] }: { unit: BoardUnit; paperTasks?: BoardTask[] }) {
   const [phase, setPhase] = useState(1);
   const [step, setStep] = useState(0);
@@ -69,6 +97,12 @@ export default function DrawingBoard({ unit, paperTasks = [] }: { unit: BoardUni
   const [chat, setChat] = useState<{ who: "kid" | "ezy"; text: string }[]>([
     { who: "ezy", text: "Tap a step above the board, or ask me one of the questions below." },
   ]);
+  const [chatInput, setChatInput] = useState("");
+  const [listening, setListening] = useState(false);
+  const [chatNotice, setChatNotice] = useState("");
+  const [chatBusy, setChatBusy] = useState(false);
+  const [language, setLanguage] = useState(getSavedBoardLanguage);
+  const [reciteProgress, setReciteProgress] = useState<Record<string, number>>({});
   const [saveState, setSaveState] = useState<"idle" | "saving" | "saved" | "error">("idle");
 
   const audioRef = useRef<AudioContext | null>(null);
@@ -76,6 +110,11 @@ export default function DrawingBoard({ unit, paperTasks = [] }: { unit: BoardUni
   answersRef.current = answers;
   const voiceOnRef = useRef(voiceOn);
   voiceOnRef.current = voiceOn;
+  const recognitionRef = useRef<SpeechRecognitionLike | null>(null);
+  const languageAudioRef = useRef<HTMLAudioElement | null>(null);
+  const languageAudioUrlRef = useRef<string | null>(null);
+  const lessonPanelRef = useRef<HTMLDivElement | null>(null);
+  const examplesPanelRef = useRef<HTMLDivElement | null>(null);
 
   const gx = useCallback(
     (x: number) => PAD_L + (x * (VB_W - PAD_L - 20)) / unit.gridMax,
@@ -86,7 +125,7 @@ export default function DrawingBoard({ unit, paperTasks = [] }: { unit: BoardUni
     [unit.gridMax],
   );
 
-  const say = useCallback((text: string, onDone?: () => void) => {
+  const say = useCallback((text: string, onDone?: () => void, languageCode = "en-GB") => {
     setSubtitle(text);
     // Fall back to a length-based estimate when there is no voice to wait on,
     // so the board behaves the same with narration off.
@@ -97,7 +136,36 @@ export default function DrawingBoard({ unit, paperTasks = [] }: { unit: BoardUni
     }
     window.speechSynthesis.cancel();
     const u = new SpeechSynthesisUtterance(text);
-    u.rate = 0.95;
+    u.lang = languageCode;
+    const voices = window.speechSynthesis.getVoices();
+    const baseLanguage = languageCode.split("-")[0].toLowerCase();
+    const matchingVoice = voices.find((voice) => voice.lang?.toLowerCase() === languageCode.toLowerCase())
+      ?? voices.find((voice) => voice.lang?.toLowerCase().startsWith(`${baseLanguage}-`));
+    if (matchingVoice) u.voice = matchingVoice;
+    if (!matchingVoice && baseLanguage !== "en") {
+      fetch("/api/tts", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text, languageCode }),
+      }).then(async (response) => {
+        if (!response.ok) throw new Error("local-language speech unavailable");
+        const url = URL.createObjectURL(await response.blob());
+        if (languageAudioUrlRef.current) URL.revokeObjectURL(languageAudioUrlRef.current);
+        languageAudioUrlRef.current = url;
+        const audio = languageAudioRef.current ?? new Audio();
+        audio.src = url;
+        const finish = () => {
+          URL.revokeObjectURL(url);
+          if (languageAudioUrlRef.current === url) languageAudioUrlRef.current = null;
+          onDone?.();
+        };
+        audio.onended = finish;
+        audio.onerror = finish;
+        audio.play().catch(finish);
+      }).catch(() => onDone?.());
+      return;
+    }
+    u.rate = 0.85;
     u.pitch = 1.05;
     if (onDone) {
       let fired = false;
@@ -154,6 +222,9 @@ export default function DrawingBoard({ unit, paperTasks = [] }: { unit: BoardUni
   useEffect(() => {
     return () => {
       if (typeof window !== "undefined" && "speechSynthesis" in window) window.speechSynthesis.cancel();
+      recognitionRef.current?.stop();
+      languageAudioRef.current?.pause();
+      if (languageAudioUrlRef.current) URL.revokeObjectURL(languageAudioUrlRef.current);
     };
   }, []);
 
@@ -176,12 +247,87 @@ export default function DrawingBoard({ unit, paperTasks = [] }: { unit: BoardUni
   const activeConcept = unit.concepts.find((c) => c.conceptId === unit.conceptSteps[step]?.conceptId);
 
   /** The full concept list, hidden by default so the board keeps its height. */
-  const [pickerOpen, setPickerOpen] = useState(false);
+  const [pickerOpen, setPickerOpen] = useState(true);
+  // Lesson content owns the workspace initially. Chat becomes a compact bar
+  // while a child is learning, then takes the full workspace only when opened.
+  const [focusPanel, setFocusPanel] = useState<"lesson" | "chat">("lesson");
+  const [exampleProgress, setExampleProgress] = useState<Record<string, number>>({});
+
+  // Keep every RCRT phase on the concept currently being taught. The old
+  // Cover phase used the whole unit's task list, exposing later topics early.
+  const activeConceptId = activeConcept?.conceptId;
+  const topicTasks = (tasks: BoardTask[]) => tasks.filter((task) => !activeConceptId || task.conceptId === activeConceptId);
+  const topicGuidedTasks = topicTasks(unit.guidedTasks);
+  const topicPartA = topicTasks(unit.assessment.partA);
+  const topicPartB = topicTasks(unit.assessment.partB);
+  const topicPaperTasks = paperTasks.filter((task) => !activeConceptId || task.conceptId === activeConceptId);
+  const topicRecitePrompts = unit.recitePrompts.filter((prompt) => !prompt.conceptId || prompt.conceptId === activeConceptId);
+  const topicWrittenPractice = unit.writtenPractice.filter((practice) => !practice.conceptId || practice.conceptId === activeConceptId);
+  const topicGraded = [...topicPartA, ...topicPartB, ...topicPaperTasks];
+  const nextGroup = activeGroup
+    ? conceptGroups[conceptGroups.findIndex((group) => group.key === activeGroup.key) + 1]
+    : undefined;
+
+  function quickChecksComplete() {
+    return (activeConcept?.quickCheck ?? []).every((task) => answers[task.title]?.correct);
+  }
+
+  function conceptStatus(conceptId: string): { read: boolean; cover: boolean; recite: boolean; test: boolean } {
+    const concept = unit.concepts.find((item) => item.conceptId === conceptId);
+    if (!concept) return { read: false, cover: false, recite: false, test: false };
+    const read = (exampleProgress[conceptId] ?? 0) >= concept.examples.length
+      && (concept.quickCheck ?? []).every((task) => answers[task.title]?.correct);
+    const guided = unit.guidedTasks.filter((task) => task.conceptId === conceptId);
+    const cover = read && guided.every((task) => answers[task.title]);
+    const reciteTotal = unit.recitePrompts.filter((prompt) => prompt.conceptId === conceptId).length
+      + unit.writtenPractice.filter((practice) => practice.conceptId === conceptId).length;
+    const recite = cover && reciteTotal > 0 && (reciteProgress[conceptId] ?? 0) >= reciteTotal;
+    const testTasks = [...unit.assessment.partA, ...unit.assessment.partB, ...paperTasks].filter((task) => task.conceptId === conceptId);
+    const test = recite && testTasks.length > 0 && testTasks.every((task) => answers[task.title]);
+    return { read, cover, recite, test };
+  }
+
+  function markReciteComplete(conceptId: string) {
+    setReciteProgress((previous) => ({ ...previous, [conceptId]: (previous[conceptId] ?? 0) + 1 }));
+  }
+
+  function moveToNextTopic() {
+    const nextStep = nextGroup?.indexes[0];
+    if (nextStep === undefined) return;
+    const next = unit.conceptSteps[nextStep];
+    setStep(nextStep);
+    setPhase(1);
+    setFocusPanel("lesson");
+    setFrame(next.frame ?? {});
+    setPickerOpen(true);
+    say(`Great work. ${activeGroup?.label ?? "That topic"} is complete. Now let's learn ${nextGroup?.label ?? "the next topic"}.`, undefined, "en-GB");
+  }
+
+  function examplesComplete(conceptId = activeConcept?.conceptId) {
+    const concept = unit.concepts.find((item) => item.conceptId === conceptId);
+    return !concept || concept.examples.length === 0 || (exampleProgress[concept.conceptId] ?? 0) >= concept.examples.length;
+  }
+
+  function markExampleComplete(conceptId: string) {
+    const total = unit.concepts.find((item) => item.conceptId === conceptId)?.examples.length ?? 0;
+    setExampleProgress((previous) => ({
+      ...previous,
+      [conceptId]: Math.min(total, (previous[conceptId] ?? 0) + 1),
+    }));
+  }
 
   function loadStep(i: number) {
     const s = unit.conceptSteps[i];
     if (!s) return;
+    const currentConceptId = unit.conceptSteps[step]?.conceptId;
+    if (s.conceptId !== currentConceptId && !examplesComplete(currentConceptId)) {
+      setFocusPanel("lesson");
+      examplesPanelRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+      say("Try every example in this concept first. Then we will unlock the next topic.");
+      return;
+    }
     setStep(i);
+    setFocusPanel("lesson");
     setFrame(s.frame);
     sfx("tap");
     say(s.say);
@@ -218,7 +364,7 @@ export default function DrawingBoard({ unit, paperTasks = [] }: { unit: BoardUni
       setFrame(unit.conceptSteps[step]?.frame ?? {});
       return;
     }
-    const list = phase === 2 ? unit.guidedTasks : [...unit.assessment.partA, ...unit.assessment.partB, ...paperTasks];
+    const list = phase === 2 ? topicGuidedTasks : topicGraded;
     const next = list.find((t) => t.title !== justAnswered && !answersRef.current[t.title]);
     setFrame(next?.setup ?? {});
   }
@@ -226,7 +372,7 @@ export default function DrawingBoard({ unit, paperTasks = [] }: { unit: BoardUni
   /** The question the board is currently offering to be dragged. */
   const dragTask =
     phase === 2 || phase === 4
-      ? (phase === 2 ? unit.guidedTasks : [...unit.assessment.partA, ...unit.assessment.partB]).find(
+      ? (phase === 2 ? topicGuidedTasks : [...topicPartA, ...topicPartB]).find(
           (t) => t.drag && !answers[t.title],
         )
       : undefined;
@@ -259,7 +405,7 @@ export default function DrawingBoard({ unit, paperTasks = [] }: { unit: BoardUni
   /** The question currently offering a word to sort into a bucket. */
   const chipTask =
     phase === 2 || phase === 4
-      ? (phase === 2 ? unit.guidedTasks : [...unit.assessment.partA, ...unit.assessment.partB]).find(
+      ? (phase === 2 ? topicGuidedTasks : [...topicPartA, ...topicPartB]).find(
           (t) => t.chipDrag && !answers[t.title],
         )
       : undefined;
@@ -285,14 +431,17 @@ export default function DrawingBoard({ unit, paperTasks = [] }: { unit: BoardUni
     );
     setFrame(opt.frame);
     sfx(opt.correct ? "right" : "wrong");
-    say(opt.say, () => handOverToNextTask(task.title));
+    say(opt.say, () => {
+      if (phase === 1 && opt.correct) goPhase(2);
+      else handOverToNextTask(task.title);
+    });
   }
 
   // Score is only ever the graded phase - the practice phases are for trying
   // things, and counting them would punish exploring.
   // Paper questions count the same as the board's own - they are this unit's
   // real progression-test content, not a warm-up.
-  const graded = [...unit.assessment.partA, ...unit.assessment.partB, ...paperTasks];
+  const graded = topicGraded;
   const gradedAnswered = graded.filter((t) => answers[t.title]);
   const gradedCorrect = graded.filter((t) => answers[t.title]?.correct);
   const readiness = graded.length ? Math.round((gradedCorrect.length / graded.length) * 100) : 0;
@@ -313,6 +462,21 @@ export default function DrawingBoard({ unit, paperTasks = [] }: { unit: BoardUni
   }, [unit.lab, dx, dy]);
 
   function goPhase(p: number) {
+    if (phase === 1 && p > 1 && !examplesComplete()) {
+      setFocusPanel("lesson");
+      examplesPanelRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+      say("Before Cover, try every example in this concept. They are your warm-up for the homework.");
+      return;
+    }
+    if (phase === 1 && p > 1 && !quickChecksComplete()) {
+      say("Finish this topic's quick check first. Then we will start Cover.");
+      return;
+    }
+    if (phase === 2 && p === 3 && topicGuidedTasks.some((task) => !answers[task.title])) {
+      say("Finish this topic's Cover questions first. Then we will move to Recite.");
+      return;
+    }
+    setFocusPanel("lesson");
     setPhase(p);
     sfx("tap");
     if (p === 1) {
@@ -320,7 +484,7 @@ export default function DrawingBoard({ unit, paperTasks = [] }: { unit: BoardUni
       setFrame(s?.frame ?? {});
       say(s?.say ?? "Let's look at the idea again.");
     } else if (p === 2) {
-      setFrame(unit.guidedTasks.find((t) => !answers[t.title])?.setup ?? {});
+      setFrame(topicGuidedTasks.find((t) => !answers[t.title])?.setup ?? {});
       say("Cover. The explanation is put away - try these from memory. Even a wrong answer will show you where it would land.");
     } else if (p === 3) {
       say("Recite. Say the rule back in your own words first, then play with the sliders and watch the shape travel.");
@@ -368,9 +532,117 @@ export default function DrawingBoard({ unit, paperTasks = [] }: { unit: BoardUni
     }
   }
 
-  function ask(q: string, a: string) {
-    setChat((prev) => [...prev, { who: "kid", text: q }, { who: "ezy", text: a }]);
-    say(a);
+  async function ask(q: string, a: string) {
+    const selectedLanguage = BOARD_LANGUAGES.find((item) => item.code === language) ?? BOARD_LANGUAGES[0];
+    // The saved cards are English curriculum content. English can answer
+    // offline; a selected Indian language must use the same cached translation
+    // pipeline as typed questions, otherwise the Board silently prints English.
+    if (language === "en-IN") {
+      setChat((prev) => [...prev, { who: "kid", text: q }, { who: "ezy", text: a }]);
+      say(a, undefined, selectedLanguage.ttsCode);
+      return;
+    }
+    setChat((prev) => [...prev, { who: "kid", text: q }, { who: "ezy", text: "Let me think about that…" }]);
+    setChatBusy(true);
+    try {
+      const response = await fetch("/api/ask", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          unitKey: unit.unitKey,
+          conceptId: activeConcept?.conceptId ?? unit.concepts[0]?.conceptId,
+          question: q,
+          language: selectedLanguage.label,
+        }),
+      });
+      const payload = (await response.json()) as { answer?: string };
+      const answer = response.ok && payload.answer ? payload.answer : a;
+      setChat((prev) => prev.map((message, index) => index === prev.length - 1 ? { ...message, text: answer } : message));
+      say(answer, undefined, selectedLanguage.ttsCode);
+    } catch {
+      setChat((prev) => prev.map((message, index) => index === prev.length - 1 ? { ...message, text: a } : message));
+      say(a, undefined, selectedLanguage.ttsCode);
+    } finally {
+      setChatBusy(false);
+    }
+  }
+
+  function answerStoredQuestion(question: string): string | null {
+    const normalized = question.toLowerCase().replace(/[^a-z0-9. ]/g, " ");
+    const words = new Set(normalized.split(/\s+/).filter((word) => word.length > 1));
+    const candidates = (unit.chatAnswers ?? []).filter((item) => !item.conceptId || item.conceptId === activeConcept?.conceptId);
+    const best = candidates
+      .map((item) => ({ item, score: item.keywords.reduce((score, keyword) => score + (normalized.includes(keyword.toLowerCase()) ? 1 : 0), 0) + (words.has(item.question.toLowerCase()) ? 2 : 0) }))
+      .sort((a, b) => b.score - a.score)[0];
+    return best && best.score >= 1 ? best.item.answer : null;
+  }
+
+  async function submitChatQuestion(rawQuestion = chatInput) {
+    const question = rawQuestion.trim();
+    if (!question || chatBusy) return;
+    setChatInput("");
+    const storedAnswer = language === "en-IN" ? answerStoredQuestion(question) : null;
+    if (storedAnswer) {
+      setChat((prev) => [...prev, { who: "kid", text: question }, { who: "ezy", text: storedAnswer }]);
+      setChatNotice("Answered from this topic’s saved help cards");
+      say(storedAnswer, undefined, BOARD_LANGUAGES.find((item) => item.code === language)?.ttsCode);
+      return;
+    }
+    setChatBusy(true);
+    setChatNotice("I’m checking that with Ezy…");
+    setChat((prev) => [...prev, { who: "kid", text: question }, { who: "ezy", text: "Let me think about that…" }]);
+    try {
+      const selectedLanguage = BOARD_LANGUAGES.find((item) => item.code === language) ?? BOARD_LANGUAGES[0];
+      const response = await fetch("/api/ask", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ unitKey: unit.unitKey, conceptId: activeConcept?.conceptId ?? unit.concepts[0]?.conceptId, question, language: selectedLanguage.label }) });
+      const payload = (await response.json()) as { answer?: string; source?: string };
+      const answerText = response.ok && payload.answer ? payload.answer : "I could not reach Ezy right now. Try one of the saved questions, or ask your teacher to add this one to the topic cards.";
+      setChat((prev) => prev.map((message, index) => index === prev.length - 1 ? { ...message, text: answerText } : message));
+      setChatNotice(payload.source === "local" ? "Answered from the saved curriculum help" : "Answered live by Ezy");
+      say(answerText, undefined, selectedLanguage.ttsCode);
+    } catch {
+      const answerText = "I could not reach Ezy right now. Try one of the saved questions, or ask your teacher to add this one to the topic cards.";
+      setChat((prev) => prev.map((message, index) => index === prev.length - 1 ? { ...message, text: answerText } : message));
+      setChatNotice("Ezy is offline — saved help is still available");
+      say(answerText, undefined, BOARD_LANGUAGES.find((item) => item.code === language)?.ttsCode);
+    } finally {
+      setChatBusy(false);
+    }
+  }
+
+  function toggleListening() {
+    if (typeof window === "undefined") {
+      setChatNotice("Microphone input is not available in this browser. Try Chrome or Edge.");
+      return;
+    }
+    if (listening) {
+      recognitionRef.current?.stop();
+      setListening(false);
+      return;
+    }
+    const SpeechRecognition = (window as Window & { SpeechRecognition?: SpeechRecognitionConstructor; webkitSpeechRecognition?: SpeechRecognitionConstructor }).SpeechRecognition
+      ?? (window as Window & { webkitSpeechRecognition?: SpeechRecognitionConstructor }).webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      setChatNotice("Microphone input is not available in this browser. Try Chrome or Edge.");
+      return;
+    }
+    const recognition = new SpeechRecognition();
+    recognition.lang = language;
+    recognition.continuous = false;
+    recognition.interimResults = false;
+    recognition.onresult = (event) => {
+      const transcript = event.results[0]?.[0]?.transcript ?? "";
+      setChatInput(transcript);
+      setListening(false);
+    };
+    recognition.onend = () => setListening(false);
+    recognition.onerror = () => {
+      setListening(false);
+      setChatNotice("I could not hear that. Please try again or type your question.");
+    };
+    recognitionRef.current = recognition;
+      setChatNotice("Listening… ask about this topic");
+    setListening(true);
+    recognition.start();
   }
 
   const shapeFill: Record<string, string> = {
@@ -389,6 +661,8 @@ export default function DrawingBoard({ unit, paperTasks = [] }: { unit: BoardUni
 
   return (
     <div className="flex h-full min-h-0 flex-col bg-[#090d16] font-board text-slate-100">
+      <audio ref={languageAudioRef} className="hidden" aria-hidden="true" />
+      <style>{`@keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }`}</style>
       {/* Header */}
       <header className="flex shrink-0 flex-wrap items-center justify-between gap-3 border-b-4 border-[#f59e0b] bg-[#020617] px-5 py-2.5">
         <div className="flex items-center gap-2.5 text-lg font-bold text-[#f59e0b]">
@@ -396,10 +670,10 @@ export default function DrawingBoard({ unit, paperTasks = [] }: { unit: BoardUni
               feedback 2026-09-14: "it has not synced up with our old link
               portion". */}
           <Link
-            href={`/learn/${unit.unitKey}`}
+            href="/select"
             className="rounded-lg border-2 border-slate-700 px-2.5 py-1 text-sm text-slate-300 transition-colors hover:border-[#38bdf8] hover:text-[#38bdf8]"
           >
-            ← Unit
+            ← Unit selection
           </Link>
           🏫 Learning Board
           <span className="rounded-full bg-[#ec4899] px-3 py-0.5 text-xs text-white">{unit.badge}</span>
@@ -420,7 +694,7 @@ export default function DrawingBoard({ unit, paperTasks = [] }: { unit: BoardUni
               voiceOn ? "border-[#34d399] bg-[#10b981] text-white" : "border-slate-500 bg-slate-700 text-slate-200"
             }`}
           >
-            {voiceOn ? "🎙️ Voice on" : "🔇 Voice off"}
+            {voiceOn ? "🔊 Read aloud" : "🔇 Read aloud off"}
           </button>
         </div>
       </header>
@@ -444,7 +718,7 @@ export default function DrawingBoard({ unit, paperTasks = [] }: { unit: BoardUni
         ))}
       </nav>
 
-      <div className="grid min-h-0 flex-1 gap-3 p-3 lg:grid-cols-[1fr_22rem]">
+      <div className="relative grid min-h-0 flex-1 gap-3 p-2.5 sm:p-3 lg:grid-cols-[minmax(0,1fr)_22rem]">
         {/* ---------- Board ---------- */}
         <section className="flex min-h-0 flex-col overflow-hidden rounded-3xl border-4 border-slate-700 bg-[#0f172a] shadow-2xl">
           {/* Grouped by concept. A unit where several concepts are walked
@@ -473,46 +747,40 @@ export default function DrawingBoard({ unit, paperTasks = [] }: { unit: BoardUni
                 </span>
               </div>
               {pickerOpen && (
-                <div className="mt-2 flex max-h-32 flex-wrap justify-center gap-2 overflow-y-auto">
-                  {conceptGroups.map((g) => {
-                    const isHere = g.indexes.includes(step);
-                    return (
-                      <button
-                        key={g.key}
-                        type="button"
-                        /* Stays open on pick: finishing one concept is exactly
-                           when a child reaches for the next, so closing the
-                           list every time makes them re-open it every time. */
-                        onClick={() => loadStep(g.indexes[0])}
-                        className={`rounded-xl border-2 px-3 py-1.5 text-xs font-bold transition-colors ${
-                          isHere
-                            ? "border-[#f59e0b] bg-[#f59e0b] text-[#020617]"
-                            : "border-slate-700 bg-slate-900/95 text-slate-300 hover:border-[#38bdf8] hover:text-white"
-                        }`}
-                      >
-                        {g.label}
-                        {g.indexes.length > 1 ? ` · ${g.indexes.length}` : ""}
-                      </button>
-                    );
-                  })}
-                </div>
-              )}
-              {activeGroup && activeGroup.indexes.length > 1 && (
-                <div className="mt-2 flex flex-wrap justify-center gap-1.5">
-                  {activeGroup.indexes.map((idx, n) => (
-                    <button
-                      key={idx}
-                      type="button"
-                      onClick={() => loadStep(idx)}
-                      className={`rounded-lg border px-2.5 py-1 text-[0.7rem] font-bold transition-colors ${
-                        idx === step
-                          ? "border-[#38bdf8] bg-[#38bdf8]/20 text-[#7dd3fc]"
-                          : "border-slate-700 text-slate-400 hover:border-[#38bdf8] hover:text-white"
-                      }`}
-                    >
-                      {n + 1}. {unit.conceptSteps[idx].label.replace(/^\S+\s*/, "")}
-                    </button>
-                  ))}
+                <div className="mt-2 max-h-48 overflow-y-auto rounded-2xl border border-slate-800 bg-[#090d16] p-2">
+                  <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-3">
+                    {conceptGroups.map((g) => {
+                      const isHere = g.indexes.includes(step);
+                      const status = conceptStatus(g.key);
+                      const statusLabel = status.test ? "Complete" : status.recite ? "Test pending" : status.cover ? "Recite pending" : status.read ? "Cover pending" : "Read pending";
+                      return (
+                        <div key={g.key} className={`rounded-xl border p-2 ${isHere ? "border-[#f59e0b]/70 bg-[#f59e0b]/10" : "border-slate-800 bg-[#0f172a]"}`}>
+                          <button
+                            type="button"
+                            onClick={() => loadStep(g.indexes[0])}
+                            className={`w-full rounded-lg px-2 py-1 text-left text-xs font-extrabold transition-colors ${isHere ? "text-[#fef08a]" : "text-slate-300 hover:text-white"}`}
+                          >
+                            {g.label}
+                          </button>
+                          <p className={`mt-1 text-[0.62rem] font-bold ${status.test ? "text-[#34d399]" : "text-[#f59e0b]"}`}>
+                            {status.test ? "✅" : "⏳"} {statusLabel}
+                          </p>
+                          <div className="mt-1 flex flex-wrap gap-1">
+                            {g.indexes.map((idx, n) => (
+                              <button
+                                key={idx}
+                                type="button"
+                                onClick={() => loadStep(idx)}
+                                className={`rounded-md border px-1.5 py-1 text-[0.65rem] font-bold transition-colors ${idx === step ? "border-[#38bdf8] bg-[#38bdf8]/20 text-[#7dd3fc]" : "border-slate-700 text-slate-500 hover:border-[#38bdf8] hover:text-slate-200"}`}
+                              >
+                                {n + 1}. {unit.conceptSteps[idx].label.replace(/^\S+\s*/, "")}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
                 </div>
               )}
             </div>
@@ -697,7 +965,26 @@ export default function DrawingBoard({ unit, paperTasks = [] }: { unit: BoardUni
         </section>
 
         {/* ---------- Assistant / tasks ---------- */}
-        <aside className="flex min-h-0 flex-col gap-3 overflow-y-auto rounded-3xl border-2 border-slate-700 bg-[#1e293b] p-4">
+        <aside className="flex min-h-0 flex-col gap-3 overflow-hidden rounded-3xl border-2 border-slate-700 bg-[#1e293b] p-3 transition-all duration-500 ease-out sm:p-4">
+          <nav className="grid shrink-0 grid-cols-2 gap-2 rounded-2xl border border-slate-700 bg-[#0f172a] p-1.5" aria-label="Learning board side panel">
+            <button
+              type="button"
+              onClick={() => setFocusPanel("lesson")}
+              aria-pressed={focusPanel === "lesson"}
+              className={`rounded-xl px-3 py-2 text-sm font-extrabold transition-all ${focusPanel === "lesson" ? "bg-[#f59e0b] text-[#020617] shadow-lg shadow-amber-500/20" : "text-slate-400 hover:bg-slate-800 hover:text-white"}`}
+            >
+              📚 Lesson
+            </button>
+            <button
+              type="button"
+              onClick={() => setFocusPanel("chat")}
+              aria-pressed={focusPanel === "chat"}
+              className={`rounded-xl px-3 py-2 text-sm font-extrabold transition-all ${focusPanel === "chat" ? "bg-[#38bdf8] text-[#052e3f] shadow-lg shadow-cyan-500/20" : "text-slate-400 hover:bg-slate-800 hover:text-white"}`}
+            >
+              💬 Chat
+            </button>
+          </nav>
+          {focusPanel !== "chat" && <div ref={lessonPanelRef} className="min-h-0 flex-1 overflow-y-auto pr-1 motion-safe:animate-[fadeIn_.35s_ease-out]">
           {phase === 1 && (
             <>
               <h2 className="border-b-2 border-slate-700 pb-2 text-lg font-bold text-[#f59e0b]">📖 This chapter</h2>
@@ -706,18 +993,16 @@ export default function DrawingBoard({ unit, paperTasks = [] }: { unit: BoardUni
                   2026-09-14: "it lacks some introduction on what we are going
                   to cover in this chapter and what will be achieved". */}
               <div className="rounded-2xl border-2 border-slate-700 bg-[#0f172a] p-3">
-                <p className="text-[0.7rem] font-extrabold uppercase tracking-wider text-[#38bdf8]">What we will cover</p>
-                <ul className="mt-1.5 flex flex-col gap-1">
-                  {unit.intro.covers.map((c) => (
-                    <li key={c} className="text-[0.8rem] leading-snug text-slate-300">• {c}</li>
-                  ))}
-                </ul>
-                <p className="mt-3 text-[0.7rem] font-extrabold uppercase tracking-wider text-[#34d399]">By the end you can</p>
-                <ul className="mt-1.5 flex flex-col gap-1">
-                  {unit.intro.outcomes.map((o) => (
-                    <li key={o} className="text-[0.8rem] leading-snug text-slate-300">✓ {o}</li>
-                  ))}
-                </ul>
+                <p className="text-[0.7rem] font-extrabold uppercase tracking-wider text-[#38bdf8]">Today&apos;s mission</p>
+                <p className="mt-1 text-[0.82rem] font-semibold leading-snug text-slate-300">
+                  Learn how tenths build decimals, place them on a number line, and explain your thinking.
+                </p>
+                <details className="mt-2 rounded-xl border border-slate-700 bg-[#111c31] px-2.5 py-2">
+                  <summary className="cursor-pointer text-[0.72rem] font-bold text-slate-400">See the whole chapter map</summary>
+                  <ul className="mt-2 flex flex-col gap-1">
+                    {unit.intro.covers.map((c) => <li key={c} className="text-[0.75rem] leading-snug text-slate-400">• {c}</li>)}
+                  </ul>
+                </details>
                 <button
                   type="button"
                   onClick={() => say(`In this chapter we will cover: ${unit.intro.covers.join(". ")}. By the end you will be able to ${unit.intro.outcomes.join(", and ")}.`)}
@@ -748,12 +1033,22 @@ export default function DrawingBoard({ unit, paperTasks = [] }: { unit: BoardUni
                       moving on - real user direction 2026-09-14: "we have to
                       have examples at the end of each concept, that will be
                       practice". */}
-                  <p className="pt-1 text-[0.7rem] font-extrabold uppercase tracking-wider text-[#34d399]">
-                    Try these before moving on
-                  </p>
+                  <div ref={examplesPanelRef} className="mt-3 rounded-2xl border-2 border-[#34d399] bg-[#34d399]/10 p-3 shadow-lg shadow-emerald-950/30 scroll-mt-3">
+                    <div className="flex items-center justify-between gap-2">
+                      <p className="text-[0.78rem] font-extrabold uppercase tracking-wider text-[#6ee7b7]">
+                        ⭐ Try these before moving on
+                      </p>
+                      <span className="rounded-full bg-[#34d399] px-2 py-0.5 text-[0.68rem] font-extrabold text-[#022c22]">
+                        {exampleProgress[activeConcept.conceptId] ?? 0}/{activeConcept.examples.length}
+                      </span>
+                    </div>
+                    <p className="mt-1 text-[0.75rem] font-semibold leading-snug text-emerald-100">
+                      Complete each warm-up first. The next topic unlocks after this.
+                    </p>
+                  </div>
                   <div className="flex flex-col gap-2">
                     {activeConcept.examples.map((e, i) => (
-                      <ReciteCard key={e.question} prompt={{ ask: `${i + 1}. ${e.question}`, answer: e.answer }} onSay={say} revealLabel="Check my answer" />
+                      <ReciteCard key={e.question} prompt={{ ask: `${i + 1}. ${e.question}`, answer: e.answer }} onSay={say} onComplete={() => markExampleComplete(activeConcept.conceptId)} revealLabel="Check my answer" />
                     ))}
                   </div>
                   {activeConcept.quickCheck && activeConcept.quickCheck.length > 0 && (
@@ -773,8 +1068,8 @@ export default function DrawingBoard({ unit, paperTasks = [] }: { unit: BoardUni
                   <li key={k} className="rounded-xl bg-[#0f172a] px-3 py-2 text-[0.8rem] leading-snug text-slate-300">• {k}</li>
                 ))}
               </ul>
-              <button type="button" onClick={() => goPhase(2)} className="mt-auto rounded-xl bg-[#ec4899] px-4 py-2.5 font-bold text-white shadow-[0_4px_0_#be185d] transition-transform hover:-translate-y-0.5">
-                Cover it up and try ➔
+              <button type="button" onClick={() => goPhase(2)} disabled={!examplesComplete() || !quickChecksComplete()} className="mt-auto rounded-xl bg-[#ec4899] px-4 py-2.5 font-bold text-white shadow-[0_4px_0_#be185d] transition-transform hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-45">
+                {!examplesComplete() ? "Try all examples to unlock Cover" : quickChecksComplete() ? "Cover it up and try ➔" : "Complete the quick check to unlock Cover"}
               </button>
             </>
           )}
@@ -795,21 +1090,21 @@ export default function DrawingBoard({ unit, paperTasks = [] }: { unit: BoardUni
                   or mark them light or move them backward for each answer
                   done... else old answer stays we work on new question that
                   may confuse". */}
-              {byDone(phase === 2 ? unit.guidedTasks : unit.assessment.partA).map((t) => (
+              {byDone(phase === 2 ? topicGuidedTasks : topicPartA).map((t) => (
                 <TaskCard key={t.title} task={t} chosen={answers[t.title]} onPick={(i) => answer(t, i)} onReplay={() => replayTask(t)} />
               ))}
               {phase === 4 && (
                 <>
                   <p className="pt-1 text-[0.7rem] font-extrabold uppercase tracking-wider text-[#f59e0b]">Part B · use it somewhere new</p>
-                  {byDone(unit.assessment.partB).map((t) => (
+                  {byDone(topicPartB).map((t) => (
                     <TaskCard key={t.title} task={t} chosen={answers[t.title]} onPick={(i) => answer(t, i)} onReplay={() => replayTask(t)} />
                   ))}
-                  {paperTasks.length > 0 && (
+                  {topicPaperTasks.length > 0 && (
                     <>
                       <p className="pt-1 text-[0.7rem] font-extrabold uppercase tracking-wider text-[#38bdf8]">
                         From your question paper
                       </p>
-                      {byDone(paperTasks).map((t) => (
+                      {byDone(topicPaperTasks).map((t) => (
                         <TaskCard key={t.title} task={t} chosen={answers[t.title]} onPick={(i) => answer(t, i)} onReplay={() => replayTask(t)} />
                       ))}
                     </>
@@ -819,9 +1114,10 @@ export default function DrawingBoard({ unit, paperTasks = [] }: { unit: BoardUni
               <button
                 type="button"
                 onClick={() => goPhase(phase === 2 ? 3 : 5)}
+                disabled={phase === 2 && topicGuidedTasks.some((task) => !answers[task.title])}
                 className="mt-auto rounded-xl bg-[#ec4899] px-4 py-2.5 font-bold text-white shadow-[0_4px_0_#be185d] transition-transform hover:-translate-y-0.5"
               >
-                {phase === 2 ? "Recite it back ➔" : "See how I did ➔"}
+                {phase === 2 ? (topicGuidedTasks.every((task) => answers[task.title]) ? "Recite it back ➔" : "Finish this topic's Cover questions") : "See how I did ➔"}
               </button>
             </>
           )}
@@ -834,16 +1130,16 @@ export default function DrawingBoard({ unit, paperTasks = [] }: { unit: BoardUni
                 you to hear whether you have really got it.
               </p>
               <div className="flex flex-col gap-2">
-                {unit.recitePrompts.map((r) => (
-                  <ReciteCard key={r.ask} prompt={r} onSay={say} />
+                {topicRecitePrompts.map((r) => (
+                  <ReciteCard key={r.ask} prompt={r} onSay={say} onComplete={() => activeConceptId && markReciteComplete(activeConceptId)} />
                 ))}
               </div>
               <p className="pt-1 text-[0.7rem] font-extrabold uppercase tracking-wider text-slate-500">
                 Write these in your rough book, then check
               </p>
               <div className="flex flex-col gap-2">
-                {unit.writtenPractice.map((w, i) => (
-                  <ReciteCard key={w.question} prompt={{ ask: `${i + 1}. ${w.question}`, answer: w.answer }} onSay={say} revealLabel="I've written it - check me" />
+                {topicWrittenPractice.map((w, i) => (
+                  <ReciteCard key={w.question} prompt={{ ask: `${i + 1}. ${w.question}`, answer: w.answer }} onSay={say} onComplete={() => activeConceptId && markReciteComplete(activeConceptId)} revealLabel="I've written it - check me" />
                 ))}
               </div>
               <p className="pt-1 text-[0.7rem] font-extrabold uppercase tracking-wider text-slate-500">Then play with it</p>
@@ -889,9 +1185,18 @@ export default function DrawingBoard({ unit, paperTasks = [] }: { unit: BoardUni
               <div className="rounded-2xl border border-slate-700 bg-[#0f172a] p-3 text-[0.82rem] text-slate-300">
                 <p className="mb-1.5 font-bold text-white">What we&apos;ll do next</p>
                 {passed
-                  ? "This comes back in 3 days as a quick brush-up, so it sticks for the test."
+                  ? nextGroup ? `Topic complete. The next topic is ${nextGroup.label}.` : "This was the final topic. It comes back in 3 days as a quick brush-up, so it sticks for the test."
                   : "We&apos;ll revisit the concept walkthrough tomorrow, then try the check again."}
               </div>
+              {passed && nextGroup && (
+                <button
+                  type="button"
+                  onClick={moveToNextTopic}
+                  className="rounded-xl bg-[#38bdf8] px-4 py-2.5 text-center font-extrabold text-[#052e3f] shadow-[0_4px_0_#0369a1] transition-transform hover:-translate-y-0.5"
+                >
+                  Continue to {nextGroup.label} ➔
+                </button>
+              )}
               {graded.map((t) => {
                 const a = answers[t.title];
                 return (
@@ -935,14 +1240,16 @@ export default function DrawingBoard({ unit, paperTasks = [] }: { unit: BoardUni
             </>
           )}
 
+          </div>}
+
           {/* Ask-me sits under every phase, not just the first - real
               feedback 2026-09-14: "on the chat side there is no change,
               probably we should have some questions there". */}
-          <details className="mt-2 rounded-2xl border-2 border-slate-700 bg-[#0f172a]" open={phase === 1}>
-            <summary className="cursor-pointer px-3 py-2 text-[0.8rem] font-bold text-[#38bdf8]">
-              📌 Stuck? Ask me ({unit.readymade.length})
-            </summary>
-            <div className="flex flex-col gap-1.5 px-3 pb-3">
+          {focusPanel === "chat" && <section className="flex min-h-0 flex-1 flex-col rounded-2xl border-2 border-[#38bdf8]/60 bg-[#0f172a] motion-safe:animate-[fadeIn_.35s_ease-out]">
+            <h2 className="px-3 py-2 text-[0.82rem] font-extrabold text-[#38bdf8]">
+              💬 Ask Ezy about this lesson
+            </h2>
+            <div className="flex min-h-0 flex-1 flex-col gap-1.5 px-3 pb-3">
               {unit.readymade.map((r) => (
                 <button
                   key={r.q}
@@ -953,7 +1260,51 @@ export default function DrawingBoard({ unit, paperTasks = [] }: { unit: BoardUni
                   {r.q}
                 </button>
               ))}
-              <div className="mt-1 flex max-h-36 flex-col gap-1.5 overflow-y-auto rounded-xl border border-slate-700 bg-[#090d16] p-2">
+              <div className="mt-1 rounded-xl border-2 border-[#38bdf8]/50 bg-[#0b1329] p-2.5">
+                <p className="mb-1.5 text-[0.7rem] font-extrabold uppercase tracking-wider text-[#34d399]">Ask about this topic</p>
+                <div className="flex gap-1.5">
+                  <label className="sr-only" htmlFor="board-language">Response language</label>
+                  <select
+                    id="board-language"
+                    value={language}
+                    onChange={(event) => {
+                      setLanguage(event.target.value);
+                      localStorage.setItem("studyezy_language", event.target.value);
+                      setChatNotice(`Voice questions and answers will use ${BOARD_LANGUAGES.find((item) => item.code === event.target.value)?.label ?? "English"}`);
+                    }}
+                    className="w-24 rounded-lg border-2 border-slate-700 bg-[#1e293b] px-1.5 py-2 text-[0.7rem] font-bold text-slate-200 outline-none focus:border-[#38bdf8]"
+                  >
+                    {BOARD_LANGUAGES.map((item) => <option key={item.code} value={item.code}>{item.label}</option>)}
+                  </select>
+                  <input
+                    value={chatInput}
+                    onChange={(event) => setChatInput(event.target.value)}
+                    onKeyDown={(event) => { if (event.key === "Enter") submitChatQuestion(); }}
+                    placeholder="Type your question…"
+                    aria-label="Ask a question about this topic"
+                    className="min-w-0 flex-1 rounded-lg border-2 border-slate-700 bg-[#1e293b] px-2.5 py-2 text-[0.8rem] text-white outline-none placeholder:text-slate-500 focus:border-[#38bdf8]"
+                  />
+                  <button
+                    type="button"
+                    onClick={toggleListening}
+                    aria-label={listening ? "Stop listening" : "Ask by microphone"}
+                    title="Ask by microphone (Chrome or Edge)"
+                    className={`rounded-lg border-2 px-2.5 text-lg transition-colors ${listening ? "border-[#f59e0b] bg-[#f59e0b] text-[#020617]" : "border-slate-700 bg-[#1e293b] hover:border-[#38bdf8]"}`}
+                  >
+                    {listening ? "⏹️" : "🎤"}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => submitChatQuestion()}
+                    disabled={!chatInput.trim()}
+                    className="rounded-lg bg-[#0284c7] px-3 text-sm font-extrabold text-white disabled:opacity-40"
+                  >
+                    Ask
+                  </button>
+                </div>
+                {chatNotice && <p className="mt-1.5 text-[0.68rem] font-semibold text-[#7dd3fc]">{chatNotice}</p>}
+              </div>
+              <div className={`flex flex-col gap-1.5 overflow-y-auto rounded-xl border border-slate-700 bg-[#090d16] p-2 ${focusPanel === "chat" ? "min-h-0 flex-1" : "max-h-32"}`}>
                 {chat.map((m, i) => (
                   <p
                     key={i}
@@ -966,7 +1317,7 @@ export default function DrawingBoard({ unit, paperTasks = [] }: { unit: BoardUni
                 ))}
               </div>
             </div>
-          </details>
+          </section>}
         </aside>
       </div>
     </div>
@@ -1475,10 +1826,12 @@ function NumberLineStage({
 function ReciteCard({
   prompt,
   onSay,
+  onComplete,
   revealLabel = "I've said it - show me",
 }: {
   prompt: { ask: string; answer: string };
   onSay: (t: string) => void;
+  onComplete?: () => void;
   revealLabel?: string;
 }) {
   const [shown, setShown] = useState(false);
@@ -1492,6 +1845,7 @@ function ReciteCard({
           type="button"
           onClick={() => {
             setShown(true);
+            onComplete?.();
             onSay(prompt.answer);
           }}
           className="mt-2 rounded-xl border-2 border-slate-600 px-3 py-1.5 text-[0.78rem] font-bold text-slate-300 hover:border-[#38bdf8] hover:text-[#38bdf8]"

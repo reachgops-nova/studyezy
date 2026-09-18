@@ -1701,7 +1701,23 @@ export default function AvatarChat({
         {/* ---------------- The assistant ---------------- */}
         <div className="flex min-h-0 flex-col overflow-hidden rounded-3xl bg-white lg:w-[23rem]">
           <div className="shrink-0 px-4 pt-4">
-            <h3 className="text-base font-extrabold text-[#16241f]">💡 RCRT Assistant</h3>
+            <div className="flex items-center justify-between gap-2">
+              <h3 className="text-base font-extrabold text-[#16241f]">💡 RCRT Assistant</h3>
+              <label className="flex items-center gap-1.5 text-[10px] font-bold text-slate-500">
+                <span className="sr-only">Response language</span>
+                <select
+                  value={language}
+                  onChange={(event) => {
+                    setLanguage(event.target.value);
+                    localStorage.setItem(LANGUAGE_KEY, event.target.value);
+                  }}
+                  className="rounded-lg border border-slate-200 bg-slate-50 px-1.5 py-1.5 text-[11px] font-bold text-slate-700 outline-none focus:border-[#06b6d4]"
+                  aria-label="Response language"
+                >
+                  {LANGUAGES.map((item) => <option key={item.code} value={item.code}>{item.label}</option>)}
+                </select>
+              </label>
+            </div>
             <div className="mt-2 rounded-xl border-2 border-[#f59e0b] bg-[#fef9c3] px-3 py-2 text-[12px] font-medium leading-snug text-[#78350f]">
               <span className="font-extrabold">RCRT Tip:</span>{" "}
               {concept.tips_to_remember?.[0] ?? "Tap a question below if you get stuck - Ezy will take it slowly."}

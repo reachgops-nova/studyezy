@@ -772,4 +772,11 @@ export const CAMBRIDGE_4_MATH_10: BoardUnit = {
       a: "Translation has 's', 'l' in it - just think of a smooth slide where nothing turns or twists!",
     },
   ],
+
+  chatAnswers: [
+    { question: "What is a translation?", answer: "A translation is sliding a shape in a straight direction across a grid without turning, flipping, or resizing it.", keywords: ["translation", "slide", "shape"], conceptId: "10.1" },
+    { question: "How do I describe a translation?", answer: "Say how many units the shape moves horizontally first, left or right, and then vertically, up or down.", keywords: ["describe", "translation", "left", "right", "up", "down"], conceptId: "10.1" },
+    { question: "What is a reflection?", answer: "A reflection flips a shape across a mirror line. Each point stays the same distance from the line on the opposite side.", keywords: ["reflection", "mirror", "flip"], conceptId: "10.2" },
+    { question: "How do I find a missing corner?", answer: "Match the equal side lengths and parallel edges. On a square grid, trace across and up from the known corners to complete the shape.", keywords: ["missing", "corner", "shape", "square", "rectangle"], conceptId: "10.2" },
+  ],
 };

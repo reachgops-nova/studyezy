@@ -1,9 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getActiveProfileId } from "@/lib/auth";
 import { getUnit } from "@/lib/content";
-import { askConceptQuestion, isConfigured } from "@/lib/claude";
-import { askConceptQuestionGroq, isGroqConfigured, suggestFollowUpsGroq } from "@/lib/groq";
+import { askConceptQuestion, isConfigured, translateAnswerClaude } from "@/lib/claude";
+import { askConceptQuestionGroq, isGroqConfigured, suggestFollowUpsGroq, translateAnswerGroq } from "@/lib/groq";
 import { findLocalAnswer } from "@/lib/localAnswers";
+import { askConceptQuestionOpenRouter, isOpenRouterConfigured, translateAnswerOpenRouter } from "@/lib/openrouter";
+import { askConceptQuestionGemini, isGeminiConfigured, translateAnswerGemini } from "@/lib/gemini";
 import { checkRateLimit } from "@/lib/rateLimit";
 import { getCachedAnswer, saveCachedAnswer } from "@/lib/answerCache";
 import { logCacheHit } from "@/lib/aiCost";
@@ -35,6 +37,47 @@ const SUPPORTED_LANGUAGES = new Set(["English", "Tamil", "Hindi", "Telugu", "Kan
 function resolveLanguage(value: unknown): string {
   return typeof value === "string" && SUPPORTED_LANGUAGES.has(value) ? value : "English";
 }
+
+// Do not serve an old English cache entry for a parent who selected an
+// Indian language. The cache key already includes language, but older builds
+// could have stored English under that key, so a small script check keeps the
+// visible answer and the spoken answer aligned.
+function hasRequestedScript(answer: string, language: string): boolean {
+  if (language === "English") return true;
+  const ranges: Record<string, RegExp> = {
+    Tamil: /[\u0B80-\u0BFF]/,
+    Hindi: /[\u0900-\u097F]/,
+    Telugu: /[\u0C00-\u0C7F]/,
+    Kannada: /[\u0C80-\u0CFF]/,
+    Malayalam: /[\u0D00-\u0D7F]/,
+  };
+  return ranges[language]?.test(answer) ?? false;
+}
+
+async function ensureRequestedLanguage(answer: string, language: string): Promise<string> {
+  if (language === "English" || hasRequestedScript(answer, language)) return answer;
+  try {
+    if (isGroqConfigured()) return await translateAnswerGroq(answer, language);
+    if (isGeminiConfigured()) return await translateAnswerGemini(answer, language);
+    if (isConfigured()) return await translateAnswerClaude(answer, language);
+    if (isOpenRouterConfigured()) return await translateAnswerOpenRouter(answer, language);
+  } catch (err) {
+    console.error("localized answer repair failed, keeping original answer", err);
+  }
+  return answer;
+}
+
+// If every configured provider is unavailable or over its limit, never show
+// the student an English answer while Tamil/Hindi/etc. is selected. This is a
+// truthful, cached-safe terminal response; the next request can retry once a
+// provider is healthy again.
+const LOCALIZED_PROVIDER_UNAVAILABLE: Record<string, string> = {
+  Tamil: "இப்போது பதிலை உருவாக்க முடியவில்லை. சிறிது நேரம் கழித்து மீண்டும் முயற்சி செய்யுங்கள்.",
+  Hindi: "अभी उत्तर तैयार नहीं हो सका। कृपया थोड़ी देर बाद फिर कोशिश करें।",
+  Telugu: "ఇప్పుడు సమాధానం తయారు చేయలేకపోయాము. కొద్దిసేపటి తర్వాత మళ్లీ ప్రయత్నించండి.",
+  Kannada: "ಈಗ ಉತ್ತರವನ್ನು ತಯಾರಿಸಲು ಸಾಧ್ಯವಾಗಲಿಲ್ಲ. ಸ್ವಲ್ಪ ಸಮಯದ ನಂತರ ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ.",
+  Malayalam: "ഇപ്പോൾ ഉത്തരം തയ്യാറാക്കാൻ കഴിഞ്ഞില്ല. കുറച്ച് കഴിഞ്ഞ് വീണ്ടും ശ്രമിക്കുക.",
+};
 
 export async function POST(req: NextRequest) {
   const profileId = await getActiveProfileId();
@@ -87,10 +130,11 @@ export async function POST(req: NextRequest) {
   // kid on the same concept, is served free instead of triggering a new
   // Groq/Claude call. See lib/answerCache.ts for the matching rules.
   const cached = await getCachedAnswer(unitKey, concept.concept_id, resolvedLanguage, question);
-  if (cached) {
+  if (cached && hasRequestedScript(cached.answer, resolvedLanguage)) {
     logCacheHit("ask");
-    const followUps = await tryFollowUps(concept, question, cached.answer);
-    return NextResponse.json({ answer: cached.answer, source: "cache", followUps });
+    // Follow-up chips are also AI output. Do not spend another request on a
+    // cache hit; the answer itself is already the reusable response.
+    return NextResponse.json({ answer: cached.answer, source: "cache", followUps: [] });
   }
 
   // 2026-08-20: reordered to Groq-first, Claude-fallback (was the reverse).
@@ -111,7 +155,10 @@ export async function POST(req: NextRequest) {
   // making this the default tier, not just the fallback.
   if (isGroqConfigured()) {
     try {
-      const answer = await askConceptQuestionGroq(concept, question, resolvedLanguage, unit.subject, unit.concepts);
+      const answer = await ensureRequestedLanguage(
+        await askConceptQuestionGroq(concept, question, resolvedLanguage, unit.subject, unit.concepts),
+        resolvedLanguage,
+      );
       await saveCachedAnswer(unitKey, concept.concept_id, resolvedLanguage, question, answer);
       const followUps = await tryFollowUps(concept, question, answer);
       return NextResponse.json({ answer, source: "ai-groq", followUps });
@@ -120,16 +167,51 @@ export async function POST(req: NextRequest) {
     }
   }
 
+  if (isGeminiConfigured()) {
+    try {
+      const answer = await askConceptQuestionGemini(
+        `${concept.concept_name}\n${concept.definition ?? ""}\n${(concept.key_points ?? []).join("\n")}`,
+        question,
+        resolvedLanguage,
+      );
+      const localizedAnswer = await ensureRequestedLanguage(answer, resolvedLanguage);
+      await saveCachedAnswer(unitKey, concept.concept_id, resolvedLanguage, question, localizedAnswer);
+      const followUps = await tryFollowUps(concept, question, localizedAnswer);
+      return NextResponse.json({ answer: localizedAnswer, source: "ai-gemini", followUps });
+    } catch (err) {
+      console.error("askConceptQuestionGemini failed, trying next fallback", err);
+    }
+  }
+
   if (isConfigured()) {
     try {
-      const answer = await askConceptQuestion(concept, question, resolvedLanguage, unit.subject, unit.concepts);
+      const answer = await ensureRequestedLanguage(
+        await askConceptQuestion(concept, question, resolvedLanguage, unit.subject, unit.concepts),
+        resolvedLanguage,
+      );
       await saveCachedAnswer(unitKey, concept.concept_id, resolvedLanguage, question, answer);
       const followUps = await tryFollowUps(concept, question, answer);
       return NextResponse.json({ answer, source: "ai", followUps });
     } catch (err) {
-      console.error("askConceptQuestion failed, falling back to local answer", err);
+      console.error("askConceptQuestion failed, trying OpenRouter/local fallback", err);
     }
   }
 
-  return NextResponse.json({ answer: findLocalAnswer(concept, question), source: "local", followUps: [] });
+  if (isOpenRouterConfigured()) {
+    try {
+      const answer = await askConceptQuestionOpenRouter(concept, question, resolvedLanguage, unit.subject, unit.concepts);
+      await saveCachedAnswer(unitKey, concept.concept_id, resolvedLanguage, question, answer);
+      const followUps = await tryFollowUps(concept, question, answer);
+      return NextResponse.json({ answer, source: "ai-openrouter", followUps });
+    } catch (err) {
+      console.error("askConceptQuestionOpenRouter failed, falling back to local answer", err);
+    }
+  }
+
+  const translatedLocal = await ensureRequestedLanguage(findLocalAnswer(concept, question), resolvedLanguage);
+  const localAnswer = resolvedLanguage === "English" || hasRequestedScript(translatedLocal, resolvedLanguage)
+    ? translatedLocal
+    : LOCALIZED_PROVIDER_UNAVAILABLE[resolvedLanguage] ?? translatedLocal;
+  await saveCachedAnswer(unitKey, concept.concept_id, resolvedLanguage, question, localAnswer);
+  return NextResponse.json({ answer: localAnswer, source: "local", followUps: [] });
 }

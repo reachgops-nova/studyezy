@@ -26,6 +26,48 @@ export function isGeminiConfigured(): boolean {
   return Boolean(process.env.GOOGLE_AI_API_KEY);
 }
 
+/** Low-cost text Q&A tier for interactive student questions. Gemini is kept
+ * separate from the extraction helpers below so the live route can use its
+ * free quota before consuming paid Claude/OpenRouter credits. */
+export async function askConceptQuestionGemini(
+  context: string,
+  question: string,
+  language: string,
+): Promise<string> {
+  const languageRule = language === "English"
+    ? "Respond in English."
+    : `Respond entirely in ${language} script, not English. Do not transliterate.`;
+  const result = await geminiGenerateRaw(
+    "ask",
+    `You are a patient school tutor. Answer only from the supplied concept context. Explain simply to a 9-10 year old in under 100 words. ${languageRule} Return JSON only in the shape {"answer":"..."}.`,
+    [{ text: `${context}\n\nStudent question: ${question.trim().slice(0, 500)}` }],
+    1000,
+  );
+  try {
+    const parsed = JSON.parse(result.text.replace(/^```json\s*|\s*```$/g, "")) as { answer?: string };
+    if (parsed.answer?.trim()) return parsed.answer.trim();
+  } catch {
+    /* provider occasionally returns plain text despite the JSON contract */
+  }
+  throw new Error("Gemini returned no usable answer");
+}
+
+export async function translateAnswerGemini(answer: string, language: string): Promise<string> {
+  const result = await geminiGenerateRaw(
+    "ask",
+    `Translate the school-tutor answer entirely into ${language}. Return JSON only in the shape {"answer":"..."}. Use ${language} script, not transliteration. Preserve numbers and mathematical expressions.`,
+    [{ text: answer }],
+    600,
+  );
+  try {
+    const parsed = JSON.parse(result.text.replace(/^```json\s*|\s*```$/g, "")) as { answer?: string };
+    if (parsed.answer?.trim()) return parsed.answer.trim();
+  } catch {
+    /* continue to the next provider */
+  }
+  throw new Error("Gemini returned no usable translation");
+}
+
 interface GeminiPart {
   text?: string;
   inline_data?: { mime_type: string; data: string };
