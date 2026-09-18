@@ -13,6 +13,7 @@ const PRICE_PER_MILLION_USD: Record<string, { input: number; output: number }> =
   "claude-haiku-4-5-20251001": { input: 1.0, output: 5.0 },
   "claude-sonnet-5": { input: 2.0, output: 10.0 },
   "openai/gpt-oss-120b": { input: 0.15, output: 0.6 },
+  "cerebras/gpt-oss-120b": { input: 0.35, output: 0.75 },
   "openai/gpt-oss-20b": { input: 0.075, output: 0.3 },
   // Verified 2026-08-22 against console.groq.com/docs/model/qwen/qwen3.6-27b
   "qwen/qwen3.6-27b": { input: 0.6, output: 3.0 },

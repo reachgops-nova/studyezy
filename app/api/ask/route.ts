@@ -6,6 +6,7 @@ import { askConceptQuestionGroq, isGroqConfigured, suggestFollowUpsGroq, transla
 import { findLocalAnswer } from "@/lib/localAnswers";
 import { askConceptQuestionOpenRouter, isOpenRouterConfigured, translateAnswerOpenRouter } from "@/lib/openrouter";
 import { askConceptQuestionGemini, isGeminiConfigured, translateAnswerGemini } from "@/lib/gemini";
+import { askConceptQuestionCerebras, isCerebrasConfigured, translateAnswerCerebras } from "@/lib/cerebras";
 import { checkRateLimit } from "@/lib/rateLimit";
 import { getCachedAnswer, saveCachedAnswer } from "@/lib/answerCache";
 import { logCacheHit } from "@/lib/aiCost";
@@ -59,6 +60,7 @@ async function ensureRequestedLanguage(answer: string, language: string): Promis
   try {
     if (isGroqConfigured()) return await translateAnswerGroq(answer, language);
     if (isGeminiConfigured()) return await translateAnswerGemini(answer, language);
+    if (isCerebrasConfigured()) return await translateAnswerCerebras(answer, language);
     if (isConfigured()) return await translateAnswerClaude(answer, language);
     if (isOpenRouterConfigured()) return await translateAnswerOpenRouter(answer, language);
   } catch (err) {
@@ -180,6 +182,20 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ answer: localizedAnswer, source: "ai-gemini", followUps });
     } catch (err) {
       console.error("askConceptQuestionGemini failed, trying next fallback", err);
+    }
+  }
+
+  if (isCerebrasConfigured()) {
+    try {
+      const answer = await ensureRequestedLanguage(
+        await askConceptQuestionCerebras(concept, question, resolvedLanguage, unit.concepts),
+        resolvedLanguage,
+      );
+      await saveCachedAnswer(unitKey, concept.concept_id, resolvedLanguage, question, answer);
+      const followUps = await tryFollowUps(concept, question, answer);
+      return NextResponse.json({ answer, source: "ai-cerebras", followUps });
+    } catch (err) {
+      console.error("askConceptQuestionCerebras failed, trying paid fallback", err);
     }
   }
 

@@ -54,10 +54,11 @@ Provider order is deliberately free/low-cost first:
 1. Persistent answer cache.
 2. Groq, when `GROQ_API_KEY` exists.
 3. Gemini free tier, when `GOOGLE_AI_API_KEY` exists.
-4. Claude, reserved paid fallback.
-5. OpenRouter, reserved paid fallback (currently GPT-4o in
+4. Cerebras `gpt-oss-120b`, when `CEREBRAS_API_KEY` exists.
+5. Claude, reserved paid fallback.
+6. OpenRouter, reserved paid fallback (currently GPT-4o in
    `lib/openrouter.ts`).
-6. Local curriculum fallback / native-script unavailable message.
+7. Local curriculum fallback / native-script unavailable message.
 
 Supported response languages: English, Tamil, Hindi, Telugu, Kannada,
 Malayalam, and French. Non-English responses must be native script, not

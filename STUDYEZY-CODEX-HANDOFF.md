@@ -111,6 +111,9 @@ the cache/provider route so the displayed text and speech are translated.
   strengthened native-script requirements in `lib/groq.ts` and `lib/claude.ts`.
 - Added Gemini text Q&A/translation as the free-tier fallback before Claude in
   `lib/gemini.ts` and `app/api/ask/route.ts`.
+- Added Cerebras `gpt-oss-120b` as the next free/credit fallback, configured by
+  the server-only `CEREBRAS_API_KEY` environment variable. The raw key remains
+  only in ignored local/Railway secret storage, never Git.
 - Added `lib/boardUnits/curriculumAdapter.ts`: all drafted DB textbook
   concepts now flow into the Board's examples, key-point steps, recitation,
   written practice, pages, and voice Q&A. Math Units 12–18 now get the same
