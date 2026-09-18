@@ -426,3 +426,20 @@ move, including `(2 + 2, 2 + 3) = (4, 5)`.
 
 Validation: `npm test` (13 passed), Cambridge 27-unit audit, TypeScript,
 `git diff --check`, and `npm run build` pass.
+
+## Tamil Nadu Grade 9 Science rollout started (2026-09-18)
+
+The textbook source is `/Users/gopsair/Downloads/Class_9_Science_English_2024_Edition-www.tntextbooks.in.pdf` (24 units, 328 pages). Unit 1 remains the detailed authored Board lesson. Added `lib/boardUnits/tamilnadustateboard-9-science-pending.ts`, which registers source-aligned concept scaffolds, worked examples, Cover/Recite/Test ownership, and visual cards for Units 2–24. `BOARD_UNITS` now exposes all 24 Science unit keys in the shared Board template.
+
+Generated and copied two project assets using the built-in image-generation skill, with no educational text embedded in the images so labels remain accurate/localisable in code:
+
+- `public/board-art/tn9-science-motion-paths.png` — distance versus displacement
+- `public/board-art/tn9-science-fluids-pressure-buoyancy.png` — depth pressure and buoyancy
+
+The universal Recite board card applies to Cambridge English, Cambridge Math,
+Science Unit 1, Science Units 2–24, DB-backed textbook units, and future
+subjects. Validation: 24 Science units registered, `npm test` (13 passed),
+Cambridge 27-unit audit, TypeScript, `git diff --check`, and `npm run build`
+pass. The Science shells are not yet a claim of full page-by-page textbook
+extraction; deepen each unit's source examples, question-paper links, and
+visuals in order starting with Unit 2.

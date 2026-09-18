@@ -9,6 +9,7 @@ import { CAMBRIDGE_5_ENGLISH_3 } from "./cambridge-5-english-3";
 import { PENDING_MATH_BOARD_UNITS } from "./cambridge-4-math-pending";
 import { PENDING_ENGLISH_BOARD_UNITS } from "./cambridge-5-english-pending";
 import { TAMILNADU_9_SCIENCE_1 } from "./tamilnadustateboard-9-science-1";
+import { PENDING_TAMILNADU_9_SCIENCE_UNITS } from "./tamilnadustateboard-9-science-pending";
 
 /**
  * Every unit that has a Drawing Board, keyed by unitKey. Adding a unit is
@@ -26,6 +27,7 @@ const RAW_BOARD_UNITS: Record<string, BoardUnit> = {
   ...PENDING_MATH_BOARD_UNITS,
   ...PENDING_ENGLISH_BOARD_UNITS,
   [TAMILNADU_9_SCIENCE_1.unitKey]: TAMILNADU_9_SCIENCE_1,
+  ...PENDING_TAMILNADU_9_SCIENCE_UNITS,
 };
 
 /**

@@ -309,6 +309,24 @@ board, including `(2 + 2, 2 + 3) = (4, 5)`.
 Verified with `npm test` (13 tests), the 27-unit Board audit, TypeScript,
 `git diff --check`, and `npm run build`.
 
+## Tamil Nadu Grade 9 Science rollout started (2026-09-18)
+
+Source textbook: `/Users/gopsair/Downloads/Class_9_Science_English_2024_Edition-www.tntextbooks.in.pdf` (24 units, 328 pages). Unit 1 is the detailed authored reference. Added `lib/boardUnits/tamilnadustateboard-9-science-pending.ts` and registered Units 2–24 with source-aligned concept scaffolds, examples, and the shared Read/Cover/Recite/Test flow. `BOARD_UNITS` now exposes all 24 Science unit keys.
+
+Added image-generation assets:
+
+- `public/board-art/tn9-science-motion-paths.png`
+- `public/board-art/tn9-science-fluids-pressure-buoyancy.png`
+
+They contain no embedded educational text; code-rendered labels remain
+accurate and localisable. The universal non-blank Recite board card applies
+to Cambridge English as well as all current/future Science and Math units.
+
+Important boundary: Units 2–24 are Board-ready scaffolds, not yet a claim of
+complete page-by-page extraction. Next work should deepen Unit 2 Motion from
+the PDF, then Unit 3 Fluids, adding textbook page references, exact question
+examples, and interactive/animated visuals.
+
 ## Resume instruction
 
 Continue StudyEzy Board coverage from
