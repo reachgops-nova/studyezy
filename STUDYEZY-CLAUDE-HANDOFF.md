@@ -400,6 +400,25 @@ scientific scene with Codex, inspect it, copy it to `public/board-art`, overlay
 accurate labels/hotspots in the unit data, then add a student action and
 animation state; do not fall back to generic circles or narration-only cards.
 
+## Student action engine (2026-09-19)
+
+`components/board/InteractiveChallenge.tsx` is now mounted in the shared
+Board. Time/clock topics show a set-and-check analogue clock, chemistry
+acid/base/solution/volume topics show a virtual pipette targeting 10 mL,
+English/word topics let the child create a vocabulary card in their own words,
+and every remaining concept shows its relevant quick-check on the Board. The
+feedback uses local state plus the existing TTS/subtitle path, so it is
+immediate and low cost.
+
+Keep expanding this into explicit concept-owned activities rather than relying
+only on title heuristics: clock/time-zone manipulation, virtual lab measuring,
+sorting/sequencing, vocabulary building, predict-then-reveal, drawing, and
+spoken explanation. A visual lesson is complete only when the child performs
+an action and sees a concept-specific consequence in the same RCRT topic.
+
+Validation: 13 tests, TypeScript, `git diff --check`, and production build
+pass.
+
 ## Resume instruction
 
 Continue StudyEzy Board coverage from

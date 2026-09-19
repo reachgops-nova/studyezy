@@ -6,6 +6,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { BoardFrame, BoardTask, BoardUnit } from "@/lib/boardUnits/types";
 import { sanitizeSvgFragment } from "@/lib/richScene";
 import VoiceReciteCheck from "./VoiceReciteCheck";
+import InteractiveChallenge from "./InteractiveChallenge";
 
 /**
  * The Drawing Board: a five-phase lesson surface built to the reference the
@@ -266,6 +267,7 @@ export default function DrawingBoard({ unit, paperTasks = [] }: { unit: BoardUni
   const topicRecitePrompts = unit.recitePrompts.filter((prompt) => !prompt.conceptId || prompt.conceptId === activeConceptId);
   const topicWrittenPractice = unit.writtenPractice.filter((practice) => !practice.conceptId || practice.conceptId === activeConceptId);
   const topicGraded = [...topicPartA, ...topicPartB, ...topicPaperTasks];
+  const interactiveTask = activeConcept?.quickCheck?.[0] ?? topicGuidedTasks[0];
   const nextGroup = activeGroup
     ? conceptGroups[conceptGroups.findIndex((group) => group.key === activeGroup.key) + 1]
     : undefined;
@@ -822,6 +824,14 @@ export default function DrawingBoard({ unit, paperTasks = [] }: { unit: BoardUni
 
           <div className="relative flex min-h-0 flex-1 flex-col items-stretch justify-center gap-2 p-3">
             <VisualMission explored={visualExplored.length} total={visualTargetCount} phase={phase} />
+            {phase !== 5 && (
+              <InteractiveChallenge
+                concept={activeConcept}
+                task={interactiveTask}
+                unitTitle={unit.title}
+                onSay={say}
+              />
+            )}
             <div className="relative flex min-h-0 flex-1 items-center justify-center">
             {frame.image ? (
               <ImageStage frame={frame} onTap={handleVisualTap} />

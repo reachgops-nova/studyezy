@@ -526,3 +526,22 @@ expects. Continue this pattern for the remaining Unit 1 concepts, then the
 highest-impact Cambridge and Tamil Nadu Science concepts: generate the scene,
 inspect it, copy it into `public/board-art`, add code-owned hotspots/animation
 steps, and verify the relevant textbook facts.
+
+## Student action engine (2026-09-19)
+
+Added `components/board/InteractiveChallenge.tsx` and mounted it in the shared
+Board. Time/clock concepts get an interactive analogue clock with a checkable
+target, acid/base/solution/volume concepts get a virtual pipette with a 10 mL
+target, English/word concepts get a learner-authored vocabulary card, and all
+other concepts get the active textbook quick-check directly on the Board.
+Feedback uses local state plus the existing narration/TTS path, so it is
+immediate and does not call an LLM for every click.
+
+Future activity data should replace heuristic mode selection with explicit
+per-concept actions: clock/time-zone setting, measurement/lab manipulation,
+drag-and-drop sequencing, vocabulary construction, prediction/reveal,
+drawing, and explanation. The visual, action, feedback, and RCRT phase must
+belong to the same concept.
+
+Validation: 13 tests, TypeScript, `git diff --check`, and production build
+pass.
