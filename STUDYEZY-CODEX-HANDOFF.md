@@ -443,3 +443,21 @@ Cambridge 27-unit audit, TypeScript, `git diff --check`, and `npm run build`
 pass. The Science shells are not yet a claim of full page-by-page textbook
 extraction; deepen each unit's source examples, question-paper links, and
 visuals in order starting with Unit 2.
+
+## Science visual explanation and audio pass (2026-09-19)
+
+The Science scaffold no longer renders text-only concepts. `scienceVisualFrame`
+now gives every Unit 2–24 concept a visual model: Physics uses motion/force
+geometry, Chemistry uses atom/bond models, and Biology uses cell/organism
+models. Every model has tappable `Core idea`, `Evidence`, and `Check` points;
+the child sees the picture, hears the explanation through the existing Board
+narration/TTS path, and then answers a concrete Cover/Test question.
+
+The generated Motion and Fluids images now have narrated hotspots. Board images
+and diagrams have gentle animation with `prefers-reduced-motion` support, and
+entering Recite automatically narrates the active concept and directs the child
+to the visible model/example. This shared behavior applies to Cambridge
+English, Cambridge Math, Tamil Nadu Science, DB-backed units, and future books.
+
+Validation: 24 Science units, 74 Science concepts, 141 visual steps; 13 tests,
+27-unit Cambridge audit, TypeScript, diff check, and production build pass.

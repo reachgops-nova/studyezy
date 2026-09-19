@@ -495,7 +495,7 @@ export default function DrawingBoard({ unit, paperTasks = [] }: { unit: BoardUni
       say("Cover. The explanation is put away - try these from memory. Even a wrong answer will show you where it would land.");
     } else if (p === 3) {
       setFrame(unit.conceptSteps[step]?.frame ?? {});
-      say("Recite. Say the rule back in your own words first, then play with the sliders and watch the shape travel.");
+      say(`Recite ${activeConcept?.conceptId ?? "this topic"}. Look at the board model, explain ${activeConcept?.title ?? "the idea"} in your own words, then use the worked example before checking the answer.`);
     } else if (p === 4) {
       setFrame(unit.assessmentStory ?? {});
       say("Test time. Part A is straight recall, Part B asks you to use the idea somewhere new.");
@@ -1445,7 +1445,7 @@ function ImageStage({ frame, onTap }: { frame: BoardFrame; onTap?: (t: string) =
               if (img.naturalWidth && img.naturalHeight)
                 setShape({ src: I.src, ratio: img.naturalWidth / img.naturalHeight });
             }}
-            className="h-full w-full object-contain"
+            className="board-motion-image h-full w-full object-contain motion-safe:animate-[board-image-float_6s_ease-in-out_infinite]"
           />
           {/* Counter-scaled: the labels live in the image's coordinate space
               so they stay pinned to their features, but they must not
@@ -1489,11 +1489,11 @@ function DiagramStage({ frame, onTap }: { frame: BoardFrame; onTap?: (t: string)
   return (
     <div className="flex h-full w-full select-none flex-col items-center gap-2 overflow-y-auto p-3">
       {D.title && <h3 className="text-center text-xl font-bold text-[#f59e0b]">{D.title}</h3>}
-      <svg viewBox={D.viewBox} className="h-full max-h-[24rem] w-full max-w-[44rem] rounded-2xl border-[3px] border-slate-700 bg-[#0b1329]">
+      <svg viewBox={D.viewBox} className="board-motion-diagram h-full max-h-[24rem] w-full max-w-[44rem] rounded-2xl border-[3px] border-slate-700 bg-[#0b1329] motion-safe:animate-[board-diagram-breathe_5s_ease-in-out_infinite]">
         <g dangerouslySetInnerHTML={{ __html: sanitizeSvgFragment(D.svg) }} />
         {(D.parts ?? []).map((p, i) => (
           <g key={i} className="cursor-pointer" onClick={() => onTap?.(`${p.label}. ${p.note}`)}>
-            <circle cx={p.at[0]} cy={p.at[1]} r={Math.max(6, vw / 70)} fill={TONE[p.tone ?? "gold"]} stroke="#0b1329" strokeWidth={2} />
+            <circle cx={p.at[0]} cy={p.at[1]} r={Math.max(6, vw / 70)} fill={TONE[p.tone ?? "gold"]} stroke="#0b1329" strokeWidth={2} className="motion-safe:animate-pulse" />
             <text
               x={p.at[0] + vw / 55}
               y={p.at[1] - vh / 45}

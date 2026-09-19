@@ -13,13 +13,41 @@ type ScienceConcept = { id: string; title: string; icon: string; summary: string
 
 type ScienceDefinition = { number: number; title: string; concepts: ScienceConcept[] };
 
-const imageFrame = (src: string, title: string, alt: string): BoardFrame => ({
-  image: { src, title, alt },
+const imageFrame = (src: string, title: string, alt: string, hotspots: { label: string; at: [number, number]; note: string; tone?: "gold" | "green" | "red" | "blue" }[] = []): BoardFrame => ({
+  image: { src, title, alt, hotspots },
 });
 
 const cardsFrame = (title: string, cards: { tag: string; title: string; desc: string }[]): BoardFrame => ({
   text: { title, cards },
 });
+
+/** A visual model for every Science concept, not just the two AI-art units. */
+function scienceVisualFrame(definition: ScienceDefinition, concept: ScienceConcept, index: number): BoardFrame {
+  if (concept.frame) return concept.frame;
+  const palette = definition.number < 10
+    ? { main: "#38bdf8", accent: "#f59e0b", soft: "#123d59" }
+    : definition.number < 17
+      ? { main: "#a78bfa", accent: "#34d399", soft: "#30205c" }
+      : { main: "#34d399", accent: "#f472b6", soft: "#123d3a" };
+  const kind = definition.number < 10 ? "physics" : definition.number < 17 ? "chemistry" : "biology";
+  const svg = kind === "physics"
+    ? `<rect x="42" y="96" width="430" height="16" rx="8" fill="${palette.soft}" stroke="${palette.main}" stroke-width="3"/><circle cx="120" cy="104" r="28" fill="${palette.accent}"/><circle cx="380" cy="104" r="28" fill="${palette.main}"/><path d="M148 104H352" stroke="${palette.accent}" stroke-width="8" stroke-dasharray="16 12"/><path d="M260 50V158" stroke="${palette.main}" stroke-width="3" stroke-dasharray="8 8"/><path d="M247 63l13-18 13 18M247 145l13 18 13-18" fill="none" stroke="${palette.accent}" stroke-width="4"/>`
+    : kind === "chemistry"
+      ? `<circle cx="260" cy="105" r="48" fill="${palette.soft}" stroke="${palette.main}" stroke-width="4"/><circle cx="260" cy="105" r="17" fill="${palette.accent}"/><ellipse cx="260" cy="105" rx="150" ry="45" fill="none" stroke="${palette.main}" stroke-width="3"/><ellipse cx="260" cy="105" rx="150" ry="45" fill="none" stroke="${palette.accent}" stroke-width="3" transform="rotate(60 260 105)"/><circle cx="410" cy="105" r="10" fill="${palette.accent}"/><circle cx="185" cy="36" r="10" fill="${palette.main}"/><circle cx="185" cy="174" r="10" fill="${palette.main}"/>`
+      : `<circle cx="260" cy="105" r="70" fill="${palette.soft}" stroke="${palette.main}" stroke-width="4"/><circle cx="260" cy="105" r="28" fill="${palette.accent}"/><path d="M260 34V176M189 105H331" stroke="${palette.main}" stroke-width="3" stroke-dasharray="7 7"/><path d="M260 22v-18M260 188v18M177 105h-18M343 105h18" stroke="${palette.accent}" stroke-width="5" stroke-linecap="round"/><path d="M95 210Q260 245 425 210" fill="none" stroke="${palette.main}" stroke-width="7" stroke-linecap="round"/>`;
+  return {
+    diagram: {
+      title: `${concept.title} · tap the model`,
+      viewBox: "0 0 520 250",
+      svg,
+      parts: [
+        { label: "Core idea", at: [260, 105], note: concept.summary, tone: "gold" },
+        { label: "Evidence", at: [410, 105], note: `Use the example: ${concept.example.question}`, tone: "blue" },
+        { label: "Check", at: [260, 215], note: concept.example.answer, tone: "green" },
+      ],
+    },
+  };
+}
 
 const C = (id: string, title: string, icon: string, summary: string, question: string, answer: string, frame?: BoardFrame): ScienceConcept => ({
   id, title, icon, summary, example: { question, answer }, frame,
@@ -28,14 +56,22 @@ const C = (id: string, title: string, icon: string, summary: string, question: s
 const SCIENCE_DEFINITIONS: ScienceDefinition[] = [
   {
     number: 2, title: "Motion", concepts: [
-      C("2.1", "Distance and displacement", "🛣️", "Distance is the full path travelled; displacement is the shortest directed change from start to finish.", "A runner goes around a track and returns to the start. What are the distance and displacement?", "Distance is the length of the track travelled; displacement is zero.", imageFrame("/board-art/tn9-science-motion-paths.png", "Same start and finish: distance versus displacement", "A car travelling along a straight path and a curved path between the same start and finish points.")),
+      C("2.1", "Distance and displacement", "🛣️", "Distance is the full path travelled; displacement is the shortest directed change from start to finish.", "A runner goes around a track and returns to the start. What are the distance and displacement?", "Distance is the length of the track travelled; displacement is zero.", imageFrame("/board-art/tn9-science-motion-paths.png", "Same start and finish: distance versus displacement", "A car travelling along a straight path and a curved path between the same start and finish points.", [
+        { label: "Straight path", at: [51, 39], note: "This is the shortest change from the start flag to the finish flag: displacement.", tone: "blue" },
+        { label: "Curved path", at: [50, 63], note: "This is the full route travelled by the car: distance.", tone: "gold" },
+        { label: "Same finish", at: [92, 39], note: "Both journeys finish at the same flag, so compare the paths, not just the destination.", tone: "green" },
+      ])),
       C("2.2", "Speed, velocity and acceleration", "🏎️", "Speed tells how fast; velocity includes direction; acceleration is the rate of change of velocity.", "A car changes velocity from 10 m/s to 20 m/s in 5 s. Find its acceleration.", "a = (20 − 10) / 5 = 2 m/s²."),
       C("2.3", "Motion graphs and equations", "📈", "The slope of a distance-time graph gives speed, while the area under a velocity-time graph gives displacement.", "What does the slope of a distance-time graph represent?", "It represents the speed of the object."),
     ],
   },
   {
     number: 3, title: "Fluids", concepts: [
-      C("3.1", "Pressure in fluids", "💧", "Pressure is thrust per unit area and liquid pressure increases with depth.", "Why does water come out faster from a lower hole in a tank?", "Pressure is greater at greater depth, so the lower jet travels farther.", imageFrame("/board-art/tn9-science-fluids-pressure-buoyancy.png", "Pressure increases with depth", "A water tank with jets from different depths and a floating block showing upward buoyant force.")),
+      C("3.1", "Pressure in fluids", "💧", "Pressure is thrust per unit area and liquid pressure increases with depth.", "Why does water come out faster from a lower hole in a tank?", "Pressure is greater at greater depth, so the lower jet travels farther.", imageFrame("/board-art/tn9-science-fluids-pressure-buoyancy.png", "Pressure increases with depth", "A water tank with jets from different depths and a floating block showing upward buoyant force.", [
+        { label: "Deeper hole", at: [35, 63], note: "There is more water above this hole, so pressure is greater and the jet travels farther.", tone: "gold" },
+        { label: "Shallow hole", at: [35, 29], note: "There is less water above this hole, so the pressure and jet range are smaller.", tone: "blue" },
+        { label: "Buoyant force", at: [75, 55], note: "The upward arrows show the fluid force supporting the floating block.", tone: "green" },
+      ])),
       C("3.2", "Pascal's law and density", "🧴", "Pressure applied to an enclosed fluid is transmitted in all directions; density is mass divided by volume.", "Find the density of 200 g of liquid occupying 100 cm³.", "Density = mass / volume = 200 / 100 = 2 g/cm³."),
       C("3.3", "Buoyancy and flotation", "⚓", "An immersed body experiences an upward force; a floating body displaces fluid whose weight equals its own weight.", "Why does a steel ship float even though steel is denser than water?", "Its hollow shape makes the average density of the ship less than water and it displaces enough water to balance its weight."),
     ],
@@ -189,15 +225,12 @@ const SCIENCE_DEFINITIONS: ScienceDefinition[] = [
   },
 ];
 
-function makeTask(concept: ScienceConcept, prefix: string): BoardTask {
-  const frame = concept.frame ?? cardsFrame(concept.title, [
-    { tag: "IDEA", title: concept.title, desc: concept.summary },
-    { tag: "EXAMPLE", title: concept.example.question, desc: concept.example.answer },
-  ]);
+function makeTask(definition: ScienceDefinition, concept: ScienceConcept, prefix: string): BoardTask {
+  const frame = scienceVisualFrame(definition, concept, 0);
   return {
     title: `${prefix} · ${concept.id}`,
     conceptId: concept.id,
-    prompt: concept.example.question,
+    prompt: `Tap the model's parts, then answer: ${concept.example.question}`,
     setup: frame,
     options: [
       { label: concept.example.answer, correct: true, say: `Correct. ${concept.example.answer}`, frame },
@@ -214,12 +247,9 @@ function makeUnit(definition: ScienceDefinition): BoardUnit {
     summary: concept.summary,
     keyPoints: [concept.summary, "Use the worked example and name the evidence before giving your answer."],
     examples: [concept.example],
-    quickCheck: [makeTask(concept, "Quick check")],
+    quickCheck: [makeTask(definition, concept, "Quick check")],
   }));
-  const frameFor = (concept: ScienceConcept) => concept.frame ?? cardsFrame(concept.title, [
-    { tag: "RULE", title: concept.title, desc: concept.summary },
-    { tag: "WORKED", title: concept.example.question, desc: concept.example.answer },
-  ]);
+  const frameFor = (concept: ScienceConcept) => scienceVisualFrame(definition, concept, 0);
   const conceptSteps = definition.concepts.flatMap((concept) => [
     { label: `${concept.id} · Meet the idea`, conceptId: concept.id, say: concept.summary, frame: frameFor(concept) },
     { label: `${concept.id} · Revisit the example`, conceptId: concept.id, say: `${concept.example.question} ${concept.example.answer}`, frame: frameFor(concept) },
@@ -236,12 +266,12 @@ function makeUnit(definition: ScienceDefinition): BoardUnit {
     },
     concepts,
     conceptSteps,
-    guidedTasks: definition.concepts.map((concept) => makeTask(concept, "Cover")),
+    guidedTasks: definition.concepts.map((concept) => makeTask(definition, concept, "Cover")),
     lab: { prompt: `Use the visible model to explain one ${definition.title.toLowerCase()} example.`, start: [2, 2], shape: [[0, 0], [2, 0], [2, 2], [0, 2]], range: { min: -2, max: 6 } },
     recitePrompts: definition.concepts.map((concept) => ({ ask: `Explain ${concept.title} using this example: ${concept.example.question}`, answer: concept.example.answer, conceptId: concept.id })),
     writtenPractice: definition.concepts.map((concept) => ({ question: `Write and explain: ${concept.example.question}`, answer: concept.example.answer, conceptId: concept.id })),
     assessmentStory: frameFor(definition.concepts[0]),
-    assessment: { partA: definition.concepts.map((concept) => makeTask(concept, "Test")), partB: [] },
+    assessment: { partA: definition.concepts.map((concept) => makeTask(definition, concept, "Test")), partB: [] },
     readymade: concepts.map((concept) => ({ q: `What is ${concept.title}?`, a: concept.summary })),
     chatAnswers: concepts.map((concept) => ({ question: `What is ${concept.title}?`, answer: concept.summary, keywords: concept.title.toLowerCase().split(/\s+/).filter((word) => word.length > 2), conceptId: concept.conceptId })),
   };

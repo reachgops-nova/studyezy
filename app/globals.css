@@ -40,8 +40,25 @@ h3 {
   }
 }
 
+@keyframes board-image-float {
+  0%, 100% { transform: scale(1) translateY(0); }
+  50% { transform: scale(1.012) translateY(-3px); }
+}
+
+@keyframes board-diagram-breathe {
+  0%, 100% { opacity: 0.94; }
+  50% { opacity: 1; }
+}
+
 .message-enter {
   animation: message-enter 0.25s ease-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .board-motion-image,
+  .board-motion-diagram {
+    animation: none !important;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

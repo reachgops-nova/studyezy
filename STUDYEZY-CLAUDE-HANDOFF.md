@@ -327,6 +327,23 @@ complete page-by-page extraction. Next work should deepen Unit 2 Motion from
 the PDF, then Unit 3 Fluids, adding textbook page references, exact question
 examples, and interactive/animated visuals.
 
+## Science visual explanation and audio pass (2026-09-19)
+
+All Tamil Nadu Science Unit 2–24 concepts now receive a visual model through
+`scienceVisualFrame`, rather than only text cards. Physics, Chemistry, and
+Biology use distinct code-rendered diagram patterns. Every diagram exposes
+tappable `Core idea`, `Evidence`, and `Check` points that speak through the
+existing narration/TTS path, and the practical Cover/Test prompt tells the
+child to inspect the model before answering.
+
+The Motion and Fluids AI images now include narrated hotspots. Images and
+diagrams animate gently, with reduced-motion support. Recite automatically
+announces the active concept and directs the child to the board visual. This
+shared behavior also covers Cambridge English and all future books.
+
+Validation: 24 Science units, 74 concepts, 141 visual steps; 13 tests, the
+27-unit Cambridge audit, TypeScript, diff check, and production build pass.
+
 ## Resume instruction
 
 Continue StudyEzy Board coverage from
