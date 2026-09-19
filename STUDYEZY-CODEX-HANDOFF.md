@@ -529,13 +529,12 @@ steps, and verify the relevant textbook facts.
 
 ## Student action engine (2026-09-19)
 
-Added `components/board/InteractiveChallenge.tsx` and mounted it in the shared
-Board. Time/clock concepts get an interactive analogue clock with a checkable
-target, acid/base/solution/volume concepts get a virtual pipette with a 10 mL
-target, English/word concepts get a learner-authored vocabulary card, and all
-other concepts get the active textbook quick-check directly on the Board.
-Feedback uses local state plus the existing narration/TTS path, so it is
-immediate and does not call an LLM for every click.
+Added `components/board/InteractiveChallenge.tsx` as a reusable activity
+engine, but it is intentionally not mounted over the visual viewport. The
+Board viewport must remain a clear, full-size concept image/diagram: the child
+taps the labelled pictured parts and hears the relevant idea. Clock, pipette,
+vocabulary, and quick-check activities belong in the practice/task area, not
+on top of the explanation artwork.
 
 Future activity data should replace heuristic mode selection with explicit
 per-concept actions: clock/time-zone setting, measurement/lab manipulation,
@@ -545,3 +544,11 @@ belong to the same concept.
 
 Validation: 13 tests, TypeScript, `git diff --check`, and production build
 pass.
+
+## Visual viewport cleanup (2026-09-19)
+
+Removed the permanent `VisualMission` and `InteractiveChallenge` overlays from
+the main Board viewport after review. This restores the full visual area and
+prevents a frozen panel such as “Which is written correctly? 25 kg / 25 kgs”
+from covering the actual concept image. Hotspots, diagram parts, text cards,
+number-line marks, and grid points still remain the direct interaction surface.

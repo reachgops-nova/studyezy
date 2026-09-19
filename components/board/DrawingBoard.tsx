@@ -6,7 +6,6 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { BoardFrame, BoardTask, BoardUnit } from "@/lib/boardUnits/types";
 import { sanitizeSvgFragment } from "@/lib/richScene";
 import VoiceReciteCheck from "./VoiceReciteCheck";
-import InteractiveChallenge from "./InteractiveChallenge";
 
 /**
  * The Drawing Board: a five-phase lesson surface built to the reference the
@@ -254,7 +253,6 @@ export default function DrawingBoard({ unit, paperTasks = [] }: { unit: BoardUni
   // while a child is learning, then takes the full workspace only when opened.
   const [focusPanel, setFocusPanel] = useState<"lesson" | "chat">("lesson");
   const [exampleProgress, setExampleProgress] = useState<Record<string, number>>({});
-  const [visualExplored, setVisualExplored] = useState<string[]>([]);
 
   // Keep every RCRT phase on the concept currently being taught. The old
   // Cover phase used the whole unit's task list, exposing later topics early.
@@ -267,35 +265,9 @@ export default function DrawingBoard({ unit, paperTasks = [] }: { unit: BoardUni
   const topicRecitePrompts = unit.recitePrompts.filter((prompt) => !prompt.conceptId || prompt.conceptId === activeConceptId);
   const topicWrittenPractice = unit.writtenPractice.filter((practice) => !practice.conceptId || practice.conceptId === activeConceptId);
   const topicGraded = [...topicPartA, ...topicPartB, ...topicPaperTasks];
-  const interactiveTask = activeConcept?.quickCheck?.[0] ?? topicGuidedTasks[0];
   const nextGroup = activeGroup
     ? conceptGroups[conceptGroups.findIndex((group) => group.key === activeGroup.key) + 1]
     : undefined;
-
-  // A visual is a learning action, not wallpaper. Every Board stage exposes
-  // at least one thing the learner can touch, move, sort, or inspect. Keep
-  // this local and deterministic: it gives instant feedback without spending
-  // an LLM request for every tap.
-  const visualTargetCount = Math.max(
-    1,
-    frame.image?.hotspots?.length ??
-      frame.diagram?.parts?.length ??
-      frame.bar?.bars?.length ??
-      frame.chart?.categories?.length ??
-      frame.timeline?.events?.length ??
-      frame.text?.cards?.length ??
-      frame.text?.chips?.length ??
-      frame.text?.passage?.filter((part) => part.tone).length ??
-      frame.line?.marks?.length ??
-      1,
-  );
-  useEffect(() => setVisualExplored([]), [frame]);
-  const handleVisualTap = useCallback((spoken: string) => {
-    const key = spoken.trim().slice(0, 160);
-    setVisualExplored((previous) => (previous.includes(key) ? previous : [...previous, key]));
-    sfx("tap");
-    say(spoken);
-  }, [say, sfx]);
 
   function quickChecksComplete() {
     return (activeConcept?.quickCheck ?? []).every((task) => answers[task.title]?.correct);
@@ -822,38 +794,28 @@ export default function DrawingBoard({ unit, paperTasks = [] }: { unit: BoardUni
             </div>
           )}
 
-          <div className="relative flex min-h-0 flex-1 flex-col items-stretch justify-center gap-2 p-3">
-            <VisualMission explored={visualExplored.length} total={visualTargetCount} phase={phase} />
-            {phase !== 5 && (
-              <InteractiveChallenge
-                concept={activeConcept}
-                task={interactiveTask}
-                unitTitle={unit.title}
-                onSay={say}
-              />
-            )}
-            <div className="relative flex min-h-0 flex-1 items-center justify-center">
+          <div className="relative flex min-h-0 flex-1 items-center justify-center p-3">
             {frame.image ? (
-              <ImageStage frame={frame} onTap={handleVisualTap} />
+              <ImageStage frame={frame} onTap={(t) => say(t)} />
             ) : frame.diagram ? (
-              <DiagramStage frame={frame} onTap={handleVisualTap} />
+              <DiagramStage frame={frame} onTap={(t) => say(t)} />
             ) : frame.bar ? (
-              <BarStage frame={frame} onTap={handleVisualTap} />
+              <BarStage frame={frame} onTap={(t) => say(t)} />
             ) : frame.chart ? (
-              <ChartStage frame={frame} onTap={handleVisualTap} />
+              <ChartStage frame={frame} onTap={(t) => say(t)} />
             ) : frame.timeline ? (
-              <TimelineStage frame={frame} onTap={handleVisualTap} />
+              <TimelineStage frame={frame} onTap={(t) => say(t)} />
             ) : frame.text || unit.stage === "text" ? (
               <TextStage
                 frame={frame}
-                onTap={handleVisualTap}
+                onTap={(t) => say(t)}
                 chipDrag={chipTask?.chipDrag && !answers[chipTask.title] ? chipTask.chipDrag : undefined}
                 onDropChip={(col) => dropChip(col)}
               />
             ) : unit.stage === "numberLine" ? (
               <NumberLineStage
                 frame={frame}
-                onTap={(v) => handleVisualTap(nameValue(v))}
+                onTap={(v) => say(nameValue(v))}
                 drag={dragTask?.drag && dragAt ? { at: dragAt[0], hint: dragTask.drag.hint } : undefined}
                 onDrag={(v) => setDragAt([v])}
                 onDrop={(v) => dropDrag([v])}
@@ -903,7 +865,7 @@ export default function DrawingBoard({ unit, paperTasks = [] }: { unit: BoardUni
                     height={18}
                     fill="transparent"
                     className="cursor-pointer"
-                    onClick={() => handleVisualTap(`${ix} across and ${iy} up. We write that as ${ix}, ${iy}.`)}
+                    onClick={() => say(`${ix} across and ${iy} up. We write that as ${ix}, ${iy}.`)}
                   />
                 )),
               )}
@@ -1002,7 +964,6 @@ export default function DrawingBoard({ unit, paperTasks = [] }: { unit: BoardUni
             )}
 
             {phase === 3 && activeConcept ? <ReciteBoardCard concept={activeConcept} /> : null}
-            </div>
           </div>
 
           {/* Narration */}
@@ -1409,21 +1370,6 @@ function ReciteBoardCard({ concept }: { concept: { conceptId: string; title: str
           </div>
         ))}
       </div>
-    </div>
-  );
-}
-
-function VisualMission({ explored, total, phase }: { explored: number; total: number; phase: number }) {
-  const complete = explored >= total;
-  return (
-    <div className={`mx-auto flex w-full max-w-4xl items-center justify-between gap-3 rounded-xl border px-3 py-2 text-[0.76rem] ${complete ? "border-emerald-400/70 bg-emerald-400/10" : "border-[#38bdf8]/60 bg-[#38bdf8]/10"}`}>
-      <div className="min-w-0">
-        <p className={`font-extrabold ${complete ? "text-emerald-200" : "text-[#7dd3fc]"}`}>
-          {complete ? "✅ You explored this visual" : phase === 3 ? "🗣️ Touch the example, then explain what changed" : "👆 Your turn: touch, move, or inspect the board"}
-        </p>
-        <p className="truncate text-slate-400">{complete ? "Now say the rule in your own words." : "Every tap reveals evidence. Do not just listen—make the board respond."}</p>
-      </div>
-      <span className="shrink-0 rounded-full bg-slate-900/70 px-2 py-1 font-bold text-slate-200">{Math.min(explored, total)}/{total}</span>
     </div>
   );
 }

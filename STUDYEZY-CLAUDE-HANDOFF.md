@@ -402,13 +402,11 @@ animation state; do not fall back to generic circles or narration-only cards.
 
 ## Student action engine (2026-09-19)
 
-`components/board/InteractiveChallenge.tsx` is now mounted in the shared
-Board. Time/clock topics show a set-and-check analogue clock, chemistry
-acid/base/solution/volume topics show a virtual pipette targeting 10 mL,
-English/word topics let the child create a vocabulary card in their own words,
-and every remaining concept shows its relevant quick-check on the Board. The
-feedback uses local state plus the existing TTS/subtitle path, so it is
-immediate and low cost.
+`components/board/InteractiveChallenge.tsx` is a reusable activity engine,
+but it must not be mounted over the main visual viewport. The viewport should
+remain a clear, full-size concept image/diagram. Clock/time, pipette/volume,
+vocabulary, and quick-check activities belong in the practice/task area while
+the pictured hotspots and diagram parts remain the direct learning interface.
 
 Keep expanding this into explicit concept-owned activities rather than relying
 only on title heuristics: clock/time-zone manipulation, virtual lab measuring,
@@ -418,6 +416,14 @@ an action and sees a concept-specific consequence in the same RCRT topic.
 
 Validation: 13 tests, TypeScript, `git diff --check`, and production build
 pass.
+
+## Visual viewport cleanup (2026-09-19)
+
+Removed the permanent mission/activity overlays from the Board viewport after
+review: the old “Your turn: touch, move, or inspect the board” and “Do it
+yourself” cards could cover the explanation image and appear frozen. Keep the
+visual full-size and clickable; place richer activities below/in the task
+panel, never between the learner and the concept artwork.
 
 ## Resume instruction
 
