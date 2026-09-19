@@ -344,6 +344,23 @@ shared behavior also covers Cambridge English and all future books.
 Validation: 24 Science units, 74 concepts, 141 visual steps; 13 tests, the
 27-unit Cambridge audit, TypeScript, diff check, and production build pass.
 
+## Topic-specific Science infographics (2026-09-19)
+
+The generic diagram pattern was replaced. `scienceVisualFrame` now renders
+relevant visuals for each Science domain: circuits, magnetic fields, rays,
+heat transfer, waves, solar orbits, particle states, atoms, periodic table,
+bonds, pH, carbon chains, applied chemistry, classification, tissues, leaves,
+organ systems, nutrient/deficiency plate, food preservation, microbes,
+economic growing systems, and environmental cycles.
+
+Labels are topic-specific and narrated—for example Vitamin A/Iron/Vitamin C/
+Vitamin D, Drying/Freezing/Canning, and Bacteria/Fungus/Virus—rather than the
+old Core idea/Evidence/Check placeholders. AI Motion and Fluids artwork keeps
+its relevant hotspots.
+
+Validation: 24 Science units, 74 concepts, 141 visual steps; 13 tests,
+TypeScript, `git diff --check`, and production build pass.
+
 ## Resume instruction
 
 Continue StudyEzy Board coverage from

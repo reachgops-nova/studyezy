@@ -461,3 +461,23 @@ English, Cambridge Math, Tamil Nadu Science, DB-backed units, and future books.
 
 Validation: 24 Science units, 74 Science concepts, 141 visual steps; 13 tests,
 27-unit Cambridge audit, TypeScript, diff check, and production build pass.
+
+## Topic-specific Science infographics (2026-09-19)
+
+Replaced the generic Core idea/Evidence/Check diagram pattern after review.
+`scienceVisualFrame` now chooses a relevant infographic by textbook unit:
+circuits (4), magnetic fields (5), ray reflection (6), heat transfer (7),
+sound waves (8), solar orbits (9), particle states (10), atomic structure
+(11), periodic table (12), bonding (13), pH (14), carbon chains (15), applied
+chemistry flow (16), animal classification (17), cell -> tissue -> organ
+(18), leaf/photosynthesis (19), digestive/excretory paths (20), nutrient and
+deficiency plate plus preservation/safety visuals (21), microbe forms (22),
+growing systems (23), and environmental cycles (24).
+
+Each diagram's tappable labels now name real pictured parts (for example
+Vitamin A, Iron, Vitamin C, Vitamin D; Drying, Freezing, Canning; Bacteria,
+Fungus, Virus), and the narration explains the selected part with the unit's
+actual example. The AI Motion/Fluids images keep their specific hotspots.
+
+Validation: 24 Science units, 74 concepts, 141 visual steps; 13 tests,
+TypeScript, `git diff --check`, and production build pass.

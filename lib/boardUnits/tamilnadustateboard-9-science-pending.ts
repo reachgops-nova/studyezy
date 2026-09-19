@@ -21,30 +21,122 @@ const cardsFrame = (title: string, cards: { tag: string; title: string; desc: st
   text: { title, cards },
 });
 
-/** A visual model for every Science concept, not just the two AI-art units. */
+/** Topic infographics: each textbook domain has its own visual language. */
 function scienceVisualFrame(definition: ScienceDefinition, concept: ScienceConcept, index: number): BoardFrame {
   if (concept.frame) return concept.frame;
-  const palette = definition.number < 10
-    ? { main: "#38bdf8", accent: "#f59e0b", soft: "#123d59" }
-    : definition.number < 17
-      ? { main: "#a78bfa", accent: "#34d399", soft: "#30205c" }
-      : { main: "#34d399", accent: "#f472b6", soft: "#123d3a" };
-  const kind = definition.number < 10 ? "physics" : definition.number < 17 ? "chemistry" : "biology";
-  const svg = kind === "physics"
-    ? `<rect x="42" y="96" width="430" height="16" rx="8" fill="${palette.soft}" stroke="${palette.main}" stroke-width="3"/><circle cx="120" cy="104" r="28" fill="${palette.accent}"/><circle cx="380" cy="104" r="28" fill="${palette.main}"/><path d="M148 104H352" stroke="${palette.accent}" stroke-width="8" stroke-dasharray="16 12"/><path d="M260 50V158" stroke="${palette.main}" stroke-width="3" stroke-dasharray="8 8"/><path d="M247 63l13-18 13 18M247 145l13 18 13-18" fill="none" stroke="${palette.accent}" stroke-width="4"/>`
-    : kind === "chemistry"
-      ? `<circle cx="260" cy="105" r="48" fill="${palette.soft}" stroke="${palette.main}" stroke-width="4"/><circle cx="260" cy="105" r="17" fill="${palette.accent}"/><ellipse cx="260" cy="105" rx="150" ry="45" fill="none" stroke="${palette.main}" stroke-width="3"/><ellipse cx="260" cy="105" rx="150" ry="45" fill="none" stroke="${palette.accent}" stroke-width="3" transform="rotate(60 260 105)"/><circle cx="410" cy="105" r="10" fill="${palette.accent}"/><circle cx="185" cy="36" r="10" fill="${palette.main}"/><circle cx="185" cy="174" r="10" fill="${palette.main}"/>`
-      : `<circle cx="260" cy="105" r="70" fill="${palette.soft}" stroke="${palette.main}" stroke-width="4"/><circle cx="260" cy="105" r="28" fill="${palette.accent}"/><path d="M260 34V176M189 105H331" stroke="${palette.main}" stroke-width="3" stroke-dasharray="7 7"/><path d="M260 22v-18M260 188v18M177 105h-18M343 105h18" stroke="${palette.accent}" stroke-width="5" stroke-linecap="round"/><path d="M95 210Q260 245 425 210" fill="none" stroke="${palette.main}" stroke-width="7" stroke-linecap="round"/>`;
+  const blue = "#38bdf8", gold = "#f59e0b", green = "#34d399", pink = "#f472b6", ink = "#0b1329";
+  let title = concept.title;
+  let svg = "";
+  let labels: { label: string; at: [number, number]; tone?: "gold" | "green" | "red" | "blue" }[] = [];
+  switch (definition.number) {
+    case 4:
+      title = "Electric circuit · charge to useful work";
+      svg = `<path d="M100 80H420V175H100Z" fill="none" stroke="${blue}" stroke-width="6"/><circle cx="100" cy="128" r="25" fill="${gold}" stroke="white" stroke-width="3"/><path d="M100 103V80M100 153v22M420 80V55M420 175v25" stroke="white" stroke-width="5"/><rect x="255" y="63" width="54" height="40" rx="8" fill="${green}"/><path d="M282 103v25" stroke="white" stroke-width="5"/><path d="M218 128h42M322 128h98" stroke="${gold}" stroke-width="7" stroke-dasharray="14 9"/>`;
+      labels = [{ label: "Cell", at: [100, 128], tone: "gold" }, { label: "Current path", at: [180, 80], tone: "blue" }, { label: "Bulb/load", at: [282, 63], tone: "green" }]; break;
+    case 5:
+      title = "Magnetic field around a current-carrying wire";
+      svg = `<circle cx="260" cy="125" r="90" fill="none" stroke="${blue}" stroke-width="4" stroke-dasharray="14 8"/><circle cx="260" cy="125" r="55" fill="none" stroke="${green}" stroke-width="4" stroke-dasharray="11 7"/><circle cx="260" cy="125" r="18" fill="${pink}"/><path d="M260 22V228" stroke="${gold}" stroke-width="10"/><path d="M260 34l-10 18h20zM260 216l-10-18h20z" fill="${gold}"/>`;
+      labels = [{ label: "Current", at: [260, 34], tone: "gold" }, { label: "Field line", at: [350, 83], tone: "blue" }, { label: "Direction", at: [260, 125], tone: "green" }]; break;
+    case 6:
+      title = "Reflection · incident ray, normal and reflected ray";
+      svg = `<path d="M260 32V215M90 180H440" stroke="white" stroke-width="4"/><path d="M120 80L260 180L398 82" fill="none" stroke="${gold}" stroke-width="6" stroke-dasharray="12 8"/><path d="M260 180L260 120" stroke="${blue}" stroke-width="4" stroke-dasharray="8 7"/><path d="M238 155h22M260 155h22" stroke="${green}" stroke-width="3"/>`;
+      labels = [{ label: "Incident ray", at: [150, 95], tone: "gold" }, { label: "Normal", at: [270, 125], tone: "blue" }, { label: "Reflected ray", at: [350, 95], tone: "green" }]; break;
+    case 7:
+      title = "Heat transfer · conduction, convection and radiation";
+      svg = `<rect x="65" y="155" width="110" height="35" rx="8" fill="${gold}"/><path d="M175 172H350" stroke="${blue}" stroke-width="10" stroke-dasharray="16 9"/><path d="M390 190C330 145 430 115 365 72M405 205C355 165 440 140 390 100" fill="none" stroke="${pink}" stroke-width="7"/><circle cx="160" cy="65" r="42" fill="${gold}"/><path d="M160 8v-20M160 142v20M103 65H83M237 65h20" stroke="${gold}" stroke-width="6"/>`;
+      labels = [{ label: "Conduction", at: [230, 150], tone: "blue" }, { label: "Convection", at: [400, 130], tone: "red" }, { label: "Radiation", at: [160, 65], tone: "gold" }]; break;
+    case 8:
+      title = "Sound wave · vibration, amplitude and frequency";
+      svg = `<path d="M45 125H475" stroke="#64748b" stroke-width="3"/><path d="M45 125C80 35 115 215 150 125S220 35 255 125S325 215 360 125S430 35 475 125" fill="none" stroke="${blue}" stroke-width="6"/><path d="M45 45V205M150 45V205" stroke="${gold}" stroke-width="3" stroke-dasharray="7 7"/>`;
+      labels = [{ label: "Amplitude", at: [45, 50], tone: "gold" }, { label: "Wavelength", at: [100, 215], tone: "green" }, { label: "Vibration", at: [270, 115], tone: "blue" }]; break;
+    case 9:
+      title = "Solar system · gravity keeps orbits";
+      svg = `<circle cx="260" cy="125" r="28" fill="${gold}"/><ellipse cx="260" cy="125" rx="90" ry="42" fill="none" stroke="${blue}" stroke-width="3"/><ellipse cx="260" cy="125" rx="160" ry="78" fill="none" stroke="${green}" stroke-width="3"/><circle cx="350" cy="125" r="10" fill="${blue}"/><circle cx="420" cy="125" r="14" fill="${pink}"/><path d="M340 108l18 17-18 17" fill="none" stroke="${gold}" stroke-width="4"/>`;
+      labels = [{ label: "Sun", at: [260, 125], tone: "gold" }, { label: "Orbit", at: [350, 90], tone: "blue" }, { label: "Gravity", at: [385, 125], tone: "green" }]; break;
+    case 10:
+      title = "Matter · particle arrangements";
+      svg = `<rect x="45" y="58" width="125" height="135" rx="10" fill="#123d59" stroke="${blue}" stroke-width="3"/><rect x="197" y="58" width="125" height="135" rx="10" fill="#30205c" stroke="${pink}" stroke-width="3"/><rect x="349" y="58" width="125" height="135" rx="10" fill="#123d3a" stroke="${green}" stroke-width="3"/>${Array.from({length:6},(_,i)=>`<circle cx="${75+(i%2)*55}" cy="${85+Math.floor(i/2)*43}" r="9" fill="${blue}"/><circle cx="${225+(i%2)*55}" cy="${85+Math.floor(i/2)*43}" r="9" fill="${pink}"/>`).join("")}<circle cx="375" cy="75" r="8" fill="${green}"/><circle cx="440" cy="180" r="8" fill="${green}"/>`;
+      labels = [{ label: "Solid", at: [105, 210], tone: "blue" }, { label: "Liquid", at: [257, 210], tone: "red" }, { label: "Gas", at: [412, 210], tone: "green" }]; break;
+    case 11:
+      title = "Atom · nucleus and electron shells";
+      svg = `<circle cx="260" cy="125" r="25" fill="${pink}"/><ellipse cx="260" cy="125" rx="85" ry="38" fill="none" stroke="${blue}" stroke-width="4"/><ellipse cx="260" cy="125" rx="145" ry="65" fill="none" stroke="${gold}" stroke-width="4" transform="rotate(-35 260 125)"/><circle cx="345" cy="125" r="9" fill="${blue}"/><circle cx="380" cy="72" r="9" fill="${gold}"/><circle cx="175" cy="178" r="9" fill="${gold}"/>`;
+      labels = [{ label: "Nucleus", at: [260, 125], tone: "red" }, { label: "Electron shell", at: [350, 118], tone: "blue" }, { label: "Electron", at: [380, 72], tone: "gold" }]; break;
+    case 12:
+      title = "Periodic table · groups and periods";
+      svg = Array.from({length:4},(_,row)=>Array.from({length:8},(_,col)=>`<rect x="${55+col*52}" y="${42+row*42}" width="42" height="32" rx="4" fill="${(col+row)%3===0?blue:(col+row)%3===1?green:gold}" opacity=".85"/>`).join("")).join("");
+      labels = [{ label: "Group", at: [465, 55], tone: "gold" }, { label: "Period", at: [70, 220], tone: "blue" }, { label: "Similar properties", at: [260, 110], tone: "green" }]; break;
+    case 13:
+      title = "Chemical bonding · transfer and sharing";
+      svg = `<circle cx="170" cy="125" r="52" fill="${blue}"/><circle cx="350" cy="125" r="52" fill="${pink}"/><circle cx="260" cy="125" r="13" fill="${gold}"/><path d="M222 125h25M273 125h25" stroke="${gold}" stroke-width="8" stroke-dasharray="8 6"/><path d="M170 52v-28M350 52v-28" stroke="white" stroke-width="3"/>`;
+      labels = [{ label: "Ion", at: [170, 125], tone: "blue" }, { label: "Shared pair", at: [260, 125], tone: "gold" }, { label: "Covalent bond", at: [350, 125], tone: "red" }]; break;
+    case 14:
+      title = "Acids, bases and pH · indicator colour";
+      svg = `<rect x="55" y="105" width="410" height="45" rx="22" fill="url(#ph)"/><defs><linearGradient id="ph"><stop offset="0" stop-color="#ef4444"/><stop offset=".5" stop-color="#facc15"/><stop offset="1" stop-color="#3b82f6"/></linearGradient></defs><path d="M105 80v95M260 80v95M415 80v95" stroke="white" stroke-width="3" stroke-dasharray="7 6"/><circle cx="105" cy="128" r="16" fill="white"/><circle cx="415" cy="128" r="16" fill="white"/>`;
+      labels = [{ label: "Acid", at: [105, 70], tone: "red" }, { label: "Neutral", at: [260, 70], tone: "gold" }, { label: "Base", at: [415, 70], tone: "blue" }]; break;
+    case 15:
+      title = "Carbon compounds · chains and functional groups";
+      svg = `<path d="M90 125L170 75L250 125L330 75L410 125" fill="none" stroke="${blue}" stroke-width="8"/><circle cx="90" cy="125" r="19" fill="${gold}"/><circle cx="170" cy="75" r="19" fill="${gold}"/><circle cx="250" cy="125" r="19" fill="${gold}"/><circle cx="330" cy="75" r="19" fill="${gold}"/><circle cx="410" cy="125" r="19" fill="${pink}"/>`;
+      labels = [{ label: "Carbon chain", at: [250, 170], tone: "gold" }, { label: "Covalent links", at: [170, 75], tone: "blue" }, { label: "Functional group", at: [410, 125], tone: "red" }]; break;
+    case 16:
+      title = "Applied chemistry · raw materials to useful products";
+      svg = `<path d="M80 125H170M260 125H350" stroke="${gold}" stroke-width="8" stroke-dasharray="15 8"/><rect x="45" y="85" width="70" height="80" rx="12" fill="${blue}"/><path d="M195 85h70v80h-70z" fill="${green}"/><path d="M375 85h70v80h-70z" fill="${pink}"/>`;
+      labels = [{ label: "Raw material", at: [80, 185], tone: "blue" }, { label: "Chemical process", at: [230, 75], tone: "green" }, { label: "Useful product", at: [410, 185], tone: "red" }]; break;
+    case 17:
+      title = "Animal kingdom · classification tree";
+      svg = `<path d="M260 48V90M260 90L125 160M260 90L395 160M125 160V205M395 160V205" stroke="${green}" stroke-width="5"/><circle cx="260" cy="42" r="25" fill="${gold}"/><circle cx="125" cy="175" r="25" fill="${blue}"/><circle cx="395" cy="175" r="25" fill="${pink}"/>`;
+      labels = [{ label: "Animal", at: [260, 42], tone: "gold" }, { label: "Non-chordate", at: [125, 215], tone: "blue" }, { label: "Chordate", at: [395, 215], tone: "red" }]; break;
+    case 18:
+      title = "Organisation of tissues · cells working together";
+      svg = `<rect x="55" y="65" width="100" height="100" rx="12" fill="${green}" opacity=".75"/><rect x="210" y="65" width="100" height="100" rx="12" fill="${pink}" opacity=".75"/><rect x="365" y="65" width="100" height="100" rx="12" fill="${blue}" opacity=".75"/><path d="M155 115h55M310 115h55" stroke="${gold}" stroke-width="7" stroke-dasharray="12 7"/><circle cx="105" cy="115" r="22" fill="${ink}"/><circle cx="260" cy="115" r="22" fill="${ink}"/><circle cx="415" cy="115" r="22" fill="${ink}"/>`;
+      labels = [{ label: "Cells", at: [105, 195], tone: "green" }, { label: "Tissue", at: [260, 195], tone: "red" }, { label: "Organ", at: [415, 195], tone: "blue" }]; break;
+    case 19:
+      title = "Plant physiology · leaf, light and gas exchange";
+      svg = `<path d="M260 210V90M260 120C160 45 85 75 100 150C170 175 230 160 260 120ZM260 120C360 45 435 75 420 150C350 175 290 160 260 120Z" fill="${green}" opacity=".75" stroke="${green}" stroke-width="4"/><circle cx="260" cy="55" r="25" fill="${gold}"/><path d="M210 55h-55M310 55h55M260 28V5" stroke="${gold}" stroke-width="5"/>`;
+      labels = [{ label: "Sunlight", at: [260, 55], tone: "gold" }, { label: "Leaf", at: [150, 125], tone: "green" }, { label: "Stomata", at: [330, 150], tone: "blue" }]; break;
+    case 20:
+      title = "Organ systems · digestion and excretion";
+      svg = `<path d="M165 45C115 90 175 110 145 145C120 175 180 192 170 220" fill="none" stroke="${pink}" stroke-width="13" stroke-linecap="round"/><path d="M330 58C300 85 340 110 310 140C285 170 340 190 330 220" fill="none" stroke="${blue}" stroke-width="13" stroke-linecap="round"/><circle cx="165" cy="45" r="18" fill="${gold}"/><circle cx="330" cy="58" r="18" fill="${gold}"/>`;
+      labels = [{ label: "Digestive path", at: [165, 145], tone: "red" }, { label: "Kidney path", at: [330, 140], tone: "blue" }, { label: "Absorb / filter", at: [250, 220], tone: "gold" }]; break;
+    case 21:
+      if (concept.id === "21.1") {
+        title = "Nutrients and deficiency · what the body needs";
+        svg = `<circle cx="260" cy="125" r="78" fill="#fbbf24" stroke="#fff" stroke-width="5"/><path d="M260 47v156M182 125h156" stroke="#fff" stroke-width="4"/><circle cx="220" cy="88" r="22" fill="#f97316"/><circle cx="300" cy="88" r="22" fill="#22c55e"/><circle cx="220" cy="162" r="22" fill="#ef4444"/><circle cx="300" cy="162" r="22" fill="#3b82f6"/>`;
+        labels = [{ label: "Vitamin A", at: [220, 88], tone: "gold" }, { label: "Iron", at: [300, 88], tone: "green" }, { label: "Vitamin C", at: [220, 162], tone: "red" }, { label: "Vitamin D", at: [300, 162], tone: "blue" }];
+      } else if (concept.id === "21.2") {
+        title = "Food preservation · slow spoilage";
+        svg = `<path d="M80 130H440" stroke="${gold}" stroke-width="6"/><circle cx="110" cy="130" r="30" fill="${blue}"/><circle cx="260" cy="130" r="30" fill="${green}"/><circle cx="410" cy="130" r="30" fill="${pink}"/><path d="M140 130h85M290 130h85" stroke="white" stroke-width="5" stroke-dasharray="12 8"/>`;
+        labels = [{ label: "Drying", at: [110, 190], tone: "blue" }, { label: "Freezing", at: [260, 190], tone: "green" }, { label: "Canning", at: [410, 190], tone: "red" }];
+      } else {
+        title = "Food safety · from source to plate";
+        svg = `<circle cx="100" cy="125" r="38" fill="${green}"/><path d="M140 125H370" stroke="${gold}" stroke-width="7" stroke-dasharray="15 8"/><circle cx="420" cy="125" r="38" fill="${blue}"/><path d="M390 125l20 20 40-45" fill="none" stroke="white" stroke-width="8"/>`;
+        labels = [{ label: "Safe food", at: [100, 190], tone: "green" }, { label: "Adulteration risk", at: [260, 80], tone: "gold" }, { label: "Check label", at: [420, 190], tone: "blue" }];
+      } break;
+    case 22:
+      title = "World of microbes · useful and harmful roles";
+      svg = `<circle cx="125" cy="125" r="42" fill="${blue}"/><circle cx="260" cy="125" r="42" fill="${green}"/><circle cx="395" cy="125" r="42" fill="${pink}"/><path d="M92 95l-25-20M158 95l25-20M227 160l-25 22M293 90l25-20M362 160l-25 22M428 90l25-20" stroke="white" stroke-width="6"/>`;
+      labels = [{ label: "Bacteria", at: [125, 195], tone: "blue" }, { label: "Fungus", at: [260, 195], tone: "green" }, { label: "Virus", at: [395, 195], tone: "red" }]; break;
+    case 23:
+      title = "Economic biology · growing systems";
+      svg = `<path d="M70 180H450" stroke="#64748b" stroke-width="6"/><path d="M120 180V120M260 180V120M400 180V120" stroke="${blue}" stroke-width="8"/><path d="M80 90Q120 40 160 90M220 90Q260 40 300 90M360 90Q400 40 440 90" fill="none" stroke="${green}" stroke-width="8"/><path d="M120 180V215M260 180V215M400 180V215" stroke="${gold}" stroke-width="7"/>`;
+      labels = [{ label: "Hydroponics", at: [120, 235], tone: "blue" }, { label: "Aquaponics", at: [260, 235], tone: "green" }, { label: "Crop / animal care", at: [400, 235], tone: "gold" }]; break;
+    case 24:
+      title = "Environmental cycles · matter keeps moving";
+      svg = `<circle cx="260" cy="125" r="78" fill="none" stroke="${blue}" stroke-width="12" stroke-dasharray="90 22"/><path d="M260 36l-18 25h36zM349 125l-25-18v36zM260 214l18-25h-36zM171 125l25 18V107z" fill="${gold}"/><circle cx="260" cy="125" r="28" fill="${green}"/>`;
+      labels = [{ label: "Water cycle", at: [260, 30], tone: "blue" }, { label: "Carbon / nitrogen", at: [390, 125], tone: "gold" }, { label: "Ecosystem balance", at: [260, 225], tone: "green" }]; break;
+    default:
+      title = `${definition.title} · visual model`;
+      svg = `<rect x="70" y="70" width="380" height="110" rx="22" fill="#123d59" stroke="${blue}" stroke-width="4"/><path d="M105 125H415" stroke="${gold}" stroke-width="8" stroke-dasharray="18 10"/><circle cx="135" cy="125" r="23" fill="${green}"/><circle cx="385" cy="125" r="23" fill="${pink}"/>`;
+      labels = [{ label: concept.title, at: [260, 65], tone: "blue" }, { label: "Process", at: [260, 205], tone: "gold" }];
+  }
   return {
     diagram: {
-      title: `${concept.title} · tap the model`,
+      title: `${title} · tap a labelled part`,
       viewBox: "0 0 520 250",
       svg,
-      parts: [
-        { label: "Core idea", at: [260, 105], note: concept.summary, tone: "gold" },
-        { label: "Evidence", at: [410, 105], note: `Use the example: ${concept.example.question}`, tone: "blue" },
-        { label: "Check", at: [260, 215], note: concept.example.answer, tone: "green" },
-      ],
+      parts: labels.map((part, partIndex) => ({
+        ...part,
+        note: partIndex === 0 ? concept.summary : partIndex === 1 ? `Look at this in the example: ${concept.example.question}` : concept.example.answer,
+      })),
     },
   };
 }
