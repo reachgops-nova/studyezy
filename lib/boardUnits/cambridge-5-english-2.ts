@@ -287,6 +287,23 @@ export const CAMBRIDGE_5_ENGLISH_2: BoardUnit = {
       },
     },
     {
+      label: "5. Poster · sharper words",
+      conceptId: "2.4",
+      say: "A synonym keeps the meaning but makes the picture or action more exact. Replace a dull word only when the new word says more, not when it merely sounds fancier.",
+      frame: {
+        text: {
+          title: "Choose the sharper word",
+          passage: [
+            { text: "Andre had the power to " },
+            { text: "strike", tone: "gold", note: "More precise than hit: it shows a deliberate, forceful action." },
+            { text: " the ball and " },
+            { text: "triumph over", tone: "green", note: "More precise than beat: it shows a successful achievement." },
+            { text: " his opponent." },
+          ],
+        },
+      },
+    },
+    {
       label: "5. Poster · split the sentence",
       conceptId: "2.5",
       say: "Watch one sentence split in two. Poorna Malavath was born on 10 June 2000 - that half you can check, so it is a fact. And she is the most amazing climber ever - that half is a judgement, so it is an opinion. Both halves, one sentence.",

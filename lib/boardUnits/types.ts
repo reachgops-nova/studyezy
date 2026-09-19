@@ -244,8 +244,8 @@ export type BoardTask = {
 /** Phase 3: the slider lab. */
 export type BoardLab = {
   prompt: string;
-  /** The shared lab can teach coordinate movement or time-zone jumps. */
-  kind?: "coordinate" | "timeZone";
+  /** The shared lab can teach coordinate movement, time-zone jumps, or a visual investigation. */
+  kind?: "coordinate" | "timeZone" | "visual";
   /** Bottom-left anchor of the shape being dragged around, in grid units. */
   start: [number, number];
   /** Offsets from the anchor that define the shape, e.g. a 2x2 square. */

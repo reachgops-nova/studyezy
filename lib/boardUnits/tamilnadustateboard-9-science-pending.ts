@@ -13,16 +13,131 @@ type ScienceConcept = { id: string; title: string; icon: string; summary: string
 
 type ScienceDefinition = { number: number; title: string; concepts: ScienceConcept[] };
 
-const imageFrame = (src: string, title: string, alt: string, hotspots: { label: string; at: [number, number]; note: string; tone?: "gold" | "green" | "red" | "blue" }[] = []): BoardFrame => ({
-  image: { src, title, alt, hotspots },
+const imageFrame = (src: string, title: string, alt: string, hotspots: { label: string; at: [number, number]; note: string; tone?: "gold" | "green" | "red" | "blue" }[] = [], focus?: { x: number; y: number; w: number; h: number }): BoardFrame => ({
+  image: { src, title, alt, hotspots, focus },
 });
 
 const cardsFrame = (title: string, cards: { tag: string; title: string; desc: string }[]): BoardFrame => ({
   text: { title, cards },
 });
 
+/**
+ * Codex-generated atlas artwork. One HD scene can serve a small related set
+ * of units; focus keeps the current phenomenon large while the hotspots stay
+ * owned by the textbook data. The artwork is deliberately text-free so the
+ * labels and Tamil/local-language narration remain accurate in code.
+ */
+function codexAtlasFrame(definition: ScienceDefinition, concept: ScienceConcept): BoardFrame | undefined {
+  const atlasByUnit: Record<number, { src: string; panel: number }> = {
+    2: { src: "/board-art/tn9-science-atlas-2-4.png", panel: 0 },
+    3: { src: "/board-art/tn9-science-atlas-2-4.png", panel: 1 },
+    4: { src: "/board-art/tn9-science-atlas-2-4.png", panel: 2 },
+    5: { src: "/board-art/tn9-science-atlas-5-7.png", panel: 0 },
+    // Unit 6 is light, so it intentionally keeps its dedicated reflection/refraction frame.
+    7: { src: "/board-art/tn9-science-atlas-5-7.png", panel: 1 },
+    8: { src: "/board-art/tn9-science-atlas-5-7.png", panel: 2 },
+    9: { src: "/board-art/tn9-science-atlas-8-10.png", panel: 0 },
+    10: { src: "/board-art/tn9-science-atlas-8-10.png", panel: 1 },
+    11: { src: "/board-art/tn9-science-atlas-8-10.png", panel: 2 },
+    12: { src: "/board-art/tn9-science-atlas-11-13.png", panel: 0 },
+    13: { src: "/board-art/tn9-science-atlas-11-13.png", panel: 1 },
+    14: { src: "/board-art/tn9-science-atlas-11-13.png", panel: 2 },
+    15: { src: "/board-art/tn9-science-atlas-14-16.png", panel: 0 },
+    16: { src: "/board-art/tn9-science-atlas-14-16.png", panel: 1 },
+  };
+  const selected = atlasByUnit[definition.number];
+  if (!selected) return undefined;
+  const atlas = selected.src;
+  const panel = selected.panel;
+  const focus = definition.number <= 4
+    ? { x: 0, y: panel * 33.34, w: 100, h: 33.34 }
+    : { x: panel * 33.34, y: 0, w: 33.34, h: 100 };
+  const presets: Record<number, { label: string; at: [number, number]; tone: "gold" | "green" | "red" | "blue"; note: string }[]> = {
+    2: [
+      { label: "Path travelled", at: [26, 13], tone: "gold", note: "The full route is distance; the straight arrow is displacement." },
+      { label: "Displacement", at: [52, 24], tone: "blue", note: "The direct change from start to finish has direction." },
+      { label: "Speed", at: [57, 11], tone: "green", note: "The speedometer shows how fast the object is moving." },
+      { label: "Graph", at: [86, 15], tone: "red", note: "A steeper distance-time line means greater speed." },
+    ],
+    3: [
+      { label: "Depth pressure", at: [14, 48], tone: "gold", note: "The lower opening has more fluid above it and sends water farther." },
+      { label: "Hydraulic force", at: [51, 46], tone: "blue", note: "Pressure applied to an enclosed liquid is transmitted through the liquid." },
+      { label: "Buoyancy", at: [85, 51], tone: "green", note: "The upward fluid force helps the block float." },
+    ],
+    4: [
+      { label: "Cell", at: [10, 82], tone: "gold", note: "The cell supplies energy to move charge around a closed circuit." },
+      { label: "Closed path", at: [27, 91], tone: "blue", note: "Current flows only when the conducting path is complete." },
+      { label: "Bulb and meter", at: [52, 82], tone: "green", note: "The load uses electrical energy and the meter measures current." },
+      { label: "Electric field", at: [86, 83], tone: "red", note: "Opposite charges have an electric field between them." },
+    ],
+    5: [
+      { label: "Field lines", at: [10, 24], tone: "blue", note: "The field is strongest where the lines are closest near the poles." },
+      { label: "Electromagnet", at: [19, 48], tone: "gold", note: "Current through a coil creates a magnetic field that can lift clips." },
+      { label: "Motor", at: [18, 86], tone: "green", note: "Electrical energy makes the coil rotate in a magnetic field." },
+    ],
+    6: [
+      { label: "Particle vibration", at: [50, 15], tone: "gold", note: "Conduction passes energy as neighbouring particles vibrate." },
+      { label: "Convection", at: [50, 48], tone: "blue", note: "Warm fluid rises and cool fluid sinks, carrying heat around." },
+      { label: "Radiation", at: [51, 88], tone: "red", note: "The Sun transfers heat to Earth through electromagnetic radiation." },
+    ],
+    7: [
+      { label: "Particle vibration", at: [50, 15], tone: "gold", note: "Conduction passes energy as neighbouring particles vibrate." },
+      { label: "Convection", at: [50, 48], tone: "blue", note: "Warm fluid rises and cool fluid sinks, carrying heat around." },
+      { label: "Radiation", at: [51, 88], tone: "red", note: "The Sun transfers heat to Earth through electromagnetic radiation." },
+    ],
+    8: [
+      { label: "Vibration", at: [84, 15], tone: "gold", note: "Sound begins when an object vibrates the surrounding medium." },
+      { label: "Amplitude", at: [76, 48], tone: "red", note: "A taller wave represents a larger amplitude and a louder sound." },
+      { label: "Frequency", at: [87, 83], tone: "blue", note: "More cycles in the same time mean greater frequency and higher pitch." },
+    ],
+    9: [
+      { label: "Orbit", at: [20, 26], tone: "blue", note: "Gravity keeps planets moving in their orbits around the Sun." },
+      { label: "Moon phases", at: [16, 67], tone: "gold", note: "The Moon appears to change shape as its sunlit half is viewed from Earth." },
+      { label: "Telescope", at: [84, 53], tone: "green", note: "A telescope collects more light so distant objects can be observed." },
+    ],
+    10: [
+      { label: "Solid", at: [49, 20], tone: "blue", note: "Particles in a solid are closely packed and vibrate in fixed positions." },
+      { label: "Liquid", at: [50, 52], tone: "green", note: "Liquid particles stay close but slide past one another." },
+      { label: "Gas", at: [50, 84], tone: "red", note: "Gas particles are far apart and move freely in all directions." },
+    ],
+    11: [
+      { label: "Nucleus", at: [85, 21], tone: "gold", note: "Almost all the atom's mass is concentrated in its tiny nucleus." },
+      { label: "Electron shell", at: [88, 54], tone: "blue", note: "Electrons occupy regions of space around the nucleus." },
+      { label: "Spectrum", at: [85, 86], tone: "green", note: "Light from excited atoms produces characteristic spectral lines." },
+    ],
+    12: [
+      { label: "Periodic table", at: [12, 22], tone: "blue", note: "Elements are arranged by increasing atomic number and repeating properties." },
+      { label: "Group", at: [21, 56], tone: "gold", note: "Elements in a group have similar outer-electron patterns." },
+      { label: "Period", at: [12, 84], tone: "green", note: "A period shows the number of occupied electron shells." },
+    ],
+    13: [
+      { label: "Electron transfer", at: [50, 21], tone: "gold", note: "Ionic bonding forms when electrons transfer and oppositely charged ions attract." },
+      { label: "Shared pair", at: [50, 55], tone: "blue", note: "Covalent bonding forms when atoms share electrons." },
+      { label: "Molecule", at: [86, 82], tone: "green", note: "A molecule is a stable group of atoms held together by shared electrons." },
+    ],
+    14: [
+      { label: "Acid", at: [84, 20], tone: "red", note: "An acid changes blue litmus red and has a pH below 7." },
+      { label: "Neutralisation", at: [84, 52], tone: "gold", note: "An acid and a base react to form salt and water." },
+      { label: "Crystals", at: [84, 84], tone: "green", note: "Dissolved salt can be recovered as crystals when water evaporates." },
+    ],
+    15: [
+      { label: "Carbon chain", at: [16, 22], tone: "blue", note: "Carbon atoms bond into chains and rings, creating many compounds." },
+      { label: "Combustion", at: [18, 58], tone: "gold", note: "Carbon compounds burn in oxygen to release energy and form new substances." },
+      { label: "Molecule", at: [17, 84], tone: "green", note: "The shape and bonding of a molecule help determine its properties." },
+    ],
+    16: [
+      { label: "Micelle", at: [50, 24], tone: "blue", note: "Soap molecules surround grease so it can be carried away by water." },
+      { label: "Fertiliser", at: [50, 58], tone: "green", note: "Fertilisers supply nutrients that support healthy plant growth." },
+      { label: "Medicine", at: [84, 84], tone: "gold", note: "Chemistry helps formulate medicines and preserve useful products safely." },
+    ],
+  };
+  return imageFrame(atlas, `${definition.title} · ${concept.title}`, `HD conceptual visual for ${concept.title}`, presets[definition.number] ?? [], focus);
+}
+
 /** Topic infographics: each textbook domain has its own visual language. */
 function scienceVisualFrame(definition: ScienceDefinition, concept: ScienceConcept, index: number): BoardFrame {
+  const atlasFrame = codexAtlasFrame(definition, concept);
+  if (atlasFrame) return atlasFrame;
   if (concept.frame) return concept.frame;
   const blue = "#38bdf8", gold = "#f59e0b", green = "#34d399", pink = "#f472b6", ink = "#0b1329";
   let title = concept.title;
@@ -359,7 +474,7 @@ function makeUnit(definition: ScienceDefinition): BoardUnit {
     concepts,
     conceptSteps,
     guidedTasks: definition.concepts.map((concept) => makeTask(definition, concept, "Cover")),
-    lab: { prompt: `Use the visible model to explain one ${definition.title.toLowerCase()} example.`, start: [2, 2], shape: [[0, 0], [2, 0], [2, 2], [0, 2]], range: { min: -2, max: 6 } },
+    lab: { kind: "visual", prompt: `Touch the pictured parts for ${definition.title.toLowerCase()}, then explain what evidence each part shows.`, start: [0, 0], shape: [[0, 0]], range: { min: 0, max: 1 } },
     recitePrompts: definition.concepts.map((concept) => ({ ask: `Explain ${concept.title} using this example: ${concept.example.question}`, answer: concept.example.answer, conceptId: concept.id })),
     writtenPractice: definition.concepts.map((concept) => ({ question: `Write and explain: ${concept.example.question}`, answer: concept.example.answer, conceptId: concept.id })),
     assessmentStory: frameFor(definition.concepts[0]),

@@ -425,6 +425,61 @@ yourself” cards could cover the explanation image and appear frozen. Keep the
 visual full-size and clickable; place richer activities below/in the task
 panel, never between the learner and the concept artwork.
 
+## HD Tamil Nadu Science visual replacement pass (2026-09-19)
+
+Added inspected Codex-generated high-resolution atlas artwork under
+`public/board-art/` for motion/fluids/electric current, magnetism/heat/sound,
+universe/matter/atomic structure, periodic classification/bonding/acids, and
+carbon/applied chemistry. The Science pending unit data maps each panel only
+to the unit it depicts, focuses the active panel, and provides textbook-
+relevant tappable hotspots. Images stay clean and text-free; app-owned notes
+and the existing local-language narration explain them.
+
+Unit 6 (Light) and units 17–24 have not received matching new AI artwork yet;
+they retain their older source frames. The image generator reached its usage
+cap, so do not reuse an unrelated panel. Generate and inspect exact subject
+assets first, then follow the same focus/hotspot pattern. Validate TypeScript,
+tests, build, and Board units 2, 5, 8, 11, 14, and 16 before deployment.
+
+## Permanent StudyEzy unit standard (2026-09-19)
+
+Apply this automatically to every textbook and every individual topic; the
+user should not need to restate it. A unit is not ready until every topic has
+the source-aligned Read -> Cover -> Recite -> Test -> Results flow, explicit
+pending/in-progress/completed state, and a topic-specific test that cannot leak
+questions from later topics.
+
+Every topic should provide a dedicated visual/animation and a student action
+(tap, drag, measure, calculate, arrange, simulate, predict, draw, or select)
+with visible concept-specific feedback. Recite must show the exact worked
+example or textbook question, listen to the student's answer, and confirm or
+correct it. Selected Indian-language mode must produce script in that language
+and matching TTS, especially Tamil text plus Tamil speech. Reuse authored and
+cached explanations/feedback to control LLM cost. The Board is the canonical
+route; adapt legacy `/learn` material into this template rather than creating
+a separate learning experience.
+
+Before release, audit all topics against the textbook and verify content,
+visual, interaction, recitation, language, progression, and results states.
+
+## Cross-subject coverage audit (2026-09-19)
+
+Audited the registered Board units across Cambridge Math 1–18, Cambridge
+English 1–9, and Tamil Nadu Grade 9 Science 1–24. Added
+`tests/boardCoverage.test.ts`, which requires every topic to own Read, Cover,
+Recite, written practice, Test, and a non-empty visual/model frame. It also
+rejects tasks assigned to a different topic. The first run caught Cambridge
+English Unit 2 topic 2.4 (Sharper words) missing its Read visual; that source-
+aligned visual is now added.
+
+The shared Recite interaction is now subject-aware: Math retains coordinate or
+time-zone manipulation, while English and Science use the active topic's
+actual visual/diagram hotspots. Do not restore a generic coordinate slider for
+non-math topics or overlay a mission card over the artwork.
+
+Validation: 14 tests pass, TypeScript and `git diff --check` pass. Run the
+production build and manual random Board checks before deployment.
+
 ## Resume instruction
 
 Continue StudyEzy Board coverage from

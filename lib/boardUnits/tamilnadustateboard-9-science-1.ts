@@ -135,7 +135,7 @@ export const TAMILNADU_9_SCIENCE_1: BoardUnit = {
     task("Practice · screw gauge", "1.4", "Why is pitch needed?", [option("It tells how far the screw moves in one full turn.", true, "Exactly. Pitch is the distance moved in one complete rotation.", screwGaugeFrame), option("It tells the mass of the object.", false, "A screw gauge measures length or thickness; pitch describes its screw movement.", screwGaugeFrame)], screwGaugeFrame),
     task("Practice · calculate weight", "1.5", "What is the weight of a 10 kg object when g = 9.8 m/s²?", [option("98 N", true, "Correct: W = mg = 10 × 9.8 = 98 N.", massFrame), option("10 N", false, "Weight is not numerically the same as mass here; multiply mass by g.", massFrame)], massFrame),
   ],
-  lab: { prompt: "Move the marker to the correct unit scale: the board will use this space for an instrument reading.", start: [2, 2], shape: [[0, 0], [2, 0], [2, 1], [0, 1]], range: { min: 0, max: 8 } },
+  lab: { kind: "visual", prompt: "Touch the instrument parts on the board, then explain which scale or quantity each one measures.", start: [0, 0], shape: [[0, 0]], range: { min: 0, max: 1 } },
   recitePrompts: [
     { ask: "What is a physical quantity?", answer: "A property that can be measured and expressed with a number and a unit.", conceptId: "1.1" },
     { ask: "What does the prefix kilo mean?", answer: "Kilo means 10³, or one thousand.", conceptId: "1.2" },

@@ -465,7 +465,7 @@ export default function DrawingBoard({ unit, paperTasks = [] }: { unit: BoardUni
   // The coordinate equation and arrows are part of the board lesson, not a
   // hidden result behind a button. Keep them synced while either slider moves.
   useEffect(() => {
-    if (phase === 3 && unit.lab.kind !== "timeZone") setFrame(labFrame);
+    if (phase === 3 && unit.lab.kind === "coordinate") setFrame(labFrame);
   }, [phase, unit.lab.kind, labFrame]);
 
   function goPhase(p: number) {
@@ -1160,6 +1160,12 @@ export default function DrawingBoard({ unit, paperTasks = [] }: { unit: BoardUni
                   <p><strong className="text-[#fb7185]">WEST ← subtract hours</strong> because west is behind.</p>
                   <p className="mt-2 font-bold text-white">Example: 7:00 am − 14 hours = 5:00 pm on the previous day.</p>
                 </div>
+              ) : unit.lab.kind === "visual" || !unit.lab.prompt ? (
+                <div className="rounded-2xl border-2 border-[#34d399] bg-[#052e2b]/70 p-3 text-[0.82rem] leading-snug text-slate-200">
+                  <p className="font-extrabold text-[#6ee7b7]">👆 Touch and investigate</p>
+                  <p className="mt-1">Tap the labelled parts on the concept visual. Each tap reveals evidence and gives the next sentence you need for your explanation.</p>
+                  <p className="mt-2 font-bold text-white">Stay on {activeConcept?.conceptId} · {activeConcept?.title}; this activity belongs only to this topic.</p>
+                </div>
               ) : <div className="flex flex-col gap-3 rounded-2xl border border-slate-700 bg-[#0f172a] p-3">
                 <label className="flex items-center justify-between gap-3 text-[0.82rem] font-bold">
                   <span>Across</span>
@@ -1179,7 +1185,7 @@ export default function DrawingBoard({ unit, paperTasks = [] }: { unit: BoardUni
                   <strong className="text-white">({unit.lab.start[0] + dx}, {unit.lab.start[1] + dy})</strong>
                 </div>
               </div>}
-              {unit.lab.kind !== "timeZone" && <button type="button" onClick={() => { setFrame(labFrame); say(`Landed at ${unit.lab.start[0] + dx}, ${unit.lab.start[1] + dy}.`); }}
+              {unit.lab.kind === "coordinate" && <button type="button" onClick={() => { setFrame(labFrame); say(`Landed at ${unit.lab.start[0] + dx}, ${unit.lab.start[1] + dy}.`); }}
                 className="rounded-xl border-2 border-slate-600 bg-[#0f172a] px-4 py-2 text-sm font-bold text-slate-200 hover:border-[#38bdf8]">
                 Show it on the board
               </button>}

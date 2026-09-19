@@ -552,3 +552,76 @@ the main Board viewport after review. This restores the full visual area and
 prevents a frozen panel such as “Which is written correctly? 25 kg / 25 kgs”
 from covering the actual concept image. Hotspots, diagram parts, text cards,
 number-line marks, and grid points still remain the direct interaction surface.
+
+## HD Tamil Nadu Science visual replacement pass (2026-09-19)
+
+Added inspected high-resolution Codex-generated concept atlases:
+
+- `tn9-science-atlas-2-4.png`: motion, fluids, electric current
+- `tn9-science-atlas-5-7.png`: magnetism, heat, sound
+- `tn9-science-atlas-8-10.png`: universe, matter, atomic structure
+- `tn9-science-atlas-11-13.png`: periodic classification, bonding, acids
+- `tn9-science-atlas-14-16.png`: carbon compounds and applied chemistry
+
+`lib/boardUnits/tamilnadustateboard-9-science-pending.ts` maps only accurate
+panels to each unit, focuses the active panel, and adds topic-specific tappable
+hotspots narrated by the existing language/TTS layer. The assets are clean and
+text-free so labels, Tamil/local-language translation, TTS, and textbook facts
+remain app-controlled. Existing image float, focus transition, hotspot pulse,
+and reduced-motion handling provide motion without a blocking overlay.
+
+Boundary: Unit 6 (Light) and units 17–24 still use their older source frames;
+matching artwork must be generated before claiming the full Science atlas is
+complete. The image generator hit its usage cap during this pass, so never
+reuse an attractive but unrelated subject panel. TypeScript and `git diff
+--check` pass; run `npm test`, `npm run build`, and manually inspect units 2,
+5, 8, 11, 14, and 16 before deployment.
+
+## Permanent StudyEzy unit standard (2026-09-19)
+
+This is the default acceptance contract for every existing and future textbook
+unit. Do not wait for the user to repeat it. Every individual topic must have
+the complete Read -> Cover -> Recite -> Test -> Results flow, with progress
+states that clearly distinguish pending, in progress, and completed work.
+
+Each topic must be source-aligned and include, where the concept permits:
+
+- a dedicated, clear visual or animation rather than a generic diagram;
+- a student action such as tap, drag, measure, calculate, arrange, simulate,
+  predict, draw, or select, with visible concept-specific feedback;
+- the exact worked example or textbook question being discussed;
+- recitation that stays on the current topic, hears the student's answer, and
+  gives an appropriate correction or confirmation;
+- local-language text and matching local-language voice for both prompts and
+  responses, including Tamil script and Tamil TTS when Tamil is selected;
+- a relevant topic-level test before the student is allowed to advance;
+- cached/reusable authored explanations and feedback wherever possible to
+  control LLM cost.
+
+The Board is the canonical learning route. Legacy `/learn` content may be
+reused as source material, but it must be adapted into the Board template.
+Before marking a unit ready, randomly audit every topic against the textbook,
+verify that no later-topic question leaks into an earlier topic, and check the
+visual, interaction, recitation, language, completion, and results states.
+
+## Cross-subject coverage audit (2026-09-19)
+
+Audited all statically registered Board units: Cambridge Grade 4 Math Units
+1–18, Cambridge Grade 5 English Units 1–9, and Tamil Nadu Grade 9 Science
+Units 1–24. The shared `completeBoardUnit` path currently gives every topic
+owned Read, Cover, Recite, written practice, and Test records. Added
+`tests/boardCoverage.test.ts` to enforce that contract and reject topics with
+missing visual/model frames or tasks owned by another topic.
+
+The audit found and fixed Cambridge English Unit 2 topic 2.4 (Sharper words),
+which had practice content but no authored Read frame and would otherwise have
+fallen back to an empty board.
+
+Also corrected the shared Recite “play with it” area: coordinate sliders are
+now reserved for Math, time-zone manipulation remains specific to Math Unit
+18, and English/Science use the active topic's visual/diagram hotspots instead
+of an unrelated coordinate exercise. This keeps touch/feel interaction
+concept-aligned across subjects without covering the main visual.
+
+Current validation: 14 tests pass, TypeScript passes, and `git diff --check`
+passes. Build and manual random Board checks remain required before release.

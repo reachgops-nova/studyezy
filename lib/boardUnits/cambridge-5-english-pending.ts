@@ -121,7 +121,7 @@ function makeEnglishUnit(definition: EnglishDefinition): BoardUnit {
     concepts,
     conceptSteps,
     guidedTasks,
-    lab: { prompt: "Build a visible answer plan: identify the feature, point to evidence, then explain its effect.", start: [2, 2], shape: [[0, 0], [2, 0], [2, 2], [0, 2]], range: { min: -2, max: 6 } },
+    lab: { kind: "visual", prompt: "Touch the Notice, Evidence and Explain parts on the board, then say what each one proves.", start: [0, 0], shape: [[0, 0]], range: { min: 0, max: 1 } },
     recitePrompts: definition.concepts.map((concept) => ({ ask: `Say the rule for ${concept.title}.`, answer: concept.summary })),
     writtenPractice: definition.concepts.slice(0, 4).map((concept) => ({ question: `Write a short example showing ${concept.title}.`, answer: `${concept.summary} Use a short quotation or detail as evidence.` })),
     assessmentStory: frameFor(definition.concepts[0]),

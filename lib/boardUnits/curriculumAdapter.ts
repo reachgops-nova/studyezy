@@ -154,7 +154,7 @@ export function boardUnitFromCurriculum(source: CurriculumUnit, unitKey: string)
     concepts,
     conceptSteps: steps,
     guidedTasks,
-    lab: { prompt: `Build and explain an example of ${first?.concept_name ?? "this unit"}.`, start: [2, 2], shape: [[0, 0], [2, 0], [2, 2], [0, 2]], range: { min: -2, max: 6 } },
+    lab: { kind: "visual", prompt: `Touch the visible parts for ${first?.concept_name ?? "this topic"}, then explain the evidence they show.`, start: [0, 0], shape: [[0, 0]], range: { min: 0, max: 1 } },
     recitePrompts,
     writtenPractice,
     assessmentStory: first ? conceptFrame(first) : undefined,
