@@ -361,6 +361,27 @@ its relevant hotspots.
 Validation: 24 Science units, 74 concepts, 141 visual steps; 13 tests,
 TypeScript, `git diff --check`, and production build pass.
 
+## Interactive visual mission layer (2026-09-19)
+
+The DOCX reference at `/Users/gopsair/Downloads/What codex offered.docx`
+shows the desired nutrition interaction: tap labelled visual parts and learn
+from their evidence. The Board now has a shared `VisualMission` in
+`components/board/DrawingBoard.tsx`; every stage asks the child to touch,
+move, inspect, sort, or otherwise act, with an explored/total counter.
+Hotspots, diagram parts, bars, charts, timelines, text cards/chips, number
+line marks, and grid points all route through the existing local subtitle/TTS
+feedback. Recite explicitly asks the child to touch the worked example and
+explain the change.
+
+Keep this contract for future books: author relevant visual targets and the
+action they prove; do not ship a static image plus narration only. Use LLMs or
+NotebookLM for content extraction, prompts, hints, translations, animation
+briefs, and uncertain free-speech evaluation. Keep basic tap/drag/sequence/
+sorting state local for speed, reliability, and cost.
+
+Validation after this change: TypeScript and `git diff --check` pass. Run
+`npm test` and `npm run build` before deployment.
+
 ## Resume instruction
 
 Continue StudyEzy Board coverage from

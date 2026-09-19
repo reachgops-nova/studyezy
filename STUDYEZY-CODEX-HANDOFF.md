@@ -481,3 +481,28 @@ actual example. The AI Motion/Fluids images keep their specific hotspots.
 
 Validation: 24 Science units, 74 concepts, 141 visual steps; 13 tests,
 TypeScript, `git diff --check`, and production build pass.
+
+## Interactive visual mission layer (2026-09-19)
+
+Reviewed `/Users/gopsair/Downloads/What codex offered.docx`. Its nutrition
+reference makes the expected behavior explicit: the learner should tap a
+labelled body/food region and learn from the resulting evidence, rather than
+watch a picture while narration plays.
+
+Updated `components/board/DrawingBoard.tsx` with a shared `VisualMission` for
+all Board stages. Every topic now presents a visible “your turn” action and a
+progress counter. Tappable image hotspots, diagram parts, charts, bars,
+timelines, text cards/chips, number-line marks, and coordinate points feed the
+same immediate audio/subtitle response and are counted as explored. Recite
+changes the prompt to touch the worked example and explain what changed. This
+is deterministic in-browser (no LLM request per tap), so it is instant, cheap,
+and reusable for Cambridge, Tamil Nadu Science, DB units, and future books.
+
+LLM/NotebookLM/ChatGPT should author source-aligned prompts, hints, language
+translations, visual/animation briefs, and uncertain spoken-answer feedback;
+the Board should run taps, drags, sorting, sequencing, and visual state
+changes locally. This separation keeps the experience genuinely interactive
+and controls API cost while retaining an upgrade path for richer simulations.
+
+Validation after this change: TypeScript and `git diff --check` pass. Run
+`npm test` and `npm run build` before the next deployment.
