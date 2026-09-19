@@ -506,3 +506,23 @@ and controls API cost while retaining an upgrade path for richer simulations.
 
 Validation after this change: TypeScript and `git diff --check` pass. Run
 `npm test` and `npm run build` before the next deployment.
+
+## Codex-generated visual pilot (2026-09-19)
+
+NotebookLM was not usable in the current session because its authentication
+expired and its connector does not expose Infographic/Video downloads. The
+Codex image-generation workflow was therefore used for a stronger visual
+pilot. Added project assets:
+
+- `public/board-art/tn9-science-measurement-lab.png`
+- `public/board-art/tn9-science-vernier-caliper.png`
+
+Unit 1's SI/physical-quantities frame and Vernier-caliper frame now use these
+rich, source-aligned scenes. Artwork intentionally contains no educational
+text; `tamilnadustateboard-9-science-1.ts` supplies accurate hotspot labels,
+facts, local-language narration, and interaction state. This prevents image
+model text errors while preserving the visual quality the reference DOCX
+expects. Continue this pattern for the remaining Unit 1 concepts, then the
+highest-impact Cambridge and Tamil Nadu Science concepts: generate the scene,
+inspect it, copy it into `public/board-art`, add code-owned hotspots/animation
+steps, and verify the relevant textbook facts.

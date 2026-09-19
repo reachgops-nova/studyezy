@@ -382,6 +382,24 @@ sorting state local for speed, reliability, and cost.
 Validation after this change: TypeScript and `git diff --check` pass. Run
 `npm test` and `npm run build` before deployment.
 
+## Codex-generated visual pilot (2026-09-19)
+
+NotebookLM authentication was unavailable in this session and its connector
+does not directly download Infographic/Video Studio outputs. A richer Codex
+image-generation pilot was added instead:
+
+- `public/board-art/tn9-science-measurement-lab.png`
+- `public/board-art/tn9-science-vernier-caliper.png`
+
+`lib/boardUnits/tamilnadustateboard-9-science-1.ts` wires the artwork into the
+SI and Vernier frames with code-owned, tappable labels and explanations. The
+images deliberately have no embedded learning text so labels, Tamil/local
+language translation, TTS, and textbook accuracy remain controlled by the
+application. Follow this workflow for future visuals: generate a relevant
+scientific scene with Codex, inspect it, copy it to `public/board-art`, overlay
+accurate labels/hotspots in the unit data, then add a student action and
+animation state; do not fall back to generic circles or narration-only cards.
+
 ## Resume instruction
 
 Continue StudyEzy Board coverage from

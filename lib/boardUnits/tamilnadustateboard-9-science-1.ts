@@ -1,13 +1,19 @@
 import type { BoardFrame, BoardTask, BoardUnit } from "./types";
 
 const siFrame: BoardFrame = {
-  text: {
-    title: "Measure the world with one shared language",
-    cards: [
-      { tag: "QUANTITY", title: "Physical quantity", desc: "A property that can be measured and written with a number and a unit." },
-      { tag: "BASE", title: "Seven base quantities", desc: "Length, mass, time, temperature, electric current, luminous intensity, and amount of substance." },
-      { tag: "DERIVED", title: "Build new units", desc: "Area, volume, speed, and density are derived from base quantities." },
-      { tag: "SI", title: "Use SI symbols carefully", desc: "Write the number and symbol with a space: 5 kg, 20 s, 3 m." },
+  image: {
+    src: "/board-art/tn9-science-measurement-lab.png",
+    alt: "Illustrated measurement laboratory with instruments and derived quantity examples",
+    title: "Touch an instrument or example: what does it measure?",
+    hotspots: [
+      { label: "Length", at: [12, 37], note: "A ruler measures length. Its SI unit is the metre.", tone: "gold" },
+      { label: "Mass", at: [33, 37], note: "A balance measures mass. Its SI unit is the kilogram.", tone: "blue" },
+      { label: "Time", at: [51, 38], note: "A stopwatch measures time. Its SI unit is the second.", tone: "red" },
+      { label: "Temperature", at: [70, 38], note: "A thermometer measures temperature. Its SI unit is the kelvin.", tone: "green" },
+      { label: "Current", at: [89, 38], note: "An ammeter measures electric current. Its SI unit is the ampere.", tone: "gold" },
+      { label: "Area", at: [13, 79], note: "Area is derived from length multiplied by length.", tone: "blue" },
+      { label: "Speed", at: [51, 79], note: "Speed is derived from distance divided by time.", tone: "green" },
+      { label: "Density", at: [86, 79], note: "Density compares mass with volume. It is a derived quantity.", tone: "red" },
     ],
   },
 };
@@ -25,6 +31,19 @@ const prefixesFrame: BoardFrame = {
 };
 
 const caliperFrame: BoardFrame = {
+  image: {
+    src: "/board-art/tn9-science-vernier-caliper.png",
+    alt: "Detailed vernier caliper measuring a cylinder with scale and jaw insets",
+    title: "Explore the caliper: tap each part before reading it",
+    hotspots: [
+      { label: "Main scale", at: [66, 31], note: "The main scale gives the whole part of the reading.", tone: "gold" },
+      { label: "Vernier scale", at: [42, 45], note: "The vernier scale gives the fractional part when one division aligns.", tone: "blue" },
+      { label: "Outside jaws", at: [12, 20], note: "The outside jaws grip the outside of a cylinder or object.", tone: "green" },
+      { label: "Inside jaws", at: [83, 69], note: "The inside jaws measure the inside of a hollow tube.", tone: "green" },
+      { label: "Depth rod", at: [90, 37], note: "The depth rod measures the depth of a hole or container.", tone: "red" },
+      { label: "Coinciding mark", at: [49, 78], note: "Find the vernier division that lines up with a main-scale mark, then multiply it by the least count.", tone: "gold" },
+    ],
+  },
   diagram: {
     title: "Vernier caliper: measure small lengths",
     viewBox: "0 0 520 260",
