@@ -1,4 +1,4 @@
-import type { BoardFrame, BoardTask, BoardUnit } from "./types";
+import type { BoardFrame, BoardTask, BoardUnit, ConceptStep } from "./types";
 
 /** English units 4–9: the same board contract, using the existing English
  * widget/scene concepts as the source for the topic map and explanations. */
@@ -570,10 +570,59 @@ function makeEnglishUnit(definition: EnglishDefinition): BoardUnit {
     ],
     quickCheck: [taskFor(definition, concept, index, "Ready check")],
   }));
-  const conceptSteps = definition.concepts.flatMap((concept, index) => [
-    { label: `${concept.id} · Meet the idea`, conceptId: concept.id, say: concept.summary, frame: frameFor(concept) },
-    { label: `${concept.id} · Find the clue`, conceptId: concept.id, say: `Tap the clue and explain how it helps with ${concept.title}.`, frame: frameFor(concept) },
-  ]);
+  const UNIT6_POSTER_PANEL: Record<string, { focus: { x: number; y: number; w: number; h: number }; hotspots: { label: string; at: [number, number]; note: string; tone?: "blue" | "gold" | "green" | "red" }[] }> = {
+    "6.1": {
+      focus: { x: 0, y: 6, w: 49, h: 42 },
+      hotspots: [{ label: "unbelievably large / frighteningly sharp", at: [25, 46], note: "Combine an adverb with an adjective to heighten the drama, just like the book's own roc-and-serpent battle.", tone: "gold" }],
+    },
+    "6.2": {
+      focus: { x: 51, y: 6, w: 49, h: 42 },
+      hotspots: [
+        { label: "marooned", at: [66, 17], note: "Sinbad left alone, ship gone - the surrounding sentence gives the meaning away.", tone: "blue" },
+        { label: "profitable", at: [82, 21], note: "Root + suffix: profit (to gain) + able (can be done) = likely to make money.", tone: "green" },
+      ],
+    },
+    "6.3": {
+      focus: { x: 0, y: 50, w: 49, h: 47 },
+      hotspots: [
+        { label: "Might / Could", at: [19, 84], note: "Both show possibility - the speaker isn't sure.", tone: "gold" },
+        { label: "Cannot", at: [42, 84], note: "Shows impossibility - it definitely will not happen.", tone: "red" },
+      ],
+    },
+    "6.4": {
+      focus: { x: 51, y: 50, w: 49, h: 47 },
+      hotspots: [
+        { label: "With a great gasp", at: [68, 73], note: "An adverbial phrase starting with 'With' adds detail about how the action happened.", tone: "gold" },
+        { label: "carrying a sword and shield", at: [85, 62], note: "An adverbial phrase can also start with the -ing form of a verb.", tone: "green" },
+      ],
+    },
+  };
+  const conceptSteps = definition.concepts.flatMap((concept, index): ConceptStep[] => {
+    const posterPanel = definition.number === 6 ? UNIT6_POSTER_PANEL[concept.id] : undefined;
+    if (posterPanel) {
+      return [
+        {
+          label: `${concept.id} · Poster`,
+          conceptId: concept.id,
+          say: concept.summary,
+          frame: {
+            image: {
+              src: "/board-art/en6-sinbad-linguistic-voyages.jpg",
+              alt: "A four-panel poster of Sinbad's Voyages covering adverbs and adjectives, context clues, modal verbs, and adverbial phrases.",
+              title: concept.title,
+              focus: posterPanel.focus,
+              hotspots: posterPanel.hotspots,
+            },
+          },
+        },
+        { label: `${concept.id} · Find the clue`, conceptId: concept.id, say: `Tap the clue and explain how it helps with ${concept.title}.`, frame: frameFor(concept) },
+      ];
+    }
+    return [
+      { label: `${concept.id} · Meet the idea`, conceptId: concept.id, say: concept.summary, frame: frameFor(concept) },
+      { label: `${concept.id} · Find the clue`, conceptId: concept.id, say: `Tap the clue and explain how it helps with ${concept.title}.`, frame: frameFor(concept) },
+    ];
+  });
   const guidedTasks = definition.concepts.map((concept, index) => taskFor(definition, concept, index, "Try it"));
   const assessment = definition.concepts.slice(0, 3).map((concept, index) => taskFor(definition, concept, index, "Test"));
   return {
