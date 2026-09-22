@@ -6954,6 +6954,41 @@ function makeUnit(definition: ScienceDefinition): BoardUnit {
         frame: circuit43Frame(true),
       });
     }
+    const UNIT22_POSTER_PANEL: Record<string, { focus: { x: number; y: number; w: number; h: number }; hotspots: { label: string; at: [number, number]; note: string; tone?: "blue" | "gold" | "green" | "red" }[] }> = {
+      "22.1": {
+        focus: { x: 0, y: 17, w: 50, h: 38 },
+        hotspots: [{ label: "cocci, bacilli, spirilla", at: [25, 35], note: "The three real bacterial shapes: spherical, rod, and spiral.", tone: "gold" }],
+      },
+      "22.8": {
+        focus: { x: 50, y: 17, w: 50, h: 38 },
+        hotspots: [{ label: "endemic → epidemic → pandemic → sporadic", at: [75, 35], note: "Classified by occurrence, from one region up to global scale.", tone: "green" }],
+      },
+      "22.12": {
+        focus: { x: 0, y: 54, w: 50, h: 46 },
+        hotspots: [{ label: "female Anopheles mosquito", at: [12, 71], note: "The bite transmits the Plasmodium parasite, causing chills then fever then sweating.", tone: "red" }],
+      },
+      "22.16": {
+        focus: { x: 50, y: 54, w: 50, h: 46 },
+        hotspots: [{ label: "BCG at birth", at: [60, 76], note: "A newborn's very first vaccine dose, protecting against Tuberculosis.", tone: "blue" }],
+      },
+    };
+    const posterPanel = definition.number === 22 ? UNIT22_POSTER_PANEL[concept.id] : undefined;
+    if (posterPanel) {
+      base.unshift({
+        label: `${concept.id} · Poster`,
+        conceptId: concept.id,
+        say: concept.summary,
+        frame: {
+          image: {
+            src: "/board-art/science22-microbes-diseases.jpg",
+            alt: "A four-panel poster covering bacteria shapes, classifying diseases, malaria transmission, and the immunization schedule.",
+            title: concept.title,
+            focus: posterPanel.focus,
+            hotspots: posterPanel.hotspots,
+          },
+        },
+      });
+    }
     return base;
   });
   return {
