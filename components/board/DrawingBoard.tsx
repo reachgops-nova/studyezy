@@ -871,6 +871,25 @@ export default function DrawingBoard({
                 onDrag={(v) => setDragAt([v])}
                 onDrop={(v) => dropDrag([v])}
               />
+            ) : unit.stage !== "grid" &&
+              !frame.shapes?.length &&
+              !frame.arrows?.length &&
+              !frame.guides?.length &&
+              !frame.dots?.length &&
+              !dragTask?.drag ? (
+              // The coordinate-axis grid below is a real Math teaching tool
+              // (drag-a-shape tasks, translations, plotted points) - showing
+              // its bare x/y axes for a Science or English step with no
+              // matching visual is confusing, not a neutral empty state. Real
+              // user finding 2026-09-22: a stale/empty frame surfaced this
+              // grid on a Science unit's Recite step. Every other stage falls
+              // back to this only when there is real coordinate content to
+              // draw; otherwise show a plain "no picture for this step" card.
+              <div className="flex h-full max-h-[26rem] w-full max-w-[36rem] flex-col items-center justify-center gap-2 rounded-2xl border-[3px] border-dashed border-slate-700 bg-[#0b1329] p-6 text-center">
+                <span className="text-3xl">{activeConcept?.icon ?? "📋"}</span>
+                <p className="text-sm font-bold text-slate-300">{activeConcept?.title ?? unit.title}</p>
+                <p className="max-w-xs text-xs text-slate-500">Talk through the idea out loud, then check the worked example below.</p>
+              </div>
             ) : (
             <svg
               viewBox={`0 0 ${VB_W} ${VB_H}`}
