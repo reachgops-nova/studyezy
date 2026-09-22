@@ -773,6 +773,46 @@ function makeBoardUnit(definition: MathDefinition): BoardUnit {
       ];
       return steps;
     }
+    if (definition.number === 12 && ["12.1", "12.2", "12.3", "12.4"].includes(concept.id)) {
+      const panel: Record<string, { focus: { x: number; y: number; w: number; h: number }; hotspots: { label: string; at: [number, number]; note: string; tone?: "blue" | "gold" | "green" | "red" }[] }> = {
+        "12.1": {
+          focus: { x: 0, y: 6, w: 49, h: 42 },
+          hotspots: [{ label: "12 cm × 2 + 4 cm × 2", at: [25, 46], note: "Add all four side lengths: 12 + 4 + 12 + 4 = 32 cm.", tone: "gold" }],
+        },
+        "12.2": {
+          focus: { x: 51, y: 6, w: 49, h: 42 },
+          hotspots: [{ label: "length × width", at: [75, 46], note: "A 12 cm by 4 cm rectangle covers 12 × 4 = 48 square units.", tone: "green" }],
+        },
+        "12.3": {
+          focus: { x: 0, y: 50, w: 49, h: 47 },
+          hotspots: [{ label: "the cube net", at: [25, 74], note: "Six matching square faces fold until edges meet to form a closed cube.", tone: "gold" }],
+        },
+        "12.4": {
+          focus: { x: 51, y: 50, w: 49, h: 47 },
+          hotspots: [
+            { label: "Face", at: [78, 60], note: "A flat surface of a 3D shape.", tone: "blue" },
+            { label: "Edge", at: [58, 66], note: "The line where two faces of a solid meet.", tone: "gold" },
+            { label: "Vertex", at: [79, 79], note: "A corner point where edges meet.", tone: "green" },
+          ],
+        },
+      };
+      const p = panel[concept.id];
+      const step: ConceptStep = {
+        label: `${concept.id} · Poster`,
+        conceptId: concept.id,
+        say: concept.summary,
+        frame: {
+          image: {
+            src: "/board-art/math12-perimeter-area-3d.jpg",
+            alt: "A four-panel poster covering perimeter, area of a rectangle, folding a cube net, and the parts of a 3D shape.",
+            title: concept.title,
+            focus: p.focus,
+            hotspots: p.hotspots,
+          },
+        },
+      };
+      return [step, { label: `${concept.id} · Tap and explain`, conceptId: concept.id, say: `Tap the highlighted part and explain what ${concept.title} is doing.`, frame: conceptFrame(definition, index) }];
+    }
     return [
       { label: `${concept.id} · Meet the idea`, conceptId: concept.id, say: concept.summary, frame: conceptFrame(definition, index) },
       { label: `${concept.id} · Tap and explain`, conceptId: concept.id, say: `Tap the highlighted part and explain what ${concept.title} is doing.`, frame: conceptFrame(definition, index) },
