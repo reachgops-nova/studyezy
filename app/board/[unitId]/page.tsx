@@ -15,8 +15,15 @@ import type { TestQuestion } from "@/lib/types";
  * Full-bleed on purpose: the board is the screen, not a panel inside one, so
  * this page deliberately skips AppShell's sidebar and padding.
  */
-export default async function BoardPage({ params }: { params: Promise<{ unitId: string }> }) {
+export default async function BoardPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ unitId: string }>;
+  searchParams: Promise<{ concept?: string }>;
+}) {
   const { unitId } = await params;
+  const { concept } = await searchParams;
   const user = await requireUser();
   if (!user) redirect("/login");
 
@@ -59,7 +66,7 @@ export default async function BoardPage({ params }: { params: Promise<{ unitId: 
 
   return (
     <main className="fixed inset-0 overflow-hidden">
-      <DrawingBoard unit={unit} paperTasks={paperTasks} />
+      <DrawingBoard unit={unit} paperTasks={paperTasks} initialConceptId={concept} />
     </main>
   );
 }

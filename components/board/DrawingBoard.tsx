@@ -51,6 +51,32 @@ function nameValue(v: number): string {
   return `${v} - that is ${Math.abs(whole)} ${Math.abs(whole) === 1 ? "whole" : "wholes"} and ${tenthWord}.`;
 }
 
+/**
+ * Names the actual mistake in a number-line drag answer instead of just
+ * stating the right spot - real user direction 2026-09-20: "if wrong tell
+ * them what went wrong and correct." Generic by design (direction, then
+ * distance) so it works for any number-line topic, not just one unit.
+ */
+function diagnoseNumberLineMiss(from: number, target: number, dropped: number): string {
+  if (Math.abs(dropped - from) < 1e-6) {
+    return `You left it at ${from}. ${target > from ? "Adding" : "Subtracting"} means the counter has to move - slide it toward ${target}.`;
+  }
+  const wantDir = Math.sign(target - from);
+  const gotDir = Math.sign(dropped - from);
+  if (gotDir !== wantDir) {
+    return `You moved ${gotDir > 0 ? "right" : "left"} from ${from}, but this needs a move ${wantDir > 0 ? "right, since you are adding" : "left, since you are subtracting"}. Start at ${from} again and go the other way.`;
+  }
+  const wantSteps = Math.abs(target - from);
+  const gotSteps = Math.abs(dropped - from);
+  if (gotSteps < wantSteps) {
+    return `Right direction, but you stopped short at ${dropped}. From ${from} it is ${wantSteps} steps - you only moved ${gotSteps}.`;
+  }
+  if (gotSteps > wantSteps) {
+    return `Right direction, but you went too far to ${dropped}. From ${from} it is only ${wantSteps} steps - you moved ${gotSteps}.`;
+  }
+  return `Close - double check the landing spot. It belongs at ${target}.`;
+}
+
 const PAD_L = 44;
 const PAD_B = 44;
 const VB_W = 460;
@@ -84,10 +110,22 @@ function getSavedBoardLanguage(): string {
   return localStorage.getItem("studyezy_language") || "en-IN";
 }
 
-export default function DrawingBoard({ unit, paperTasks = [] }: { unit: BoardUnit; paperTasks?: BoardTask[] }) {
+export default function DrawingBoard({
+  unit,
+  paperTasks = [],
+  initialConceptId,
+}: {
+  unit: BoardUnit;
+  paperTasks?: BoardTask[];
+  /** Jump straight to this concept's first step instead of the unit's start. */
+  initialConceptId?: string;
+}) {
+  const initialStep = initialConceptId
+    ? Math.max(0, unit.conceptSteps.findIndex((s) => s.conceptId === initialConceptId))
+    : 0;
   const [phase, setPhase] = useState(1);
-  const [step, setStep] = useState(0);
-  const [frame, setFrame] = useState<BoardFrame>(unit.conceptSteps[0]?.frame ?? {});
+  const [step, setStep] = useState(initialStep);
+  const [frame, setFrame] = useState<BoardFrame>(unit.conceptSteps[initialStep]?.frame ?? {});
   const [subtitle, setSubtitle] = useState(
     `Welcome to ${unit.title}. Press the buttons above the board to walk through it one step at a time.`,
   );
@@ -135,7 +173,6 @@ export default function DrawingBoard({ unit, paperTasks = [] }: { unit: BoardUni
       if (onDone) setTimeout(onDone, estimate);
       return;
     }
-    window.speechSynthesis.cancel();
     const u = new SpeechSynthesisUtterance(text);
     u.lang = languageCode;
     const voices = window.speechSynthesis.getVoices();
@@ -180,7 +217,15 @@ export default function DrawingBoard({ unit, paperTasks = [] }: { unit: BoardUni
       // Some installed voices never fire onend at all.
       setTimeout(once, estimate + 3000);
     }
-    window.speechSynthesis.speak(u);
+    // Calling speak() immediately after cancel() is a known cause of
+    // dropped or laggy speech in Chrome - only cancel when something is
+    // actually still talking, and let the engine settle a tick first.
+    if (window.speechSynthesis.speaking || window.speechSynthesis.pending) {
+      window.speechSynthesis.cancel();
+      setTimeout(() => window.speechSynthesis.speak(u), 30);
+    } else {
+      window.speechSynthesis.speak(u);
+    }
   }, []);
 
   // Small synthesised cues rather than audio files: no asset to ship, no
@@ -398,7 +443,9 @@ export default function DrawingBoard({ unit, paperTasks = [] }: { unit: BoardUni
     say(
       hit
         ? `That is the spot. ${opt?.say ?? ""}`
-        : `Not quite - you put it at ${at.join(", ")}. ${dragTask.drag.to.length > 1 ? `It belongs at ${dragTask.drag.to.join(", ")}.` : `It belongs at ${dragTask.drag.to[0]}.`}`,
+        : dragTask.drag.to.length === 1
+          ? diagnoseNumberLineMiss(dragTask.drag.from[0], dragTask.drag.to[0], at[0])
+          : `Not quite - you put it at ${at.join(", ")}. It belongs at ${dragTask.drag.to.join(", ")}.`,
       () => handOverToNextTask(dragTask.title),
     );
   }
@@ -497,7 +544,11 @@ export default function DrawingBoard({ unit, paperTasks = [] }: { unit: BoardUni
       setFrame(unit.conceptSteps[step]?.frame ?? {});
       say(`Recite ${activeConcept?.conceptId ?? "this topic"}. Look at the board model, explain ${activeConcept?.title ?? "the idea"} in your own words, then use the worked example before checking the answer.`);
     } else if (p === 4) {
-      setFrame(unit.assessmentStory ?? {});
+      // Same rule as Cover: show the active topic's own next question, not
+      // a unit-wide fallback - real user finding 2026-09-22: switching
+      // topics then opening Test showed topic 1's board image regardless
+      // of which topic's question was actually being asked.
+      setFrame(topicGraded.find((t) => !answers[t.title])?.setup ?? unit.assessmentStory ?? {});
       say("Test time. Part A is straight recall, Part B asks you to use the idea somewhere new.");
     } else {
       say(
@@ -910,15 +961,15 @@ export default function DrawingBoard({ unit, paperTasks = [] }: { unit: BoardUni
                 </g>
               )}
               {(frame.shapes ?? []).map((s, i) => (
-                <polygon
+                <AnimatedPolygon
                   key={`s${i}`}
-                  points={s.points.map(([x, y]) => `${gx(x)},${gy(y)}`).join(" ")}
+                  points={s.points}
+                  gx={gx}
+                  gy={gy}
                   fill={shapeFill[s.look]}
                   stroke={shapeStroke[s.look]}
                   strokeWidth={s.look === "ghost" ? 2.5 : 3}
                   strokeDasharray={s.look === "ghost" ? "5,5" : undefined}
-                  strokeLinejoin="round"
-                  style={{ transition: "all .7s cubic-bezier(.34,1.56,.64,1)" }}
                 />
               ))}
               {/* Guides are drawn under everything else: a mirror line is
@@ -1005,7 +1056,12 @@ export default function DrawingBoard({ unit, paperTasks = [] }: { unit: BoardUni
               <div className="rounded-2xl border-2 border-slate-700 bg-[#0f172a] p-3">
                 <p className="text-[0.7rem] font-extrabold uppercase tracking-wider text-[#38bdf8]">Today&apos;s mission</p>
                 <p className="mt-1 text-[0.82rem] font-semibold leading-snug text-slate-300">
-                  Learn how tenths build decimals, place them on a number line, and explain your thinking.
+                  {/* This was a hardcoded Math-decimals sentence that showed
+                      on every unit in every subject regardless of what it
+                      actually was - real user finding 2026-09-22. Build it
+                      from this unit's own outcomes instead. */}
+                  By the end, you will be able to {unit.intro.outcomes[0] ?? "explain what you have learned in this chapter"}
+                  {unit.intro.outcomes[1] ? `, and ${unit.intro.outcomes[1]}` : ""}.
                 </p>
                 <details className="mt-2 rounded-xl border border-slate-700 bg-[#111c31] px-2.5 py-2">
                   <summary className="cursor-pointer text-[0.72rem] font-bold text-slate-400">See the whole chapter map</summary>
@@ -1348,6 +1404,82 @@ export default function DrawingBoard({ unit, paperTasks = [] }: { unit: BoardUni
 }
 
 /**
+ * A shape polygon that actually slides between positions instead of
+ * snapping. SVG `points` is not a CSS-animatable property - a `transition`
+ * on it (the previous approach) is silently ignored by every browser - so
+ * the move is tweened by hand with requestAnimationFrame, one vertex at a
+ * time. Falls back to an instant snap when the vertex count changes (a
+ * genuinely different shape, not a move of the same one) or the visitor has
+ * asked for reduced motion.
+ */
+function AnimatedPolygon({
+  points,
+  gx,
+  gy,
+  fill,
+  stroke,
+  strokeWidth,
+  strokeDasharray,
+}: {
+  points: [number, number][];
+  gx: (x: number) => number;
+  gy: (y: number) => number;
+  fill: string;
+  stroke: string;
+  strokeWidth: number;
+  strokeDasharray?: string;
+}) {
+  const [rendered, setRendered] = useState(points);
+  const fromRef = useRef(points);
+  const rafRef = useRef<number | null>(null);
+
+  useEffect(() => {
+    const reduceMotion = typeof window !== "undefined" && window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+    const from = fromRef.current;
+    if (reduceMotion || from.length !== points.length) {
+      fromRef.current = points;
+      setRendered(points);
+      return;
+    }
+    if (from.every(([x, y], i) => x === points[i][0] && y === points[i][1])) return;
+
+    const durationMs = 650;
+    const start = performance.now();
+    if (rafRef.current != null) cancelAnimationFrame(rafRef.current);
+    const tick = (now: number) => {
+      const t = Math.min(1, (now - start) / durationMs);
+      const eased = 1 - Math.pow(1 - t, 3);
+      setRendered(points.map(([tx, ty], i) => {
+        const [fx, fy] = from[i];
+        return [fx + (tx - fx) * eased, fy + (ty - fy) * eased];
+      }));
+      if (t < 1) {
+        rafRef.current = requestAnimationFrame(tick);
+      } else {
+        fromRef.current = points;
+      }
+    };
+    rafRef.current = requestAnimationFrame(tick);
+    return () => {
+      if (rafRef.current != null) cancelAnimationFrame(rafRef.current);
+    };
+    // Re-tween only when the target vertices actually change.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [JSON.stringify(points)]);
+
+  return (
+    <polygon
+      points={rendered.map(([x, y]) => `${gx(x)},${gy(y)}`).join(" ")}
+      fill={fill}
+      stroke={stroke}
+      strokeWidth={strokeWidth}
+      strokeDasharray={strokeDasharray}
+      strokeLinejoin="round"
+    />
+  );
+}
+
+/**
  * Draws a number line frame: the line and its ticks, marks sitting on it,
  * hops drawn as arcs with their size written above, and place-value parts
  * underneath. Values in, pixels out - the same boundary the grid keeps.
@@ -1372,7 +1504,7 @@ function ReciteBoardCard({ concept }: { concept: { conceptId: string; title: str
         {examples.map((example, index) => (
           <div key={`${example.question}-${index}`} className="rounded-xl bg-[#064e3b]/80 px-2.5 py-1.5 text-[0.76rem] leading-snug">
             <p className="font-bold text-white">{index + 1}. {example.question}</p>
-            <p className="text-emerald-100">Answer: {example.answer}</p>
+            <p className="chalkboard mt-1 px-2.5 py-1.5 text-[0.85rem]">{example.answer}</p>
           </div>
         ))}
       </div>
@@ -1400,8 +1532,13 @@ function ImageStage({ frame, onTap }: { frame: BoardFrame; onTap?: (t: string) =
   const ratio = shape && shape.src === I?.src ? shape.ratio : null;
   if (!I) return null;
   const f = I.focus;
-  // Zoom so the focused region fills the stage, then shift it to the middle.
-  const scale = f ? Math.min(100 / f.w, 100 / f.h) : 1;
+  // Zoom so the focused region FILLS the stage - Math.min was the "contain"
+  // formula (shrink to fit both sides in view, i.e. barely zoom at all for
+  // a full-width horizontal band); Math.max is "cover", the one that
+  // actually crops. transform-origin stays fixed at centre and a translate
+  // (computed in the image's own unscaled percentage space, so it composes
+  // correctly with the scale that follows it) carries the focus point there.
+  const scale = f ? Math.max(100 / f.w, 100 / f.h) : 1;
   const originX = f ? f.x + f.w / 2 : 50;
   const originY = f ? f.y + f.h / 2 : 50;
 
@@ -1430,7 +1567,7 @@ function ImageStage({ frame, onTap }: { frame: BoardFrame; onTap?: (t: string) =
       >
         <div
           className="absolute inset-0 motion-safe:transition-transform motion-safe:duration-700 motion-safe:ease-out"
-          style={{ transform: `scale(${scale})`, transformOrigin: `${originX}% ${originY}%` }}
+          style={{ transform: `scale(${scale}) translate(${50 - originX}%, ${50 - originY}%)`, transformOrigin: "50% 50%" }}
         >
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
@@ -1487,6 +1624,52 @@ function ImageStage({ frame, onTap }: { frame: BoardFrame; onTap?: (t: string) =
   );
 }
 
+/**
+ * A token that travels a hand-authored path once per frame - current round a
+ * circuit, water through a cycle, blood round a loop. Same tween technique
+ * as the shape/number-line motion, generalised to any SVG path instead of a
+ * straight line or a polygon's own vertices.
+ */
+function AnimatedPathToken({ d, onDone }: { d: string; onDone?: () => void }) {
+  const pathRef = useRef<SVGPathElement>(null);
+  const [dotAt, setDotAt] = useState<{ x: number; y: number } | null>(null);
+  const [done, setDone] = useState(false);
+
+  useEffect(() => {
+    const path = pathRef.current;
+    if (!path) return;
+    const reduceMotion = typeof window !== "undefined" && window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+    const len = path.getTotalLength();
+    if (reduceMotion) {
+      setDotAt(null);
+      setDone(true);
+      onDone?.();
+      return;
+    }
+    setDone(false);
+    let raf: number | null = null;
+    const durationMs = Math.min(2600, Math.max(900, len * 3.2));
+    const start = performance.now();
+    const tick = (now: number) => {
+      const t = Math.min(1, (now - start) / durationMs);
+      const p = path.getPointAtLength(len * t);
+      setDotAt({ x: p.x, y: p.y });
+      if (t < 1) raf = requestAnimationFrame(tick);
+      else { setDone(true); onDone?.(); }
+    };
+    raf = requestAnimationFrame(tick);
+    return () => { if (raf != null) cancelAnimationFrame(raf); };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [d]);
+
+  return (
+    <>
+      <path ref={pathRef} d={d} fill="none" stroke="none" />
+      {!done && dotAt && <circle cx={dotAt.x} cy={dotAt.y} r={7} fill="#38bdf8" stroke="#0b1329" strokeWidth={2} />}
+    </>
+  );
+}
+
 /** A labelled figure. Artwork is repo source, still sanitised on the way in. */
 function DiagramStage({ frame, onTap }: { frame: BoardFrame; onTap?: (t: string) => void }) {
   const D = frame.diagram;
@@ -1497,6 +1680,9 @@ function DiagramStage({ frame, onTap }: { frame: BoardFrame; onTap?: (t: string)
       {D.title && <h3 className="text-center text-xl font-bold text-[#f59e0b]">{D.title}</h3>}
       <svg viewBox={D.viewBox} className="board-motion-diagram h-full max-h-[24rem] w-full max-w-[44rem] rounded-2xl border-[3px] border-slate-700 bg-[#0b1329] motion-safe:animate-[board-diagram-breathe_5s_ease-in-out_infinite]">
         <g dangerouslySetInnerHTML={{ __html: sanitizeSvgFragment(D.svg) }} />
+        {D.motionPath && (
+          <AnimatedPathToken d={D.motionPath.d} onDone={D.motionPath.label ? () => onTap?.(D.motionPath!.label!) : undefined} />
+        )}
         {(D.parts ?? []).map((p, i) => (
           <g key={i} className="cursor-pointer" onClick={() => onTap?.(`${p.label}. ${p.note}`)}>
             <circle cx={p.at[0]} cy={p.at[1]} r={Math.max(6, vw / 70)} fill={TONE[p.tone ?? "gold"]} stroke="#0b1329" strokeWidth={2} className="motion-safe:animate-pulse" />
@@ -1599,30 +1785,95 @@ function ChartStage({ frame, onTap }: { frame: BoardFrame; onTap?: (t: string) =
 /** Dated events along a line. */
 function TimelineStage({ frame, onTap }: { frame: BoardFrame; onTap?: (t: string) => void }) {
   const T = frame.timeline;
+  const [revealed, setRevealed] = useState(0);
+
+  useEffect(() => {
+    if (!T) return;
+    const reduceMotion = typeof window !== "undefined" && window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+    if (reduceMotion) { setRevealed(T.events.length); return; }
+    setRevealed(0);
+    let cancelled = false;
+    let timer: ReturnType<typeof setTimeout> | null = null;
+    const next = (i: number) => {
+      if (cancelled || i > T.events.length) return;
+      setRevealed(i);
+      if (i < T.events.length) timer = setTimeout(() => next(i + 1), 420);
+    };
+    next(1);
+    return () => { cancelled = true; if (timer != null) clearTimeout(timer); };
+    // Replay whenever the events themselves change (a new step/example).
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [JSON.stringify(T?.events)]);
+
   if (!T) return null;
   return (
     <div className="flex h-full w-full select-none flex-col gap-3 overflow-y-auto p-5">
       {T.title && <h3 className="text-center text-xl font-bold text-[#f59e0b]">{T.title}</h3>}
       <ol className="relative ml-3 border-l-[3px] border-[#38bdf8]/50 pl-5">
-        {T.events.map((e, i) => (
-          <li key={i} className="mb-4">
-            <button type="button" onClick={() => onTap?.(e.note ?? `${e.when}. ${e.what}`)} className="text-left">
-              <span
-                className="absolute -left-[11px] mt-1 h-5 w-5 rounded-full border-[3px] border-[#0f172a]"
-                style={{ backgroundColor: TONE[e.tone ?? "blue"] }}
-              />
-              <span className="block text-[0.8rem] font-extrabold uppercase tracking-wider" style={{ color: TONE[e.tone ?? "blue"] }}>{e.when}</span>
-              <span className="block text-[0.95rem] font-bold text-white">{e.what}</span>
-              {e.note && <span className="block text-[0.82rem] leading-snug text-slate-400">{e.note}</span>}
-            </button>
-          </li>
-        ))}
+        {T.events.map((e, i) => {
+          if (i >= revealed) return null;
+          return (
+            <li key={i} className="mb-4 motion-safe:animate-[fadeIn_.4s_ease-out]">
+              <button type="button" onClick={() => onTap?.(e.note ?? `${e.when}. ${e.what}`)} className="text-left">
+                <span
+                  className="absolute -left-[11px] mt-1 h-5 w-5 rounded-full border-[3px] border-[#0f172a]"
+                  style={{ backgroundColor: TONE[e.tone ?? "blue"] }}
+                />
+                <span className="block text-[0.8rem] font-extrabold uppercase tracking-wider" style={{ color: TONE[e.tone ?? "blue"] }}>{e.when}</span>
+                <span className="block text-[0.95rem] font-bold text-white">{e.what}</span>
+                {e.note && <span className="block text-[0.82rem] leading-snug text-slate-400">{e.note}</span>}
+              </button>
+            </li>
+          );
+        })}
       </ol>
     </div>
   );
 }
 
 const TONE: Record<string, string> = { gold: "#f59e0b", green: "#34d399", red: "#f43f5e", blue: "#38bdf8" };
+
+/**
+ * A sentence assembled piece by piece - the text equivalent of a token
+ * sliding along a number line. The first piece appears immediately; each
+ * later piece slides in after a pause, so a child watches the sentence grow
+ * instead of reading it finished.
+ */
+function AnimatedTextBuild({ pieces }: { pieces: { text: string; tone?: string }[] }) {
+  const [revealed, setRevealed] = useState(0);
+
+  useEffect(() => {
+    const reduceMotion = typeof window !== "undefined" && window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+    if (reduceMotion) { setRevealed(pieces.length); return; }
+    setRevealed(0);
+    let cancelled = false;
+    let timer: ReturnType<typeof setTimeout> | null = null;
+    const next = (i: number) => {
+      if (cancelled || i > pieces.length) return;
+      setRevealed(i);
+      if (i < pieces.length) timer = setTimeout(() => next(i + 1), 550);
+    };
+    next(1);
+    return () => { cancelled = true; if (timer != null) clearTimeout(timer); };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [JSON.stringify(pieces)]);
+
+  return (
+    <p className="mx-auto flex max-w-3xl flex-wrap items-center justify-center gap-x-1.5 gap-y-2 text-[1.15rem] font-bold leading-relaxed">
+      {pieces.map((piece, i) =>
+        i >= revealed ? null : (
+          <span
+            key={i}
+            className="motion-safe:animate-[board-piece-in_.4s_ease-out]"
+            style={{ color: piece.tone ? TONE[piece.tone] : "#e2e8f0" }}
+          >
+            {piece.text}
+          </span>
+        ),
+      )}
+    </p>
+  );
+}
 
 /**
  * Renders a text frame: a passage with parts picked out in colour, a row of
@@ -1647,6 +1898,8 @@ function TextStage({
   return (
     <div className="flex h-full w-full select-none flex-col gap-4 overflow-y-auto p-4">
       {T.title && <h3 className="text-center text-xl font-bold text-[#f59e0b]">{T.title}</h3>}
+
+      {T.build && <AnimatedTextBuild pieces={T.build.pieces} />}
 
       {T.passage && (
         <p className="mx-auto max-w-3xl text-[1.05rem] leading-relaxed text-slate-200">
@@ -1755,6 +2008,102 @@ function TextStage({
   );
 }
 
+/**
+ * Plays a number line's jumps one at a time - a token actually slides along
+ * each arc, and the next jump only appears once the last one lands. Real
+ * user direction 2026-09-20: "show these one by one and make kids
+ * understand ... not just read the example, show the examples animated."
+ * Previously every jump was drawn at once with no motion at all.
+ */
+function AnimatedNumberLineJumps({
+  jumps,
+  px,
+  midY,
+}: {
+  jumps: { from: number; to: number; label?: string }[];
+  px: (v: number) => number;
+  midY: number;
+}) {
+  const [revealed, setRevealed] = useState(0);
+  const [tokenValue, setTokenValue] = useState<number | null>(jumps[0]?.from ?? null);
+  const [playing, setPlaying] = useState(false);
+
+  useEffect(() => {
+    const reduceMotion = typeof window !== "undefined" && window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+    if (!jumps.length) {
+      setRevealed(0);
+      setTokenValue(null);
+      return;
+    }
+    if (reduceMotion) {
+      setRevealed(jumps.length);
+      setTokenValue(jumps[jumps.length - 1].to);
+      setPlaying(false);
+      return;
+    }
+
+    let cancelled = false;
+    let raf: number | null = null;
+    let pauseTimer: ReturnType<typeof setTimeout> | null = null;
+    setRevealed(0);
+    setTokenValue(jumps[0].from);
+    setPlaying(true);
+
+    const runJump = (i: number) => {
+      if (cancelled) return;
+      if (i >= jumps.length) {
+        setPlaying(false);
+        return;
+      }
+      const { from, to } = jumps[i];
+      const durationMs = Math.min(1400, Math.max(500, Math.abs(to - from) * 90));
+      const start = performance.now();
+      const tick = (now: number) => {
+        if (cancelled) return;
+        const t = Math.min(1, (now - start) / durationMs);
+        const eased = 1 - Math.pow(1 - t, 3);
+        setTokenValue(from + (to - from) * eased);
+        if (t < 1) {
+          raf = requestAnimationFrame(tick);
+        } else {
+          setRevealed(i + 1);
+          pauseTimer = setTimeout(() => runJump(i + 1), 380);
+        }
+      };
+      raf = requestAnimationFrame(tick);
+    };
+    runJump(0);
+
+    return () => {
+      cancelled = true;
+      if (raf != null) cancelAnimationFrame(raf);
+      if (pauseTimer != null) clearTimeout(pauseTimer);
+    };
+    // Replay whenever the jump sequence itself changes (a new step/example).
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [JSON.stringify(jumps)]);
+
+  return (
+    <>
+      {jumps.map((j, i) => {
+        if (i >= revealed) return null;
+        const x1 = px(j.from);
+        const x2 = px(j.to);
+        const top = midY - 52;
+        return (
+          <g key={`j${i}`} className="motion-safe:animate-[fadeIn_.3s_ease-out]">
+            <path d={`M ${x1} ${midY - 12} Q ${(x1 + x2) / 2} ${top} ${x2} ${midY - 12}`} fill="none" stroke="#f59e0b" strokeWidth={2.5} strokeDasharray="6,4" markerEnd="url(#nl-arrow)" />
+            {j.label && <text x={(x1 + x2) / 2} y={top - 4} fill="#f59e0b" fontSize={13} fontWeight="bold" textAnchor="middle">{j.label}</text>}
+          </g>
+        );
+      })}
+      {playing && tokenValue != null && (
+        <circle cx={px(tokenValue)} cy={midY} r={10} fill="#f59e0b" stroke="#0b1329" strokeWidth={2} />
+      )}
+    </>
+  );
+}
+
 function NumberLineStage({
   frame,
   onTap,
@@ -1805,17 +2154,7 @@ function NumberLineStage({
         );
       })}
 
-      {(L.jumps ?? []).map((j, i) => {
-        const x1 = px(j.from);
-        const x2 = px(j.to);
-        const top = midY - 52;
-        return (
-          <g key={`j${i}`}>
-            <path d={`M ${x1} ${midY - 12} Q ${(x1 + x2) / 2} ${top} ${x2} ${midY - 12}`} fill="none" stroke="#f59e0b" strokeWidth={2.5} strokeDasharray="6,4" markerEnd="url(#nl-arrow)" />
-            {j.label && <text x={(x1 + x2) / 2} y={top - 4} fill="#f59e0b" fontSize={13} fontWeight="bold" textAnchor="middle">{j.label}</text>}
-          </g>
-        );
-      })}
+      <AnimatedNumberLineJumps jumps={L.jumps ?? []} px={px} midY={midY} />
 
       {(L.marks ?? []).map((m, i) => (
         <g key={`m${i}`}>
@@ -1893,7 +2232,7 @@ function ReciteCard({
     <div className="rounded-2xl border-2 border-slate-700 bg-[#0f172a] p-3">
       <p className="text-[0.85rem] font-bold leading-snug text-white">{prompt.ask}</p>
       {shown ? (
-        <p className="mt-2 rounded-xl bg-[#38bdf8]/10 px-3 py-2 text-[0.8rem] leading-snug text-[#7dd3fc]">{prompt.answer}</p>
+        <p className="chalkboard mt-2 px-3.5 py-2.5 text-[0.95rem] leading-snug">{prompt.answer}</p>
       ) : (
         <>
           {unitKey && conceptId ? (

@@ -228,9 +228,7 @@ export default function CurriculumSelector({
                   </div>
                   {u.available ? (
                     <Link
-                      href={`${hasBoardRoute(`${curriculumId}-${stageId}-${subjectId}-${u.id}`)
-                        ? `/board/${curriculumId}-${stageId}-${subjectId}-${u.id}`
-                        : `/learn/${curriculumId}-${stageId}-${subjectId}-${u.id}`}`}
+                      href={hasBoardRoute(u.unitKey) ? `/board/${u.unitKey}` : `/learn/${u.unitKey}`}
                       className="shrink-0 rounded-md bg-brand-ink px-3 py-1.5 text-sm font-medium text-white hover:bg-brand-ink-dark"
                     >
                       {done ? "Review" : started ? "Continue" : "Start"}

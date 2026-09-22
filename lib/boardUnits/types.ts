@@ -106,6 +106,13 @@ export type TextFrame = {
   cards?: { tag: string; title: string; desc: string; quote?: string }[];
   /** Labelled buckets to sort into, e.g. Fact / Opinion, Formal / Informal. */
   columns?: { label: string; items: string[]; tone?: "gold" | "green" | "red" | "blue" }[];
+  /**
+   * A sentence or phrase assembled piece by piece - the text equivalent of a
+   * number line's jumps. Each piece slides into place in order, so a child
+   * watches "The dog barked." become "The dog barked because it saw a
+   * stranger." instead of reading the finished sentence cold.
+   */
+  build?: { pieces: { text: string; tone?: "gold" | "green" | "red" | "blue" }[] };
 };
 
 type Tone = "gold" | "green" | "red" | "blue";
@@ -120,6 +127,13 @@ export type DiagramFrame = {
   viewBox: string;
   svg: string;
   parts?: { label: string; at: [number, number]; note: string; tone?: Tone }[];
+  /**
+   * A path something travels along - current round a circuit, blood round a
+   * loop, water through a cycle - in the same viewBox coordinates as `svg`.
+   * Drawn once as the token moves; this is what turns a labelled picture
+   * into a process the child watches happen.
+   */
+  motionPath?: { d: string; label?: string };
 };
 
 /** Bar models and arrays - multiplication, fractions of an amount. */

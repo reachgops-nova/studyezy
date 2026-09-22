@@ -1,4 +1,4 @@
-import type { BoardFrame, BoardTask, BoardUnit } from "./types";
+import type { BoardFrame, BoardTask, BoardUnit, ConceptStep } from "./types";
 
 /**
  * Board definitions for the Math units that already have lesson scenes and
@@ -196,6 +196,157 @@ function conceptFrame(definition: MathDefinition, index: number): BoardFrame {
       },
     };
   }
+  if (definition.number === 3 && definition.concepts[index]?.id === "3.2") {
+    // Real book sequence (Learn, p33): start at 4653, add 3000, subtract
+    // 499, subtract 2486, add 32 - the number-line jumps animate this one
+    // step at a time for free, via the shared AnimatedNumberLineJumps fix.
+    return {
+      line: {
+        min: 4000, max: 8000, step: 500,
+        marks: [{ at: 4653, label: "start 4653", tone: "blue" }, { at: 4700, label: "finish 4700", tone: "green" }],
+        jumps: [
+          { from: 4653, to: 7653, label: "+3000" },
+          { from: 7653, to: 7154, label: "−499" },
+          { from: 7154, to: 4668, label: "−2486" },
+          { from: 4668, to: 4700, label: "+32" },
+        ],
+      },
+    };
+  }
+  if (definition.number === 3 && definition.concepts[index]?.id === "3.3") {
+    // Real book scenario (Explore, p35): missing-number toy-shop problem,
+    // solved by undoing each operation - inverse, not guesswork.
+    return {
+      text: {
+        title: "Missing number problems · toy shop",
+        cards: [
+          { tag: "Given", title: "Two spinning tops cost $16", desc: "So one spinning top costs 16 ÷ 2 = $8." },
+          { tag: "Given", title: "A spinning top and a toy car cost $20", desc: "So the toy car costs 20 − 8 = $12." },
+          { tag: "Given", title: "A train set with a $20 note gives $3 change", desc: "So the train set costs 20 − 3 = $17." },
+          { tag: "Given", title: "A train set and a skipping rope cost $25", desc: "So the skipping rope costs 25 − 17 = $8." },
+        ],
+      },
+    };
+  }
+  if (definition.number === 3 && definition.concepts[index]?.id === "3.4") {
+    // Real book laws (Learn, p38): distributive, commutative, associative -
+    // each with the book's own worked numbers, not invented ones.
+    return {
+      text: {
+        title: "Simplifying multiplications · the three laws",
+        cards: [
+          { tag: "Distributive", title: "19 × 5", desc: "Regroup 19 as 20 − 1: 19 × 5 = (20 × 5) − 5 = 100 − 5 = 95." },
+          { tag: "Commutative", title: "25 × 33 × 4", desc: "Reorder the factors: 25 × 33 × 4 = 25 × 4 × 33 = 100 × 33 = 3300." },
+          { tag: "Associative", title: "46 × 2 × 5", desc: "Group 2 × 5 first: 46 × 2 × 5 = 46 × 10 = 460." },
+        ],
+      },
+    };
+  }
+  if (definition.number === 3 && definition.concepts[index]?.id === "3.5") {
+    // Real book grid method (Learn, p41): 34 x 13 split into four partial
+    // products that sum to the answer.
+    return {
+      bar: {
+        title: "Partial products · 34 × 13",
+        max: 300,
+        bars: [
+          { label: "30 × 10", value: 300, tone: "blue" },
+          { label: "4 × 10", value: 40, tone: "gold" },
+          { label: "30 × 3", value: 90, tone: "green" },
+          { label: "4 × 3", value: 12, tone: "red" },
+        ],
+        caption: "300 + 40 + 90 + 12 = 442, so 34 × 13 = 442.",
+      },
+    };
+  }
+  if (definition.number === 4 && definition.concepts[index]?.id === "4.1") {
+    // Real book example (Learn, p44): Guss walked to school in 0.5 hours.
+    // The book itself flags both "5 minutes" and "50 minutes" as wrong
+    // guesses - genuine, documented misconceptions worth animating past.
+    return {
+      line: {
+        min: 0, max: 60, step: 10,
+        marks: [{ at: 0, label: "start", tone: "blue" }, { at: 30, label: "finish: 30 min", tone: "green" }],
+        jumps: [{ from: 0, to: 30, label: "0.5 hours" }],
+      },
+    };
+  }
+  if (definition.number === 4 && definition.concepts[index]?.id === "4.2") {
+    // Real book method (Learn, p47): 07:57 to 08:04, jumping to the next
+    // whole hour first, then on to the finish - two clean animated jumps.
+    return {
+      line: {
+        min: 0, max: 10, step: 1,
+        marks: [{ at: 0, label: "start 07:57", tone: "blue" }, { at: 3, label: "08:00", tone: "gold" }, { at: 7, label: "finish 08:04", tone: "green" }],
+        jumps: [{ from: 0, to: 3, label: "+3 min" }, { from: 3, to: 7, label: "+4 min" }],
+      },
+    };
+  }
+  if (definition.number === 5 && definition.concepts[index]?.id === "5.1") {
+    // Real book bar chart (Learn, p50): visitors to a Nature Garden by
+    // month, read carefully off the gridlines at 100-visitor intervals.
+    return {
+      chart: {
+        title: "Number of visitors each month",
+        xLabel: "Month", yLabel: "Visitors",
+        categories: [
+          { label: "March", value: 50, tone: "blue" },
+          { label: "April", value: 330, tone: "blue" },
+          { label: "May", value: 200, tone: "blue" },
+          { label: "June", value: 450, tone: "green" },
+          { label: "July", value: 520, tone: "green" },
+          { label: "August", value: 570, tone: "green" },
+        ],
+      },
+    };
+  }
+  if (definition.number === 5 && definition.concepts[index]?.id === "5.2") {
+    // Real book data (Practise, p53): 20 learners' distance to school,
+    // grouped into the book's own 1 km bins - every count checked by hand.
+    return {
+      chart: {
+        title: "Distance to school (20 learners)",
+        xLabel: "Distance", yLabel: "Frequency",
+        categories: [
+          { label: "0-1 km", value: 3, tone: "blue" },
+          { label: "1-2 km", value: 2, tone: "blue" },
+          { label: "2-3 km", value: 5, tone: "gold" },
+          { label: "3-4 km", value: 3, tone: "gold" },
+          { label: "4-5 km", value: 5, tone: "green" },
+          { label: "5-6 km", value: 2, tone: "green" },
+        ],
+      },
+    };
+  }
+  if (definition.number === 5 && definition.concepts[index]?.id === "5.3") {
+    // Real book table (Practise, p55): maximum temperature over 6 days -
+    // coordinates computed from the table, not eyeballed off the printed
+    // graph, so the polyline lands exactly on each real reading.
+    return {
+      diagram: {
+        title: "Maximum temperature over 6 days",
+        viewBox: "0 0 520 250",
+        svg: `
+          <line x1="60" y1="210" x2="460" y2="210" stroke="#475569" stroke-width="2"/>
+          <line x1="60" y1="40" x2="60" y2="210" stroke="#475569" stroke-width="2"/>
+          <polyline points="60,114 140,80 220,125 300,159 380,97 460,63" fill="none" stroke="#38bdf8" stroke-width="4"/>
+          ${[["60","114"],["140","80"],["220","125"],["300","159"],["380","97"],["460","63"]].map(([x,y]) => `<circle cx="${x}" cy="${y}" r="6" fill="#f59e0b" stroke="#0b1329" stroke-width="2"/>`).join("")}
+          <text x="60" y="228" font-size="12" fill="#94a3b8" text-anchor="middle">Day 1</text>
+          <text x="140" y="228" font-size="12" fill="#94a3b8" text-anchor="middle">Day 2</text>
+          <text x="220" y="228" font-size="12" fill="#94a3b8" text-anchor="middle">Day 3</text>
+          <text x="300" y="228" font-size="12" fill="#94a3b8" text-anchor="middle">Day 4</text>
+          <text x="380" y="228" font-size="12" fill="#94a3b8" text-anchor="middle">Day 5</text>
+          <text x="460" y="228" font-size="12" fill="#94a3b8" text-anchor="middle">Day 6</text>
+        `,
+        parts: [
+          { label: "17°C", at: [60, 114], tone: "blue", note: "Day 1: 17°C." },
+          { label: "23°C", at: [140, 80], tone: "green", note: "Day 2: 23°C - the temperature rose." },
+          { label: "9°C (lowest)", at: [300, 159], tone: "red", note: "Day 4: 9°C, the lowest point on the graph - the trend dipped here." },
+          { label: "26°C (highest)", at: [460, 63], tone: "gold", note: "Day 6: 26°C, the highest point - the trend rose sharply from Day 4 to Day 6." },
+        ],
+      },
+    };
+  }
   if (definition.number === 18 && definition.concepts[index]?.id === "18.1") {
     return {
       timeline: {
@@ -267,13 +418,132 @@ function makeTask(definition: MathDefinition, concept: MathDefinition["concepts"
   if (definition.number === 3 && concept.id === "3.1") {
     return {
       title,
-      prompt: "Start at −4 on the number line and add 9. Where do you land?",
+      prompt: "Start at −3. Now add 6. Drag the marker along the line to where you land.",
+      conceptId: concept.id,
+      setup: frame,
+      drag: { from: [-3], to: [3], hint: "drag to where −3 + 6 lands" },
+      options: [
+        { label: "3", correct: true, say: "Yes - 3. From −3, six steps right crosses zero and lands on 3.", frame },
+        { label: "not 3", correct: false, say: "Not quite - try dragging again and count the steps from −3.", frame },
+      ],
+    };
+  }
+  if (definition.number === 3 && concept.id === "3.2") {
+    // Real book Practise question (p33): 6345 - 90 - 255. Broken into its
+    // final step so it fits a single drag, same give-them-the-ball pattern.
+    return {
+      title,
+      prompt: "Start at 6255 (that's 6345 − 90). Now subtract 255. Drag the marker to where you land.",
+      conceptId: concept.id,
+      setup: frame,
+      drag: { from: [6255], to: [6000], hint: "drag to where 6255 − 255 lands" },
+      options: [
+        { label: "6000", correct: true, say: "Yes - 6000. 6255 − 255 = 6000, a nice round number to land on.", frame },
+        { label: "not 6000", correct: false, say: "Not quite - try dragging again and count back 255 from 6255.", frame },
+      ],
+    };
+  }
+  if (definition.number === 3 && concept.id === "3.3") {
+    return {
+      title,
+      prompt: "A train set with a $20 note gives $3 change, so it costs $17. A train set and a skipping rope together cost $25. What does the skipping rope cost?",
       conceptId: concept.id,
       setup: frame,
       options: [
-        { label: "5", correct: true, say: "Correct. Move 4 steps right to 0, then 5 more steps right to land on 5.", frame },
-        { label: "−13", correct: false, say: "Adding 9 moves right, not left. From −4, cross zero and land on 5.", frame },
-        { label: "−5", correct: false, say: "That is only one step left of −4. Adding 9 means nine steps to the right.", frame },
+        { label: "$8", correct: true, say: "Correct. Undo the addition: 25 − 17 = 8, so the skipping rope costs $8.", frame },
+        { label: "$17", correct: false, say: "That is the train set's price, not the skipping rope's. Subtract the train set's cost from $25 to find what is left.", frame },
+        { label: "$5", correct: false, say: "That comes from 25 − 20, using the $20 note instead of the $17 train set. Use the train set's actual price, $17.", frame },
+      ],
+    };
+  }
+  if (definition.number === 3 && concept.id === "3.4") {
+    return {
+      title,
+      prompt: "Use the commutative law to reorder the factors: what is 25 × 33 × 4?",
+      conceptId: concept.id,
+      setup: frame,
+      options: [
+        { label: "3300", correct: true, say: "Yes. Reorder to 25 × 4 × 33 = 100 × 33 = 3300 - multiplying in a friendlier order gives the same product.", frame },
+        { label: "336", correct: false, say: "That looks like the digits were combined, not multiplied. Reorder the factors first: 25 × 4 = 100, then 100 × 33.", frame },
+        { label: "2533", correct: false, say: "That is not a multiplication at all. Group 25 and 4 first (25 × 4 = 100), then multiply by 33.", frame },
+      ],
+    };
+  }
+  if (definition.number === 3 && concept.id === "3.5") {
+    return {
+      title,
+      prompt: "Use the grid method to work out 27 × 12.",
+      conceptId: concept.id,
+      setup: frame,
+      options: [
+        { label: "324", correct: true, say: "Correct. 20×10=200, 7×10=70, 20×2=40, 7×2=14, and 200+70+40+14=324.", frame },
+        { label: "270", correct: false, say: "That is only 27 × 10 - you left out the × 2 part. 12 splits into 10 and 2, so you need all four partial products.", frame },
+        { label: "290", correct: false, say: "One partial product is missing. Check all four: 200, 70, 40 and 14 - add every one of them.", frame },
+      ],
+    };
+  }
+  if (definition.number === 4 && concept.id === "4.1") {
+    return {
+      title,
+      prompt: "Milo cycled to the park in 0.25 hours. Drag the marker to how many minutes that is.",
+      conceptId: concept.id,
+      setup: frame,
+      drag: { from: [0], to: [15], hint: "drag to how many minutes 0.25 hours is" },
+      options: [
+        { label: "15", correct: true, say: "Yes - 15 minutes. 0.25 is a quarter, and a quarter of 60 minutes is 15.", frame },
+        { label: "not 15", correct: false, say: "Not quite - 0.25 hours is a quarter of an hour. A quarter of 60 minutes is 15, try dragging again.", frame },
+      ],
+    };
+  }
+  if (definition.number === 4 && concept.id === "4.2") {
+    return {
+      title,
+      prompt: "Garden World starts at 09:45. Cartoons starts at 10:35. How long is Garden World?",
+      conceptId: concept.id,
+      setup: frame,
+      options: [
+        { label: "50 minutes", correct: true, say: "Correct. Jump to the hour first: 09:45 to 10:00 is 15 minutes, then 10:00 to 10:35 is 35 more - 15 + 35 = 50.", frame },
+        { label: "90 minutes", correct: false, say: "That subtracts the hour digits (10 − 9 = 1 hour) and the minute digits separately, which does not work across an hour boundary. Jump to 10:00 first, then add on.", frame },
+        { label: "45 minutes", correct: false, say: "That is just the minutes part of 10:35, not the interval. Jump from 09:45 to the next hour (15 min), then on to 10:35 (35 min more).", frame },
+      ],
+    };
+  }
+  if (definition.number === 5 && concept.id === "5.1") {
+    return {
+      title,
+      prompt: "Looking at the bar chart, which month had about 200 visitors?",
+      conceptId: concept.id,
+      setup: frame,
+      options: [
+        { label: "May", correct: true, say: "Correct. May's bar sits right around the 200 line - lower than April's, even though April comes first.", frame },
+        { label: "March", correct: false, say: "March's bar is the shortest of all, only about 50 - nowhere near 200.", frame },
+        { label: "June", correct: false, say: "June's bar is much taller, around 450 - more than double 200.", frame },
+      ],
+    };
+  }
+  if (definition.number === 5 && concept.id === "5.2") {
+    return {
+      title,
+      prompt: "Using the frequency chart, how many learners travel between 3 km and 5 km to school?",
+      conceptId: concept.id,
+      setup: frame,
+      options: [
+        { label: "8", correct: true, say: "Correct. Add the 3-4 km bar (3) and the 4-5 km bar (5): 3 + 5 = 8.", frame },
+        { label: "5", correct: false, say: "That is only the 4-5 km bar. The question asks for 3 km to 5 km, so the 3-4 km bar counts too: 3 + 5 = 8.", frame },
+        { label: "20", correct: false, say: "That is every learner in the whole survey, not just the ones travelling 3-5 km. Add only the 3-4 km and 4-5 km bars: 3 + 5 = 8.", frame },
+      ],
+    };
+  }
+  if (definition.number === 5 && concept.id === "5.3") {
+    return {
+      title,
+      prompt: "Looking at the temperature line graph, between which two days did the temperature fall the most?",
+      conceptId: concept.id,
+      setup: frame,
+      options: [
+        { label: "Day 3 to Day 4", correct: true, say: "Correct. The line drops from 15°C to 9°C, a fall of 6°C - the steepest downward slope on the graph.", frame },
+        { label: "Day 1 to Day 2", correct: false, say: "That section is actually rising, from 17°C to 23°C - look for where the line slopes downward instead.", frame },
+        { label: "Day 4 to Day 5", correct: false, say: "That section is rising too, from 9°C to 20°C. The steepest fall is the line just before it, Day 3 to Day 4.", frame },
       ],
     };
   }
@@ -328,9 +598,54 @@ function makeBoardUnit(definition: MathDefinition): BoardUnit {
         : [concept.summary, "Tap the board, talk through the example, then check your thinking."],
     examples: definition.number === 3 && concept.id === "3.1"
       ? [
-          { question: "Start at −4 and add 9. Where do you land?", answer: "5: move 4 steps right to 0, then 5 more steps right." },
-          { question: "Start at 5 and subtract 9. Where do you land?", answer: "−4: move 5 steps left to 0, then 4 more steps left." },
+          { question: "Start at −4 and add 5. Where do you land?", answer: "1: from −4, slide 5 steps right, crossing zero, to land on 1." },
+          { question: "Start at −5 and add 4. Where do you land?", answer: "−1: from −5, slide 4 steps right - not quite enough to reach zero, so it lands on −1." },
         ]
+      : definition.number === 3 && concept.id === "3.2"
+      ? [
+          { question: "Start at 4653. Add 3000, subtract 499, subtract 2486, then add 32. What is the answer?", answer: "4700: 4653 + 3000 = 7653, − 499 = 7154, − 2486 = 4668, + 32 = 4700." },
+          { question: "Which rowers in Team Yellow (88 kg, 79 kg, 96 kg, 81 kg) have a total mass that is a multiple of ten?", answer: "Rower 2 and Rower 4: 79 + 81 = 160, a multiple of ten." },
+        ]
+      : definition.number === 3 && concept.id === "3.3"
+        ? [
+            { question: "Two spinning tops cost $16 together. What does one cost?", answer: "$8: 16 ÷ 2 = 8, since both spinning tops cost the same." },
+            { question: "A spinning top and a toy car cost $20 together. The spinning top is $8. What does the toy car cost?", answer: "$12: 20 − 8 = 12, undoing the addition." },
+          ]
+        : definition.number === 3 && concept.id === "3.4"
+          ? [
+              { question: "Work out 19 × 5 by regrouping 19 as 20 − 1.", answer: "95: 19 × 5 = (20 × 5) − 5 = 100 − 5 = 95." },
+              { question: "Work out 46 × 2 × 5 by grouping the last two factors first.", answer: "460: 2 × 5 = 10, so 46 × 2 × 5 = 46 × 10 = 460." },
+            ]
+          : definition.number === 3 && concept.id === "3.5"
+            ? [
+                { question: "Use the grid method to work out 34 × 13.", answer: "442: 30×10=300, 4×10=40, 30×3=90, 4×3=12, and 300+40+90+12=442." },
+                { question: "Use the grid method to work out 27 × 12.", answer: "324: 20×10=200, 7×10=70, 20×2=40, 7×2=14, and 200+70+40+14=324." },
+              ]
+      : definition.number === 4 && concept.id === "4.1"
+        ? [
+            { question: "Guss walked to school in 0.5 hours. How many minutes is that?", answer: "30 minutes: 0.5 hours is half an hour, and half of 60 minutes is 30." },
+            { question: "Is 0.5 hours the same as 5 minutes, 50 minutes, or 30 minutes?", answer: "30 minutes - both 5 and 50 minutes are common wrong guesses that ignore what the decimal point actually means." },
+          ]
+        : definition.number === 4 && concept.id === "4.2"
+          ? [
+              { question: "Find the time interval from 07:04 to 07:57.", answer: "53 minutes: 57 − 4 = 53, since both times are within the same hour." },
+              { question: "Find the time interval from 07:57 to 08:04, jumping to the hour first.", answer: "7 minutes: +3 minutes to reach 08:00, then +4 more minutes to 08:04, so 3 + 4 = 7." },
+            ]
+      : definition.number === 5 && concept.id === "5.1"
+        ? [
+            { question: "Reading the bar chart, about how many visitors came in July?", answer: "About 520 - the bar reaches just above the 500 line." },
+            { question: "Which two months had the closest number of visitors?", answer: "July and August (about 520 and 570) - their bars are the closest in height of any pair." },
+          ]
+        : definition.number === 5 && concept.id === "5.2"
+          ? [
+              { question: "How many of the 20 learners travel 1 km or less to school?", answer: "3: the 0-1 km bar has a frequency of 3." },
+              { question: "What is the most common distance range for this class?", answer: "2-3 km and 4-5 km are tied as the most common, each with 5 learners." },
+            ]
+          : definition.number === 5 && concept.id === "5.3"
+            ? [
+                { question: "What was the maximum temperature on Day 2?", answer: "23°C, read directly from the table and the graph's second point." },
+                { question: "Describe the overall trend of the temperature across the 6 days.", answer: "It rises, falls to a low point on Day 4 (9°C), then rises sharply to the highest point on Day 6 (26°C)." },
+              ]
       : definition.number === 18 && concept.id === "18.1"
       ? [
           { question: "12:00 noon in Lagos; Delhi is 5 hours east. Find Delhi time.", answer: "17:00 (5:00 pm), because 12:00 + 5 hours = 17:00." },
@@ -348,10 +663,44 @@ function makeBoardUnit(definition: MathDefinition): BoardUnit {
     quickCheck: [makeTask(definition, concept, index, `Ready check · ${concept.id}`)],
   }));
 
-  const conceptSteps = definition.concepts.flatMap((concept, index) => [
-    { label: `${concept.id} · Meet the idea`, conceptId: concept.id, say: concept.summary, frame: conceptFrame(definition, index) },
-    { label: `${concept.id} · Tap and explain`, conceptId: concept.id, say: `Tap the highlighted part and explain what ${concept.title} is doing.`, frame: conceptFrame(definition, index) },
-  ]);
+  const conceptSteps = definition.concepts.flatMap((concept, index) => {
+    if (definition.number === 3 && concept.id === "3.1") {
+      // Two contrasting worked examples, watched one at a time - real user
+      // direction 2026-09-20: "-4+5 = 1 and -5+4 = -1 show these one by one
+      // and make kids understand." The counter actually slides for each.
+      const steps: ConceptStep[] = [
+        {
+          label: "3.1 · Start at −4, add 5",
+          conceptId: concept.id,
+          say: "Start at negative 4. Add 5 - watch the counter slide 5 steps right. Where does it land?",
+          frame: {
+            line: {
+              min: -5, max: 9, step: 1,
+              marks: [{ at: -4, label: "start −4", tone: "blue" }, { at: 0, label: "zero", tone: "gold" }, { at: 1, label: "finish 1", tone: "green" }],
+              jumps: [{ from: -4, to: 1, label: "+5" }],
+            },
+          },
+        },
+        {
+          label: "3.1 · Start at −5, add 4",
+          conceptId: concept.id,
+          say: "Now start at negative 5 instead and add 4. Same idea, different numbers - watch where it lands this time.",
+          frame: {
+            line: {
+              min: -5, max: 9, step: 1,
+              marks: [{ at: -5, label: "start −5", tone: "blue" }, { at: 0, label: "zero", tone: "gold" }, { at: -1, label: "finish −1", tone: "green" }],
+              jumps: [{ from: -5, to: -1, label: "+4" }],
+            },
+          },
+        },
+      ];
+      return steps;
+    }
+    return [
+      { label: `${concept.id} · Meet the idea`, conceptId: concept.id, say: concept.summary, frame: conceptFrame(definition, index) },
+      { label: `${concept.id} · Tap and explain`, conceptId: concept.id, say: `Tap the highlighted part and explain what ${concept.title} is doing.`, frame: conceptFrame(definition, index) },
+    ];
+  });
   const guidedTasks = definition.concepts.map((concept, index) => makeTask(definition, concept, index, `Try it · ${concept.id}`));
   const assessmentTasks = definition.concepts.slice(0, Math.min(3, definition.concepts.length)).map((concept, index) => makeTask(definition, concept, index, `Test · ${concept.id}`));
 
@@ -371,10 +720,76 @@ function makeBoardUnit(definition: MathDefinition): BoardUnit {
     lab: { kind: definition.number === 18 ? "timeZone" : "coordinate", prompt: definition.number === 18
       ? "Use the visible time jumps to explain whether you are adding eastward or subtracting westward."
       : `Use the highlighted model to work one ${definition.title.toLowerCase()} example and explain each change.`, start: [2, 2], shape: [[0, 0], [2, 0], [2, 2], [0, 2]], range: { min: -2, max: 6 } },
-    recitePrompts: concepts.flatMap((concept) => [
-      { ask: `Say the rule for ${concept.title}.`, answer: concept.summary, conceptId: concept.conceptId },
-      ...(concept.examples[0] ? [{ ask: `Recite this worked example: ${concept.examples[0].question}`, answer: concept.examples[0].answer, conceptId: concept.conceptId }] : []),
-    ]),
+    recitePrompts: concepts.flatMap((concept) => {
+      const rule = { ask: `Say the rule for ${concept.title}.`, answer: concept.summary, conceptId: concept.conceptId };
+      // Recite tests transfer, not memory of the exact example just watched -
+      // real user direction 2026-09-20: "recite can have different example
+      // ... practise them with more at each stage so they are well trained."
+      if (definition.number === 3 && concept.conceptId === "3.1") {
+        return [
+          rule,
+          { ask: "Start at −2 and add 7. Where do you land?", answer: "5: from −2, slide 7 steps right, crossing zero, to land on 5.", conceptId: concept.conceptId },
+          { ask: "Start at −6 and add 8. Where do you land?", answer: "2: from −6, slide 8 steps right, crossing zero, to land on 2.", conceptId: concept.conceptId },
+        ];
+      }
+      if (definition.number === 5 && concept.conceptId === "5.1") {
+        return [
+          rule,
+          { ask: "Looking at the bar chart, which month had the fewest visitors?", answer: "March, with about 50 visitors - the shortest bar on the chart.", conceptId: concept.conceptId },
+        ];
+      }
+      if (definition.number === 5 && concept.conceptId === "5.2") {
+        return [
+          rule,
+          { ask: "How many of the 20 learners travel more than 3 km to school?", answer: "10: add the 3-4 km (3), 4-5 km (5) and 5-6 km (2) bars - 3 + 5 + 2 = 10.", conceptId: concept.conceptId },
+        ];
+      }
+      if (definition.number === 5 && concept.conceptId === "5.3") {
+        return [
+          rule,
+          { ask: "Between which two days did the temperature rise the most?", answer: "Day 4 to Day 6: it climbs from 9°C to 26°C, a rise of 17°C - the biggest change on the whole graph.", conceptId: concept.conceptId },
+        ];
+      }
+      if (definition.number === 4 && concept.conceptId === "4.1") {
+        return [
+          rule,
+          { ask: "A film lasts 0.75 hours. How many minutes is that?", answer: "45 minutes: 0.75 is three-quarters, and three-quarters of 60 minutes is 45.", conceptId: concept.conceptId },
+        ];
+      }
+      if (definition.number === 4 && concept.conceptId === "4.2") {
+        return [
+          rule,
+          { ask: "Music Special starts at 11:05 and News starts at 12:30. How long is Music Special?", answer: "85 minutes (1 hour 25 minutes): jump 11:05 to 12:00 is 55 minutes, then 12:00 to 12:30 is 30 more - 55 + 30 = 85.", conceptId: concept.conceptId },
+        ];
+      }
+      if (definition.number === 3 && concept.conceptId === "3.2") {
+        return [
+          rule,
+          { ask: "Start at 3826. Add 174, then subtract 500. What do you land on?", answer: "3500: 3826 + 174 = 4000, then 4000 − 500 = 3500.", conceptId: concept.conceptId },
+        ];
+      }
+      if (definition.number === 3 && concept.conceptId === "3.3") {
+        return [
+          rule,
+          { ask: "A book and a pencil cost $15 together. The pencil costs $3. What does the book cost?", answer: "$12: undo the addition, 15 − 3 = 12.", conceptId: concept.conceptId },
+        ];
+      }
+      if (definition.number === 3 && concept.conceptId === "3.4") {
+        return [
+          rule,
+          { ask: "Work out 18 × 5 by regrouping 18 as 20 − 2.", answer: "90: 18 × 5 = (20 × 5) − (2 × 5) = 100 − 10 = 90.", conceptId: concept.conceptId },
+        ];
+      }
+      if (definition.number === 3 && concept.conceptId === "3.5") {
+        return [
+          rule,
+          { ask: "Use the grid method to work out 23 × 14.", answer: "322: 20×10=200, 3×10=30, 20×4=80, 3×4=12, and 200+30+80+12=322.", conceptId: concept.conceptId },
+        ];
+      }
+      return concept.examples[0]
+        ? [rule, { ask: `Recite this worked example: ${concept.examples[0].question}`, answer: concept.examples[0].answer, conceptId: concept.conceptId }]
+        : [rule];
+    }),
     writtenPractice: concepts.flatMap((concept) => concept.examples[1] ? [{ question: `Write and explain: ${concept.examples[1].question}`, answer: concept.examples[1].answer, conceptId: concept.conceptId }] : []),
     assessmentStory: conceptFrame(definition, 0),
     assessment: { partA: assessmentTasks, partB: [] },

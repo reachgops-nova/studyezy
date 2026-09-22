@@ -622,6 +622,43 @@ export const CAMBRIDGE_5_ENGLISH_1: BoardUnit = {
         },
       },
     },
+    {
+      // Watched, not just read - real user direction 2026-09-20: "show the
+      // examples animated ... not just read the example." The sentence
+      // grows piece by piece instead of appearing finished.
+      label: "1.9 · Watch it grow: compound",
+      conceptId: "1.9",
+      say: "Start with one simple sentence. Watch a joining word slide in, then a second equal idea, to make it compound.",
+      frame: {
+        text: {
+          title: "Building a compound sentence",
+          build: {
+            pieces: [
+              { text: "The kangaroo jumped" },
+              { text: "but", tone: "gold" },
+              { text: "it missed the branch." },
+            ],
+          },
+        },
+      },
+    },
+    {
+      label: "1.9 · Watch it grow: complex",
+      conceptId: "1.9",
+      say: "Now a different join. Start with the main idea, then watch a connective and a dependent clause slide in - one that could not stand on its own.",
+      frame: {
+        text: {
+          title: "Building a complex sentence",
+          build: {
+            pieces: [
+              { text: "The kangaroo kept jumping" },
+              { text: "although", tone: "green" },
+              { text: "it was tired." },
+            ],
+          },
+        },
+      },
+    },
         {
       label: "1.10 Story structure",
       conceptId: "1.10",
@@ -853,13 +890,34 @@ export const CAMBRIDGE_5_ENGLISH_1: BoardUnit = {
       ],
     },
     {
-      title: "Practice 3 · Sentence type",
+      // Give them the ball - real user direction 2026-09-20: not multiple
+      // choice, drag it yourself and be told exactly what went wrong.
+      title: "Practice 3 · Sort the connective",
       conceptId: "1.9",
-      prompt: "'The drum sounded and the village gathered.' What type is it?",
+      prompt: "'The drum sounded ___ the village gathered.' Drag 'although' to where it belongs.",
+      setup: {
+        text: {
+          title: "Sort the connective",
+          columns: [
+            { label: "Compound - two equal ideas (and / but / or)", items: [], tone: "blue" },
+            { label: "Complex - a main idea + one that cannot stand alone", items: [], tone: "green" },
+          ],
+        },
+      },
+      chipDrag: { chip: "although", toColumn: 1, hint: "drag it to where it belongs" },
       options: [
-        { label: "Compound", correct: true, say: "Correct - two ideas that could each stand alone, joined by 'and'.", frame: { text: { chips: [{ text: "The drum sounded", tone: "blue" }, { text: "and", tone: "gold" }, { text: "the village gathered", tone: "blue" }] } } },
-        { label: "Simple", correct: false, say: "A simple sentence has one idea. This has two, joined together.", frame: { text: { chips: [{ text: "Two ideas = not simple", tone: "red" }] } } },
-        { label: "Complex", correct: false, say: "Complex needs a part that cannot stand alone, like 'because...' or 'although...'. Both halves here can.", frame: { text: { chips: [{ text: "Both halves stand alone", tone: "red" }] } } },
+        {
+          label: "Complex",
+          correct: true,
+          say: "Yes - 'although' makes a clause that cannot stand alone. 'The drum sounded although the village gathered' has a main idea plus a dependent one, so it is complex.",
+          frame: { text: { chips: [{ text: "The drum sounded", tone: "blue" }, { text: "although", tone: "green" }, { text: "the village gathered", tone: "blue" }] } },
+        },
+        {
+          label: "Compound",
+          correct: false,
+          say: "'Although' cannot join two equal ideas that could each stand on their own - that is the job of 'and', 'but' and 'or'. 'Although' always creates a dependent clause, which makes the sentence complex, not compound.",
+          frame: { text: { chips: [{ text: "and / but / or = compound", tone: "blue" }, { text: "although = complex", tone: "red" }] } },
+        },
       ],
     },
     {
@@ -897,7 +955,12 @@ export const CAMBRIDGE_5_ENGLISH_1: BoardUnit = {
     { ask: "What are the features of a fable?", answer: "Short, fictional, usually animal characters who act like people, and a moral at the end." },
     { ask: "What is the difference between explicit and implicit meaning?", answer: "Explicit is stated directly in the words. Implicit is shown through clues and you work it out." },
     { ask: "What makes a prediction a good one?", answer: "It uses evidence from the text - the story so far, the title, the pictures - not just imagination." },
-    { ask: "What are the three sentence types?", answer: "Simple - one idea. Compound - two equal ideas joined by and, but or or. Complex - a main idea plus one that cannot stand alone." },
+    { ask: "What are the three sentence types?", answer: "Simple - one idea. Compound - two equal ideas joined by and, but or or. Complex - a main idea plus one that cannot stand alone.", conceptId: "1.9" },
+    // Fresh sentences, not the ones just watched build - real user direction
+    // 2026-09-20: "recite can have different example ... practise them with
+    // more at each stage so they are well trained."
+    { ask: "Say whether this is simple, compound or complex: 'The wombat dug a burrow, but it kept collapsing.'", answer: "Compound - 'the wombat dug a burrow' and 'it kept collapsing' could each stand alone, joined by 'but'.", conceptId: "1.9" },
+    { ask: "Say whether this is simple, compound or complex: 'When the rain stopped, the birds began to sing.'", answer: "Complex - 'When the rain stopped' cannot stand alone; it depends on the main idea, 'the birds began to sing'.", conceptId: "1.9" },
     { ask: "What shape does a narrative mountain follow?", answer: "Beginning, build up, the problem at the peak, then the resolution and the ending." },
     { ask: "How does a writer build mood?", answer: "Through the setting and the words they choose - the same place can feel calm or frightening depending on the words." },
   ],

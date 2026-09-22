@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Bricolage_Grotesque, Fredoka, Manrope } from "next/font/google";
+import { Bricolage_Grotesque, Fredoka, Kalam, Manrope } from "next/font/google";
 import "./globals.css";
 
 // Self-hosted via next/font (built at compile time, no runtime CDN request)
@@ -34,6 +34,17 @@ const manrope = Manrope({
   display: "swap",
 });
 
+// Scoped to worked-example "chalkboard" reveals on the Learning Board only -
+// real user direction 2026-09-22: make a worked formula "more attention
+// seeking" by showing it like a teacher chalking it on a board, not another
+// line of body text.
+const kalam = Kalam({
+  subsets: ["latin"],
+  weight: ["400", "700"],
+  variable: "--font-chalk",
+  display: "swap",
+});
+
 export const metadata: Metadata = {
   title: "StudyEzy",
   description: "A voice-first, student-first learning companion.",
@@ -41,7 +52,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={`${bricolage.variable} ${fredoka.variable} ${manrope.variable}`}>
+    <html lang="en" className={`${bricolage.variable} ${fredoka.variable} ${manrope.variable} ${kalam.variable}`}>
       <body className="min-h-screen font-sans">
         {/* No max-width here on purpose - the sidebar app shell (AppShell)
             and the narrower single-column pages (auth, landing, focused

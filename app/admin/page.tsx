@@ -61,6 +61,11 @@ export default async function AdminPage({
         <p className="mt-1 text-slate-600">
           Every registered account and the kid profiles under it. Admin-only.
         </p>
+        {admin.email.toLowerCase() === "reachgops@gmail.com" && (
+          <a href="/admin/pilots" className="mt-3 inline-block text-sm font-semibold text-blue-600 hover:underline">
+            → Completed pilots (jump straight to a finished concept)
+          </a>
+        )}
       </div>
 
       {error && ERROR_MESSAGES[error] && (

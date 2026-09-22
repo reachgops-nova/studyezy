@@ -15,7 +15,7 @@ const ENGLISH_DEFINITIONS: EnglishDefinition[] = [
     { id: "4.3", title: "Scanning for answers", icon: "🔍", summary: "Scan for the kind of detail the question asks for, such as a place, reason or step." },
     { id: "4.4", title: "Register and suffixes", icon: "🧠", summary: "Register changes with the audience, while suffixes change a word's meaning or job." },
   ] },
-  { number: 5, title: "Classic literature", concepts: [
+  { number: 5, title: "Stories that have been developed into a film", concepts: [
     { id: "5.1", title: "Verb choice and character", icon: "🎭", summary: "Precise verbs and adverbs show a character's feelings without simply naming them." },
     { id: "5.2", title: "Concrete and abstract nouns", icon: "🧱", summary: "Concrete nouns are physical; abstract nouns name ideas, feelings or qualities." },
     { id: "5.3", title: "Film shot types", icon: "🎬", summary: "A storyboard shot controls what the audience sees and how powerful a character feels." },
@@ -49,7 +49,131 @@ const ENGLISH_DEFINITIONS: EnglishDefinition[] = [
   ] },
 ];
 
+/**
+ * Real per-concept content for units that have been deepened from the real
+ * textbook pages, checked ahead of the generic Notice/Evidence/Explain
+ * frame below. Real user direction 2026-09-21/22: "complete the entire
+ * textbook ... finalise this and share it for practice."
+ */
+function realFrameFor(id: string): BoardFrame | undefined {
+  switch (id) {
+    case "4.1":
+      // Real book content, p60: comparative/superlative adjectives, used
+      // inside information texts to make comparisons.
+      return {
+        text: {
+          title: "Features of an information text · p60",
+          cards: [
+            { tag: "Feature", title: "Sub-headings and sections", desc: "Readers can jump straight to the part they need, rather than reading start to finish - that is why information texts are sometimes called non-chronological reports." },
+            { tag: "Feature", title: "Technical vocabulary", desc: "Topic-specific words, e.g. for a volcano: lava, magma, crater, ash cloud." },
+            { tag: "Feature", title: "Comparisons", desc: "tall → taller → the tallest. beautiful → more beautiful → the most beautiful." },
+          ],
+          columns: [
+            { label: "Comparative (compares two)", items: [], tone: "blue" },
+            { label: "Superlative (compares many)", items: [], tone: "gold" },
+          ],
+        },
+      };
+    case "4.2":
+      // Real book process, p64: how sea ice becomes an ice floe, told with
+      // real sequence words - built one step at a time, not read whole.
+      return {
+        text: {
+          title: "How an ice floe forms · p64",
+          build: {
+            pieces: [
+              { text: "First, floating ice crystals give the sea a greasy look. " },
+              { text: "Then, ", tone: "gold" }, { text: "this grease ice thickens into wave-shaped discs. " },
+              { text: "Eventually, ", tone: "gold" }, { text: "the discs are pushed together and jam to form an ice floe. " },
+              { text: "Finally, ", tone: "green" }, { text: "ice floes collide and join into a mighty sheet of pack ice." },
+            ],
+          },
+        },
+      };
+    case "4.3":
+      // Real book fact file, p68: coral reef facts, scanned for a specific
+      // kind of detail (a rate, a duration, a fraction) - not read start to end.
+      return {
+        text: {
+          title: "Scan for the answer · coral reefs, p68",
+          passage: [
+            { text: "Large reefs grow at the rate of " },
+            { text: "1-2 cm per year", tone: "gold", note: "How much does coral grow in a year? Scan for a rate, not a story." },
+            { text: ". It is estimated that some of the largest reefs took as long as " },
+            { text: "30 million years", tone: "blue", note: "When did some corals begin to grow? Scan for a length of time." },
+            { text: " to form. Coral reefs are sometimes called the rainforests of the sea because " },
+            { text: "one quarter of all the world's marine life", tone: "green", note: "Why are coral reefs important? Scan for a fraction or a reason." },
+            { text: " lives on them." },
+          ],
+        },
+      };
+    case "4.4":
+      // Real book table + example, p70: -graphy/-ology suffixes, and a
+      // real informal-register extract to sort against the formal features.
+      return {
+        text: {
+          title: "Register and suffixes · p70",
+          cards: [
+            { tag: "Suffix", title: "-graphy means 'writing'", desc: "biography = the story of someone's life.", quote: "bio (life) + graphy (writing)" },
+            { tag: "Suffix", title: "-ology means 'the study of'", desc: "biology = the study of living things.", quote: "bio (life) + ology (study of)" },
+          ],
+          columns: [
+            { label: "Formal (serious, impersonal)", items: [], tone: "blue" },
+            { label: "Informal (personal, fun)", items: [], tone: "gold" },
+          ],
+        },
+      };
+    case "5.1":
+      // Real book example, p76: "Hugo trudged up the staircase" - watched
+      // building up feeling one addition at a time, not read finished.
+      return {
+        text: {
+          title: "Building feeling into a sentence · The Invention of Hugo Cabret, p76",
+          build: {
+            pieces: [
+              { text: "Hugo trudged" }, { text: " up the staircase." },
+              { text: " The word 'trudged' already suggests reluctance." },
+            ],
+          },
+        },
+      };
+    case "5.2":
+      // Real book example, p79: the same extract naming a concrete noun
+      // (something physical) and an abstract noun (something not physical).
+      return {
+        text: {
+          title: "Concrete and abstract nouns · The Invention of Hugo Cabret, p79",
+          cards: [
+            { tag: "Concrete noun", title: "clocks", desc: "A physical thing you could touch.", quote: "'Hugo wound the clocks.'" },
+            { tag: "Abstract noun", title: "knowledge", desc: "Not physical - an idea, not a thing.", quote: "'Hugo had gained the knowledge of how to care for them.'" },
+          ],
+          columns: [
+            { label: "Concrete (physical)", items: [], tone: "blue" },
+            { label: "Abstract (an idea, not physical)", items: [], tone: "gold" },
+          ],
+        },
+      };
+    case "5.3":
+      // Real book storyboard, p87: two real shot choices and the effect
+      // each one has on how the audience feels about the same character.
+      return {
+        text: {
+          title: "Storyboard shots · The Invention of Hugo Cabret, p87",
+          cards: [
+            { tag: "High-angle long-shot", title: "Shows the whole room from above", desc: "As if someone is watching Hugo from above - this adds tension to the moment." },
+            { tag: "High-angle mid-shot", title: "From the top of the armoire", desc: "Makes Hugo seem smaller and a little afraid." },
+            { tag: "Low-angle shot", title: "Camera looks up at the subject", desc: "Makes a character or object seem more important or powerful - the opposite effect of a high angle." },
+          ],
+        },
+      };
+    default:
+      return undefined;
+  }
+}
+
 function frameFor(concept: EnglishDefinition["concepts"][number]): BoardFrame {
+  const real = realFrameFor(concept.id);
+  if (real) return real;
   return {
     diagram: {
       title: concept.title,
@@ -76,6 +200,96 @@ function frameFor(concept: EnglishDefinition["concepts"][number]): BoardFrame {
 
 function taskFor(definition: EnglishDefinition, concept: EnglishDefinition["concepts"][number], index: number, prefix: string): BoardTask {
   const frame = frameFor(concept);
+  if (concept.id === "4.1") {
+    return {
+      title: `${prefix} · ${concept.id}`,
+      prompt: "Sort 'the most beautiful' - is it comparative or superlative? Drag it to where it belongs.",
+      conceptId: concept.id,
+      setup: frame,
+      chipDrag: { chip: "the most beautiful", toColumn: 1, hint: "drag it to where it belongs" },
+      options: [
+        { label: "Superlative", correct: true, say: "Yes - 'most' compares three or more things, which makes it superlative, not comparative.", frame },
+        { label: "Comparative", correct: false, say: "Comparative only compares two things, like 'more beautiful'. 'The most beautiful' compares many, which makes it superlative.", frame },
+      ],
+    };
+  }
+  if (concept.id === "4.2") {
+    return {
+      title: `${prefix} · ${concept.id}`,
+      prompt: "Put these ice-floe steps in order: (1) discs jam together, (2) grease ice forms, (3) pack ice forms, (4) ice floe forms. Which comes first?",
+      conceptId: concept.id,
+      setup: frame,
+      options: [
+        { label: "Grease ice forms", correct: true, say: "Correct. First the sea gets a greasy look from floating ice crystals - everything else builds on that first step.", frame },
+        { label: "Pack ice forms", correct: false, say: "Pack ice is the last stage, not the first - it only forms after ice floes have already joined together.", frame },
+        { label: "Discs jam together", correct: false, say: "That happens after the grease ice has already thickened into discs - it can't be the very first step.", frame },
+      ],
+    };
+  }
+  if (concept.id === "4.3") {
+    return {
+      title: `${prefix} · ${concept.id}`,
+      prompt: "You need to answer 'How much does coral grow in a year?'. What kind of detail should you scan for?",
+      conceptId: concept.id,
+      setup: frame,
+      options: [
+        { label: "A rate, like a measurement per year", correct: true, say: "Yes - 'how much... in a year' is asking for a rate, and the text gives '1-2 cm per year'.", frame },
+        { label: "A place name", correct: false, say: "That would answer a 'where' question. This question asks 'how much', so scan for a measurement, not a location.", frame },
+        { label: "A reason", correct: false, say: "That would answer a 'why' question. This one asks 'how much', so scan for a number or rate.", frame },
+      ],
+    };
+  }
+  if (concept.id === "4.4") {
+    return {
+      title: `${prefix} · ${concept.id}`,
+      prompt: "'Have you ever heard stories of strange sea beasts?' - drag this to where it belongs.",
+      conceptId: concept.id,
+      setup: frame,
+      chipDrag: { chip: "Have you ever heard stories of strange sea beasts?", toColumn: 1, hint: "drag it to where it belongs" },
+      options: [
+        { label: "Informal", correct: true, say: "Yes - a direct question to the reader is a personal, informal touch, not the serious, impersonal tone of a formal text.", frame },
+        { label: "Formal", correct: false, say: "Formal writing keeps a serious, impersonal tone and avoids speaking directly to the reader. A question like this is informal.", frame },
+      ],
+    };
+  }
+  if (concept.id === "5.1") {
+    return {
+      title: `${prefix} · ${concept.id}`,
+      prompt: "'Hugo trudged ___ up the staircase.' Which adverb best shows he felt unwilling?",
+      conceptId: concept.id,
+      setup: frame,
+      options: [
+        { label: "reluctantly", correct: true, say: "Yes - 'reluctantly' directly adds the feeling of not wanting to go, matching what 'trudged' already suggests.", frame },
+        { label: "quickly", correct: false, say: "'Trudged' already suggests heavy, effortful walking - 'quickly' contradicts that feeling rather than adding to it.", frame },
+        { label: "happily", correct: false, say: "'Trudged' suggests reluctance or a burden, not enjoyment - 'happily' contradicts the verb's own feeling.", frame },
+      ],
+    };
+  }
+  if (concept.id === "5.2") {
+    return {
+      title: `${prefix} · ${concept.id}`,
+      prompt: "'Hugo had gained the knowledge of how to care for them.' Drag 'knowledge' to where it belongs.",
+      conceptId: concept.id,
+      setup: frame,
+      chipDrag: { chip: "knowledge", toColumn: 1, hint: "drag it to where it belongs" },
+      options: [
+        { label: "Abstract", correct: true, say: "Yes - you cannot touch 'knowledge'. It is an idea, which makes it an abstract noun.", frame },
+        { label: "Concrete", correct: false, say: "Concrete nouns are physical things you could touch, like 'clocks'. 'Knowledge' is an idea, not a physical thing, so it is abstract.", frame },
+      ],
+    };
+  }
+  if (concept.id === "5.3") {
+    return {
+      title: `${prefix} · ${concept.id}`,
+      prompt: "You want the audience to feel a character is powerful and important. Which shot should you use?",
+      conceptId: concept.id,
+      setup: frame,
+      options: [
+        { label: "A low-angle shot", correct: true, say: "Correct. A low-angle shot, looking up at the subject, makes a character or object seem more important or powerful.", frame },
+        { label: "A high-angle shot", correct: false, say: "That has the opposite effect - a high-angle shot, looking down, makes a character seem less powerful, smaller or more afraid.", frame },
+      ],
+    };
+  }
   return {
     title: `${prefix} · ${concept.id}`,
     prompt: `Use Notice → Evidence → Explain for this ${concept.title} example. Which response follows the method?`,
@@ -88,6 +302,73 @@ function taskFor(definition: EnglishDefinition, concept: EnglishDefinition["conc
   };
 }
 
+/** Real worked examples for deepened concepts, taught in Read and shown on
+ * the Recite board card - checked ahead of the generic N-E-E filler. */
+function realExamplesFor(id: string): { question: string; answer: string }[] | undefined {
+  switch (id) {
+    case "4.1":
+      return [
+        { question: "Give the comparative and superlative of 'tall'.", answer: "taller (comparative, compares two); the tallest (superlative, compares three or more)." },
+        { question: "Name three features that make a text an information text.", answer: "Any three of: a title and introduction, sub-headings, paragraphs within sections, facts, diagrams with labels, bullet points, technical vocabulary, comparative/superlative adjectives." },
+      ];
+    case "4.2":
+      return [
+        { question: "What are the four sequence words used to explain how an ice floe forms?", answer: "First, then/eventually, eventually, finally - they show the order the process happens in." },
+        { question: "Why is an explanation of a process always chronological, in order?", answer: "Because a process is a series of actions with a beginning and an end, so it has to be told in the order it happens." },
+      ];
+    case "4.3":
+      return [
+        { question: "Scanning for 'why are coral reefs important', what kind of answer are you looking for?", answer: "A reason or a fraction - the text says coral reefs support 'one quarter of all the world's marine life'." },
+        { question: "What is the difference between skimming and scanning?", answer: "Skimming gets a general impression of a whole text; scanning reads more thoroughly to find one specific piece of information." },
+      ];
+    case "4.4":
+      return [
+        { question: "Split 'biology' into its root and suffix, and give the meaning of each part.", answer: "bio (Greek for 'life') + ology ('the study of something') = the study of living things." },
+        { question: "Name two features of a formal information text.", answer: "Any two of: a serious, impersonal tone; precise, formal language; adjectives that give factual information (e.g. colour, size)." },
+      ];
+    case "5.1":
+      return [
+        { question: "What does the verb 'trudged' suggest about how Hugo feels, without saying it directly?", answer: "That walking up the stairs is hard work, or that he doesn't want to go - the verb itself carries the feeling, not a stated emotion." },
+        { question: "What is the difference between an adverb and an adverbial phrase? Give the book's examples.", answer: "An adverb is one word ('Hugo trudged reluctantly'); an adverbial phrase is a group of words doing the same job ('Hugo trudged with heavy footsteps')." },
+      ];
+    case "5.2":
+      return [
+        { question: "Give one example each of a concrete noun and an abstract noun from the Hugo extract.", answer: "Concrete: 'clocks' (physical). Abstract: 'knowledge' (an idea, not physical)." },
+        { question: "Why can't you touch an abstract noun?", answer: "Because abstract nouns name things that are not physical, like imagination, thoughts or knowledge - only concrete nouns name physical things." },
+      ];
+    case "5.3":
+      return [
+        { question: "What effect does a high-angle long-shot of the whole room have on the audience?", answer: "It feels as if someone is watching from above, which adds tension to the moment." },
+        { question: "What effect does an over-the-shoulder shot have?", answer: "It shows events from a character's own viewpoint, so the audience sees what that character sees." },
+      ];
+    default:
+      return undefined;
+  }
+}
+
+/** Fresh recite prompts, different from what was just taught - real user
+ * direction 2026-09-20/21: vary the example, then practise more of them. */
+function realRecitePromptsFor(id: string): { ask: string; answer: string }[] | undefined {
+  switch (id) {
+    case "4.1":
+      return [{ ask: "Give the comparative and superlative of 'happy'.", answer: "happier (comparative); the happiest (superlative)." }];
+    case "4.2":
+      return [{ ask: "Put in order: the coral polyp feeds; it is dark; the polyp comes out of its skeleton; prey is pulled into its mouth. What happens first?", answer: "It becomes dark - the polyps only come out of their hard skeletons to feed once night falls." }];
+    case "4.3":
+      return [{ ask: "If a question asks 'where', what kind of detail should you scan for?", answer: "A place name or location, not a reason, a rate or a time." }];
+    case "4.4":
+      return [{ ask: "Is 'Well, everyone loves a good story!' formal or informal? Why?", answer: "Informal - it uses a casual opener ('Well,') and an exclamation, not the serious, impersonal tone of formal writing." }];
+    case "5.1":
+      return [{ ask: "Rewrite 'Hugo walked to the door' to show he felt nervous, using an adverb.", answer: "Something like: 'Hugo walked nervously to the door' - the adverb adds the feeling without stating 'Hugo felt nervous' directly." }];
+    case "5.2":
+      return [{ ask: "Is 'imagination' a concrete noun or an abstract noun?", answer: "Abstract - you cannot touch or see imagination itself, only its effects, which makes it an idea rather than a physical thing." }];
+    case "5.3":
+      return [{ ask: "Which shot would you choose to make a villain seem frightening and dominant - high-angle or low-angle?", answer: "Low-angle - looking up at the villain would make them seem more powerful and important, the effect the scene needs." }];
+    default:
+      return undefined;
+  }
+}
+
 function makeEnglishUnit(definition: EnglishDefinition): BoardUnit {
   const concepts = definition.concepts.map((concept, index) => ({
     conceptId: concept.id,
@@ -95,7 +376,7 @@ function makeEnglishUnit(definition: EnglishDefinition): BoardUnit {
     icon: concept.icon,
     summary: concept.summary,
     keyPoints: [concept.summary, "Use a word or phrase from the passage as evidence."],
-    examples: [
+    examples: realExamplesFor(concept.id) ?? [
       { question: `Use Notice → Evidence → Explain to show ${concept.title}.`, answer: `${concept.summary} Name the feature, quote a short clue, and explain the effect or meaning.` },
       { question: `What exact evidence would you choose for ${concept.title}?`, answer: "Choose the relevant word, phrase, punctuation or stage/text detail, then explain why it matters." },
       { question: `What should you check for ${concept.title}?`, answer: "Check the exact words, the audience, and the evidence before deciding." },
@@ -122,7 +403,10 @@ function makeEnglishUnit(definition: EnglishDefinition): BoardUnit {
     conceptSteps,
     guidedTasks,
     lab: { kind: "visual", prompt: "Touch the Notice, Evidence and Explain parts on the board, then say what each one proves.", start: [0, 0], shape: [[0, 0]], range: { min: 0, max: 1 } },
-    recitePrompts: definition.concepts.map((concept) => ({ ask: `Say the rule for ${concept.title}.`, answer: concept.summary })),
+    recitePrompts: definition.concepts.flatMap((concept) => [
+      { ask: `Say the rule for ${concept.title}.`, answer: concept.summary, conceptId: concept.id },
+      ...(realRecitePromptsFor(concept.id)?.map((p) => ({ ...p, conceptId: concept.id })) ?? []),
+    ]),
     writtenPractice: definition.concepts.slice(0, 4).map((concept) => ({ question: `Write a short example showing ${concept.title}.`, answer: `${concept.summary} Use a short quotation or detail as evidence.` })),
     assessmentStory: frameFor(definition.concepts[0]),
     assessment: { partA: assessment, partB: [] },

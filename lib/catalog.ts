@@ -6,6 +6,15 @@ import { db } from "./db";
 
 export interface CatalogUnit {
   id: number;
+  /**
+   * The unit's own stored key (e.g. "cambridge-5-english-1"), authoritative
+   * over reconstructing curriculum-stage-subject-unit - real user finding
+   * 2026-09-22: English units 404'd because their Stage row's number (4,
+   * shared with Cambridge Math) does not match English's own book edition
+   * (5). A subject's book number can legitimately differ from its Stage's
+   * nominal class/grade number, so only the Unit's own key is trustworthy.
+   */
+  unitKey: string;
   title: string;
   available: boolean;
   /** Total concepts currently drafted for this unit - undefined when getCatalog() was called without a profileId. */
@@ -53,7 +62,7 @@ export async function getCatalog(profileId?: string): Promise<CatalogCurriculum[
             include: {
               units: {
                 orderBy: { number: "asc" },
-                include: { concepts: { select: { id: true } } },
+                select: { number: true, title: true, available: true, unitKey: true, concepts: { select: { id: true } } },
               },
             },
           },
@@ -110,6 +119,7 @@ export async function getCatalog(profileId?: string): Promise<CatalogCurriculum[
         samplePages: samplesBySubject.get(subj.id) ?? [],
         units: subj.units.map((u) => ({
           id: u.number,
+          unitKey: u.unitKey,
           title: u.title,
           available: u.available,
           totalConcepts: coveredConceptIds ? u.concepts.length : undefined,
@@ -148,7 +158,7 @@ export async function getSwitcherGroups(): Promise<SwitcherGroup[]> {
         const units = subject.units
           .filter((u) => u.available)
           .map((u) => ({
-            unitKey: `${curriculum.id}-${stage.id}-${subject.id}-${u.id}`,
+            unitKey: u.unitKey,
             label: `Unit ${u.id}: ${u.title}`,
           }));
         if (units.length === 0) continue;
