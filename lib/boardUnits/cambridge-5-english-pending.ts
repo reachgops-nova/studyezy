@@ -23,7 +23,7 @@ const ENGLISH_DEFINITIONS: EnglishDefinition[] = [
   { number: 6, title: "Classic literature", concepts: [
     { id: "6.1", title: "Adverbs and adjectives", icon: "✨", summary: "An adverb can intensify an adjective and make a feeling more precise." },
     { id: "6.2", title: "Context clues", icon: "🕵️", summary: "The words around an unfamiliar word can reveal what it means." },
-    { id: "6.3", title: "Possibility and certainty", icon: "🌦️", summary: "Modal verbs show how possible, likely or certain something is." },
+    { id: "6.3", title: "Possibility and impossibility", icon: "🌦️", summary: "Modal verbs like might, could and cannot show whether something is possible or ruled out." },
     { id: "6.4", title: "Adverbial phrases", icon: "🏃", summary: "An adverbial phrase adds detail about how, when or where an action happens." },
     { id: "6.5", title: "Themes in literature", icon: "💡", summary: "A theme is the bigger idea a story makes us think about beyond its events." },
   ] },
@@ -166,6 +166,93 @@ function realFrameFor(id: string): BoardFrame | undefined {
           ],
         },
       };
+    case "6.1":
+      // Real book content, p94-95: the roc/serpent battle, teaching adverbs
+      // combined with adjectives for more powerful description.
+      return {
+        text: {
+          title: "Adverbs + adjectives · p94-95",
+          cards: [
+            { tag: "Book example", title: "unbelievably large", desc: "The adverb 'unbelievably' makes the adjective 'large' far more vivid than 'large' alone." },
+            { tag: "Book example", title: "frighteningly sharp", desc: "'Frighteningly' intensifies 'sharp' - the reader feels the danger, not just pictures it." },
+            { tag: "Word bank", title: "absolutely, bitterly, deeply, badly, painfully…", desc: "Adverbs like these combine with adjectives (confident, disappointed, shaken, hurt, thin) to sharpen a description." },
+          ],
+          columns: [
+            { label: "Adverb + adjective", items: [], tone: "green" },
+            { label: "Adjective alone", items: [], tone: "blue" },
+          ],
+        },
+      };
+    case "6.2":
+      // Real book content, p100-102: context-clue strategy, with the book's
+      // own words - marooned (surrounding sentence) and profitable (root +
+      // suffix).
+      return {
+        text: {
+          title: "Context clues · p100-102",
+          cards: [
+            { tag: "Book example", title: "marooned", desc: "'The ship sailed away leaving Sinbad marooned on the island with nothing but the breeze to keep him company.' Alone, ship gone - marooned means abandoned or stranded." },
+            { tag: "Book example", title: "profitable", desc: "Root + suffix: profit (to gain) + able (can be done) = likely to make money." },
+            { tag: "Word bank", title: "wholesome, abundance, calamity, trepidation", desc: "Each word's meaning is revealed by the sentence around it, not by the word alone." },
+          ],
+          columns: [
+            { label: "Fits the context", items: [], tone: "green" },
+            { label: "Contradicts the context", items: [], tone: "red" },
+          ],
+        },
+      };
+    case "6.3":
+      // Real book content, p103: modal verbs for possibility/impossibility -
+      // the book's own five example sentences.
+      return {
+        text: {
+          title: "Modal verbs · p103",
+          cards: [
+            { tag: "Book example", title: "My keys might be in my bag.", desc: "'Might' shows possibility - the speaker isn't sure." },
+            { tag: "Book example", title: "The storm could get worse.", desc: "'Could' shows something is possible, not certain." },
+            { tag: "Book example", title: "If you cannot attend, you'll get a full refund.", desc: "'Cannot' shows impossibility - it definitely will not happen." },
+          ],
+          columns: [
+            { label: "Shows possibility", items: [], tone: "green" },
+            { label: "Shows impossibility", items: [], tone: "red" },
+          ],
+        },
+      };
+    case "6.4":
+      // Real book content, p106: adverbial phrases (starting with "With" or
+      // an -ing verb form), plus the book's own homonym bonus.
+      return {
+        text: {
+          title: "Adverbial phrases · p106",
+          cards: [
+            { tag: "Book example", title: "With a great gasp, the crowd saw the acrobat wobble.", desc: "An adverbial phrase starting with 'With' adds detail about how the action happened." },
+            { tag: "Book example", title: "The actor stepped onto the stage, carrying a sword and shield.", desc: "An adverbial phrase can also start with the -ing form of a verb." },
+            { tag: "Bonus", title: "tie (a knot) / tie (a necktie)", desc: "Homonyms: spelled and said the same, but with different meanings." },
+          ],
+          columns: [
+            { label: "Adverbial phrase", items: [], tone: "green" },
+            { label: "Not an adverbial phrase", items: [], tone: "blue" },
+          ],
+        },
+      };
+    case "6.5":
+      // Synthesised from the unit's real "What can you do?" checklist, p111
+      // ("I can identify a theme in a story and explain my opinion about
+      // it") and the real events across Sinbad's voyages, p91-111.
+      return {
+        text: {
+          title: "Themes across the voyages · p91-111",
+          cards: [
+            { tag: "Theme", title: "Curiosity leads to danger", desc: "Sinbad explores a mysterious 'island', only to discover it is really a whale." },
+            { tag: "Theme", title: "Quick thinking saves the day", desc: "Sinbad ties himself to the roc's leg to escape the island, turning danger into an escape plan." },
+            { tag: "Theme", title: "Trusting too quickly can backfire", desc: "The old man of the sea seems helpless, then traps Sinbad by clinging to him and refusing to let go." },
+          ],
+          columns: [
+            { label: "Matches this event", items: [], tone: "green" },
+            { label: "Does not match", items: [], tone: "red" },
+          ],
+        },
+      };
     default:
       return undefined;
   }
@@ -290,6 +377,71 @@ function taskFor(definition: EnglishDefinition, concept: EnglishDefinition["conc
       ],
     };
   }
+  if (concept.id === "6.1") {
+    return {
+      title: `${prefix} · ${concept.id}`,
+      prompt: "The book describes the roc as 'unbelievably free'. Is that an adverb + adjective pair, or just an adjective? Drag it to where it belongs.",
+      conceptId: concept.id,
+      setup: frame,
+      chipDrag: { chip: "unbelievably free", toColumn: 0, hint: "drag it to where it belongs" },
+      options: [
+        { label: "Adverb + adjective", correct: true, say: "Yes - 'unbelievably' is the adverb, strengthening the adjective 'free', exactly like the book's own example.", frame },
+        { label: "Adjective alone", correct: false, say: "'Free' is the adjective, but 'unbelievably' in front of it is doing real work too - together they make an adverb + adjective pair, not just one word.", frame },
+      ],
+    };
+  }
+  if (concept.id === "6.2") {
+    return {
+      title: `${prefix} · ${concept.id}`,
+      prompt: "'With trepidation, I peered over the edge of my blanket to see a creature snuffling around.' Does 'trepidation' fit with cautious fear, or joyful excitement? Drag it to where it belongs.",
+      conceptId: concept.id,
+      setup: frame,
+      chipDrag: { chip: "trepidation", toColumn: 0, hint: "drag it to where it belongs" },
+      options: [
+        { label: "Fits: cautious fear", correct: true, say: "Yes - peering nervously at a strange creature is a fearful, cautious action, so 'trepidation' means anxious fear.", frame },
+        { label: "Contradicts: joyful excitement", correct: false, say: "Peering carefully over the edge of a blanket at a strange creature is not what excitement looks like - the context points to fear, not joy.", frame },
+      ],
+    };
+  }
+  if (concept.id === "6.3") {
+    return {
+      title: `${prefix} · ${concept.id}`,
+      prompt: "'We couldn't have won that race!' Does 'couldn't' show something was possible, or impossible? Drag it to where it belongs.",
+      conceptId: concept.id,
+      setup: frame,
+      chipDrag: { chip: "couldn't", toColumn: 1, hint: "drag it to where it belongs" },
+      options: [
+        { label: "Shows impossibility", correct: true, say: "Yes - 'couldn't have won' rules winning out completely, which makes it impossibility, not a maybe.", frame },
+        { label: "Shows possibility", correct: false, say: "'Couldn't' rules the event out completely - that's impossibility. A possibility word would be one like 'might' or 'could' without the 'n't'.", frame },
+      ],
+    };
+  }
+  if (concept.id === "6.4") {
+    return {
+      title: `${prefix} · ${concept.id}`,
+      prompt: "'The acrobat balanced himself with great calm.' Which part is the adverbial phrase? Drag it to where it belongs.",
+      conceptId: concept.id,
+      setup: frame,
+      chipDrag: { chip: "with great calm", toColumn: 0, hint: "drag it to where it belongs" },
+      options: [
+        { label: "Adverbial phrase", correct: true, say: "Yes - 'with great calm' adds detail about how the acrobat balanced, exactly the job of an adverbial phrase.", frame },
+        { label: "Not an adverbial phrase", correct: false, say: "'With great calm' describes how the balancing happened - that's the job of an adverbial phrase, so it does belong in that column.", frame },
+      ],
+    };
+  }
+  if (concept.id === "6.5") {
+    return {
+      title: `${prefix} · ${concept.id}`,
+      prompt: "Sinbad ties himself to the roc's giant leg to escape the island. Which theme does this best show? Drag it to where it belongs.",
+      conceptId: concept.id,
+      setup: frame,
+      chipDrag: { chip: "Quick thinking saves the day", toColumn: 0, hint: "drag it to where it belongs" },
+      options: [
+        { label: "Matches this event", correct: true, say: "Yes - tying himself to the roc is a clever, fast plan that turns Sinbad's danger into his escape.", frame },
+        { label: "Does not match", correct: false, say: "This was a deliberate, clever plan, not luck or carelessness - it fits 'quick thinking saves the day' exactly.", frame },
+      ],
+    };
+  }
   return {
     title: `${prefix} · ${concept.id}`,
     prompt: `Use Notice → Evidence → Explain for this ${concept.title} example. Which response follows the method?`,
@@ -341,6 +493,31 @@ function realExamplesFor(id: string): { question: string; answer: string }[] | u
         { question: "What effect does a high-angle long-shot of the whole room have on the audience?", answer: "It feels as if someone is watching from above, which adds tension to the moment." },
         { question: "What effect does an over-the-shoulder shot have?", answer: "It shows events from a character's own viewpoint, so the audience sees what that character sees." },
       ];
+    case "6.1":
+      return [
+        { question: "The book describes the roc as 'unbelievably large'. Which word is the adverb, and which is the adjective?", answer: "'unbelievably' is the adverb; 'large' is the adjective it strengthens." },
+        { question: "From the book's word bank, match the adverb 'bitterly' to the adjective it most naturally strengthens: disappointed, thin, or confident?", answer: "disappointed - 'bitterly disappointed' is a natural, powerful pairing; 'bitterly thin' or 'bitterly confident' don't make sense." },
+      ];
+    case "6.2":
+      return [
+        { question: "'Despite the apparent abundance of fresh food, the people were quite thin.' What does 'abundance' mean?", answer: "A large amount, or plenty - the contrast with 'thin' and 'ill' only makes sense if there was plenty of food, not scarcity." },
+        { question: "Break 'profitable' into its root and suffix to find its meaning.", answer: "profit (to gain) + able (can be done) = likely to make money." },
+      ];
+    case "6.3":
+      return [
+        { question: "'I may travel again next year.' Does 'may' show something is certain or possible?", answer: "Possible - 'may' shows the speaker isn't sure, not a certainty." },
+        { question: "Identify the modal verb in 'You could visit me on Sunday.'", answer: "'could' - it shows the visit is possible, not definite." },
+      ];
+    case "6.4":
+      return [
+        { question: "Find the adverbial phrase in 'The actor stepped onto the stage, carrying a sword and shield.'", answer: "'carrying a sword and shield' - an -ing phrase adding detail about how the actor stepped onto the stage." },
+        { question: "What are homonyms? Give the book's example.", answer: "Words spelled and said the same but with different meanings, e.g. 'tie' (a knot) and 'tie' (a necktie)." },
+      ];
+    case "6.5":
+      return [
+        { question: "What theme does the whale-island twist (voyage one) best show?", answer: "Curiosity leads to danger - exploring the mysterious 'island' leads Sinbad straight into danger when it turns out to be a whale." },
+        { question: "Give one reason a story like Sinbad's Voyages might be called a 'classic'.", answer: "Any reasonable reason, e.g. it was written long ago but is still read and enjoyed today, or it has been translated and retold for centuries." },
+      ];
     default:
       return undefined;
   }
@@ -364,6 +541,16 @@ function realRecitePromptsFor(id: string): { ask: string; answer: string }[] | u
       return [{ ask: "Is 'imagination' a concrete noun or an abstract noun?", answer: "Abstract - you cannot touch or see imagination itself, only its effects, which makes it an idea rather than a physical thing." }];
     case "5.3":
       return [{ ask: "Which shot would you choose to make a villain seem frightening and dominant - high-angle or low-angle?", answer: "Low-angle - looking up at the villain would make them seem more powerful and important, the effect the scene needs." }];
+    case "6.1":
+      return [{ ask: "Which word is the adverb in 'painfully thin'?", answer: "'painfully' - it's the adverb strengthening the adjective 'thin'." }];
+    case "6.2":
+      return [{ ask: "'I chased after her and calamity struck.' What does 'calamity' most likely mean?", answer: "A disaster - something struck suddenly and the tone is alarming, so it means a disaster or serious misfortune." }];
+    case "6.3":
+      return [{ ask: "'If you go now, you should be on time.' Identify the modal verb.", answer: "'should' - it shows a likely outcome, not a certainty." }];
+    case "6.4":
+      return [{ ask: "Which verb form often starts the second kind of adverbial phrase the book teaches?", answer: "The -ing form of a verb, e.g. 'carrying a sword and shield'." }];
+    case "6.5":
+      return [{ ask: "Which theme fits the old man of the sea trapping Sinbad?", answer: "Trusting too quickly can backfire - the old man seemed helpless and in need of help, but turned out to be dangerous." }];
     default:
       return undefined;
   }
