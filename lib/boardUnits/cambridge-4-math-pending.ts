@@ -693,6 +693,83 @@ function makeBoardUnit(definition: MathDefinition): BoardUnit {
             },
           },
         },
+        {
+          label: "3.1 · Poster · below zero",
+          conceptId: concept.id,
+          say: "Here is the same idea on a thermometer. Zero sits in the middle - counting down from six by fives lands on one, then negative four, then negative nine, the same way you just watched on the counter.",
+          frame: {
+            image: {
+              src: "/board-art/math7-decimals-negative.jpg",
+              alt: "A thermometer and number line from -10 to 10, showing counting backwards by 5s from 6 to -9.",
+              title: "Below zero",
+              focus: { x: 74.5, y: 16, w: 25.5, h: 84 },
+              hotspots: [
+                { label: "Backwards 5", at: [80, 46], note: "6 minus 5 is 1 - still above zero.", tone: "gold" },
+                { label: "Backwards 5", at: [86, 46], note: "1 minus 5 is negative 4 - now below zero.", tone: "red" },
+                { label: "Backwards 5", at: [92, 46], note: "Negative 4 minus 5 is negative 9 - keep counting the same way.", tone: "red" },
+              ],
+            },
+          },
+        },
+      ];
+      return steps;
+    }
+    if (definition.number === 7 && concept.id === "7.1") {
+      const step: ConceptStep = {
+        label: "7.1 · Poster · tenths",
+        conceptId: concept.id,
+        say: "One piece of a chocolate bar split into ten equal parts is one tenth - we write that as 0.1. Ten of these pieces make one whole.",
+        frame: {
+          image: {
+            src: "/board-art/math7-decimals-negative.jpg",
+            alt: "A chocolate bar split into ten pieces, with one piece labelled 0.1.",
+            title: "Tenths",
+            focus: { x: 0, y: 16, w: 24.5, h: 84 },
+            hotspots: [
+              { label: "0.1", at: [19, 50], note: "One piece out of ten equal pieces is one tenth of the whole bar.", tone: "gold" },
+            ],
+          },
+        },
+      };
+      return [step, { label: `${concept.id} · Tap and explain`, conceptId: concept.id, say: `Tap the highlighted part and explain what ${concept.title} is doing.`, frame: conceptFrame(definition, index) }];
+    }
+    if (definition.number === 7 && concept.id === "7.2") {
+      const steps: ConceptStep[] = [
+        {
+          label: "7.2 · Poster · decompose 45.8",
+          conceptId: concept.id,
+          say: "45.8 breaks apart into its place value parts - 40 in the tens, 5 in the ones, and 0.8 in the tenths.",
+          frame: {
+            image: {
+              src: "/board-art/math7-decimals-negative.jpg",
+              alt: "45.8 broken into place value blocks: 40, 5, and 0.8.",
+              title: "Decompose 45.8",
+              focus: { x: 25.3, y: 16, w: 24, h: 84 },
+              hotspots: [
+                { label: "40", at: [32, 58], note: "Four tens.", tone: "blue" },
+                { label: "5", at: [40, 58], note: "Five ones.", tone: "green" },
+                { label: "0.8", at: [46, 68], note: "Eight tenths.", tone: "gold" },
+              ],
+            },
+          },
+        },
+        {
+          label: "7.2 · Poster · regroup 3.4",
+          conceptId: concept.id,
+          say: "3 wholes and 4 tenths can be regrouped: take one whole apart into ten tenths, leaving 2 wholes and 14 tenths - the same value, written differently.",
+          frame: {
+            image: {
+              src: "/board-art/math7-decimals-negative.jpg",
+              alt: "3.4 regrouped from 3 wholes and 4 tenths into 2 wholes and 14 tenths.",
+              title: "Regroup 3.4",
+              focus: { x: 50, y: 16, w: 24, h: 84 },
+              hotspots: [
+                { label: "3 wholes, 4 tenths", at: [57, 55], note: "The number as first written.", tone: "blue" },
+                { label: "2 wholes, 14 tenths", at: [68, 58], note: "The same value - one whole regrouped into ten more tenths.", tone: "green" },
+              ],
+            },
+          },
+        },
       ];
       return steps;
     }
