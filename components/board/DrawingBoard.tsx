@@ -180,7 +180,14 @@ export default function DrawingBoard({
     const matchingVoice = voices.find((voice) => voice.lang?.toLowerCase() === languageCode.toLowerCase())
       ?? voices.find((voice) => voice.lang?.toLowerCase().startsWith(`${baseLanguage}-`));
     if (matchingVoice) u.voice = matchingVoice;
-    if (!matchingVoice && baseLanguage !== "en") {
+    // Real user finding 2026-09-23: some browsers list a Tamil (or other
+    // Indian-language) voice in getVoices() that never actually produces
+    // sound - a silent match, not a missing one. The server route already
+    // has a real, verified-working Tamil voice (Sarvam), so for any
+    // non-English language always prefer it over a browser voice that might
+    // just be a name with nothing behind it - never gate this on whether a
+    // "matching" voice was merely reported.
+    if (baseLanguage !== "en") {
       fetch("/api/tts", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -366,7 +373,16 @@ export default function DrawingBoard({
     const s = unit.conceptSteps[i];
     if (!s) return;
     const currentConceptId = unit.conceptSteps[step]?.conceptId;
-    if (s.conceptId !== currentConceptId && !examplesComplete(currentConceptId)) {
+    // Only advancing to a topic ahead of where you are should ever be
+    // gated - real user finding 2026-09-23: finishing topic 1 and moving to
+    // topic 2, then trying to go back and revisit topic 1, was blocked by
+    // this same "finish your examples first" check meant for topic 2's own
+    // unfinished examples. Revisiting anything already reached must always
+    // be free, in both directions.
+    const targetGroupIndex = conceptGroups.findIndex((g) => g.key === s.conceptId);
+    const currentGroupIndex = conceptGroups.findIndex((g) => g.key === currentConceptId);
+    const movingForward = targetGroupIndex > currentGroupIndex;
+    if (s.conceptId !== currentConceptId && movingForward && !examplesComplete(currentConceptId)) {
       setFocusPanel("lesson");
       examplesPanelRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
       say("Try every example in this concept first. Then we will unlock the next topic.");
