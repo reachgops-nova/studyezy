@@ -201,17 +201,31 @@ export default function CurriculumSelector({
               const hasProgress = u.totalConcepts !== undefined && u.coveredConcepts !== undefined;
               const done = hasProgress && u.totalConcepts! > 0 && u.coveredConcepts === u.totalConcepts;
               const started = hasProgress && (u.coveredConcepts ?? 0) > 0;
+              // Real user finding 2026-09-23: after failing a topic's Test,
+              // "Continue" looked identical whether everything covered so
+              // far was solid or not - nothing on this list said which unit
+              // still had unfinished business to come back to.
+              const needsReview = (u.needsReviewConcepts ?? 0) > 0;
               return (
                 <div
                   key={u.id}
                   className={`flex items-center justify-between gap-3 rounded-xl border px-4 py-3 ${
-                    u.available ? "border-brand-gold/40 bg-brand-gold-bright/10" : "border-slate-200 bg-slate-50 text-slate-400"
+                    !u.available
+                      ? "border-slate-200 bg-slate-50 text-slate-400"
+                      : needsReview
+                        ? "border-amber-400 bg-amber-50"
+                        : "border-brand-gold/40 bg-brand-gold-bright/10"
                   }`}
                 >
                   <div className="min-w-0">
                     <span>
                       Unit {u.id}: {u.title}
                     </span>
+                    {needsReview && (
+                      <span className="ml-2 rounded-full bg-amber-400 px-2 py-0.5 text-xs font-semibold text-amber-950">
+                        ⚠️ {u.needsReviewConcepts} to revisit
+                      </span>
+                    )}
                     {u.available && hasProgress && u.totalConcepts! > 0 && (
                       <div className="mt-1.5 flex items-center gap-2">
                         <div className="h-1.5 w-24 overflow-hidden rounded-full bg-slate-200">
@@ -229,9 +243,9 @@ export default function CurriculumSelector({
                   {u.available ? (
                     <Link
                       href={hasBoardRoute(u.unitKey) ? `/board/${u.unitKey}` : `/learn/${u.unitKey}`}
-                      className="shrink-0 rounded-md bg-brand-ink px-3 py-1.5 text-sm font-medium text-white hover:bg-brand-ink-dark"
+                      className={`shrink-0 rounded-md px-3 py-1.5 text-sm font-medium text-white ${needsReview ? "bg-amber-600 hover:bg-amber-700" : "bg-brand-ink hover:bg-brand-ink-dark"}`}
                     >
-                      {done ? "Review" : started ? "Continue" : "Start"}
+                      {needsReview ? "Revisit" : done ? "Review" : started ? "Continue" : "Start"}
                     </Link>
                   ) : (
                     <Badge>coming soon</Badge>

@@ -21,6 +21,15 @@ export interface CatalogUnit {
   totalConcepts?: number;
   /** How many of those this student has a ConceptMastery row for (attempted via a widget or test, not just viewed). */
   coveredConcepts?: number;
+  /**
+   * How many attempted concepts scored below "mastered" (band
+   * needs_brush_up/needs_reteach) - real user finding 2026-09-23: after a
+   * failed Test there was no way to tell, from the unit picker, which unit
+   * still had unfinished business - "Continue" looked identical whether
+   * everything covered so far was solid or not. Undefined when getCatalog()
+   * was called without a profileId, same as totalConcepts/coveredConcepts.
+   */
+  needsReviewConcepts?: number;
 }
 
 export interface CatalogSubject {
@@ -71,16 +80,17 @@ export async function getCatalog(profileId?: string): Promise<CatalogCurriculum[
     },
   });
 
-  const coveredConceptIds = profileId
-    ? new Set(
+  const masteryByConceptId = profileId
+    ? new Map(
         (
           await db.conceptMastery.findMany({
             where: { studentProfileId: profileId },
-            select: { conceptId: true },
+            select: { conceptId: true, band: true },
           })
-        ).map((m) => m.conceptId)
+        ).map((m) => [m.conceptId, m.band])
       )
     : null;
+  const coveredConceptIds = masteryByConceptId ? new Set(masteryByConceptId.keys()) : null;
 
   // A couple of real pages per book, sampled across its units, so a family can
   // check they are looking at the right textbook before committing to it.
@@ -125,6 +135,12 @@ export async function getCatalog(profileId?: string): Promise<CatalogCurriculum[
           totalConcepts: coveredConceptIds ? u.concepts.length : undefined,
           coveredConcepts: coveredConceptIds
             ? u.concepts.filter((concept) => coveredConceptIds.has(concept.id)).length
+            : undefined,
+          needsReviewConcepts: masteryByConceptId
+            ? u.concepts.filter((concept) => {
+                const band = masteryByConceptId.get(concept.id);
+                return band === "needs_brush_up" || band === "needs_reteach";
+              }).length
             : undefined,
         })),
       })),

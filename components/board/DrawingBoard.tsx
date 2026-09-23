@@ -388,6 +388,12 @@ export default function DrawingBoard({
       say("Try every example in this concept first. Then we will unlock the next topic.");
       return;
     }
+    // Jumping to a different topic from anywhere but Read used to leave
+    // Cover/Recite/Test/Results showing that OLD topic's answers and
+    // progress next to the NEW topic's board - switching topic always
+    // lands back on Read, same as finishing one topic and moving to the
+    // next already did.
+    if (s.conceptId !== currentConceptId) setPhase(1);
     setStep(i);
     setFocusPanel("lesson");
     setFrame(s.frame);
@@ -800,8 +806,14 @@ export default function DrawingBoard({
               across an illustration can reach forty steps, and a flat row of
               forty buttons is not navigable - so the row shows one button per
               concept, and its sub-steps appear underneath only while that
-              concept is the one being read. */}
-          {phase === 1 && (
+              concept is the one being read.
+              Real user finding 2026-09-23: this was gated to phase 1 only,
+              so failing a topic's Test (which never shows a "next topic"
+              button) left no way at all to reach any other topic - not even
+              one already completed - without knowing to click back to the
+              Read tab first. Visible on every phase now; loadStep() below
+              always returns to Read for whichever topic gets picked. */}
+          {(
             <div className="shrink-0 border-b border-slate-800 px-3 py-2">
               {/* Thirteen concepts laid flat ran to four rows and left the
                   board barely 230px tall, which is what was cropping the
