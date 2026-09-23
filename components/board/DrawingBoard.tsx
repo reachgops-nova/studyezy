@@ -1213,6 +1213,25 @@ export default function DrawingBoard({
               <p className="text-[0.8rem] text-slate-400">
                 Say the rule and the worked example shown on the board. Each prompt belongs to <strong className="text-slate-200">{activeConcept?.conceptId} {activeConcept?.title}</strong>; nothing from the next topic is included.
               </p>
+              {/* The mic below listens and answers in whatever language is
+                  picked here - real user finding 2026-09-23: this setting is
+                  shared with the Chat tab's own selector and can be left on
+                  a language from an earlier session with zero indication,
+                  so speaking English got heard and answered as Tamil with no
+                  way to see why. Surfaced right next to the mic it controls. */}
+              <label className="flex items-center gap-2 text-[0.72rem] font-bold text-slate-400">
+                Answer in
+                <select
+                  value={language}
+                  onChange={(event) => {
+                    setLanguage(event.target.value);
+                    localStorage.setItem("studyezy_language", event.target.value);
+                  }}
+                  className="rounded-lg border-2 border-slate-700 bg-[#1e293b] px-2 py-1 text-[0.72rem] font-bold text-slate-200 outline-none focus:border-[#38bdf8]"
+                >
+                  {BOARD_LANGUAGES.map((item) => <option key={item.code} value={item.code}>{item.label}</option>)}
+                </select>
+              </label>
               <div className="flex flex-col gap-2">
                 {topicRecitePrompts.map((r) => (
                   <ReciteCard key={r.ask} prompt={r} onSay={say} unitKey={unit.unitKey} conceptId={activeConceptId ?? unit.concepts[0]?.conceptId ?? ""} languageCode={language} languageLabel={BOARD_LANGUAGES.find((item) => item.code === language)?.label ?? "English"} onComplete={() => activeConceptId && markReciteComplete(activeConceptId)} />
@@ -1348,17 +1367,11 @@ export default function DrawingBoard({
               💬 Ask Ezy about this lesson
             </h2>
             <div className="flex min-h-0 flex-1 flex-col gap-1.5 px-3 pb-3">
-              {unit.readymade.map((r) => (
-                <button
-                  key={r.q}
-                  type="button"
-                  onClick={() => ask(r.q, r.a)}
-                  className="rounded-xl border-2 border-slate-700 bg-[#1e293b] px-3 py-2 text-left text-[0.8rem] font-semibold text-slate-300 transition-colors hover:border-[#38bdf8] hover:text-[#38bdf8]"
-                >
-                  {r.q}
-                </button>
-              ))}
-              <div className="mt-1 rounded-xl border-2 border-[#38bdf8]/50 bg-[#0b1329] p-2.5">
+              {/* Real user finding 2026-09-23: with a long readymade-question
+                  list this input sat below the fold with nothing on screen
+                  hinting it existed - moved above the suggestions, which now
+                  scroll in their own capped box instead of pushing it down. */}
+              <div className="rounded-xl border-2 border-[#38bdf8]/50 bg-[#0b1329] p-2.5">
                 <p className="mb-1.5 text-[0.7rem] font-extrabold uppercase tracking-wider text-[#34d399]">Ask about this topic</p>
                 <div className="flex gap-1.5">
                   <label className="sr-only" htmlFor="board-language">Response language</label>
@@ -1401,6 +1414,18 @@ export default function DrawingBoard({
                   </button>
                 </div>
                 {chatNotice && <p className="mt-1.5 text-[0.68rem] font-semibold text-[#7dd3fc]">{chatNotice}</p>}
+              </div>
+              <div className="flex max-h-36 flex-col gap-1.5 overflow-y-auto pr-0.5">
+                {unit.readymade.map((r) => (
+                  <button
+                    key={r.q}
+                    type="button"
+                    onClick={() => ask(r.q, r.a)}
+                    className="rounded-xl border-2 border-slate-700 bg-[#1e293b] px-3 py-2 text-left text-[0.8rem] font-semibold text-slate-300 transition-colors hover:border-[#38bdf8] hover:text-[#38bdf8]"
+                  >
+                    {r.q}
+                  </button>
+                ))}
               </div>
               <div className={`flex flex-col gap-1.5 overflow-y-auto rounded-xl border border-slate-700 bg-[#090d16] p-2 ${focusPanel === "chat" ? "min-h-0 flex-1" : "max-h-32"}`}>
                 {chat.map((m, i) => (
