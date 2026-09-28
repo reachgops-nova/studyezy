@@ -3,20 +3,22 @@ import { LogoMark } from "./Logo";
 import AccountMenu from "./AccountMenu";
 import DesktopSidebar from "./DesktopSidebar";
 import UnitSwitcher from "./UnitSwitcher";
-import { BookIcon, ChartIcon, ClipboardIcon } from "./NavIcons";
+import { BookIcon, ChartIcon, ClipboardIcon, ExamIcon } from "./NavIcons";
 import { getSwitcherGroups } from "@/lib/catalog";
 
 type NavKey =
   | "select"
   | "dashboard"
   | "plan"
+  | "exams"
   | "manage"
   | "admin"
   | "admin-resources"
   | "admin-pricing"
   | "admin-compare"
   | "admin-content-packs"
-  | "admin-ai-costs";
+  | "admin-ai-costs"
+  | "admin-exams";
 
 // Desktop (lg+): fixed left sidebar for primary nav + a slim top bar holding
 // just the account menu ("topside configurations"), main content to the
@@ -53,7 +55,8 @@ export default async function AppShell({
     active === "admin-pricing" ||
     active === "admin-compare" ||
     active === "admin-content-packs" ||
-    active === "admin-ai-costs"
+    active === "admin-ai-costs" ||
+    active === "admin-exams"
       ? active
       : undefined;
 
@@ -84,6 +87,9 @@ export default async function AppShell({
               </NavPill>
               <NavPill href="/plan" isActive={active === "plan"} icon={<ClipboardIcon />}>
                 Prep Plan
+              </NavPill>
+              <NavPill href="/exams" isActive={active === "exams"} icon={<ExamIcon />}>
+                Exams
               </NavPill>
             </nav>
             <div className="shrink-0">

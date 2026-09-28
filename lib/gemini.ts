@@ -3,11 +3,15 @@ import { logAiCost } from "./aiCost";
 import {
   parseExtractedConcepts,
   parseQuestionPaperResponse,
+  parseTermExamPapersResponse,
   questionPaperSystemPrompt,
+  termExamSystemPrompt,
   EXTRACTION_SYSTEM_PROMPT,
   FREEFORM_EXTRACTION_SYSTEM_PROMPT,
   type ExpectedConcept,
   type ExtractionSourceFile,
+  type TermExamUnitContent,
+  type TermExamDraftPaper,
 } from "./claude";
 import type { Concept, ProgressionTestDraft, QuestionPaperDifficulty } from "./types";
 
@@ -168,6 +172,28 @@ export async function generateQuestionPaperGemini(
     { text: `Concepts this unit covers:\n${JSON.stringify(concepts, null, 2)}` },
   ]);
   return parseQuestionPaperResponse(raw);
+}
+
+/** Same contract as lib/claude.ts's generateTermExamPapers - text-only, no
+ * source images, since the portion's Board/Concept content is already text.
+ * Tried first in production (see the module comment above - ANTHROPIC_API_KEY
+ * isn't set there), with maxOutputTokens raised to 16000: two full 100-mark
+ * papers plus their answer keys is a bigger JSON payload than a single
+ * question paper. */
+export async function generateTermExamPapersGemini(
+  subjectName: string,
+  stageLabel: string,
+  units: TermExamUnitContent[],
+  paperCount: number,
+  totalMarks: number
+): Promise<TermExamDraftPaper[]> {
+  const result = await geminiGenerateRaw(
+    "term-exam-paper-gemini",
+    termExamSystemPrompt(subjectName, stageLabel, paperCount, totalMarks),
+    [{ text: `Portion to cover (${units.length} unit(s)):\n${JSON.stringify(units, null, 2)}` }],
+    16000
+  );
+  return parseTermExamPapersResponse(result.text);
 }
 
 /**

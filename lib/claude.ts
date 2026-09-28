@@ -699,6 +699,124 @@ export async function generateQuestionPaper(
   return parseQuestionPaperResponse(raw);
 }
 
+export interface TermExamUnitContent {
+  unitKey: string;
+  title: string;
+  concepts: { title: string; summary: string; keyPoints: string[] }[];
+}
+
+export interface TermExamDraftQuestion {
+  number: string;
+  prompt: string;
+  marks: number;
+}
+
+export interface TermExamDraftSection {
+  label: string;
+  instructions?: string;
+  marks: number;
+  questions: TermExamDraftQuestion[];
+}
+
+export interface TermExamDraftAnswer {
+  number: string;
+  modelAnswer: string;
+  marks: number;
+  markingNotes?: string;
+}
+
+export interface TermExamDraftAnswerSection {
+  label: string;
+  answers: TermExamDraftAnswer[];
+}
+
+export interface TermExamDraftPaper {
+  paperNumber: number;
+  title: string;
+  totalMarks: number;
+  sections: TermExamDraftSection[];
+  answerSections: TermExamDraftAnswerSection[];
+}
+
+// No fixed board blueprint exists for this school's terminal exams (teacher
+// confirmation, 2026-09-27) - this prompt builds a rigorous but flexible
+// structure rather than following one, and is deliberately told to test
+// transfer (the same concept in an unfamiliar framing), not just recall of
+// the exact textbook wording, per the same conversation.
+export function termExamSystemPrompt(subjectName: string, stageLabel: string, paperCount: number, totalMarks: number): string {
+  return `You are writing ${paperCount} full terminal-examination papers for ${stageLabel} ${subjectName}, for a real school's end-of-term exam. There is no fixed board blueprint to follow - design a rigorous, well-rounded paper yourself.
+
+You will be given the portion (units and their concepts, each with a summary and key points) that this exam covers.
+
+Each paper must:
+- Total exactly ${totalMarks} marks.
+- Be split into sections mixing question types: an OBJECTIVE section (multiple-choice, matching a word to its meaning, opposites/antonyms, vocabulary-in-context, idiom recognition/matching, fill-in-the-blank - quick, single-answer items), short recall/definition questions, short-answer questions (2-3 sentences), structured/application questions that apply a concept to a NEW scenario not used in the source material (this matters most - a student who only memorized the textbook example must not be able to answer these from memory alone), and at least one longer extended-response question.
+- Weight marks across units roughly by how much content each unit represents (a unit with many concepts should carry more marks than one with few), not a flat split.
+- Number questions sequentially within each section (plain numbers, or "2(a)"/"2(b)" for sub-parts). For multiple-choice, put the options directly in the question's "prompt" text (e.g. "...? A) ... B) ... C) ... D) ...").
+- If more than one paper is requested, they must NOT reuse the same questions, AND must not repeat the same per-unit mark composition - genuinely vary how marks are split across the units/sections from one paper to the next, not just the wording of the questions.
+
+For each paper also write a complete separate answer key: for every question, a model answer (not just a final answer - show the expected reasoning/working where relevant) and how the marks for that question are allocated across its parts.
+
+Respond with ONLY a JSON object, no other text, no markdown fences, matching this shape:
+{"papers": [{"paperNumber": number, "title": string, "totalMarks": number, "sections": [{"label": string, "instructions": string, "marks": number, "questions": [{"number": string, "prompt": string, "marks": number}]}], "answerSections": [{"label": string, "answers": [{"number": string, "modelAnswer": string, "marks": number, "markingNotes": string}]}]}]}
+
+- Each paper's "answerSections" must have the exact same "label" values as its own "sections", in the same order, and each answer's "number" must match its question's "number".
+- Every section's own "questions[].marks" must sum to that section's "marks", and every paper's sections' "marks" must sum to ${totalMarks}.`;
+}
+
+// Shared by every term-exam-generating provider (Claude here, Gemini in
+// lib/gemini.ts), same reasoning as parseQuestionPaperResponse above.
+export function parseTermExamPapersResponse(raw: string): TermExamDraftPaper[] {
+  let parsed: { papers?: TermExamDraftPaper[] };
+  try {
+    parsed = JSON.parse(raw) as { papers?: TermExamDraftPaper[] };
+  } catch {
+    throw new Error("Couldn't generate terminal exam papers from that portion - please try again.");
+  }
+  return parsed.papers ?? [];
+}
+
+/**
+ * Generates full terminal-exam papers (real school terminal exam, not a
+ * self-test practice bank) from a chosen portion of units, each with its own
+ * separately-stored answer key - see lib/termExams.ts and prisma's
+ * TermExamPaper/TermExamAnswerKey models. Runs on the same extraction-tier
+ * model as generateQuestionPaper (admin-triggered, rare, quality matters more
+ * than marginal cost) but is a pure-text call - no source images, since the
+ * portion's already-vetted Board/Concept content is the source, not a scan.
+ */
+export async function generateTermExamPapers(
+  subjectName: string,
+  stageLabel: string,
+  units: TermExamUnitContent[],
+  paperCount: number,
+  totalMarks: number
+): Promise<TermExamDraftPaper[]> {
+  const response = await getClient().messages.create({
+    model: EXTRACTION_MODEL,
+    max_tokens: 8000,
+    output_config: { effort: "high" },
+    system: [
+      {
+        type: "text",
+        text: termExamSystemPrompt(subjectName, stageLabel, paperCount, totalMarks),
+        cache_control: { type: "ephemeral" },
+      },
+    ],
+    messages: [
+      {
+        role: "user",
+        content: `Portion to cover (${units.length} unit(s)):\n${JSON.stringify(units, null, 2)}`,
+      },
+    ],
+  });
+
+  logAiCost("term-exam-paper", EXTRACTION_MODEL, response.usage.input_tokens, response.usage.output_tokens);
+  const textBlock = response.content.find((block) => block.type === "text");
+  const raw = textBlock && textBlock.type === "text" ? textBlock.text : "{}";
+  return parseTermExamPapersResponse(raw);
+}
+
 export interface ExamCoachingResult {
   technique_notes: string[];
   overall_note: string;

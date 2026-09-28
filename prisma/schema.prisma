@@ -36,6 +36,9 @@ model User {
   approvedResources   UnitResource[]       @relation("ResourceApprovedBy")
   textbookSubmissions TextbookSubmission[]
   referenceUploads    ReferenceUpload[]
+  createdTermExamPapers    TermExamPaper[]         @relation("TermExamPaperCreatedBy")
+  termExamAccessRequests   TermExamAccessRequest[] @relation("TermExamAccessRequestedBy")
+  respondedTermExamRequests TermExamAccessRequest[] @relation("TermExamAccessRespondedBy")
 }
 
 model Session {
@@ -104,6 +107,7 @@ model StudentProfile {
   worksheetAttempts WorksheetAttempt[]
   unitProgress      UnitProgress[]
   worksheetProgress WorksheetProgress[]
+  termExamAccessRequests TermExamAccessRequest[]
 }
 
 // --- curriculum hierarchy ---
@@ -141,8 +145,75 @@ model Subject {
   textbookSubmissions TextbookSubmission[]
   createdAt           DateTime             @default(now())
   units               Unit[]
+  termExamPapers      TermExamPaper[]
 
   @@unique([stageId, slug])
+}
+
+// A formal, school-style terminal-examination paper for a subject - distinct
+// from QuestionPaper (a single unit's own self-test bank, one difficulty
+// tier). Teachers confirmed there is no fixed board blueprint for these, so
+// `sections` is a flexible, admin/AI-authored structure covering a chosen
+// portion of units (unitIds), not one generated formula - see lib/termExams.ts
+// for the shape. Real requirement (2026-09-27): at least 2 full papers per
+// portion, each with its own separately-stored answer key, and the key stays
+// hidden from parents until an admin approves their in-app request
+// (TermExamAccessRequest) - never auto-visible like a QuestionPaper's answers.
+model TermExamPaper {
+  id              String   @id @default(cuid())
+  subjectId       String
+  subject         Subject  @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  title           String
+  paperNumber     Int
+  // Unit.id values the portion covers - a weak reference (not a join table),
+  // matching this codebase's existing convention for portion-style lists
+  // (e.g. Concept.bookPages, QuestionPaper.coversConcepts) since the set is
+  // small and never queried from the Unit side.
+  unitIds         String[]
+  totalMarks      Int
+  durationMinutes Int?
+  sections        Json // TermExamSection[] - see lib/termExams.ts
+  status          String   @default("draft") // "draft" | "published"
+  createdByUserId String?
+  createdBy       User?    @relation("TermExamPaperCreatedBy", fields: [createdByUserId], references: [id])
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  answerKey      TermExamAnswerKey?
+  accessRequests TermExamAccessRequest[]
+
+  @@index([subjectId, status])
+}
+
+model TermExamAnswerKey {
+  id        String        @id @default(cuid())
+  paperId   String        @unique
+  paper     TermExamPaper @relation(fields: [paperId], references: [id], onDelete: Cascade)
+  sections  Json // TermExamAnswerSection[] - model answers + marking scheme, mirrors paper.sections
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+}
+
+// One parent's request to view a paper's answer key, and the admin's
+// decision on it - kept as a durable log (not just a boolean flag on the
+// paper) since access is per requester, not global once approved.
+model TermExamAccessRequest {
+  id                String          @id @default(cuid())
+  paperId           String
+  paper             TermExamPaper   @relation(fields: [paperId], references: [id], onDelete: Cascade)
+  requestedByUserId String
+  requestedBy       User            @relation("TermExamAccessRequestedBy", fields: [requestedByUserId], references: [id], onDelete: Cascade)
+  studentProfileId  String?
+  studentProfile    StudentProfile? @relation(fields: [studentProfileId], references: [id], onDelete: SetNull)
+  note              String?
+  status            String          @default("pending") // "pending" | "approved" | "denied"
+  respondedByUserId String?
+  respondedBy       User?           @relation("TermExamAccessRespondedBy", fields: [respondedByUserId], references: [id])
+  respondedAt       DateTime?
+  createdAt         DateTime        @default(now())
+
+  @@index([paperId, status])
+  @@index([requestedByUserId])
 }
 
 model Unit {

@@ -4,20 +4,22 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import Logo, { LogoMark } from "./Logo";
 import UnitSwitcher from "./UnitSwitcher";
-import { BookIcon, ChartIcon, ClipboardIcon, FolderPlusIcon, ShieldIcon, ArchiveIcon, TagIcon, ScaleIcon, LayersIcon, CoinIcon } from "./NavIcons";
+import { BookIcon, ChartIcon, ClipboardIcon, ExamIcon, FolderPlusIcon, ShieldIcon, ArchiveIcon, TagIcon, ScaleIcon, LayersIcon, CoinIcon } from "./NavIcons";
 import type { SwitcherGroup } from "@/lib/catalog";
 
 type NavKey =
   | "select"
   | "dashboard"
   | "plan"
+  | "exams"
   | "manage"
   | "admin"
   | "admin-resources"
   | "admin-pricing"
   | "admin-compare"
   | "admin-content-packs"
-  | "admin-ai-costs";
+  | "admin-ai-costs"
+  | "admin-exams";
 
 const STORAGE_KEY = "studyezy_sidebar_collapsed";
 
@@ -99,6 +101,9 @@ export default function DesktopSidebar({
         <SidebarLink href="/plan" isActive={active === "plan"} icon={<ClipboardIcon />} collapsed={collapsed}>
           Prep Plan
         </SidebarLink>
+        <SidebarLink href="/exams" isActive={active === "exams"} icon={<ExamIcon />} collapsed={collapsed}>
+          Exams
+        </SidebarLink>
       </nav>
 
       <div className="mt-6 border-t border-slate-200 pt-6">
@@ -131,6 +136,9 @@ export default function DesktopSidebar({
               </SidebarLink>
               <SidebarLink href="/admin/ai-costs" isActive={active === "admin-ai-costs"} icon={<CoinIcon />} collapsed={collapsed}>
                 AI costs
+              </SidebarLink>
+              <SidebarLink href="/admin/exams" isActive={active === "admin-exams"} icon={<ExamIcon />} collapsed={collapsed}>
+                Terminal exam papers
               </SidebarLink>
             </>
           )}

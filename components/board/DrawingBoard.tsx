@@ -299,8 +299,6 @@ export default function DrawingBoard({
 
   const activeConcept = unit.concepts.find((c) => c.conceptId === unit.conceptSteps[step]?.conceptId);
 
-  /** The full concept list, hidden by default so the board keeps its height. */
-  const [pickerOpen, setPickerOpen] = useState(true);
   // Lesson content owns the workspace initially. Chat becomes a compact bar
   // while a child is learning, then takes the full workspace only when opened.
   const [focusPanel, setFocusPanel] = useState<"lesson" | "chat">("lesson");
@@ -352,7 +350,6 @@ export default function DrawingBoard({
     setPhase(1);
     setFocusPanel("lesson");
     setFrame(next.frame ?? {});
-    setPickerOpen(true);
     say(`Great work. ${activeGroup?.label ?? "That topic"} is complete. Now let's learn ${nextGroup?.label ?? "the next topic"}.`, undefined, "en-GB");
   }
 
@@ -802,76 +799,60 @@ export default function DrawingBoard({
       <div className="relative grid min-h-0 flex-1 gap-3 p-2.5 sm:p-3 lg:grid-cols-[minmax(0,1fr)_22rem]">
         {/* ---------- Board ---------- */}
         <section className="flex min-h-0 flex-col overflow-hidden rounded-3xl border-4 border-slate-700 bg-[#0f172a] shadow-2xl">
-          {/* Grouped by concept. A unit where several concepts are walked
-              across an illustration can reach forty steps, and a flat row of
-              forty buttons is not navigable - so the row shows one button per
-              concept, and its sub-steps appear underneath only while that
-              concept is the one being read.
-              Real user finding 2026-09-23: this was gated to phase 1 only,
-              so failing a topic's Test (which never shows a "next topic"
-              button) left no way at all to reach any other topic - not even
-              one already completed - without knowing to click back to the
-              Read tab first. Visible on every phase now; loadStep() below
-              always returns to Read for whichever topic gets picked. */}
-          {(
-            <div className="shrink-0 border-b border-slate-800 px-3 py-2">
-              {/* Thirteen concepts laid flat ran to four rows and left the
-                  board barely 230px tall, which is what was cropping the
-                  artwork. Collapsed to the concept being read, with the full
-                  list one tap away. */}
-              <div className="flex items-center justify-center gap-2">
-                <button
-                  type="button"
-                  onClick={() => setPickerOpen((v) => !v)}
-                  aria-expanded={pickerOpen}
-                  className="rounded-xl border-2 border-slate-700 bg-slate-900/95 px-2.5 py-1.5 text-xs font-bold text-slate-300 transition-colors hover:border-[#38bdf8] hover:text-white"
-                  title="Show every concept in this chapter"
-                >
-                  {pickerOpen ? "✕" : "☰"} {conceptGroups.length}
-                </button>
-                <span className="rounded-xl border-2 border-[#f59e0b] bg-[#f59e0b] px-3 py-1.5 text-xs font-bold text-[#020617]">
-                  {activeGroup ? activeGroup.label : "Read"}
-                </span>
-              </div>
-              {pickerOpen && (
-                <div className="mt-2 max-h-48 overflow-y-auto rounded-2xl border border-slate-800 bg-[#090d16] p-2">
-                  <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-3">
-                    {conceptGroups.map((g) => {
-                      const isHere = g.indexes.includes(step);
-                      const status = conceptStatus(g.key);
-                      const statusLabel = status.test ? "Complete" : status.recite ? "Test pending" : status.cover ? "Recite pending" : status.read ? "Cover pending" : "Read pending";
-                      return (
-                        <div key={g.key} className={`rounded-xl border p-2 ${isHere ? "border-[#f59e0b]/70 bg-[#f59e0b]/10" : "border-slate-800 bg-[#0f172a]"}`}>
+          {/* Grouped by concept, shown as a slim rail down the LEFT of the
+              board rather than a horizontal row of cards above it - real
+              user finding 2026-09-26: the old row of concept cards (even
+              collapsed to one row) ate enough vertical space that the
+              artwork below it was cropped or pushed off-screen, on exactly
+              the kind of image-heavy Science step this board most needs to
+              show clearly. A vertical rail costs width, which this board has
+              more of than height, and never grows when a chapter gains
+              concepts - only the rail's own scroll region does.
+              Sub-steps for the concept being read appear as small numbered
+              chips under its row; other concepts stay collapsed to their
+              one-line label so the rail stays scannable at a glance. */}
+          <div className="flex min-h-0 flex-1">
+            <nav
+              className="flex w-[6.5rem] shrink-0 flex-col gap-0.5 overflow-y-auto border-r border-slate-800 bg-[#090d16]/70 p-1.5 sm:w-32"
+              aria-label="Concepts in this chapter"
+            >
+              {conceptGroups.map((g) => {
+                const isHere = g.indexes.includes(step);
+                const status = conceptStatus(g.key);
+                return (
+                  <div key={g.key}>
+                    <button
+                      type="button"
+                      onClick={() => loadStep(g.indexes[0])}
+                      title={g.label}
+                      className={`w-full rounded-lg px-1.5 py-1.5 text-left text-[0.68rem] font-bold leading-tight transition-colors ${
+                        isHere ? "bg-[#f59e0b]/15 text-[#fef08a]" : "text-slate-400 hover:bg-slate-800/60 hover:text-white"
+                      }`}
+                    >
+                      <span className={`mr-1 inline-block h-1.5 w-1.5 rounded-full align-middle ${status.test ? "bg-[#34d399]" : "bg-[#f59e0b]"}`} />
+                      {g.label}
+                    </button>
+                    {isHere && g.indexes.length > 1 && (
+                      <div className="mb-1 ml-1.5 flex flex-wrap gap-1">
+                        {g.indexes.map((idx, n) => (
                           <button
+                            key={idx}
                             type="button"
-                            onClick={() => loadStep(g.indexes[0])}
-                            className={`w-full rounded-lg px-2 py-1 text-left text-xs font-extrabold transition-colors ${isHere ? "text-[#fef08a]" : "text-slate-300 hover:text-white"}`}
+                            onClick={() => loadStep(idx)}
+                            title={unit.conceptSteps[idx].label.replace(/^\S+\s*/, "")}
+                            className={`rounded px-1 py-0.5 text-[0.6rem] font-bold transition-colors ${
+                              idx === step ? "bg-[#38bdf8]/25 text-[#7dd3fc]" : "text-slate-500 hover:text-slate-200"
+                            }`}
                           >
-                            {g.label}
+                            {n + 1}
                           </button>
-                          <p className={`mt-1 text-[0.62rem] font-bold ${status.test ? "text-[#34d399]" : "text-[#f59e0b]"}`}>
-                            {status.test ? "✅" : "⏳"} {statusLabel}
-                          </p>
-                          <div className="mt-1 flex flex-wrap gap-1">
-                            {g.indexes.map((idx, n) => (
-                              <button
-                                key={idx}
-                                type="button"
-                                onClick={() => loadStep(idx)}
-                                className={`rounded-md border px-1.5 py-1 text-[0.65rem] font-bold transition-colors ${idx === step ? "border-[#38bdf8] bg-[#38bdf8]/20 text-[#7dd3fc]" : "border-slate-700 text-slate-500 hover:border-[#38bdf8] hover:text-slate-200"}`}
-                              >
-                                {n + 1}. {unit.conceptSteps[idx].label.replace(/^\S+\s*/, "")}
-                              </button>
-                            ))}
-                          </div>
-                        </div>
-                      );
-                    })}
+                        ))}
+                      </div>
+                    )}
                   </div>
-                </div>
-              )}
-            </div>
-          )}
+                );
+              })}
+            </nav>
 
           <div className="relative flex min-h-0 flex-1 items-center justify-center p-3">
             {frame.image ? (
@@ -1062,6 +1043,7 @@ export default function DrawingBoard({
             )}
 
             {phase === 3 && activeConcept ? <ReciteBoardCard concept={activeConcept} /> : null}
+          </div>
           </div>
 
           {/* Narration */}
@@ -1689,6 +1671,19 @@ function ImageStage({ frame, onTap }: { frame: BoardFrame; onTap?: (t: string) =
             </button>
             );
           })}
+          {I.motionPath && (
+            <svg
+              viewBox="0 0 100 100"
+              preserveAspectRatio="none"
+              className="pointer-events-none absolute inset-0 h-full w-full"
+            >
+              <AnimatedPathToken
+                d={`M ${I.motionPath.points.map(([x, y]) => `${x} ${y}`).join(" L ")}`}
+                radius={1.6 * (1 / scale)}
+                color={TONE[I.motionPath.tone ?? "blue"]}
+              />
+            </svg>
+          )}
         </div>
       </div>
       <p className="shrink-0 text-[0.78rem] text-slate-500">Tap a label to hear more.</p>
@@ -1702,7 +1697,7 @@ function ImageStage({ frame, onTap }: { frame: BoardFrame; onTap?: (t: string) =
  * as the shape/number-line motion, generalised to any SVG path instead of a
  * straight line or a polygon's own vertices.
  */
-function AnimatedPathToken({ d, onDone }: { d: string; onDone?: () => void }) {
+function AnimatedPathToken({ d, onDone, radius = 7, color = "#38bdf8" }: { d: string; onDone?: () => void; radius?: number; color?: string }) {
   const pathRef = useRef<SVGPathElement>(null);
   const [dotAt, setDotAt] = useState<{ x: number; y: number } | null>(null);
   const [done, setDone] = useState(false);
@@ -1737,7 +1732,7 @@ function AnimatedPathToken({ d, onDone }: { d: string; onDone?: () => void }) {
   return (
     <>
       <path ref={pathRef} d={d} fill="none" stroke="none" />
-      {!done && dotAt && <circle cx={dotAt.x} cy={dotAt.y} r={7} fill="#38bdf8" stroke="#0b1329" strokeWidth={2} />}
+      {!done && dotAt && <circle cx={dotAt.x} cy={dotAt.y} r={radius} fill={color} stroke="#0b1329" strokeWidth={radius / 3.5} />}
     </>
   );
 }

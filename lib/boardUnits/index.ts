@@ -10,6 +10,16 @@ import { PENDING_MATH_BOARD_UNITS } from "./cambridge-4-math-pending";
 import { PENDING_ENGLISH_BOARD_UNITS } from "./cambridge-5-english-pending";
 import { TAMILNADU_9_SCIENCE_1 } from "./tamilnadustateboard-9-science-1";
 import { PENDING_TAMILNADU_9_SCIENCE_UNITS } from "./tamilnadustateboard-9-science-pending";
+import { CAMBRIDGE_4_SCIENCE_1 } from "./cambridge-4-science-1";
+import { CAMBRIDGE_4_SCIENCE_2 } from "./cambridge-4-science-2";
+import { CAMBRIDGE_4_SCIENCE_3 } from "./cambridge-4-science-3";
+import { CAMBRIDGE_4_SCIENCE_4 } from "./cambridge-4-science-4";
+import { CAMBRIDGE_4_SCIENCE_5 } from "./cambridge-4-science-5";
+import { CAMBRIDGE_4_SCIENCE_6 } from "./cambridge-4-science-6";
+import { CAMBRIDGE_4_SCIENCE_7 } from "./cambridge-4-science-7";
+import { CAMBRIDGE_4_SCIENCE_8 } from "./cambridge-4-science-8";
+import { CAMBRIDGE_4_SCIENCE_9 } from "./cambridge-4-science-9";
+import { CAMBRIDGE_4_SCIENCE_10 } from "./cambridge-4-science-10";
 
 /**
  * Every unit that has a Drawing Board, keyed by unitKey. Adding a unit is
@@ -28,6 +38,16 @@ const RAW_BOARD_UNITS: Record<string, BoardUnit> = {
   ...PENDING_ENGLISH_BOARD_UNITS,
   [TAMILNADU_9_SCIENCE_1.unitKey]: TAMILNADU_9_SCIENCE_1,
   ...PENDING_TAMILNADU_9_SCIENCE_UNITS,
+  [CAMBRIDGE_4_SCIENCE_1.unitKey]: CAMBRIDGE_4_SCIENCE_1,
+  [CAMBRIDGE_4_SCIENCE_2.unitKey]: CAMBRIDGE_4_SCIENCE_2,
+  [CAMBRIDGE_4_SCIENCE_3.unitKey]: CAMBRIDGE_4_SCIENCE_3,
+  [CAMBRIDGE_4_SCIENCE_4.unitKey]: CAMBRIDGE_4_SCIENCE_4,
+  [CAMBRIDGE_4_SCIENCE_5.unitKey]: CAMBRIDGE_4_SCIENCE_5,
+  [CAMBRIDGE_4_SCIENCE_6.unitKey]: CAMBRIDGE_4_SCIENCE_6,
+  [CAMBRIDGE_4_SCIENCE_7.unitKey]: CAMBRIDGE_4_SCIENCE_7,
+  [CAMBRIDGE_4_SCIENCE_8.unitKey]: CAMBRIDGE_4_SCIENCE_8,
+  [CAMBRIDGE_4_SCIENCE_9.unitKey]: CAMBRIDGE_4_SCIENCE_9,
+  [CAMBRIDGE_4_SCIENCE_10.unitKey]: CAMBRIDGE_4_SCIENCE_10,
 };
 
 /**
@@ -150,5 +170,9 @@ export const BOARD_UNITS: Record<string, BoardUnit> = Object.fromEntries(
 /** Cambridge textbook units are DB-processed and can use the generic Board
  * adapter even before a bespoke visual file is authored. */
 export function hasBoardRoute(unitKey: string): boolean {
-  return Boolean(BOARD_UNITS[unitKey]) || /^cambridge-(?:4-math|5-english)-\d+$/.test(unitKey) || /^tamilnadustateboard-9-science-\d+$/.test(unitKey);
+  return (
+    Boolean(BOARD_UNITS[unitKey]) ||
+    /^cambridge-(?:4-math|4-science|5-english)-\d+$/.test(unitKey) ||
+    /^tamilnadustateboard-9-science-\d+$/.test(unitKey)
+  );
 }

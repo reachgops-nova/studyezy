@@ -181,6 +181,15 @@ export type ImageFrame = {
   hotspots?: { label: string; at: [number, number]; note: string; tone?: Tone }[];
   /** The region to zoom to. Omitted shows the whole picture. */
   focus?: { x: number; y: number; w: number; h: number };
+  /**
+   * A token that travels across the picture once per visit - the pollen tube
+   * growing down the style, a bee flying flower to flower, a root pushing
+   * into soil. Points are in the same image-percentage space as `at` on a
+   * hotspot, so they can be read straight off the same picture. Real user
+   * direction 2026-09-26: the life-cycle poster's stages read as still
+   * photos with labels, not as a process the child watches happen.
+   */
+  motionPath?: { points: [number, number][]; label?: string; tone?: Tone };
 };
 
 export type BoardFrame = {
