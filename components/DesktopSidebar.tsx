@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import Logo, { LogoMark } from "./Logo";
 import UnitSwitcher from "./UnitSwitcher";
-import { BookIcon, ChartIcon, ClipboardIcon, ExamIcon, FolderPlusIcon, ShieldIcon, ArchiveIcon, TagIcon, ScaleIcon, LayersIcon, CoinIcon } from "./NavIcons";
+import { BookIcon, ChartIcon, ClipboardIcon, ExamIcon, CompassIcon, FolderPlusIcon, ShieldIcon, ArchiveIcon, TagIcon, ScaleIcon, LayersIcon, CoinIcon } from "./NavIcons";
 import type { SwitcherGroup } from "@/lib/catalog";
 
 type NavKey =
@@ -12,6 +12,7 @@ type NavKey =
   | "dashboard"
   | "plan"
   | "exams"
+  | "careers"
   | "manage"
   | "admin"
   | "admin-resources"
@@ -19,7 +20,8 @@ type NavKey =
   | "admin-compare"
   | "admin-content-packs"
   | "admin-ai-costs"
-  | "admin-exams";
+  | "admin-exams"
+  | "admin-careers";
 
 const STORAGE_KEY = "studyezy_sidebar_collapsed";
 
@@ -104,6 +106,9 @@ export default function DesktopSidebar({
         <SidebarLink href="/exams" isActive={active === "exams"} icon={<ExamIcon />} collapsed={collapsed}>
           Exams
         </SidebarLink>
+        <SidebarLink href="/careers" isActive={active === "careers"} icon={<CompassIcon />} collapsed={collapsed}>
+          Careers
+        </SidebarLink>
       </nav>
 
       <div className="mt-6 border-t border-slate-200 pt-6">
@@ -139,6 +144,9 @@ export default function DesktopSidebar({
               </SidebarLink>
               <SidebarLink href="/admin/exams" isActive={active === "admin-exams"} icon={<ExamIcon />} collapsed={collapsed}>
                 Terminal exam papers
+              </SidebarLink>
+              <SidebarLink href="/admin/careers" isActive={active === "admin-careers"} icon={<CompassIcon />} collapsed={collapsed}>
+                Career paths
               </SidebarLink>
             </>
           )}

@@ -3,7 +3,7 @@ import { LogoMark } from "./Logo";
 import AccountMenu from "./AccountMenu";
 import DesktopSidebar from "./DesktopSidebar";
 import UnitSwitcher from "./UnitSwitcher";
-import { BookIcon, ChartIcon, ClipboardIcon, ExamIcon } from "./NavIcons";
+import { BookIcon, ChartIcon, ClipboardIcon, ExamIcon, CompassIcon } from "./NavIcons";
 import { getSwitcherGroups } from "@/lib/catalog";
 
 type NavKey =
@@ -11,6 +11,7 @@ type NavKey =
   | "dashboard"
   | "plan"
   | "exams"
+  | "careers"
   | "manage"
   | "admin"
   | "admin-resources"
@@ -18,7 +19,8 @@ type NavKey =
   | "admin-compare"
   | "admin-content-packs"
   | "admin-ai-costs"
-  | "admin-exams";
+  | "admin-exams"
+  | "admin-careers";
 
 // Desktop (lg+): fixed left sidebar for primary nav + a slim top bar holding
 // just the account menu ("topside configurations"), main content to the
@@ -56,7 +58,8 @@ export default async function AppShell({
     active === "admin-compare" ||
     active === "admin-content-packs" ||
     active === "admin-ai-costs" ||
-    active === "admin-exams"
+    active === "admin-exams" ||
+    active === "admin-careers"
       ? active
       : undefined;
 
@@ -90,6 +93,9 @@ export default async function AppShell({
               </NavPill>
               <NavPill href="/exams" isActive={active === "exams"} icon={<ExamIcon />}>
                 Exams
+              </NavPill>
+              <NavPill href="/careers" isActive={active === "careers"} icon={<CompassIcon />}>
+                Careers
               </NavPill>
             </nav>
             <div className="shrink-0">

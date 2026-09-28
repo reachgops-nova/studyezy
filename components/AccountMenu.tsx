@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { signOut } from "@/app/login/actions";
-import { ChevronDownIcon, FolderPlusIcon, LogoutIcon, ShieldIcon, UsersIcon, ArchiveIcon, TagIcon, ScaleIcon, LayersIcon, CoinIcon, ExamIcon } from "./NavIcons";
+import { ChevronDownIcon, FolderPlusIcon, LogoutIcon, ShieldIcon, UsersIcon, ArchiveIcon, TagIcon, ScaleIcon, LayersIcon, CoinIcon, ExamIcon, CompassIcon } from "./NavIcons";
 
 // Everything that isn't a daily-use action (Switch profile, adding
 // content, admin tools, sign out) lives behind one clearly-labeled menu
@@ -26,7 +26,8 @@ export default function AccountMenu({
     | "admin-compare"
     | "admin-content-packs"
     | "admin-ai-costs"
-    | "admin-exams";
+    | "admin-exams"
+    | "admin-careers";
 }) {
   const [open, setOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -105,6 +106,9 @@ export default function AccountMenu({
                 </MenuLink>
                 <MenuLink href="/admin/exams" icon={<ExamIcon />} isActive={active === "admin-exams"}>
                   Terminal exam papers
+                </MenuLink>
+                <MenuLink href="/admin/careers" icon={<CompassIcon />} isActive={active === "admin-careers"}>
+                  Career paths
                 </MenuLink>
               </>
             )}

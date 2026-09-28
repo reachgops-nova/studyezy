@@ -129,6 +129,15 @@ export function CoinIcon({ className = base }: IconProps) {
   );
 }
 
+export function CompassIcon({ className = base }: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" className={className} fill="none" stroke="currentColor" strokeWidth="1.75" aria-hidden>
+      <circle cx="12" cy="12" r="9" />
+      <path d="m14.8 9.2-1.6 4.2-4.2 1.6 1.6-4.2 4.2-1.6Z" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
 export function LogoutIcon({ className = base }: IconProps) {
   return (
     <svg viewBox="0 0 24 24" className={className} fill="none" stroke="currentColor" strokeWidth="1.75" aria-hidden>

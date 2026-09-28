@@ -39,6 +39,7 @@ model User {
   createdTermExamPapers    TermExamPaper[]         @relation("TermExamPaperCreatedBy")
   termExamAccessRequests   TermExamAccessRequest[] @relation("TermExamAccessRequestedBy")
   respondedTermExamRequests TermExamAccessRequest[] @relation("TermExamAccessRespondedBy")
+  createdCareerPaths       CareerPath[]            @relation("CareerPathCreatedBy")
 }
 
 model Session {
@@ -108,6 +109,7 @@ model StudentProfile {
   unitProgress      UnitProgress[]
   worksheetProgress WorksheetProgress[]
   termExamAccessRequests TermExamAccessRequest[]
+  careerInterests        CareerInterest[]
 }
 
 // --- curriculum hierarchy ---
@@ -214,6 +216,47 @@ model TermExamAccessRequest {
 
   @@index([paperId, status])
   @@index([requestedByUserId])
+}
+
+// --- career explorer (2026-09-28: lightweight v1 per product discussion) ---
+// Goal-based learning starts as a browsable directory, not an assessment-
+// driven recommendation engine - a kid marks paths they're curious about,
+// and a path just names the school subjects that feed it, so "why does this
+// matter" has a concrete answer without gating any actual lesson content.
+model CareerPath {
+  id                  String   @id @default(cuid())
+  slug                String   @unique
+  name                String
+  category            String // e.g. "STEM", "Arts & Design", "Business", "Health & Care", "Public Service"
+  summary             String   @db.Text
+  dayInLife           String?  @db.Text
+  keySkills           String[] @default([])
+  // Subject.slug values this path draws on (weak reference, same convention
+  // as TermExamPaper.unitIds) - just used to badge "Science, Maths" etc. on
+  // a card, never joined against a specific curriculum/stage's real Subject.
+  relatedSubjectSlugs String[] @default([])
+  available           Boolean  @default(true)
+  createdByUserId     String?
+  createdBy           User?    @relation("CareerPathCreatedBy", fields: [createdByUserId], references: [id])
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  interests CareerInterest[]
+}
+
+// A student's opt-in "I'm curious about this" mark - deliberately just a
+// toggle, not a rating/rank, since forcing a kid to prioritize career paths
+// would work against the "not a forced learning" framing this feature
+// started from.
+model CareerInterest {
+  id               String         @id @default(cuid())
+  studentProfileId String
+  studentProfile   StudentProfile @relation(fields: [studentProfileId], references: [id], onDelete: Cascade)
+  careerPathId     String
+  careerPath       CareerPath     @relation(fields: [careerPathId], references: [id], onDelete: Cascade)
+  createdAt        DateTime       @default(now())
+
+  @@unique([studentProfileId, careerPathId])
 }
 
 model Unit {
