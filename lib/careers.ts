@@ -26,6 +26,7 @@ export interface CareerPathInput {
   keySkills: string[];
   relatedSubjectSlugs: string[];
   gradeGuidance?: CareerGradeGuidance[];
+  relatedUnitIds?: string[];
   createdByUserId?: string;
 }
 
@@ -55,6 +56,7 @@ export async function createCareerPath(input: CareerPathInput) {
       keySkills: input.keySkills,
       relatedSubjectSlugs: input.relatedSubjectSlugs,
       gradeGuidance: (input.gradeGuidance ?? []) as unknown as Prisma.InputJsonValue,
+      relatedUnitIds: input.relatedUnitIds ?? [],
       createdByUserId: input.createdByUserId,
     },
   });
@@ -69,6 +71,44 @@ export async function setCareerPathGradeGuidance(id: string, guidance: CareerGra
     where: { id },
     data: { gradeGuidance: guidance as unknown as Prisma.InputJsonValue },
   });
+}
+
+export async function setCareerPathRelatedUnits(id: string, unitIds: string[]) {
+  return db.careerPath.update({ where: { id }, data: { relatedUnitIds: unitIds } });
+}
+
+/** Every available unit across the real curriculum, grouped by subject, for
+ * an admin to pick from when wiring a career path to actual lessons -
+ * mirrors the subject/unit shape GenerateTermExamForm already uses. */
+export async function getUnitPickerOptions() {
+  const subjects = await db.subject.findMany({
+    where: { available: true },
+    include: {
+      stage: { include: { curriculum: true } },
+      units: { where: { available: true }, orderBy: { number: "asc" }, select: { id: true, number: true, title: true } },
+    },
+    orderBy: [{ stage: { curriculum: { name: "asc" } } }, { stage: { number: "asc" } }, { name: "asc" }],
+  });
+  return subjects
+    .filter((s) => s.units.length > 0)
+    .map((s) => ({
+      id: s.id,
+      label: `${s.stage.curriculum.name} - ${s.stage.label} - ${s.name}`,
+      units: s.units,
+    }));
+}
+
+/** Resolves a career path's relatedUnitIds into real, linkable lesson info -
+ * skips any id that no longer resolves (a unit hidden or removed) rather
+ * than erroring, since this is a soft, best-effort link, not a hard FK. */
+export async function getRelatedUnitsForCareerPath(unitIds: string[]) {
+  if (unitIds.length === 0) return [];
+  const units = await db.unit.findMany({
+    where: { id: { in: unitIds }, available: true },
+    select: { id: true, number: true, title: true, subject: { select: { name: true } } },
+  });
+  const byId = new Map(units.map((u) => [u.id, u]));
+  return unitIds.map((id) => byId.get(id)).filter((u): u is NonNullable<typeof u> => Boolean(u));
 }
 
 export async function deleteCareerPath(id: string) {
@@ -104,9 +144,6 @@ export async function getCareerInterestsForProfile(studentProfileId: string) {
   });
 }
 
-/** Toggles a student's "I'm curious about this" mark - opt-in only, no
- * ranking, per the "not a forced learning" framing this feature started
- * from. Returns whether the path is now marked (true) or unmarked (false). */
 /** Best-effort guess at which grade band a profile currently sits in, used
  * only to highlight one band of a career path's roadmap by default - never
  * to gate content (that stays assignedStageId's job, set via /select).
@@ -136,6 +173,9 @@ export async function getLikelyGradeBand(studentProfileId: string): Promise<Care
   return "Grades 11-12";
 }
 
+/** Toggles a student's "I'm curious about this" mark - opt-in only, no
+ * ranking, per the "not a forced learning" framing this feature started
+ * from. Returns whether the path is now marked (true) or unmarked (false). */
 export async function toggleCareerInterest(studentProfileId: string, careerPathId: string): Promise<boolean> {
   const existing = await db.careerInterest.findUnique({
     where: { studentProfileId_careerPathId: { studentProfileId, careerPathId } },

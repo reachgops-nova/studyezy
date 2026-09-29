@@ -1,7 +1,13 @@
 import { redirect } from "next/navigation";
+import Link from "next/link";
 import { getCurrentUser } from "@/lib/session";
 import { getActiveProfile } from "@/lib/auth";
-import { getAvailableCareerPaths, getCareerInterestIdsForProfile, getLikelyGradeBand } from "@/lib/careers";
+import {
+  getAvailableCareerPaths,
+  getCareerInterestIdsForProfile,
+  getLikelyGradeBand,
+  getRelatedUnitsForCareerPath,
+} from "@/lib/careers";
 import type { CareerGradeGuidance } from "@/lib/careers";
 import AppShell from "@/components/AppShell";
 import { markCareerInterest } from "./actions";
@@ -17,6 +23,12 @@ export default async function CareersPage() {
     getCareerInterestIdsForProfile(profile.id),
     getLikelyGradeBand(profile.id),
   ]);
+
+  const relatedUnitsByPathId = new Map(
+    await Promise.all(
+      paths.map(async (p) => [p.id, await getRelatedUnitsForCareerPath(p.relatedUnitIds)] as const),
+    ),
+  );
 
   const byCategory = new Map<string, typeof paths>();
   for (const path of paths) {
@@ -43,6 +55,7 @@ export default async function CareersPage() {
               const isInterested = interestIds.has(path.id);
               const guidance = path.gradeGuidance as unknown as CareerGradeGuidance[];
               const currentGuidance = guidance.find((g) => g.band === currentBand);
+              const relatedUnits = relatedUnitsByPathId.get(path.id) ?? [];
               return (
                 <div key={path.id} className="rounded-xl border border-slate-200 bg-slate-50 p-3">
                   <div className="flex items-start justify-between gap-2">
@@ -83,6 +96,21 @@ export default async function CareersPage() {
                       <summary className="cursor-pointer font-medium text-brand-ink">What&apos;s a typical day like?</summary>
                       <p className="mt-1.5 text-slate-600">{path.dayInLife}</p>
                     </details>
+                  )}
+
+                  {relatedUnits.length > 0 && (
+                    <div className="mt-3 rounded-lg border border-slate-200 bg-white p-2.5">
+                      <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Open real lessons for this</p>
+                      <ul className="mt-1.5 grid gap-1">
+                        {relatedUnits.map((unit) => (
+                          <li key={unit.id}>
+                            <Link href={`/learn/${unit.id}`} className="text-sm text-brand-ink hover:underline">
+                              {unit.subject.name} - {unit.title}
+                            </Link>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
                   )}
 
                   {isInterested && currentGuidance && (

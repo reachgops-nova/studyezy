@@ -3,7 +3,7 @@
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { getCurrentAdmin } from "@/lib/session";
-import { createCareerPath, setCareerPathAvailability, deleteCareerPath, CAREER_GRADE_BANDS } from "@/lib/careers";
+import { createCareerPath, setCareerPathAvailability, setCareerPathRelatedUnits, deleteCareerPath, CAREER_GRADE_BANDS } from "@/lib/careers";
 import type { CareerGradeGuidance } from "@/lib/careers";
 
 function splitList(raw: FormDataEntryValue | null): string[] {
@@ -52,6 +52,7 @@ export async function addCareerPath(formData: FormData) {
     keySkills: splitList(formData.get("keySkills")),
     relatedSubjectSlugs: splitList(formData.get("relatedSubjectSlugs")),
     gradeGuidance: readGradeGuidance(formData),
+    relatedUnitIds: formData.getAll("relatedUnitIds").map(String),
     createdByUserId: admin.id,
   });
   revalidatePath("/admin/careers");
@@ -66,6 +67,18 @@ export async function toggleCareerPathAvailability(formData: FormData) {
   const available = formData.get("available") === "true";
   if (id) {
     await setCareerPathAvailability(id, available);
+    revalidatePath("/admin/careers");
+    revalidatePath("/careers");
+  }
+}
+
+export async function updateCareerPathUnits(formData: FormData) {
+  const admin = await getCurrentAdmin();
+  if (!admin) redirect("/select");
+
+  const id = String(formData.get("id") ?? "");
+  if (id) {
+    await setCareerPathRelatedUnits(id, formData.getAll("relatedUnitIds").map(String));
     revalidatePath("/admin/careers");
     revalidatePath("/careers");
   }

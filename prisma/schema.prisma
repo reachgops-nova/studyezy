@@ -243,6 +243,12 @@ model CareerPath {
   // at their own age - this closes that gap without needing per-grade
   // curriculum content to exist yet.
   gradeGuidance       Json     @default("[]")
+  // Unit.id values this path draws on - same weak-reference convention as
+  // TermExamPaper.unitIds. Points a "curious" mark at real lessons already
+  // in the curriculum instead of new career-specific content, per the
+  // 2026-09-29 decision to wire existing concepts rather than author a
+  // parallel curriculum per career.
+  relatedUnitIds      String[] @default([])
   available           Boolean  @default(true)
   createdByUserId     String?
   createdBy           User?    @relation("CareerPathCreatedBy", fields: [createdByUserId], references: [id])
