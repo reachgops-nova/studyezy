@@ -1,7 +1,8 @@
 import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/session";
 import { getActiveProfile } from "@/lib/auth";
-import { getAvailableCareerPaths, getCareerInterestIdsForProfile } from "@/lib/careers";
+import { getAvailableCareerPaths, getCareerInterestIdsForProfile, getLikelyGradeBand } from "@/lib/careers";
+import type { CareerGradeGuidance } from "@/lib/careers";
 import AppShell from "@/components/AppShell";
 import { markCareerInterest } from "./actions";
 
@@ -11,9 +12,10 @@ export default async function CareersPage() {
   const profile = await getActiveProfile();
   if (!profile) redirect("/profiles");
 
-  const [paths, interestIds] = await Promise.all([
+  const [paths, interestIds, currentBand] = await Promise.all([
     getAvailableCareerPaths(),
     getCareerInterestIdsForProfile(profile.id),
+    getLikelyGradeBand(profile.id),
   ]);
 
   const byCategory = new Map<string, typeof paths>();
@@ -39,6 +41,8 @@ export default async function CareersPage() {
           <div className="mt-3 grid gap-3 sm:grid-cols-2">
             {list.map((path) => {
               const isInterested = interestIds.has(path.id);
+              const guidance = path.gradeGuidance as unknown as CareerGradeGuidance[];
+              const currentGuidance = guidance.find((g) => g.band === currentBand);
               return (
                 <div key={path.id} className="rounded-xl border border-slate-200 bg-slate-50 p-3">
                   <div className="flex items-start justify-between gap-2">
@@ -78,6 +82,46 @@ export default async function CareersPage() {
                     <details className="mt-2 text-sm">
                       <summary className="cursor-pointer font-medium text-brand-ink">What&apos;s a typical day like?</summary>
                       <p className="mt-1.5 text-slate-600">{path.dayInLife}</p>
+                    </details>
+                  )}
+
+                  {isInterested && currentGuidance && (
+                    <div className="mt-3 rounded-lg border border-amber-200 bg-amber-50 p-2.5">
+                      <p className="text-xs font-semibold uppercase tracking-wide text-amber-700">
+                        Right now ({currentGuidance.band})
+                      </p>
+                      {currentGuidance.focus && <p className="mt-1 text-sm text-amber-900">{currentGuidance.focus}</p>}
+                      {currentGuidance.activities.length > 0 && (
+                        <ul className="mt-1.5 list-disc pl-4 text-sm text-amber-800">
+                          {currentGuidance.activities.map((a) => (
+                            <li key={a}>{a}</li>
+                          ))}
+                        </ul>
+                      )}
+                    </div>
+                  )}
+
+                  {guidance.length > 0 && (
+                    <details className="mt-2 text-sm">
+                      <summary className="cursor-pointer font-medium text-brand-ink">See the full grade-by-grade roadmap</summary>
+                      <div className="mt-1.5 grid gap-2">
+                        {guidance.map((g) => (
+                          <div key={g.band} className={`rounded-lg p-2 ${g.band === currentBand ? "bg-amber-50 ring-1 ring-amber-200" : "bg-white ring-1 ring-slate-200"}`}>
+                            <p className="text-xs font-semibold text-slate-700">
+                              {g.band}
+                              {g.band === currentBand && <span className="ml-1.5 font-normal text-amber-600">(you are here)</span>}
+                            </p>
+                            {g.focus && <p className="mt-0.5 text-slate-600">{g.focus}</p>}
+                            {g.activities.length > 0 && (
+                              <ul className="mt-1 list-disc pl-4 text-slate-600">
+                                {g.activities.map((a) => (
+                                  <li key={a}>{a}</li>
+                                ))}
+                              </ul>
+                            )}
+                          </div>
+                        ))}
+                      </div>
                     </details>
                   )}
                 </div>

@@ -26,20 +26,20 @@ model User {
   state        String?
   district     String?
 
-  sessions            Session[]
-  passwordResetTokens PasswordResetToken[]
-  studentProfiles     StudentProfile[]
-  uploadedPages       UploadedPage[]
-  createdSubjects     Subject[]            @relation("SubjectCreatedBy")
-  createdUnits        Unit[]               @relation("UnitCreatedBy")
-  uploadedResources   UnitResource[]       @relation("ResourceUploadedBy")
-  approvedResources   UnitResource[]       @relation("ResourceApprovedBy")
-  textbookSubmissions TextbookSubmission[]
-  referenceUploads    ReferenceUpload[]
-  createdTermExamPapers    TermExamPaper[]         @relation("TermExamPaperCreatedBy")
-  termExamAccessRequests   TermExamAccessRequest[] @relation("TermExamAccessRequestedBy")
+  sessions                  Session[]
+  passwordResetTokens       PasswordResetToken[]
+  studentProfiles           StudentProfile[]
+  uploadedPages             UploadedPage[]
+  createdSubjects           Subject[]               @relation("SubjectCreatedBy")
+  createdUnits              Unit[]                  @relation("UnitCreatedBy")
+  uploadedResources         UnitResource[]          @relation("ResourceUploadedBy")
+  approvedResources         UnitResource[]          @relation("ResourceApprovedBy")
+  textbookSubmissions       TextbookSubmission[]
+  referenceUploads          ReferenceUpload[]
+  createdTermExamPapers     TermExamPaper[]         @relation("TermExamPaperCreatedBy")
+  termExamAccessRequests    TermExamAccessRequest[] @relation("TermExamAccessRequestedBy")
   respondedTermExamRequests TermExamAccessRequest[] @relation("TermExamAccessRespondedBy")
-  createdCareerPaths       CareerPath[]            @relation("CareerPathCreatedBy")
+  createdCareerPaths        CareerPath[]            @relation("CareerPathCreatedBy")
 }
 
 model Session {
@@ -100,14 +100,14 @@ model StudentProfile {
   preferredCurriculumLabel String?
   enrolledSubjectSlugs     String[] @default([])
 
-  testAttempts      TestAttempt[]
-  conceptMasteries  ConceptMastery[]
-  interactionEvents InteractionEvent[]
-  reasoningLogs     ReasoningLog[]
-  examSubmissions   ExamSubmission[]
-  worksheetAttempts WorksheetAttempt[]
-  unitProgress      UnitProgress[]
-  worksheetProgress WorksheetProgress[]
+  testAttempts           TestAttempt[]
+  conceptMasteries       ConceptMastery[]
+  interactionEvents      InteractionEvent[]
+  reasoningLogs          ReasoningLog[]
+  examSubmissions        ExamSubmission[]
+  worksheetAttempts      WorksheetAttempt[]
+  unitProgress           UnitProgress[]
+  worksheetProgress      WorksheetProgress[]
   termExamAccessRequests TermExamAccessRequest[]
   careerInterests        CareerInterest[]
 }
@@ -235,6 +235,14 @@ model CareerPath {
   // as TermExamPaper.unitIds) - just used to badge "Science, Maths" etc. on
   // a card, never joined against a specific curriculum/stage's real Subject.
   relatedSubjectSlugs String[] @default([])
+  // Grade-by-grade roadmap so marking a path "curious" answers "what do I
+  // actually do about that right now?" - CareerGradeGuidance[] in
+  // lib/careers.ts, one entry per grade band (e.g. "Grades 3-5"), each with
+  // a short focus statement and concrete activities. Real feedback
+  // (2026-09-29): a bare directory entry didn't tell a kid what to look for
+  // at their own age - this closes that gap without needing per-grade
+  // curriculum content to exist yet.
+  gradeGuidance       Json     @default("[]")
   available           Boolean  @default(true)
   createdByUserId     String?
   createdBy           User?    @relation("CareerPathCreatedBy", fields: [createdByUserId], references: [id])

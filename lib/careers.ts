@@ -1,5 +1,22 @@
 import "server-only";
 import { db } from "./db";
+import type { Prisma } from "@prisma/client";
+
+/** One rung of a career path's grade-by-grade roadmap - deliberately fixed
+ * to these 4 bands (not tied to any one curriculum's exact grade numbers)
+ * so the same roadmap makes sense across Cambridge/CBSE/ICSE/etc. `focus`
+ * is a one-line theme for the band, `activities` are concrete, doable
+ * things a kid (or their parent) can act on right now - not just "study
+ * hard". Real feedback (2026-09-29): marking a path "curious" needs to
+ * answer "what do I do about that today", not just describe the job. */
+export const CAREER_GRADE_BANDS = ["Grades 3-5", "Grades 6-8", "Grades 9-10", "Grades 11-12"] as const;
+export type CareerGradeBand = (typeof CAREER_GRADE_BANDS)[number];
+
+export interface CareerGradeGuidance {
+  band: CareerGradeBand;
+  focus: string;
+  activities: string[];
+}
 
 export interface CareerPathInput {
   name: string;
@@ -8,6 +25,7 @@ export interface CareerPathInput {
   dayInLife?: string;
   keySkills: string[];
   relatedSubjectSlugs: string[];
+  gradeGuidance?: CareerGradeGuidance[];
   createdByUserId?: string;
 }
 
@@ -36,6 +54,7 @@ export async function createCareerPath(input: CareerPathInput) {
       dayInLife: input.dayInLife,
       keySkills: input.keySkills,
       relatedSubjectSlugs: input.relatedSubjectSlugs,
+      gradeGuidance: (input.gradeGuidance ?? []) as unknown as Prisma.InputJsonValue,
       createdByUserId: input.createdByUserId,
     },
   });
@@ -43,6 +62,13 @@ export async function createCareerPath(input: CareerPathInput) {
 
 export async function setCareerPathAvailability(id: string, available: boolean) {
   return db.careerPath.update({ where: { id }, data: { available } });
+}
+
+export async function setCareerPathGradeGuidance(id: string, guidance: CareerGradeGuidance[]) {
+  return db.careerPath.update({
+    where: { id },
+    data: { gradeGuidance: guidance as unknown as Prisma.InputJsonValue },
+  });
 }
 
 export async function deleteCareerPath(id: string) {
@@ -81,6 +107,35 @@ export async function getCareerInterestsForProfile(studentProfileId: string) {
 /** Toggles a student's "I'm curious about this" mark - opt-in only, no
  * ranking, per the "not a forced learning" framing this feature started
  * from. Returns whether the path is now marked (true) or unmarked (false). */
+/** Best-effort guess at which grade band a profile currently sits in, used
+ * only to highlight one band of a career path's roadmap by default - never
+ * to gate content (that stays assignedStageId's job, set via /select).
+ * Falls back to the assigned/enrolled Stage's number, then this app's only
+ * real content today (Stage 4, i.e. "Grades 3-5"), since there's no hard
+ * grade field on StudentProfile itself. */
+export async function getLikelyGradeBand(studentProfileId: string): Promise<CareerGradeBand> {
+  const profile = await db.studentProfile.findUnique({
+    where: { id: studentProfileId },
+    include: { assignedStage: true },
+  });
+
+  let stageNumber = profile?.assignedStage?.number;
+  if (stageNumber === undefined) {
+    const recentAttempt = await db.testAttempt.findFirst({
+      where: { studentProfileId },
+      orderBy: { takenAt: "desc" },
+      include: { unit: { include: { subject: { include: { stage: true } } } } },
+    });
+    stageNumber = recentAttempt?.unit.subject.stage.number;
+  }
+
+  if (stageNumber === undefined) return "Grades 3-5";
+  if (stageNumber <= 5) return "Grades 3-5";
+  if (stageNumber <= 8) return "Grades 6-8";
+  if (stageNumber <= 10) return "Grades 9-10";
+  return "Grades 11-12";
+}
+
 export async function toggleCareerInterest(studentProfileId: string, careerPathId: string): Promise<boolean> {
   const existing = await db.careerInterest.findUnique({
     where: { studentProfileId_careerPathId: { studentProfileId, careerPathId } },

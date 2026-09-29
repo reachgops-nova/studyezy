@@ -3,13 +3,33 @@
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { getCurrentAdmin } from "@/lib/session";
-import { createCareerPath, setCareerPathAvailability, deleteCareerPath } from "@/lib/careers";
+import { createCareerPath, setCareerPathAvailability, deleteCareerPath, CAREER_GRADE_BANDS } from "@/lib/careers";
+import type { CareerGradeGuidance } from "@/lib/careers";
 
 function splitList(raw: FormDataEntryValue | null): string[] {
   return String(raw ?? "")
     .split(",")
     .map((s) => s.trim())
     .filter(Boolean);
+}
+
+function splitLines(raw: FormDataEntryValue | null): string[] {
+  return String(raw ?? "")
+    .split("\n")
+    .map((s) => s.trim())
+    .filter(Boolean);
+}
+
+function readGradeGuidance(formData: FormData): CareerGradeGuidance[] {
+  const guidance: CareerGradeGuidance[] = [];
+  for (const band of CAREER_GRADE_BANDS) {
+    const focus = String(formData.get(`focus_${band}`) ?? "").trim();
+    const activities = splitLines(formData.get(`activities_${band}`));
+    if (focus || activities.length > 0) {
+      guidance.push({ band, focus, activities });
+    }
+  }
+  return guidance;
 }
 
 export async function addCareerPath(formData: FormData) {
@@ -31,6 +51,7 @@ export async function addCareerPath(formData: FormData) {
     dayInLife: dayInLife || undefined,
     keySkills: splitList(formData.get("keySkills")),
     relatedSubjectSlugs: splitList(formData.get("relatedSubjectSlugs")),
+    gradeGuidance: readGradeGuidance(formData),
     createdByUserId: admin.id,
   });
   revalidatePath("/admin/careers");
