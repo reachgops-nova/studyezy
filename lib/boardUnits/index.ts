@@ -20,6 +20,7 @@ import { CAMBRIDGE_4_SCIENCE_7 } from "./cambridge-4-science-7";
 import { CAMBRIDGE_4_SCIENCE_8 } from "./cambridge-4-science-8";
 import { CAMBRIDGE_4_SCIENCE_9 } from "./cambridge-4-science-9";
 import { CAMBRIDGE_4_SCIENCE_10 } from "./cambridge-4-science-10";
+import { CAMBRIDGE_4_TAMIL_1 } from "./cambridge-4-tamil-1";
 
 /**
  * Every unit that has a Drawing Board, keyed by unitKey. Adding a unit is
@@ -48,6 +49,7 @@ const RAW_BOARD_UNITS: Record<string, BoardUnit> = {
   [CAMBRIDGE_4_SCIENCE_8.unitKey]: CAMBRIDGE_4_SCIENCE_8,
   [CAMBRIDGE_4_SCIENCE_9.unitKey]: CAMBRIDGE_4_SCIENCE_9,
   [CAMBRIDGE_4_SCIENCE_10.unitKey]: CAMBRIDGE_4_SCIENCE_10,
+  [CAMBRIDGE_4_TAMIL_1.unitKey]: CAMBRIDGE_4_TAMIL_1,
 };
 
 /**
