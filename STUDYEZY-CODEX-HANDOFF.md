@@ -141,6 +141,38 @@ Review both textbooks unit by unit and improve visual impact wherever it helps:
 4. Sync each visual to the exact AvatarChat checkpoint that explains it.
 5. Avoid baked-in text in generated images; render factual text as real UI text.
 
+## Unit 15 flagship pilot (2026-10-11)
+
+Unit 15 is the selected Cambridge/IGCSE showcase unit. The Board now opens a
+kid-facing mission state for `cambridge-4-math-15` before the shared RCRT
+lesson. `components/board/Unit15MissionPanel.tsx` is embedded inside the Board
+layout (not a separate blurred popup) and provides a three-clue
+inverse-operation sprint with a mission intro, visual equation preview,
+spoken tutor guidance, immediate correct/wrong feedback, hints, retries,
+stars, and a completion handoff into the existing Learning Board. This is the
+first vertical slice of the planned concept-animation, practice, and training
+experience; extend its pattern to Unit 15.2–15.5 next rather than creating a
+second lesson system.
+
+The Unit 15 mission now continues through all five topics in one guided
+training path: 15.1 inverse operations, 15.2 order of operations, 15.3
+written multiplication, 15.4 decimal addition/subtraction, and 15.5 decimal
+multiplication. Each question carries a tutor explanation, spoken transition,
+hint, and retry state so the child is told what to notice before choosing an
+answer.
+
+After the mission, `components/board/Unit15TutorJourney.tsx` now provides the
+deeper learning layer inside the Board. It intentionally hides most RCRT
+terminology from the child and uses the simpler sequence: Look -> Hear -> Try
+-> Teach it back -> Next idea. Each Unit 15 concept has a code-native animated
+infographic, tutor narration, a guided question, a hint/retry loop, and a
+teach-back checkpoint before the next concept. The existing mixed Board opens
+after this journey.
+
+The implementation uses the existing accurate Unit 15 data and preserves the
+shared Board/RCRT route. `npx tsc --noEmit --pretty false`, `git diff --check`,
+and `npm run build` passed after the change.
+
 NotebookLM should be used for source-grounded visual briefs and textbook
 cross-checking. It is not the final image renderer.
 
@@ -625,3 +657,41 @@ concept-aligned across subjects without covering the main visual.
 
 Current validation: 14 tests pass, TypeScript passes, and `git diff --check`
 passes. Build and manual random Board checks remain required before release.
+
+## Unit 15 tutor studio pilot (2026-10-11)
+
+Cambridge/IGCSE Math Unit 15 now opens in a dedicated tutor studio instead of
+the generic Learning Board/RCRT shell. The student can enter any of the five
+Unit 15 concepts directly, watch a worked code-native visual explanation,
+listen to the tutor, read the explanation again, complete guided practice,
+answer a fresh test by writing or voice, retry with a contextual hint, and
+then read/test again or move to another concept. If the first answer is wrong,
+the tutor re-teaches the method and gives two fresh coached examples before
+returning to a new test. For 15.1, the correction explicitly models that
+`100 − 70 = 30` means 100 is the whole, 70 is removed, and 30 remains,
+including a spoken explanation. The standard board remains
+available only as an explicit escape route after the tutor flow.
+
+The correction loop stores the exact failed task. For example, a wrong answer
+to `? × 4 = 28` now re-teaches `28 ÷ 4 = 7` and checks `7 × 4 = 28`; it no
+longer displays the unrelated `100 − 70 = 30` correction.
+
+Unit 15.1 now begins with `components/board/Unit15Episode.tsx`, a short
+interactive learning episode: story hook, animated star grouping, voice-led
+demonstration, guided answer, exact-mistake repair, practice, and mini-test.
+It uses timed React/CSS scenes rather than a fixed video so the lesson can
+adapt to the student's answer and replay without a media download.
+
+The first-learning path is sequential in textbook order: a future concept is
+locked until the current concept's test is passed, while completed concepts
+remain available for revision. The same correction-and-two-coached-examples
+loop applies to every Unit 15 concept, not only missing-number questions.
+
+The route is `/board/cambridge-4-math-15`. The implementation lives in
+`components/board/Unit15TutorJourney.tsx`; `DrawingBoard.tsx` bypasses the
+generic board shell for this unit so the worked learning experience is the
+first thing the student sees.
+
+For production comparison, `/learn/cambridge-4-math-15?legacy=1` explicitly
+keeps the older UnitView learning experience, while the normal `/learn/...`
+link continues to redirect to the Board.

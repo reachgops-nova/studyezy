@@ -14,17 +14,18 @@ import UnitView, { type UnitContentPack } from "@/components/UnitView";
 import AppShell from "@/components/AppShell";
 import { hasBoardRoute } from "@/lib/boardUnits";
 
-export default async function LearnPage({ params }: { params: Promise<{ unitId: string }> }) {
+export default async function LearnPage({ params, searchParams }: { params: Promise<{ unitId: string }>; searchParams: Promise<{ legacy?: string }> }) {
   const user = await getCurrentUser();
   if (!user) redirect("/login");
   const profile = await getActiveProfile();
   if (!profile) redirect("/profiles");
 
   const { unitId } = await params;
+  const { legacy } = await searchParams;
   // The Board is now the single student-facing teaching route. Keep this URL
   // as a compatibility link for bookmarks and old progress records, while
   // preserving the older page only for units that do not yet have a Board.
-  if (hasBoardRoute(unitId)) redirect(`/board/${unitId}`);
+  if (hasBoardRoute(unitId) && legacy !== "1") redirect(`/board/${unitId}`);
   const parts = unitId.split("-");
   if (parts.length !== 4) notFound();
   const [curriculumId, stageIdStr, subjectId, unitIdStr] = parts;

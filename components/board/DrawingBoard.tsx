@@ -6,6 +6,8 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { BoardFrame, BoardTask, BoardUnit } from "@/lib/boardUnits/types";
 import { sanitizeSvgFragment } from "@/lib/richScene";
 import VoiceReciteCheck from "./VoiceReciteCheck";
+import Unit15MissionPanel from "./Unit15MissionPanel";
+import Unit15TutorJourney from "./Unit15TutorJourney";
 
 /**
  * The Drawing Board: a five-phase lesson surface built to the reference the
@@ -143,6 +145,9 @@ export default function DrawingBoard({
   const [language, setLanguage] = useState(getSavedBoardLanguage);
   const [reciteProgress, setReciteProgress] = useState<Record<string, number>>({});
   const [saveState, setSaveState] = useState<"idle" | "saving" | "saved" | "error">("idle");
+  const [showUnit15DedicatedTutor, setShowUnit15DedicatedTutor] = useState(unit.unitKey === "cambridge-4-math-15");
+  const [showUnit15Mission, setShowUnit15Mission] = useState(unit.unitKey === "cambridge-4-math-15");
+  const [showUnit15Tutor, setShowUnit15Tutor] = useState(false);
 
   const audioRef = useRef<AudioContext | null>(null);
   const answersRef = useRef(answers);
@@ -737,6 +742,21 @@ export default function DrawingBoard({
   };
   const dotFill: Record<string, string> = { gold: "#f59e0b", green: "#34d399", red: "#f43f5e", blue: "#38bdf8" };
 
+  // Unit 15 is the interactive tutor pilot. Keep it outside the generic
+  // board shell so students meet the worked example before any calculation
+  // controls or RCRT phases appear.
+  if (showUnit15DedicatedTutor) {
+    return (
+      <div className="flex h-full min-h-0 flex-col bg-[#090d16] font-board text-slate-100">
+        <audio ref={languageAudioRef} className="hidden" aria-hidden="true" />
+        <style>{`@keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }`}</style>
+        <div className="min-h-0 flex-1 overflow-y-auto bg-[#090d16] p-2.5 sm:p-3">
+          <Unit15TutorJourney onDone={() => setShowUnit15DedicatedTutor(false)} onNarrate={say} />
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="flex h-full min-h-0 flex-col bg-[#090d16] font-board text-slate-100">
       <audio ref={languageAudioRef} className="hidden" aria-hidden="true" />
@@ -796,7 +816,15 @@ export default function DrawingBoard({
         ))}
       </nav>
 
-      <div className="relative grid min-h-0 flex-1 gap-3 p-2.5 sm:p-3 lg:grid-cols-[minmax(0,1fr)_22rem]">
+      {showUnit15Mission ? (
+        <div className="flex min-h-0 flex-1 overflow-y-auto bg-[#090d16] p-2.5 sm:p-3">
+          <Unit15MissionPanel embedded onEnterBoard={() => { setShowUnit15Mission(false); setShowUnit15Tutor(true); }} onNarrate={say} />
+        </div>
+      ) : showUnit15Tutor ? (
+        <div className="flex min-h-0 flex-1 overflow-y-auto bg-[#090d16] p-2.5 sm:p-3">
+          <Unit15TutorJourney onDone={() => setShowUnit15Tutor(false)} onNarrate={say} />
+        </div>
+      ) : <div className="relative grid min-h-0 flex-1 gap-3 p-2.5 sm:p-3 lg:grid-cols-[minmax(0,1fr)_22rem]">
         {/* ---------- Board ---------- */}
         <section className="flex min-h-0 flex-col overflow-hidden rounded-3xl border-4 border-slate-700 bg-[#0f172a] shadow-2xl">
           {/* Grouped by concept, shown as a slim rail down the LEFT of the
@@ -1452,7 +1480,7 @@ export default function DrawingBoard({
             </div>
           </section>}
         </aside>
-      </div>
+      </div>}
     </div>
   );
 }
