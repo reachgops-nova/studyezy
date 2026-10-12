@@ -33,8 +33,11 @@ export default function Unit15Episode({ onNarrate, onDone }: { onNarrate?: (text
   }, [guidedReady, onNarrate, replay, scene, stage, task]);
 
   useEffect(() => {
-    if (stage !== "demo" || scene >= 5) return;
-    const timer = window.setTimeout(() => setScene((value) => value + 1), 2800);
+    if (stage !== "demo") return;
+    const timer = window.setTimeout(() => {
+      if (scene < 5) setScene((value) => value + 1);
+      else { setGuidedReady(false); setStage("guided"); }
+    }, scene < 5 ? 2800 : 3600);
     return () => window.clearTimeout(timer);
   }, [scene, stage, replay]);
 
