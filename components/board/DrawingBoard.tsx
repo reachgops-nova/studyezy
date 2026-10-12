@@ -215,8 +215,10 @@ export default function DrawingBoard({
       }).catch(() => onDone?.());
       return;
     }
-    u.rate = 0.85;
-    u.pitch = 1.05;
+    // Unit lessons are aimed at young learners: leave space between ideas
+    // and keep the browser voice comfortably below its default pace.
+    u.rate = 0.68;
+    u.pitch = 1.0;
     if (onDone) {
       let fired = false;
       const once = () => {

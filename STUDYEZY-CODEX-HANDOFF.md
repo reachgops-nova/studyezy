@@ -682,6 +682,10 @@ demonstration, guided answer, exact-mistake repair, practice, and mini-test.
 It uses timed React/CSS scenes rather than a fixed video so the lesson can
 adapt to the student's answer and replay without a media download.
 
+Episode narration was slowed to a child-friendly 0.68 speech rate. Demo
+voice lines now match one visual scene at a time with a 2.8-second gap, and
+the existing speech cancellation prevents overlapping browser utterances.
+
 The first-learning path is sequential in textbook order: a future concept is
 locked until the current concept's test is passed, while completed concepts
 remain available for revision. The same correction-and-two-coached-examples

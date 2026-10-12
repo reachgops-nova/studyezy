@@ -22,7 +22,14 @@ export default function Unit15Episode({ onNarrate, onDone }: { onNarrate?: (text
   useEffect(() => {
     if (stage === "welcome") onNarrate?.("Welcome to your first Ezy Maths episode. We are going to discover a missing number by sharing stars into equal groups.");
     if (stage === "story") onNarrate?.("Ezy has 28 stars and 4 boxes. Can we share the stars equally? Watch what happens.");
-    if (stage === "demo") onNarrate?.(scene < 2 ? "First, we see 28 stars. Next, we make 4 equal groups." : scene < 5 ? `Group ${scene - 1} is receiving 7 stars.` : "Every group has 7 stars. That means the missing number is 7.");
+    if (stage === "demo") onNarrate?.([
+      "First, we see 28 stars.",
+      "Now we make four equal groups.",
+      "Group one receives seven stars.",
+      "Group two receives seven stars.",
+      "Group three receives seven stars.",
+      "Group four receives seven stars. Every group has 7, so the missing number is 7.",
+    ][Math.min(scene, 5)]);
     if (stage === "guided") onNarrate?.("Now help Ezy. What number multiplied by 4 makes 28? You can choose, type, or speak.");
     if (stage === "coach") onNarrate?.("Let us repair that exact question. 28 shared into 4 equal groups gives 7 in each group. Check it: 7 times 4 equals 28.");
     if (stage === "practice") onNarrate?.("Good. Try another example with the same idea: what number times 5 makes 35?");
@@ -32,7 +39,7 @@ export default function Unit15Episode({ onNarrate, onDone }: { onNarrate?: (text
 
   useEffect(() => {
     if (stage !== "demo" || scene >= 5) return;
-    const timer = window.setTimeout(() => setScene((value) => value + 1), 1200);
+    const timer = window.setTimeout(() => setScene((value) => value + 1), 2800);
     return () => window.clearTimeout(timer);
   }, [scene, stage, replay]);
 
