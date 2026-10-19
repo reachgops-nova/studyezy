@@ -13,6 +13,7 @@ import { LogoMark } from "@/components/Logo";
 import UnitView, { type UnitContentPack } from "@/components/UnitView";
 import AppShell from "@/components/AppShell";
 import { hasBoardRoute } from "@/lib/boardUnits";
+import { hasInkBoardRoute } from "@/lib/inkBoard";
 
 export default async function LearnPage({ params, searchParams }: { params: Promise<{ unitId: string }>; searchParams: Promise<{ legacy?: string }> }) {
   const user = await getCurrentUser();
@@ -25,6 +26,7 @@ export default async function LearnPage({ params, searchParams }: { params: Prom
   // The Board is now the single student-facing teaching route. Keep this URL
   // as a compatibility link for bookmarks and old progress records, while
   // preserving the older page only for units that do not yet have a Board.
+  if (hasInkBoardRoute(unitId) && legacy !== "1") redirect(`/board-ink/${unitId}`);
   if (hasBoardRoute(unitId) && legacy !== "1") redirect(`/board/${unitId}`);
   const parts = unitId.split("-");
   if (parts.length !== 4) notFound();

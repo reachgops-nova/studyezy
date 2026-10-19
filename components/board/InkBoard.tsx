@@ -1,0 +1,172 @@
+"use client";
+
+import { useEffect, useRef, useState } from "react";
+import { renderOps } from "@/lib/inkBoard/render";
+import type { InkUnit } from "@/lib/inkBoard/types";
+
+// Generic player for any InkUnit (see lib/inkBoard/types.ts for why this
+// replaces components/board/TeacherWritingSample.tsx's one hardcoded
+// problem) - a topic picker, a scene picker within the active topic, and
+// narration that plays automatically on every scene change.
+//
+// Real gap this reuses the fix for (2026-09-08, see /api/tts's own
+// comment): the browser's own speechSynthesis has no installed Tamil voice
+// on plenty of real devices, so Tamil scenes are always read through
+// /api/tts's server-side TTS, never window.speechSynthesis - unlike the
+// English-only teach/mistake/fix/next prototype this grew from.
+//
+// Real direction 2026-10-19: "voice need to come up automatically instead
+// of asking to read" - narration now fires from an effect keyed on the
+// active scene, not only a manual button press. Browsers block audio
+// autoplay before any user gesture on the page at all, so the very first
+// scene on a fresh page load can be silently blocked - caught via the
+// rejected play() promise and surfaced as a one-tap "தட்டி கேளுங்கள்"
+// prompt rather than failing invisibly. Every topic/scene button click is
+// itself a user gesture, so autoplay on every scene switch after that
+// first tap works without restriction.
+const DESIGN_WIDTH = 1400;
+const DESIGN_HEIGHT = 680;
+
+export default function InkBoard({ unit }: { unit: InkUnit }) {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const [topicIndex, setTopicIndex] = useState(0);
+  const [sceneIndex, setSceneIndex] = useState(0);
+  const [speaking, setSpeaking] = useState(false);
+  const [speechError, setSpeechError] = useState<string | null>(null);
+  const [needsTapToStart, setNeedsTapToStart] = useState(false);
+
+  const topic = unit.topics[topicIndex];
+  const scene = topic?.scenes[sceneIndex];
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas || !scene) return;
+    const box = canvas.getBoundingClientRect();
+    const ratio = window.devicePixelRatio || 1;
+    canvas.width = box.width * ratio;
+    canvas.height = box.height * ratio;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+    // Scenes are authored against a fixed DESIGN_WIDTH/HEIGHT canvas, then
+    // scaled to whatever size the element actually rendered at - so a scene
+    // script never needs to know the viewer's real screen size.
+    const scale = box.width / DESIGN_WIDTH;
+    ctx.scale(ratio * scale, ratio * scale);
+    renderOps(ctx, DESIGN_WIDTH, DESIGN_HEIGHT, scene.ops);
+  }, [scene]);
+
+  useEffect(() => {
+    setSceneIndex(0);
+  }, [topicIndex]);
+
+  useEffect(() => {
+    if (!scene) return;
+    readBoard();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [scene]);
+
+  async function readBoard() {
+    if (!scene) return;
+    setSpeechError(null);
+    setNeedsTapToStart(false);
+    audioRef.current?.pause();
+    setSpeaking(true);
+    try {
+      const res = await fetch("/api/tts", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text: scene.say, languageCode: unit.languageCode }),
+      });
+      if (!res.ok) throw new Error(`tts request failed (${res.status})`);
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const audio = new Audio(url);
+      audioRef.current = audio;
+      audio.onended = () => setSpeaking(false);
+      audio.onerror = () => {
+        setSpeaking(false);
+        setSpeechError("ஒலியை இயக்க முடியவில்லை.");
+      };
+      try {
+        await audio.play();
+      } catch (playErr) {
+        // Autoplay blocked (no user gesture yet on this page) - common only
+        // on the very first scene of a fresh load. Keep the audio ready and
+        // ask for one tap instead of treating this as a real failure.
+        setSpeaking(false);
+        setNeedsTapToStart(true);
+        console.warn("InkBoard autoplay blocked, waiting for a tap", playErr);
+      }
+    } catch (err) {
+      console.error("InkBoard readBoard failed", err);
+      setSpeaking(false);
+      setSpeechError("ஒலி சேவை இப்போது கிடைக்கவில்லை.");
+    }
+  }
+
+  if (!topic || !scene) return null;
+
+  return (
+    <main className="min-h-screen bg-[#20242b] p-2 sm:p-6">
+      <section className="mx-auto max-w-[1500px] overflow-hidden rounded-xl border-[10px] border-[#343943] bg-[#f5f8f5] shadow-2xl">
+        <header className="flex flex-wrap items-center justify-between gap-3 border-b-2 border-slate-300 bg-white px-4 py-3 sm:px-8">
+          <div>
+            <p className="font-mono text-[10px] font-black uppercase tracking-[0.25em] text-indigo-700">{unit.badge} · ink board</p>
+            <h1 className="hand text-2xl text-slate-800 sm:text-4xl">{unit.title}</h1>
+          </div>
+          <button
+            type="button"
+            onClick={readBoard}
+            disabled={speaking}
+            className={`rounded-lg px-4 py-3 text-sm font-black text-white disabled:opacity-60 ${
+              needsTapToStart ? "animate-pulse bg-rose-600" : "bg-indigo-700"
+            }`}
+          >
+            {speaking ? "🔊 படிக்கிறேன்..." : needsTapToStart ? "🔊 தட்டி கேளுங்கள்" : "🔊 மீண்டும் படி"}
+          </button>
+        </header>
+
+        <div className="flex flex-wrap gap-2 border-b border-slate-200 bg-white px-4 py-2 sm:px-8">
+          {unit.topics.map((t, i) => (
+            <button
+              key={t.topicId}
+              type="button"
+              onClick={() => setTopicIndex(i)}
+              className={`rounded-full border-2 px-3 py-1.5 text-xs font-black ${
+                i === topicIndex ? "border-indigo-700 bg-indigo-700 text-white" : "border-slate-300 text-slate-600"
+              }`}
+            >
+              {t.topicId} · {t.title}
+            </button>
+          ))}
+        </div>
+
+        <div className="bg-[#fbfdfb] p-2 sm:p-5">
+          <canvas ref={canvasRef} style={{ aspectRatio: `${DESIGN_WIDTH} / ${DESIGN_HEIGHT}` }} className="w-full rounded-lg" />
+        </div>
+        <div className="flex flex-wrap justify-center gap-1 border-t border-slate-200 bg-white px-4 py-3 sm:px-8">
+          {topic.scenes.map((s, i) => (
+            <button
+              key={s.label}
+              type="button"
+              onClick={() => setSceneIndex(i)}
+              className={`rounded-full border-2 px-3 py-2 text-xs font-black ${
+                i === sceneIndex ? "border-indigo-700 bg-indigo-700 text-white" : "border-slate-300 text-slate-600"
+              }`}
+            >
+              {s.label}
+            </button>
+          ))}
+        </div>
+        {speechError && <p className="px-4 pb-3 text-center text-xs font-bold text-rose-600 sm:px-8">{speechError}</p>}
+      </section>
+      <style jsx>{`
+        .hand {
+          font-family: "Comic Sans MS", "Bradley Hand", cursive;
+          font-weight: 700;
+        }
+      `}</style>
+    </main>
+  );
+}

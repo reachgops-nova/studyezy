@@ -5,7 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { BookIcon, ChevronDownIcon } from "./NavIcons";
 import type { SwitcherGroup } from "@/lib/catalog";
-import { hasBoardRoute } from "@/lib/boardUnits";
+import { resolveUnitHref } from "@/lib/unitRouting";
 
 // Persistent subject/unit switcher, always available from AppShell's header
 // (2026-08-26) - a parent reported the app feeling like a separate silo per
@@ -71,7 +71,7 @@ export default function UnitSwitcher({ groups }: { groups: SwitcherGroup[] }) {
               {g.units.map((u) => (
                 <Link
                   key={u.unitKey}
-                  href={hasBoardRoute(u.unitKey) ? `/board/${u.unitKey}` : `/learn/${u.unitKey}`}
+                  href={resolveUnitHref(u.unitKey)}
                   role="menuitem"
                   onClick={() => setOpen(false)}
                   className={`block rounded-xl px-3 py-2 text-sm font-medium transition ${

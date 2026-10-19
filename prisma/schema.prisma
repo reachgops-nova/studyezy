@@ -477,6 +477,12 @@ model Concept {
   // per concept from its own already-vetted definition/keyPoints/examples
   // (never invented facts) and cached here - never regenerated automatically.
   generatedIllustrationUrl  String?
+  // A generated structured diagram (Napkin AI, see lib/napkin.ts) - real,
+  // correctly-typeset text laid out as a flowchart/timeline/comparison/
+  // mindmap, unlike generatedIllustrationUrl's deliberately text-free scene.
+  // Built from the same already-vetted definition/keyPoints/examples, never
+  // invented facts. Cached here - never regenerated automatically.
+  generatedDiagramUrl       String?
   sourceImagePath           String?
   // A precise transcript of what's actually printed on sourceImagePath -
   // generated once via Claude vision when the image is linked (see

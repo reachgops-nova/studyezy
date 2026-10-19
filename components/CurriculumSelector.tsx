@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import type { CatalogCurriculum } from "@/lib/catalog";
-import { hasBoardRoute } from "@/lib/boardUnits";
+import { resolveUnitHref } from "@/lib/unitRouting";
 
 const LAST_PICK_KEY = "studyezy.lastPick";
 
@@ -242,7 +242,7 @@ export default function CurriculumSelector({
                   </div>
                   {u.available ? (
                     <Link
-                      href={hasBoardRoute(u.unitKey) ? `/board/${u.unitKey}` : `/learn/${u.unitKey}`}
+                      href={resolveUnitHref(u.unitKey)}
                       className={`shrink-0 rounded-md px-3 py-1.5 text-sm font-medium text-white ${needsReview ? "bg-amber-600 hover:bg-amber-700" : "bg-brand-ink hover:bg-brand-ink-dark"}`}
                     >
                       {needsReview ? "Revisit" : done ? "Review" : started ? "Continue" : "Start"}
