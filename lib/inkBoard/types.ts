@@ -125,11 +125,30 @@ export interface InkScene {
   ops: InkOp[];
 }
 
+/**
+ * One multiple-choice question for the RRT (Read, Recite, Test) assessment
+ * layer - see components/board/InkQuickCheck.tsx and InkTestSession.tsx.
+ * Real user direction 2026-10-20: "RCRT we can remove C, RRT is still
+ * fine" - the ink board has no Cover/guided-drag step, only Read (the
+ * scenes), Recite (a short random quick-check after a topic), and Test (a
+ * longer random test across the whole unit). `correctIndex` indexes into
+ * `options`; exactly one option is correct per question.
+ */
+export interface InkQuestion {
+  id: string;
+  prompt: string;
+  options: string[];
+  correctIndex: number;
+  explanation: string;
+}
+
 export interface InkTopic {
   /** e.g. "1.2" */
   topicId: string;
   title: string;
   scenes: InkScene[];
+  /** Question bank this topic draws from for both quick-checks and the unit test - see InkQuestion. */
+  questions: InkQuestion[];
 }
 
 export interface InkUnit {

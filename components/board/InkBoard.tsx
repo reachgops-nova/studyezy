@@ -1,8 +1,10 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import Link from "next/link";
 import { renderOps } from "@/lib/inkBoard/render";
 import type { InkUnit } from "@/lib/inkBoard/types";
+import InkQuickCheck from "./InkQuickCheck";
 
 // Generic player for any InkUnit (see lib/inkBoard/types.ts for why this
 // replaces components/board/TeacherWritingSample.tsx's one hardcoded
@@ -35,6 +37,7 @@ export default function InkBoard({ unit }: { unit: InkUnit }) {
   const [speaking, setSpeaking] = useState(false);
   const [speechError, setSpeechError] = useState<string | null>(null);
   const [needsTapToStart, setNeedsTapToStart] = useState(false);
+  const [showQuickCheck, setShowQuickCheck] = useState(false);
 
   const topic = unit.topics[topicIndex];
   const scene = topic?.scenes[sceneIndex];
@@ -58,6 +61,7 @@ export default function InkBoard({ unit }: { unit: InkUnit }) {
 
   useEffect(() => {
     setSceneIndex(0);
+    setShowQuickCheck(false);
   }, [topicIndex]);
 
   useEffect(() => {
@@ -115,16 +119,21 @@ export default function InkBoard({ unit }: { unit: InkUnit }) {
             <p className="font-mono text-[10px] font-black uppercase tracking-[0.25em] text-indigo-700">{unit.badge} · ink board</p>
             <h1 className="hand text-2xl text-slate-800 sm:text-4xl">{unit.title}</h1>
           </div>
-          <button
-            type="button"
-            onClick={readBoard}
-            disabled={speaking}
-            className={`rounded-lg px-4 py-3 text-sm font-black text-white disabled:opacity-60 ${
-              needsTapToStart ? "animate-pulse bg-rose-600" : "bg-indigo-700"
-            }`}
-          >
-            {speaking ? "🔊 படிக்கிறேன்..." : needsTapToStart ? "🔊 தட்டி கேளுங்கள்" : "🔊 மீண்டும் படி"}
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={readBoard}
+              disabled={speaking}
+              className={`rounded-lg px-4 py-3 text-sm font-black text-white disabled:opacity-60 ${
+                needsTapToStart ? "animate-pulse bg-rose-600" : "bg-indigo-700"
+              }`}
+            >
+              {speaking ? "🔊 படிக்கிறேன்..." : needsTapToStart ? "🔊 தட்டி கேளுங்கள்" : "🔊 மீண்டும் படி"}
+            </button>
+            <Link href={`/board-ink/${unit.unitKey}/test`} className="rounded-lg border-2 border-indigo-700 px-4 py-3 text-sm font-black text-indigo-700">
+              🧪 முழு தேர்வு
+            </Link>
+          </div>
         </header>
 
         <div className="flex flex-wrap gap-2 border-b border-slate-200 bg-white px-4 py-2 sm:px-8">
@@ -160,6 +169,20 @@ export default function InkBoard({ unit }: { unit: InkUnit }) {
           ))}
         </div>
         {speechError && <p className="px-4 pb-3 text-center text-xs font-bold text-rose-600 sm:px-8">{speechError}</p>}
+
+        <div className="border-t border-slate-200 bg-white px-4 py-4 sm:px-8">
+          {showQuickCheck ? (
+            <InkQuickCheck key={topic.topicId} unitKey={unit.unitKey} topic={topic} onClose={() => setShowQuickCheck(false)} />
+          ) : (
+            <button
+              type="button"
+              onClick={() => setShowQuickCheck(true)}
+              className="w-full rounded-lg border-2 border-dashed border-indigo-300 py-3 text-sm font-black text-indigo-700 hover:border-indigo-500"
+            >
+              ✅ {topic.topicId} - விரைவு சோதனை தொடங்கு
+            </button>
+          )}
+        </div>
       </section>
       <style jsx>{`
         .hand {
