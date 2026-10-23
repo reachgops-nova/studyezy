@@ -32,6 +32,14 @@ const DESIGN_HEIGHT = 680;
 export default function InkBoard({ unit }: { unit: InkUnit }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  // Bumped at the start of every readBoard() call - lets a call that is
+  // still awaiting its /api/tts fetch recognise it has been superseded by a
+  // newer one (a quick scene/topic tap, or the auto-play effect firing
+  // right after a manual "read again" click) and discard its result
+  // instead of playing audio on top of - or right after - whatever the
+  // newer call already started. Real gap flagged live 2026-10-23: "ensure
+  // sound overlaps does not happen".
+  const speechGenerationRef = useRef(0);
   const [topicIndex, setTopicIndex] = useState(0);
   const [sceneIndex, setSceneIndex] = useState(0);
   const [speaking, setSpeaking] = useState(false);
@@ -98,8 +106,15 @@ export default function InkBoard({ unit }: { unit: InkUnit }) {
 
   async function readBoard() {
     if (!scene) return;
+    const myGeneration = ++speechGenerationRef.current;
+    const isStale = () => speechGenerationRef.current !== myGeneration;
+
     setSpeechError(null);
     setNeedsTapToStart(false);
+    // Stop whatever is currently playing immediately, synchronously - this
+    // is what prevents the common case (switching scenes while narration is
+    // still going) from ever overlapping, independent of the generation
+    // check below which guards the slower, fetch-in-flight race.
     audioRef.current?.pause();
     setSpeaking(true);
     try {
@@ -108,32 +123,60 @@ export default function InkBoard({ unit }: { unit: InkUnit }) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ text: scene.say, languageCode: unit.languageCode }),
       });
+      if (isStale()) return; // a newer scene/click started while this fetch was in flight
       if (!res.ok) throw new Error(`tts request failed (${res.status})`);
       const blob = await res.blob();
+      if (isStale()) return;
       const url = URL.createObjectURL(blob);
       const audio = new Audio(url);
       audioRef.current = audio;
-      audio.onended = () => setSpeaking(false);
+      audio.onended = () => {
+        if (!isStale()) setSpeaking(false);
+      };
       audio.onerror = () => {
-        setSpeaking(false);
-        setSpeechError("ஒலியை இயக்க முடியவில்லை.");
+        if (!isStale()) {
+          setSpeaking(false);
+          setSpeechError("ஒலியை இயக்க முடியவில்லை.");
+        }
       };
       try {
         await audio.play();
+        if (isStale()) {
+          // Lost the race between starting playback and a newer call
+          // landing - stop immediately rather than let two scenes' audio
+          // overlap even briefly.
+          audio.pause();
+        }
       } catch (playErr) {
-        // Autoplay blocked (no user gesture yet on this page) - common only
-        // on the very first scene of a fresh load. Keep the audio ready and
-        // ask for one tap instead of treating this as a real failure.
-        setSpeaking(false);
-        setNeedsTapToStart(true);
+        if (!isStale()) {
+          // Autoplay blocked (no user gesture yet on this page) - common
+          // only on the very first scene of a fresh load. Keep the audio
+          // ready and ask for one tap instead of treating this as a real
+          // failure.
+          setSpeaking(false);
+          setNeedsTapToStart(true);
+        }
         console.warn("InkBoard autoplay blocked, waiting for a tap", playErr);
       }
     } catch (err) {
       console.error("InkBoard readBoard failed", err);
-      setSpeaking(false);
-      setSpeechError("ஒலி சேவை இப்போது கிடைக்கவில்லை.");
+      if (!isStale()) {
+        setSpeaking(false);
+        setSpeechError("ஒலி சேவை இப்போது கிடைக்கவில்லை.");
+      }
     }
   }
+
+  // Stop any in-flight narration the moment the player itself goes away
+  // (e.g. clicking through to the Test route) - otherwise a scene's audio
+  // can keep playing underneath a page the student has already left,
+  // which is its own kind of overlap.
+  useEffect(() => {
+    return () => {
+      speechGenerationRef.current++;
+      audioRef.current?.pause();
+    };
+  }, []);
 
   if (!topic || !scene) return null;
 
