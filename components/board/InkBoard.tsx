@@ -41,11 +41,15 @@ export default function InkBoard({ unit }: { unit: InkUnit }) {
 
   const topic = unit.topics[topicIndex];
   const scene = topic?.scenes[sceneIndex];
+  const sceneRef = useRef(scene);
+  sceneRef.current = scene;
 
-  useEffect(() => {
+  function draw() {
     const canvas = canvasRef.current;
-    if (!canvas || !scene) return;
+    const activeScene = sceneRef.current;
+    if (!canvas || !activeScene) return;
     const box = canvas.getBoundingClientRect();
+    if (box.width === 0 || box.height === 0) return;
     const ratio = window.devicePixelRatio || 1;
     canvas.width = box.width * ratio;
     canvas.height = box.height * ratio;
@@ -56,8 +60,30 @@ export default function InkBoard({ unit }: { unit: InkUnit }) {
     // script never needs to know the viewer's real screen size.
     const scale = box.width / DESIGN_WIDTH;
     ctx.scale(ratio * scale, ratio * scale);
-    renderOps(ctx, DESIGN_WIDTH, DESIGN_HEIGHT, scene.ops);
+    renderOps(ctx, DESIGN_WIDTH, DESIGN_HEIGHT, activeScene.ops);
+  }
+
+  useEffect(() => {
+    draw();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [scene]);
+
+  // Real bug caught live 2026-10-23: on a fresh page load the canvas's
+  // getBoundingClientRect() can still read a 0x0 box the instant this
+  // effect runs (layout/fonts not settled yet), silently leaving the very
+  // first scene blank until the viewer happened to switch scenes, which
+  // resized the canvas and drew correctly. A ResizeObserver catches the
+  // canvas's real first non-zero layout (and any later resize) and redraws
+  // from the always-current sceneRef, independent of the scene-keyed effect
+  // above timing out on a too-early measurement.
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas || typeof ResizeObserver === "undefined") return;
+    const observer = new ResizeObserver(() => draw());
+    observer.observe(canvas);
+    return () => observer.disconnect();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     setSceneIndex(0);
