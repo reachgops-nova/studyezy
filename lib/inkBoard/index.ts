@@ -14,6 +14,14 @@ import { CAMBRIDGE_4_TAMIL_11_INK } from "./cambridge-4-tamil-11";
 import { CAMBRIDGE_4_TAMIL_12_INK } from "./cambridge-4-tamil-12";
 import { CAMBRIDGE_4_TAMIL_13_INK } from "./cambridge-4-tamil-13";
 import { CAMBRIDGE_4_TAMIL_14_INK } from "./cambridge-4-tamil-14";
+import { CAMBRIDGE_4_TAMIL_15_INK } from "./cambridge-4-tamil-15";
+import { CAMBRIDGE_4_TAMIL_16_INK } from "./cambridge-4-tamil-16";
+import { CAMBRIDGE_4_TAMIL_17_INK } from "./cambridge-4-tamil-17";
+import { CAMBRIDGE_4_TAMIL_18_INK } from "./cambridge-4-tamil-18";
+import { CAMBRIDGE_4_TAMIL_19_INK } from "./cambridge-4-tamil-19";
+import { CAMBRIDGE_4_TAMIL_20_INK } from "./cambridge-4-tamil-20";
+import { CAMBRIDGE_4_TAMIL_21_INK } from "./cambridge-4-tamil-21";
+import { CAMBRIDGE_4_TAMIL_22_INK } from "./cambridge-4-tamil-22";
 
 export const INK_BOARD_UNITS: Record<string, InkUnit> = {
   [TAMILNADU_10_MATH_1.unitKey]: TAMILNADU_10_MATH_1,
@@ -31,6 +39,14 @@ export const INK_BOARD_UNITS: Record<string, InkUnit> = {
   [CAMBRIDGE_4_TAMIL_12_INK.unitKey]: CAMBRIDGE_4_TAMIL_12_INK,
   [CAMBRIDGE_4_TAMIL_13_INK.unitKey]: CAMBRIDGE_4_TAMIL_13_INK,
   [CAMBRIDGE_4_TAMIL_14_INK.unitKey]: CAMBRIDGE_4_TAMIL_14_INK,
+  [CAMBRIDGE_4_TAMIL_15_INK.unitKey]: CAMBRIDGE_4_TAMIL_15_INK,
+  [CAMBRIDGE_4_TAMIL_16_INK.unitKey]: CAMBRIDGE_4_TAMIL_16_INK,
+  [CAMBRIDGE_4_TAMIL_17_INK.unitKey]: CAMBRIDGE_4_TAMIL_17_INK,
+  [CAMBRIDGE_4_TAMIL_18_INK.unitKey]: CAMBRIDGE_4_TAMIL_18_INK,
+  [CAMBRIDGE_4_TAMIL_19_INK.unitKey]: CAMBRIDGE_4_TAMIL_19_INK,
+  [CAMBRIDGE_4_TAMIL_20_INK.unitKey]: CAMBRIDGE_4_TAMIL_20_INK,
+  [CAMBRIDGE_4_TAMIL_21_INK.unitKey]: CAMBRIDGE_4_TAMIL_21_INK,
+  [CAMBRIDGE_4_TAMIL_22_INK.unitKey]: CAMBRIDGE_4_TAMIL_22_INK,
 };
 
 export function hasInkBoardRoute(unitKey: string): boolean {
