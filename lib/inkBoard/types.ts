@@ -11,6 +11,21 @@
 // InkBoard.tsx's DESIGN_WIDTH/DESIGN_HEIGHT) - the component scales the
 // canvas to fit, so every scene script can assume the same coordinate
 // space regardless of the viewer's actual screen size.
+//
+// STANDING HOUSE STYLE - "Tips & Tricks" scenes (real direction
+// 2026-10-25: "we have to teach these kind of points with tricks to
+// remember... ensure that we apply this to all subjects and grades"):
+// every topic across every subject/grade should include at least one
+// scene that teaches a genuine, logically-grounded shortcut or memory aid
+// for that topic - never a made-up gimmick, always something that
+// actually holds up (a real pattern, a real grouping, a real reason a
+// grammar rule or a calculation shortcut works). Use TIP_COLOR for every
+// such scene's accent boxes/text so a child learns to recognise "this is
+// the trick to remember" by colour alone, consistently across every unit
+// this app ever ships - Math, Tamil, Science, any future subject or
+// grade. A tips scene is content like any other: it still needs its own
+// quiz questions in the topic's `questions` bank, not just a visual aid.
+export const TIP_COLOR = "#b8860b";
 
 export type InkColor = string;
 
