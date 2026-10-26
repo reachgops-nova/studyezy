@@ -27,6 +27,18 @@
 // quiz questions in the topic's `questions` bank, not just a visual aid.
 export const TIP_COLOR = "#b8860b";
 
+// STANDING HOUSE STYLE - "Practice Problems" scenes (real direction
+// 2026-10-26: "ask them to write and solve more examples" for TN Std 10
+// Math, generalized the same way TIP_COLOR was): every topic should also
+// include one scene, after the teaching scenes, that gives the learner
+// 2-3 additional problems of the same kind just taught and asks them to
+// write and solve each one in their notebook before the step-by-step
+// solution is shown. Use PRACTICE_COLOR for this scene's accent boxes/
+// text so a child learns to recognise "now it's my turn to solve" by
+// colour alone, the same way TIP_COLOR marks a memory aid - applies
+// across every subject/grade, not just Math.
+export const PRACTICE_COLOR = "#0ea5e9";
+
 export type InkColor = string;
 
 export interface InkText {

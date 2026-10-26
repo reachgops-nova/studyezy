@@ -1,5 +1,12 @@
 import type { InkUnit } from "./types";
 import { TAMILNADU_10_MATH_1 } from "./tamilnadustateboard-10-math-1";
+import { TAMILNADU_10_MATH_2 } from "./tamilnadustateboard-10-math-2";
+import { TAMILNADU_10_MATH_3 } from "./tamilnadustateboard-10-math-3";
+import { TAMILNADU_10_MATH_4 } from "./tamilnadustateboard-10-math-4";
+import { TAMILNADU_10_MATH_5 } from "./tamilnadustateboard-10-math-5";
+import { TAMILNADU_10_MATH_6 } from "./tamilnadustateboard-10-math-6";
+import { TAMILNADU_10_MATH_7 } from "./tamilnadustateboard-10-math-7";
+import { TAMILNADU_10_MATH_8 } from "./tamilnadustateboard-10-math-8";
 import { CAMBRIDGE_4_TAMIL_1_INK } from "./cambridge-4-tamil-1";
 import { CAMBRIDGE_4_TAMIL_2_INK } from "./cambridge-4-tamil-2";
 import { CAMBRIDGE_4_TAMIL_3_INK } from "./cambridge-4-tamil-3";
@@ -25,6 +32,13 @@ import { CAMBRIDGE_4_TAMIL_22_INK } from "./cambridge-4-tamil-22";
 
 export const INK_BOARD_UNITS: Record<string, InkUnit> = {
   [TAMILNADU_10_MATH_1.unitKey]: TAMILNADU_10_MATH_1,
+  [TAMILNADU_10_MATH_2.unitKey]: TAMILNADU_10_MATH_2,
+  [TAMILNADU_10_MATH_3.unitKey]: TAMILNADU_10_MATH_3,
+  [TAMILNADU_10_MATH_4.unitKey]: TAMILNADU_10_MATH_4,
+  [TAMILNADU_10_MATH_5.unitKey]: TAMILNADU_10_MATH_5,
+  [TAMILNADU_10_MATH_6.unitKey]: TAMILNADU_10_MATH_6,
+  [TAMILNADU_10_MATH_7.unitKey]: TAMILNADU_10_MATH_7,
+  [TAMILNADU_10_MATH_8.unitKey]: TAMILNADU_10_MATH_8,
   [CAMBRIDGE_4_TAMIL_1_INK.unitKey]: CAMBRIDGE_4_TAMIL_1_INK,
   [CAMBRIDGE_4_TAMIL_2_INK.unitKey]: CAMBRIDGE_4_TAMIL_2_INK,
   [CAMBRIDGE_4_TAMIL_3_INK.unitKey]: CAMBRIDGE_4_TAMIL_3_INK,
