@@ -6,8 +6,9 @@ import { getActiveProfile } from "@/lib/auth";
 import ConfirmSubmitButton from "@/components/ConfirmSubmitButton";
 import { isEmailConfigured } from "@/lib/email";
 import { EMAIL_TEMPLATES } from "@/lib/emailTemplates";
-import { toggleAdminRole, deleteAccount, resetUserPassword, sendTemplatedEmail } from "./actions";
+import { toggleAdminRole, deleteAccount, bulkDeleteSpamAccounts, resetUserPassword, sendTemplatedEmail } from "./actions";
 import { presenceFromSessions, formatAgo, PRESENCE_STYLES, PRESENCE_DOTS } from "@/lib/presence";
+import { isSpamDisplayName } from "@/lib/spamDetection";
 
 const ERROR_MESSAGES: Record<string, string> = {
   cannot_change_self: "You can't change or delete your own account from here.",
@@ -25,12 +26,12 @@ const SUCCESS_MESSAGES: Record<string, string> = {
 export default async function AdminPage({
   searchParams,
 }: {
-  searchParams: Promise<{ error?: string; success?: string }>;
+  searchParams: Promise<{ error?: string; success?: string; count?: string }>;
 }) {
   const admin = await getCurrentAdmin();
   if (!admin) redirect("/select");
 
-  const { error, success } = await searchParams;
+  const { error, success, count } = await searchParams;
   const emailReady = isEmailConfigured();
   const profile = await getActiveProfile();
   if (!profile) redirect("/profiles");
@@ -48,6 +49,7 @@ export default async function AdminPage({
 
   const now = new Date();
   const rows = users.map((u) => ({ user: u, presence: presenceFromSessions(u.sessions, now) }));
+  const spamCount = users.filter((u) => u.studentProfiles.some((p) => isSpamDisplayName(p.displayName))).length;
   const onlineNow = rows.filter((r) => r.presence.state === "online").length;
   const activeToday = rows.filter((r) => r.presence.state === "online" || r.presence.state === "today").length;
   const signedIn = rows.filter((r) => r.presence.liveSessions > 0).length;
@@ -73,6 +75,27 @@ export default async function AdminPage({
       )}
       {success && SUCCESS_MESSAGES[success] && (
         <p className="rounded-xl bg-green-50 px-3 py-2 text-sm text-green-700">{SUCCESS_MESSAGES[success]}</p>
+      )}
+      {success === "spam_cleaned" && (
+        <p className="rounded-xl bg-green-50 px-3 py-2 text-sm text-green-700">
+          Removed {count ?? "0"} spam account{count === "1" ? "" : "s"}.
+        </p>
+      )}
+      {spamCount > 0 && (
+        <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-red-200 bg-red-50 px-4 py-3">
+          <p className="text-sm text-red-700">
+            <span className="font-semibold">{spamCount}</span> account{spamCount === 1 ? "" : "s"} look{spamCount === 1 ? "s" : ""} like spam
+            signups (a link in the kid&apos;s name field).
+          </p>
+          <form action={bulkDeleteSpamAccounts}>
+            <ConfirmSubmitButton
+              confirmMessage={`Delete all ${spamCount} spam account(s)? This can't be undone.`}
+              className="shrink-0 rounded-md bg-red-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-red-700"
+            >
+              Delete all spam accounts
+            </ConfirmSubmitButton>
+          </form>
+        </div>
       )}
       {!emailReady && (
         <p className="rounded-xl bg-amber-50 px-3 py-2 text-xs text-amber-700">

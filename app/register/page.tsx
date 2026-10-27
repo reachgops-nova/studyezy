@@ -7,6 +7,7 @@ const ERROR_MESSAGES: Record<string, string> = {
   weak_password: "Password needs to be at least 8 characters.",
   missing_kid_name: "Add the name of the kid who'll be learning.",
   email_taken: "An account with that email already exists - try signing in instead.",
+  rate_limited: "Too many attempts - please wait a minute and try again.",
 };
 
 export default async function RegisterPage({
@@ -27,6 +28,15 @@ export default async function RegisterPage({
         {error && ERROR_MESSAGES[error] && (
           <p className="rounded-xl bg-red-50 px-3 py-2 text-sm text-red-600">{ERROR_MESSAGES[error]}</p>
         )}
+
+        {/* Honeypot: hidden from real users via off-screen CSS (not display:none,
+            which some bots skip), but form-filling bots populate every input they see. */}
+        <div className="absolute left-[-9999px] top-auto h-0 w-0 overflow-hidden" aria-hidden="true">
+          <label>
+            Website
+            <input type="text" name="website" tabIndex={-1} autoComplete="off" />
+          </label>
+        </div>
 
         <label className="grid gap-1 text-sm font-medium text-slate-700">
           Your email

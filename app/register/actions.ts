@@ -1,18 +1,36 @@
 "use server";
 
 import { redirect } from "next/navigation";
+import { headers } from "next/headers";
 import { db } from "@/lib/db";
 import { hashPassword } from "@/lib/password";
 import { createSession } from "@/lib/session";
 import { setActiveProfile } from "@/lib/auth";
+import { checkRateLimit } from "@/lib/rateLimit";
+import { isSpamDisplayName } from "@/lib/spamDetection";
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const AVATAR_EMOJIS = ["🦊", "🐼", "🦁", "🐨", "🐯", "🦉"];
+const KID_NAME_MAX_LENGTH = 40;
 
 export async function register(formData: FormData) {
+  // Honeypot: a field real users never see or fill (hidden via CSS in
+  // the form), but bots that auto-fill every input will populate it.
+  const honeypot = String(formData.get("website") ?? "").trim();
+  if (honeypot) {
+    // Pretend success so the bot doesn't learn to look for a different tell.
+    redirect("/login?registered=1");
+  }
+
+  const ip = (await headers()).get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown";
+  const { allowed } = checkRateLimit(`register:${ip}`);
+  if (!allowed) {
+    redirect("/register?error=rate_limited");
+  }
+
   const email = String(formData.get("email") ?? "").trim().toLowerCase();
   const password = String(formData.get("password") ?? "");
-  const kidName = String(formData.get("kidName") ?? "").trim();
+  const kidName = String(formData.get("kidName") ?? "").trim().slice(0, KID_NAME_MAX_LENGTH);
 
   if (!EMAIL_PATTERN.test(email)) {
     redirect("/register?error=invalid_email");
@@ -20,7 +38,7 @@ export async function register(formData: FormData) {
   if (password.length < 8) {
     redirect("/register?error=weak_password");
   }
-  if (!kidName) {
+  if (!kidName || isSpamDisplayName(kidName)) {
     redirect("/register?error=missing_kid_name");
   }
 

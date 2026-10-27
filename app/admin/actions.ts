@@ -6,6 +6,7 @@ import { getCurrentAdmin } from "@/lib/session";
 import { createPasswordResetToken } from "@/lib/passwordReset";
 import { sendEmail, isEmailConfigured } from "@/lib/email";
 import { EMAIL_TEMPLATES, type EmailTemplateKey } from "@/lib/emailTemplates";
+import { isSpamDisplayName } from "@/lib/spamDetection";
 
 const APP_URL = process.env.APP_URL || "https://studyezy-production.up.railway.app";
 
@@ -48,6 +49,31 @@ export async function deleteAccount(formData: FormData) {
   }
 
   redirect("/admin");
+}
+
+/**
+ * Deletes every account whose kid display name matches the spam pattern
+ * (lib/spamDetection.ts - URLs/shortlinks, which a real kid's name never
+ * contains). One confirm click on the admin page triggers this for all
+ * matches at once, instead of deleting spam rows one at a time.
+ */
+export async function bulkDeleteSpamAccounts() {
+  const admin = await getCurrentAdmin();
+  if (!admin) redirect("/select");
+
+  const candidates = await db.user.findMany({
+    where: { id: { not: admin.id } },
+    include: { studentProfiles: true },
+  });
+  const spamUserIds = candidates
+    .filter((u) => u.studentProfiles.some((p) => isSpamDisplayName(p.displayName)))
+    .map((u) => u.id);
+
+  if (spamUserIds.length > 0) {
+    await db.user.deleteMany({ where: { id: { in: spamUserIds } } });
+  }
+
+  redirect(`/admin?success=spam_cleaned&count=${spamUserIds.length}`);
 }
 
 /**
