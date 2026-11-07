@@ -29,6 +29,7 @@ import { CAMBRIDGE_4_TAMIL_19_INK } from "./cambridge-4-tamil-19";
 import { CAMBRIDGE_4_TAMIL_20_INK } from "./cambridge-4-tamil-20";
 import { CAMBRIDGE_4_TAMIL_21_INK } from "./cambridge-4-tamil-21";
 import { CAMBRIDGE_4_TAMIL_22_INK } from "./cambridge-4-tamil-22";
+import { CAMBRIDGE_4_SCIENCE_5_INK } from "./cambridge-4-science-5";
 
 export const INK_BOARD_UNITS: Record<string, InkUnit> = {
   [TAMILNADU_10_MATH_1.unitKey]: TAMILNADU_10_MATH_1,
@@ -61,6 +62,7 @@ export const INK_BOARD_UNITS: Record<string, InkUnit> = {
   [CAMBRIDGE_4_TAMIL_20_INK.unitKey]: CAMBRIDGE_4_TAMIL_20_INK,
   [CAMBRIDGE_4_TAMIL_21_INK.unitKey]: CAMBRIDGE_4_TAMIL_21_INK,
   [CAMBRIDGE_4_TAMIL_22_INK.unitKey]: CAMBRIDGE_4_TAMIL_22_INK,
+  [CAMBRIDGE_4_SCIENCE_5_INK.unitKey]: CAMBRIDGE_4_SCIENCE_5_INK,
 };
 
 export function hasInkBoardRoute(unitKey: string): boolean {
