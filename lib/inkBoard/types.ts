@@ -82,6 +82,16 @@ export interface InkBox {
   labelSize?: number;
 }
 
+/** A filled or outlined circle - e.g. one particle in a particle-model diagram. `fill` defaults to true (filled). */
+export interface InkCircle {
+  type: "circle";
+  x: number;
+  y: number;
+  r: number;
+  color: InkColor;
+  fill?: boolean;
+}
+
 /** A hand-drawn "set" - an ellipse boundary with a title above it and member dots+labels inside. */
 export interface InkSet {
   type: "set";
@@ -142,7 +152,7 @@ export interface InkCurve {
   width?: number;
 }
 
-export type InkOp = InkText | InkLine | InkArrow | InkBox | InkSet | InkMapping | InkAxes | InkPoint | InkCurve;
+export type InkOp = InkText | InkLine | InkArrow | InkBox | InkCircle | InkSet | InkMapping | InkAxes | InkPoint | InkCurve;
 
 export interface InkScene {
   /** Short label shown on the scene-switcher button, e.g. "1. அறிமுகம்". */

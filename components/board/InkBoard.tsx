@@ -15,7 +15,12 @@ import InkQuickCheck from "./InkQuickCheck";
 // comment): the browser's own speechSynthesis has no installed Tamil voice
 // on plenty of real devices, so Tamil scenes are always read through
 // /api/tts's server-side TTS, never window.speechSynthesis - unlike the
-// English-only teach/mistake/fix/next prototype this grew from.
+// English-only teach/mistake/fix/next prototype this grew from. English
+// units (unit.languageCode starting "en") go the other way: a real browser
+// voice is free and ~instant, while the server round-trip measured ~1.8-2s
+// per scene even on the fast Sarvam path - a real, reported "reading starts
+// late" gap for the first English-content ink unit (2026-11-07). See
+// speakEnglishWithBrowserVoice below.
 //
 // Real direction 2026-10-19: "voice need to come up automatically instead
 // of asking to read" - narration now fires from an effect keyed on the
@@ -26,8 +31,47 @@ import InkQuickCheck from "./InkQuickCheck";
 // prompt rather than failing invisibly. Every topic/scene button click is
 // itself a user gesture, so autoplay on every scene switch after that
 // first tap works without restriction.
+//
+// Real direction 2026-11-07 (first English-medium unit's review): "it's not
+// interactive or flowing constantly.. ensure we move to next topic
+// automatically. but ensure RRT is followed on each topic and covered
+// correctly" - narration finishing now auto-advances to the next scene, or
+// to the topic's Quick Check (RRT) once its scenes are done, and finishing
+// that Quick Check auto-advances to the next topic. A learner can still
+// tap any topic/scene button at any time to jump manually; that's not
+// fighting the auto-advance, it's just the next useEffect firing normally.
 const DESIGN_WIDTH = 1400;
 const DESIGN_HEIGHT = 680;
+
+// How long to sit on a finished scene/quick-check before auto-advancing -
+// long enough to feel like a deliberate pause, short enough to keep the
+// lesson actually flowing rather than stalling.
+const AUTO_ADVANCE_DELAY_MS = 900;
+
+const STRINGS = {
+  ta: {
+    reading: "🔊 படிக்கிறேன்...",
+    tapToListen: "🔊 தட்டி கேளுங்கள்",
+    readAgain: "🔊 மீண்டும் படி",
+    fullTest: "🧪 முழு தேர்வு",
+    startQuickCheck: (topicId: string) => `✅ ${topicId} - விரைவு சோதனை தொடங்கு`,
+    audioPlayError: "ஒலியை இயக்க முடியவில்லை.",
+    audioServiceError: "ஒலி சேவை இப்போது கிடைக்கவில்லை.",
+  },
+  en: {
+    reading: "🔊 Reading...",
+    tapToListen: "🔊 Tap to listen",
+    readAgain: "🔊 Read again",
+    fullTest: "🧪 Full test",
+    startQuickCheck: (topicId: string) => `✅ ${topicId} - Start quick check`,
+    audioPlayError: "Couldn't play the audio.",
+    audioServiceError: "The audio service isn't available right now.",
+  },
+};
+
+function pickStrings(languageCode: string) {
+  return languageCode.toLowerCase().startsWith("en") ? STRINGS.en : STRINGS.ta;
+}
 
 export default function InkBoard({ unit }: { unit: InkUnit }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -38,7 +82,9 @@ export default function InkBoard({ unit }: { unit: InkUnit }) {
   // right after a manual "read again" click) and discard its result
   // instead of playing audio on top of - or right after - whatever the
   // newer call already started. Real gap flagged live 2026-10-23: "ensure
-  // sound overlaps does not happen".
+  // sound overlaps does not happen". Also guards every auto-advance
+  // setTimeout below, so a manual topic/scene click cancels any pending
+  // auto-advance from the scene the learner just left.
   const speechGenerationRef = useRef(0);
   const [topicIndex, setTopicIndex] = useState(0);
   const [sceneIndex, setSceneIndex] = useState(0);
@@ -51,6 +97,8 @@ export default function InkBoard({ unit }: { unit: InkUnit }) {
   const scene = topic?.scenes[sceneIndex];
   const sceneRef = useRef(scene);
   sceneRef.current = scene;
+  const isEnglish = unit.languageCode.toLowerCase().startsWith("en");
+  const t = pickStrings(unit.languageCode);
 
   function draw() {
     const canvas = canvasRef.current;
@@ -104,6 +152,82 @@ export default function InkBoard({ unit }: { unit: InkUnit }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [scene]);
 
+  // Moves the lesson forward on its own once narration for the current
+  // scene has actually finished: next scene within the topic, or - once the
+  // topic's last scene is done - straight into that topic's Quick Check
+  // (RRT), so every topic's RRT is still always reached, just automatically
+  // instead of waiting for a tap. Guarded by the same generation counter as
+  // narration itself, so a manual click elsewhere cancels a stale advance.
+  function scheduleAdvance() {
+    const myGeneration = speechGenerationRef.current;
+    const capturedTopicIndex = topicIndex;
+    const capturedSceneIndex = sceneIndex;
+    window.setTimeout(() => {
+      if (speechGenerationRef.current !== myGeneration) return; // superseded by a manual click
+      const activeTopic = unit.topics[capturedTopicIndex];
+      if (!activeTopic) return;
+      if (capturedSceneIndex + 1 < activeTopic.scenes.length) {
+        setSceneIndex(capturedSceneIndex + 1);
+      } else {
+        setShowQuickCheck(true);
+      }
+    }, AUTO_ADVANCE_DELAY_MS);
+  }
+
+  // Called when a topic's Quick Check (RRT) is left, either finished or
+  // closed early. Only a genuinely finished quick check auto-advances to
+  // the next topic - closing early is a learner's deliberate choice to stay
+  // put, not a cue to skip ahead.
+  function handleQuickCheckClose(completed: boolean) {
+    setShowQuickCheck(false);
+    if (completed && topicIndex + 1 < unit.topics.length) {
+      const myGeneration = speechGenerationRef.current;
+      window.setTimeout(() => {
+        if (speechGenerationRef.current !== myGeneration) return;
+        setTopicIndex((i) => (i + 1 < unit.topics.length ? i + 1 : i));
+      }, AUTO_ADVANCE_DELAY_MS);
+    }
+  }
+
+  // English narration uses a real browser voice when one is installed -
+  // free and effectively instant, unlike the ~1.8-2s /api/tts round trip
+  // (measured in that endpoint's own comment). Falls back to the server
+  // path below (readBoard's main body) if no English voice is available on
+  // this device, exactly the same fallback direction /api/tts already
+  // documents for the reverse case (Tamil has no browser voice on plenty of
+  // real devices).
+  function speakEnglishWithBrowserVoice(text: string, myGeneration: number): boolean {
+    if (typeof window === "undefined" || !("speechSynthesis" in window)) return false;
+    const voices = window.speechSynthesis.getVoices();
+    const voice = voices.find((v) => v.lang.toLowerCase().startsWith("en"));
+    if (!voice) return false;
+    const isStale = () => speechGenerationRef.current !== myGeneration;
+    window.speechSynthesis.cancel();
+    const utter = new SpeechSynthesisUtterance(text);
+    utter.voice = voice;
+    utter.rate = 0.95;
+    let started = false;
+    utter.onstart = () => {
+      started = true;
+    };
+    utter.onend = () => {
+      if (isStale()) return;
+      setSpeaking(false);
+      scheduleAdvance();
+    };
+    utter.onerror = () => {
+      if (isStale()) return;
+      setSpeaking(false);
+      // A blocked/failed browser utterance before any page interaction
+      // looks just like the <audio> autoplay-block case - ask for one tap
+      // rather than silently stalling the lesson.
+      if (!started) setNeedsTapToStart(true);
+    };
+    setSpeaking(true);
+    window.speechSynthesis.speak(utter);
+    return true;
+  }
+
   async function readBoard() {
     if (!scene) return;
     const myGeneration = ++speechGenerationRef.current;
@@ -116,6 +240,10 @@ export default function InkBoard({ unit }: { unit: InkUnit }) {
     // still going) from ever overlapping, independent of the generation
     // check below which guards the slower, fetch-in-flight race.
     audioRef.current?.pause();
+    window.speechSynthesis?.cancel();
+
+    if (isEnglish && speakEnglishWithBrowserVoice(scene.say, myGeneration)) return;
+
     setSpeaking(true);
     try {
       const res = await fetch("/api/tts", {
@@ -131,12 +259,15 @@ export default function InkBoard({ unit }: { unit: InkUnit }) {
       const audio = new Audio(url);
       audioRef.current = audio;
       audio.onended = () => {
-        if (!isStale()) setSpeaking(false);
+        if (isStale()) return;
+        setSpeaking(false);
+        scheduleAdvance();
       };
       audio.onerror = () => {
         if (!isStale()) {
           setSpeaking(false);
-          setSpeechError("ஒலியை இயக்க முடியவில்லை.");
+          setSpeechError(t.audioPlayError);
+          scheduleAdvance();
         }
       };
       try {
@@ -162,7 +293,8 @@ export default function InkBoard({ unit }: { unit: InkUnit }) {
       console.error("InkBoard readBoard failed", err);
       if (!isStale()) {
         setSpeaking(false);
-        setSpeechError("ஒலி சேவை இப்போது கிடைக்கவில்லை.");
+        setSpeechError(t.audioServiceError);
+        scheduleAdvance();
       }
     }
   }
@@ -175,6 +307,7 @@ export default function InkBoard({ unit }: { unit: InkUnit }) {
     return () => {
       speechGenerationRef.current++;
       audioRef.current?.pause();
+      window.speechSynthesis?.cancel();
     };
   }, []);
 
@@ -197,25 +330,28 @@ export default function InkBoard({ unit }: { unit: InkUnit }) {
                 needsTapToStart ? "animate-pulse bg-rose-600" : "bg-indigo-700"
               }`}
             >
-              {speaking ? "🔊 படிக்கிறேன்..." : needsTapToStart ? "🔊 தட்டி கேளுங்கள்" : "🔊 மீண்டும் படி"}
+              {speaking ? t.reading : needsTapToStart ? t.tapToListen : t.readAgain}
             </button>
             <Link href={`/board-ink/${unit.unitKey}/test`} className="rounded-lg border-2 border-indigo-700 px-4 py-3 text-sm font-black text-indigo-700">
-              🧪 முழு தேர்வு
+              {t.fullTest}
             </Link>
           </div>
         </header>
 
         <div className="flex flex-wrap gap-2 border-b border-slate-200 bg-white px-4 py-2 sm:px-8">
-          {unit.topics.map((t, i) => (
+          {unit.topics.map((tp, i) => (
             <button
-              key={t.topicId}
+              key={tp.topicId}
               type="button"
-              onClick={() => setTopicIndex(i)}
+              onClick={() => {
+                speechGenerationRef.current++; // cancel any pending auto-advance from where we were
+                setTopicIndex(i);
+              }}
               className={`rounded-full border-2 px-3 py-1.5 text-xs font-black ${
                 i === topicIndex ? "border-indigo-700 bg-indigo-700 text-white" : "border-slate-300 text-slate-600"
               }`}
             >
-              {t.topicId} · {t.title}
+              {tp.topicId} · {tp.title}
             </button>
           ))}
         </div>
@@ -228,9 +364,13 @@ export default function InkBoard({ unit }: { unit: InkUnit }) {
             <button
               key={s.label}
               type="button"
-              onClick={() => setSceneIndex(i)}
+              onClick={() => {
+                speechGenerationRef.current++; // cancel any pending auto-advance from where we were
+                setShowQuickCheck(false);
+                setSceneIndex(i);
+              }}
               className={`rounded-full border-2 px-3 py-2 text-xs font-black ${
-                i === sceneIndex ? "border-indigo-700 bg-indigo-700 text-white" : "border-slate-300 text-slate-600"
+                i === sceneIndex && !showQuickCheck ? "border-indigo-700 bg-indigo-700 text-white" : "border-slate-300 text-slate-600"
               }`}
             >
               {s.label}
@@ -241,14 +381,14 @@ export default function InkBoard({ unit }: { unit: InkUnit }) {
 
         <div className="border-t border-slate-200 bg-white px-4 py-4 sm:px-8">
           {showQuickCheck ? (
-            <InkQuickCheck key={topic.topicId} unitKey={unit.unitKey} topic={topic} onClose={() => setShowQuickCheck(false)} />
+            <InkQuickCheck key={topic.topicId} unitKey={unit.unitKey} topic={topic} lang={isEnglish ? "en" : "ta"} onClose={handleQuickCheckClose} />
           ) : (
             <button
               type="button"
               onClick={() => setShowQuickCheck(true)}
               className="w-full rounded-lg border-2 border-dashed border-indigo-300 py-3 text-sm font-black text-indigo-700 hover:border-indigo-500"
             >
-              ✅ {topic.topicId} - விரைவு சோதனை தொடங்கு
+              {t.startQuickCheck(topic.topicId)}
             </button>
           )}
         </div>

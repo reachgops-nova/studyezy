@@ -15,6 +15,20 @@ function setTextStyle(ctx: CanvasRenderingContext2D, color: string, size: number
   ctx.lineJoin = "round";
 }
 
+// Canvas's fillText has no concept of "\n" - it just renders it as a
+// missing-glyph box and keeps going on one line. Every scene file across
+// every subject has used "\n" inside text/box-label values since the very
+// first ink-board unit, assuming multi-line support that never actually
+// existed - caught live 2026-11-07 when a reviewer saw a whole paragraph of
+// IGCSE Science content rendered as one garbled run-on line. Fixing it here
+// (not in each of the hundreds of call sites) makes every existing scene
+// across every unit render as originally intended.
+function fillMultilineText(ctx: CanvasRenderingContext2D, value: string, x: number, y: number, size: number) {
+  const lineHeight = size * 1.25;
+  const lines = value.split("\n");
+  lines.forEach((line, i) => ctx.fillText(line, x, y + i * lineHeight));
+}
+
 function drawLine(ctx: CanvasRenderingContext2D, x1: number, y1: number, x2: number, y2: number, color: string, width: number, dashed = false) {
   ctx.save();
   ctx.strokeStyle = color;
@@ -43,7 +57,20 @@ function drawBox(ctx: CanvasRenderingContext2D, x: number, y: number, w: number,
   ctx.stroke();
   if (label) {
     setTextStyle(ctx, color, labelSize);
-    ctx.fillText(label, x + 14, y + labelSize + 10);
+    fillMultilineText(ctx, label, x + 14, y + labelSize + 10, labelSize);
+  }
+}
+
+function drawCircle(ctx: CanvasRenderingContext2D, x: number, y: number, r: number, color: string, fill = true) {
+  ctx.beginPath();
+  ctx.arc(x, y, r, 0, Math.PI * 2);
+  if (fill) {
+    ctx.fillStyle = color;
+    ctx.fill();
+  } else {
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 3;
+    ctx.stroke();
   }
 }
 
@@ -122,7 +149,10 @@ export function renderOps(ctx: CanvasRenderingContext2D, width: number, height: 
     switch (op.type) {
       case "text":
         setTextStyle(ctx, op.color, op.size ?? 32);
-        ctx.fillText(op.value, op.x, op.y);
+        fillMultilineText(ctx, op.value, op.x, op.y, op.size ?? 32);
+        break;
+      case "circle":
+        drawCircle(ctx, op.x, op.y, op.r, op.color, op.fill ?? true);
         break;
       case "line":
         drawLine(ctx, op.x1, op.y1, op.x2, op.y2, op.color, op.width ?? 4, op.dashed);

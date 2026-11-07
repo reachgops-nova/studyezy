@@ -1,5 +1,57 @@
-import type { InkUnit } from "./types";
+import type { InkOp, InkUnit } from "./types";
 import { TIP_COLOR, PRACTICE_COLOR } from "./types";
+
+// Real drawn-circle particles for the particle-model diagrams, instead of
+// "●" text characters - crisp at any screen size and genuinely shows the
+// three arrangements (tight grid / jumbled cluster / scattered) rather than
+// relying on a font glyph to read as a "particle". Small deterministic
+// jitter tables (not Math.random()) keep every render of a scene identical.
+const LIQUID_JITTER: [number, number][] = [
+  [0, -4], [4, 3], [-3, 2], [2, -3], [-4, -2], [3, 4], [-2, -4], [4, 1],
+  [-3, -1], [1, 4], [-4, 3], [3, -2], [-1, -3], [2, 2], [4, -4], [-2, 4],
+  [0, 3], [-3, -3], [3, 1], [-4, -1], [2, 4], [-1, 2], [4, -3], [-3, 0],
+  [1, -4], [-2, 1], [3, 3], [-4, 2], [0, -2], [2, -1], [-1, 4], [4, 0],
+];
+
+function solidParticles(x0: number, y0: number, color: string): InkOp[] {
+  const ops: InkOp[] = [];
+  const r = 11;
+  const gapX = 46;
+  const gapY = 42;
+  for (let row = 0; row < 4; row++) {
+    for (let col = 0; col < 7; col++) {
+      ops.push({ type: "circle", x: x0 + col * gapX, y: y0 + row * gapY, r, color });
+    }
+  }
+  return ops;
+}
+
+function liquidParticles(x0: number, y0: number, color: string): InkOp[] {
+  const ops: InkOp[] = [];
+  const r = 11;
+  const gapX = 46;
+  const gapY = 42;
+  let i = 0;
+  for (let row = 0; row < 4; row++) {
+    for (let col = 0; col < 7; col++) {
+      const [jx, jy] = LIQUID_JITTER[i % LIQUID_JITTER.length];
+      ops.push({ type: "circle", x: x0 + col * gapX + jx, y: y0 + row * gapY + jy, r, color });
+      i++;
+    }
+  }
+  return ops;
+}
+
+// Hand-placed, not generated - "scattered, far apart" only reads correctly
+// with real irregular gaps, which a formula tends to make look gridded again.
+const GAS_POSITIONS: [number, number][] = [
+  [100, 140], [260, 155], [400, 125], [150, 225], [340, 250],
+  [220, 295], [420, 305], [90, 300], [310, 175], [180, 160],
+];
+
+function gasParticles(color: string): InkOp[] {
+  return GAS_POSITIONS.map(([x, y]) => ({ type: "circle", x, y, r: 12, color }));
+}
 
 /**
  * Ink-board treatment of Cambridge Primary Science Stage 4, Unit 5 (States
@@ -44,10 +96,7 @@ export const CAMBRIDGE_4_SCIENCE_5_INK: InkUnit = {
           ops: [
             { type: "text", value: "A SOLID - particles packed tight, fixed pattern", x: 60, y: 60, color: "#b45309", size: 24 },
             { type: "box", x: 60, y: 100, w: 420, h: 220, color: "#b45309" },
-            { type: "text", value: "●●●●●●●●", x: 90, y: 150, color: "#b45309", size: 26 },
-            { type: "text", value: "●●●●●●●●", x: 90, y: 190, color: "#b45309", size: 26 },
-            { type: "text", value: "●●●●●●●●", x: 90, y: 230, color: "#b45309", size: 26 },
-            { type: "text", value: "●●●●●●●●", x: 90, y: 270, color: "#b45309", size: 26 },
+            ...solidParticles(100, 140, "#b45309"),
             { type: "text", value: "✔ keeps its shape\n✔ keeps its volume\n✘ cannot be poured\n✔ can be cut or shaped", x: 540, y: 140, color: "#1e293b", size: 22 },
           ],
         },
@@ -57,10 +106,7 @@ export const CAMBRIDGE_4_SCIENCE_5_INK: InkUnit = {
           ops: [
             { type: "text", value: "A LIQUID - particles close but jumbled, able to flow", x: 60, y: 60, color: "#0369a1", size: 24 },
             { type: "box", x: 60, y: 100, w: 420, h: 220, color: "#0369a1" },
-            { type: "text", value: "●● ●●● ● ●●", x: 90, y: 150, color: "#0369a1", size: 26 },
-            { type: "text", value: "● ●● ●●● ●●", x: 90, y: 190, color: "#0369a1", size: 26 },
-            { type: "text", value: "●●● ● ●● ●", x: 90, y: 230, color: "#0369a1", size: 26 },
-            { type: "text", value: "●● ●●● ●● ●", x: 90, y: 270, color: "#0369a1", size: 26 },
+            ...liquidParticles(100, 140, "#0369a1"),
             { type: "text", value: "✔ keeps its volume\n✘ does NOT keep its shape\n✔ can be poured\n✔ takes the shape of its container", x: 540, y: 140, color: "#1e293b", size: 22 },
           ],
         },
@@ -70,13 +116,7 @@ export const CAMBRIDGE_4_SCIENCE_5_INK: InkUnit = {
           ops: [
             { type: "text", value: "A GAS - particles spread far apart, moving fast", x: 60, y: 60, color: "#6b21a8", size: 24 },
             { type: "box", x: 60, y: 100, w: 420, h: 220, color: "#6b21a8" },
-            { type: "text", value: "●", x: 100, y: 140, color: "#6b21a8", size: 26 },
-            { type: "text", value: "●", x: 250, y: 160, color: "#6b21a8", size: 26 },
-            { type: "text", value: "●", x: 400, y: 130, color: "#6b21a8", size: 26 },
-            { type: "text", value: "●", x: 150, y: 220, color: "#6b21a8", size: 26 },
-            { type: "text", value: "●", x: 350, y: 250, color: "#6b21a8", size: 26 },
-            { type: "text", value: "●", x: 220, y: 290, color: "#6b21a8", size: 26 },
-            { type: "text", value: "●", x: 420, y: 300, color: "#6b21a8", size: 26 },
+            ...gasParticles("#6b21a8"),
             { type: "text", value: "✘ no fixed shape\n✘ no fixed volume\n✔ fills the whole container\n✔ can be squashed (compressed) easily", x: 540, y: 140, color: "#1e293b", size: 22 },
           ],
         },
