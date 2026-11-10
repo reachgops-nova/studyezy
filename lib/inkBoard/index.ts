@@ -29,7 +29,16 @@ import { CAMBRIDGE_4_TAMIL_19_INK } from "./cambridge-4-tamil-19";
 import { CAMBRIDGE_4_TAMIL_20_INK } from "./cambridge-4-tamil-20";
 import { CAMBRIDGE_4_TAMIL_21_INK } from "./cambridge-4-tamil-21";
 import { CAMBRIDGE_4_TAMIL_22_INK } from "./cambridge-4-tamil-22";
+import { CAMBRIDGE_4_SCIENCE_1_INK } from "./cambridge-4-science-1";
+import { CAMBRIDGE_4_SCIENCE_2_INK } from "./cambridge-4-science-2";
+import { CAMBRIDGE_4_SCIENCE_3_INK } from "./cambridge-4-science-3";
+import { CAMBRIDGE_4_SCIENCE_4_INK } from "./cambridge-4-science-4";
 import { CAMBRIDGE_4_SCIENCE_5_INK } from "./cambridge-4-science-5";
+import { CAMBRIDGE_4_SCIENCE_6_INK } from "./cambridge-4-science-6";
+import { CAMBRIDGE_4_SCIENCE_7_INK } from "./cambridge-4-science-7";
+import { CAMBRIDGE_4_SCIENCE_8_INK } from "./cambridge-4-science-8";
+import { CAMBRIDGE_4_SCIENCE_9_INK } from "./cambridge-4-science-9";
+import { CAMBRIDGE_4_SCIENCE_10_INK } from "./cambridge-4-science-10";
 
 export const INK_BOARD_UNITS: Record<string, InkUnit> = {
   [TAMILNADU_10_MATH_1.unitKey]: TAMILNADU_10_MATH_1,
@@ -62,7 +71,16 @@ export const INK_BOARD_UNITS: Record<string, InkUnit> = {
   [CAMBRIDGE_4_TAMIL_20_INK.unitKey]: CAMBRIDGE_4_TAMIL_20_INK,
   [CAMBRIDGE_4_TAMIL_21_INK.unitKey]: CAMBRIDGE_4_TAMIL_21_INK,
   [CAMBRIDGE_4_TAMIL_22_INK.unitKey]: CAMBRIDGE_4_TAMIL_22_INK,
+  [CAMBRIDGE_4_SCIENCE_1_INK.unitKey]: CAMBRIDGE_4_SCIENCE_1_INK,
+  [CAMBRIDGE_4_SCIENCE_2_INK.unitKey]: CAMBRIDGE_4_SCIENCE_2_INK,
+  [CAMBRIDGE_4_SCIENCE_3_INK.unitKey]: CAMBRIDGE_4_SCIENCE_3_INK,
+  [CAMBRIDGE_4_SCIENCE_4_INK.unitKey]: CAMBRIDGE_4_SCIENCE_4_INK,
   [CAMBRIDGE_4_SCIENCE_5_INK.unitKey]: CAMBRIDGE_4_SCIENCE_5_INK,
+  [CAMBRIDGE_4_SCIENCE_6_INK.unitKey]: CAMBRIDGE_4_SCIENCE_6_INK,
+  [CAMBRIDGE_4_SCIENCE_7_INK.unitKey]: CAMBRIDGE_4_SCIENCE_7_INK,
+  [CAMBRIDGE_4_SCIENCE_8_INK.unitKey]: CAMBRIDGE_4_SCIENCE_8_INK,
+  [CAMBRIDGE_4_SCIENCE_9_INK.unitKey]: CAMBRIDGE_4_SCIENCE_9_INK,
+  [CAMBRIDGE_4_SCIENCE_10_INK.unitKey]: CAMBRIDGE_4_SCIENCE_10_INK,
 };
 
 export function hasInkBoardRoute(unitKey: string): boolean {
