@@ -212,46 +212,63 @@ export default function InkBoard({ unit }: { unit: InkUnit }) {
     }
   }
 
-  // English narration uses a real browser voice when one is installed -
-  // free and effectively instant, unlike the ~1.8-2s /api/tts round trip
-  // (measured in that endpoint's own comment). Falls back to the server
-  // path below (readBoard's main body) if no English voice is available on
-  // this device, exactly the same fallback direction /api/tts already
-  // documents for the reverse case (Tamil has no browser voice on plenty of
-  // real devices).
+  // English narration uses a real browser voice - free and effectively
+  // instant, unlike the ~1.8-2s /api/tts round trip (measured in that
+  // endpoint's own comment), let alone the much longer real-world stall
+  // reported live 2026-11-10 ("took almost 12 sec to start reading..
+  // the voice is not connected to the visuals"). Deliberately does NOT
+  // require finding an explicit English-tagged voice before committing to
+  // this path: leaving `utter.voice` unset makes the browser use its own
+  // default voice, which is English (or close enough) on the overwhelming
+  // majority of real devices - and crucially, NEVER silently falls through
+  // to the slow network path just because getVoices() hasn't populated
+  // yet. Only a device with no speechSynthesis API at all uses the server
+  // path below (readBoard's main body).
   function speakEnglishWithBrowserVoice(text: string, myGeneration: number, advance: boolean): boolean {
     if (typeof window === "undefined" || !("speechSynthesis" in window)) return false;
-    // Fall back to a fresh call only if the primed/cached list is still
-    // empty (e.g. voiceschanged genuinely hasn't fired yet on this very
-    // first scene) - most calls use the cached list so they don't pay the
-    // same "might be empty right now" lottery on every scene.
     const voices = voicesRef.current.length > 0 ? voicesRef.current : window.speechSynthesis.getVoices();
     const voice = voices.find((v) => v.lang.toLowerCase().startsWith("en"));
-    if (!voice) return false;
     const isStale = () => speechGenerationRef.current !== myGeneration;
+
+    // Chrome has a known quirk where speak() called in the same tick right
+    // after cancel() can be silently dropped - a tiny delay lets the
+    // cancellation actually land first, every time, instead of only after
+    // whichever earlier call happened to win the race.
     window.speechSynthesis.cancel();
-    const utter = new SpeechSynthesisUtterance(text);
-    utter.voice = voice;
-    utter.rate = 0.95;
-    let started = false;
-    utter.onstart = () => {
-      started = true;
-    };
-    utter.onend = () => {
-      if (isStale()) return;
-      setSpeaking(false);
-      if (advance) scheduleAdvance();
-    };
-    utter.onerror = () => {
-      if (isStale()) return;
-      setSpeaking(false);
-      // A blocked/failed browser utterance before any page interaction
-      // looks just like the <audio> autoplay-block case - ask for one tap
-      // rather than silently stalling the lesson.
-      if (!started) setNeedsTapToStart(true);
-    };
     setSpeaking(true);
-    window.speechSynthesis.speak(utter);
+    window.setTimeout(() => {
+      if (isStale()) return;
+      const utter = new SpeechSynthesisUtterance(text);
+      if (voice) utter.voice = voice; // else: browser's own default voice
+      utter.rate = 0.95;
+      let started = false;
+      utter.onstart = () => {
+        started = true;
+      };
+      utter.onend = () => {
+        if (isStale()) return;
+        setSpeaking(false);
+        if (advance) scheduleAdvance();
+      };
+      utter.onerror = () => {
+        if (isStale()) return;
+        setSpeaking(false);
+        // A blocked/failed browser utterance before any page interaction
+        // looks just like the <audio> autoplay-block case - ask for one tap
+        // rather than silently stalling the lesson.
+        if (!started) setNeedsTapToStart(true);
+      };
+      window.speechSynthesis.speak(utter);
+      // Safety net: if the browser never actually starts speaking (some
+      // real devices silently swallow speak() calls), stop waiting and ask
+      // for a tap rather than leaving the lesson stalled indefinitely.
+      window.setTimeout(() => {
+        if (isStale() || started) return;
+        window.speechSynthesis.cancel();
+        setSpeaking(false);
+        setNeedsTapToStart(true);
+      }, 1500);
+    }, 30);
     return true;
   }
 
@@ -402,7 +419,12 @@ export default function InkBoard({ unit }: { unit: InkUnit }) {
 
         <div className="bg-[#fbfdfb] p-2 sm:p-5">
           {scene.image ? (
-            <div style={{ aspectRatio: `${DESIGN_WIDTH} / ${DESIGN_HEIGHT}` }} className="w-full overflow-hidden rounded-lg bg-[#0b1329]">
+            // ImageStage sizes itself from the picture's own measured aspect
+            // ratio (see components/board/ImageStage.tsx) - it needs a
+            // flexible box, not one forced into the canvas's wide 1400x680
+            // ratio, which squeezed/cropped it. This mirrors the flexible
+            // stage container DrawingBoard.tsx already gives it.
+            <div className="relative flex min-h-[20rem] items-center justify-center overflow-hidden rounded-lg bg-[#0b1329] p-2 sm:min-h-[28rem]">
               <ImageStage image={scene.image} onTap={speakHotspot} />
             </div>
           ) : (
