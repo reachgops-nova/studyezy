@@ -39,6 +39,24 @@ import { CAMBRIDGE_4_SCIENCE_7_INK } from "./cambridge-4-science-7";
 import { CAMBRIDGE_4_SCIENCE_8_INK } from "./cambridge-4-science-8";
 import { CAMBRIDGE_4_SCIENCE_9_INK } from "./cambridge-4-science-9";
 import { CAMBRIDGE_4_SCIENCE_10_INK } from "./cambridge-4-science-10";
+import { CAMBRIDGE_4_MATH_1_INK } from "./cambridge-4-math-1";
+import { CAMBRIDGE_4_MATH_2_INK } from "./cambridge-4-math-2";
+import { CAMBRIDGE_4_MATH_3_INK } from "./cambridge-4-math-3";
+import { CAMBRIDGE_4_MATH_4_INK } from "./cambridge-4-math-4";
+import { CAMBRIDGE_4_MATH_5_INK } from "./cambridge-4-math-5";
+import { CAMBRIDGE_4_MATH_6_INK } from "./cambridge-4-math-6";
+import { CAMBRIDGE_4_MATH_7_INK } from "./cambridge-4-math-7";
+import { CAMBRIDGE_4_MATH_8_INK } from "./cambridge-4-math-8";
+import { CAMBRIDGE_4_MATH_9_INK } from "./cambridge-4-math-9";
+import { CAMBRIDGE_4_MATH_10_INK } from "./cambridge-4-math-10";
+import { CAMBRIDGE_4_MATH_11_INK } from "./cambridge-4-math-11";
+import { CAMBRIDGE_4_MATH_12_INK } from "./cambridge-4-math-12";
+import { CAMBRIDGE_4_MATH_13_INK } from "./cambridge-4-math-13";
+import { CAMBRIDGE_4_MATH_14_INK } from "./cambridge-4-math-14";
+import { CAMBRIDGE_4_MATH_15_INK } from "./cambridge-4-math-15";
+import { CAMBRIDGE_4_MATH_16_INK } from "./cambridge-4-math-16";
+import { CAMBRIDGE_4_MATH_17_INK } from "./cambridge-4-math-17";
+import { CAMBRIDGE_4_MATH_18_INK } from "./cambridge-4-math-18";
 
 export const INK_BOARD_UNITS: Record<string, InkUnit> = {
   [TAMILNADU_10_MATH_1.unitKey]: TAMILNADU_10_MATH_1,
@@ -81,6 +99,24 @@ export const INK_BOARD_UNITS: Record<string, InkUnit> = {
   [CAMBRIDGE_4_SCIENCE_8_INK.unitKey]: CAMBRIDGE_4_SCIENCE_8_INK,
   [CAMBRIDGE_4_SCIENCE_9_INK.unitKey]: CAMBRIDGE_4_SCIENCE_9_INK,
   [CAMBRIDGE_4_SCIENCE_10_INK.unitKey]: CAMBRIDGE_4_SCIENCE_10_INK,
+  [CAMBRIDGE_4_MATH_1_INK.unitKey]: CAMBRIDGE_4_MATH_1_INK,
+  [CAMBRIDGE_4_MATH_2_INK.unitKey]: CAMBRIDGE_4_MATH_2_INK,
+  [CAMBRIDGE_4_MATH_3_INK.unitKey]: CAMBRIDGE_4_MATH_3_INK,
+  [CAMBRIDGE_4_MATH_4_INK.unitKey]: CAMBRIDGE_4_MATH_4_INK,
+  [CAMBRIDGE_4_MATH_5_INK.unitKey]: CAMBRIDGE_4_MATH_5_INK,
+  [CAMBRIDGE_4_MATH_6_INK.unitKey]: CAMBRIDGE_4_MATH_6_INK,
+  [CAMBRIDGE_4_MATH_7_INK.unitKey]: CAMBRIDGE_4_MATH_7_INK,
+  [CAMBRIDGE_4_MATH_8_INK.unitKey]: CAMBRIDGE_4_MATH_8_INK,
+  [CAMBRIDGE_4_MATH_9_INK.unitKey]: CAMBRIDGE_4_MATH_9_INK,
+  [CAMBRIDGE_4_MATH_10_INK.unitKey]: CAMBRIDGE_4_MATH_10_INK,
+  [CAMBRIDGE_4_MATH_11_INK.unitKey]: CAMBRIDGE_4_MATH_11_INK,
+  [CAMBRIDGE_4_MATH_12_INK.unitKey]: CAMBRIDGE_4_MATH_12_INK,
+  [CAMBRIDGE_4_MATH_13_INK.unitKey]: CAMBRIDGE_4_MATH_13_INK,
+  [CAMBRIDGE_4_MATH_14_INK.unitKey]: CAMBRIDGE_4_MATH_14_INK,
+  [CAMBRIDGE_4_MATH_15_INK.unitKey]: CAMBRIDGE_4_MATH_15_INK,
+  [CAMBRIDGE_4_MATH_16_INK.unitKey]: CAMBRIDGE_4_MATH_16_INK,
+  [CAMBRIDGE_4_MATH_17_INK.unitKey]: CAMBRIDGE_4_MATH_17_INK,
+  [CAMBRIDGE_4_MATH_18_INK.unitKey]: CAMBRIDGE_4_MATH_18_INK,
 };
 
 export function hasInkBoardRoute(unitKey: string): boolean {
