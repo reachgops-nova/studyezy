@@ -6,6 +6,7 @@ import { renderOps } from "@/lib/inkBoard/render";
 import type { InkUnit } from "@/lib/inkBoard/types";
 import ImageStage from "./ImageStage";
 import InkQuickCheck from "./InkQuickCheck";
+import SpoonFeedPanel from "./SpoonFeedPanel";
 
 // Generic player for any InkUnit (see lib/inkBoard/types.ts for why this
 // replaces components/board/TeacherWritingSample.tsx's one hardcoded
@@ -100,6 +101,7 @@ export default function InkBoard({ unit }: { unit: InkUnit }) {
   sceneRef.current = scene;
   const isEnglish = unit.languageCode.toLowerCase().startsWith("en");
   const t = pickStrings(unit.languageCode);
+  const isSpoonFedUnit = unit.unitKey === "cambridge-4-science-5";
 
   // Chrome (and others) return an EMPTY array from speechSynthesis.getVoices()
   // on its first call(s), populating only after the async 'voiceschanged'
@@ -171,9 +173,9 @@ export default function InkBoard({ unit }: { unit: InkUnit }) {
 
   useEffect(() => {
     if (!scene) return;
-    readBoard();
+    playNarration(scene.say, !isSpoonFedUnit);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [scene]);
+  }, [scene, isSpoonFedUnit]);
 
   // Moves the lesson forward on its own once narration for the current
   // scene has actually finished: next scene within the topic, or - once the
@@ -431,6 +433,17 @@ export default function InkBoard({ unit }: { unit: InkUnit }) {
             <canvas ref={canvasRef} style={{ aspectRatio: `${DESIGN_WIDTH} / ${DESIGN_HEIGHT}` }} className="w-full rounded-lg" />
           )}
         </div>
+        {isSpoonFedUnit && !showQuickCheck && (
+          <SpoonFeedPanel
+            sceneIndex={sceneIndex}
+            onComplete={() => {
+              speechGenerationRef.current++;
+              if (sceneIndex + 1 < topic.scenes.length) setSceneIndex((index) => index + 1);
+              else setShowQuickCheck(true);
+            }}
+            onSpeak={(text) => playNarration(text, false)}
+          />
+        )}
         <div className="flex flex-wrap justify-center gap-1 border-t border-slate-200 bg-white px-4 py-3 sm:px-8">
           {topic.scenes.map((s, i) => (
             <button
