@@ -226,7 +226,7 @@ export default function InkBoard({ unit }: { unit: InkUnit }) {
   // to the slow network path just because getVoices() hasn't populated
   // yet. Only a device with no speechSynthesis API at all uses the server
   // path below (readBoard's main body).
-  function speakEnglishWithBrowserVoice(text: string, myGeneration: number, advance: boolean): boolean {
+  function speakEnglishWithBrowserVoice(text: string, myGeneration: number, advance: boolean, onDone?: () => void): boolean {
     if (typeof window === "undefined" || !("speechSynthesis" in window)) return false;
     const voices = voicesRef.current.length > 0 ? voicesRef.current : window.speechSynthesis.getVoices();
     const voice = voices.find((v) => v.lang.toLowerCase().startsWith("en"));
@@ -242,7 +242,9 @@ export default function InkBoard({ unit }: { unit: InkUnit }) {
       if (isStale()) return;
       const utter = new SpeechSynthesisUtterance(text);
       if (voice) utter.voice = voice; // else: browser's own default voice
-      utter.rate = 0.95;
+      // Grade 4 explanations need deliberate pauses between ideas.
+      utter.rate = 0.72;
+      utter.pitch = 1.0;
       let started = false;
       utter.onstart = () => {
         started = true;
@@ -250,6 +252,7 @@ export default function InkBoard({ unit }: { unit: InkUnit }) {
       utter.onend = () => {
         if (isStale()) return;
         setSpeaking(false);
+        onDone?.();
         if (advance) scheduleAdvance();
       };
       utter.onerror = () => {
@@ -281,7 +284,7 @@ export default function InkBoard({ unit }: { unit: InkUnit }) {
   // auto-advance flow - true for the scene's own narration, false for an
   // ad-hoc hotspot tap (tapping a hotspot is exploration, not "this scene is
   // done, move on").
-  async function playNarration(text: string, advance: boolean) {
+  async function playNarration(text: string, advance: boolean, onDone?: () => void) {
     const myGeneration = ++speechGenerationRef.current;
     const isStale = () => speechGenerationRef.current !== myGeneration;
 
@@ -294,7 +297,7 @@ export default function InkBoard({ unit }: { unit: InkUnit }) {
     audioRef.current?.pause();
     window.speechSynthesis?.cancel();
 
-    if (isEnglish && speakEnglishWithBrowserVoice(text, myGeneration, advance)) return;
+    if (isEnglish && speakEnglishWithBrowserVoice(text, myGeneration, advance, onDone)) return;
 
     setSpeaking(true);
     try {
@@ -313,12 +316,14 @@ export default function InkBoard({ unit }: { unit: InkUnit }) {
       audio.onended = () => {
         if (isStale()) return;
         setSpeaking(false);
+        onDone?.();
         if (advance) scheduleAdvance();
       };
       audio.onerror = () => {
         if (!isStale()) {
           setSpeaking(false);
           setSpeechError(t.audioPlayError);
+          onDone?.();
           if (advance) scheduleAdvance();
         }
       };
@@ -346,6 +351,7 @@ export default function InkBoard({ unit }: { unit: InkUnit }) {
       if (!isStale()) {
         setSpeaking(false);
         setSpeechError(t.audioServiceError);
+        onDone?.();
         if (advance) scheduleAdvance();
       }
     }
@@ -401,21 +407,17 @@ export default function InkBoard({ unit }: { unit: InkUnit }) {
           </div>
         </header>
 
-        <div className="flex flex-wrap gap-2 border-b border-slate-200 bg-white px-4 py-2 sm:px-8">
-          {unit.topics.map((tp, i) => (
-            <button
-              key={tp.topicId}
-              type="button"
-              onClick={() => {
-                speechGenerationRef.current++; // cancel any pending auto-advance from where we were
-                setTopicIndex(i);
-              }}
-              className={`rounded-full border-2 px-3 py-1.5 text-xs font-black ${
-                i === topicIndex ? "border-indigo-700 bg-indigo-700 text-white" : "border-slate-300 text-slate-600"
-              }`}
-            >
-              {tp.topicId} · {tp.title}
-            </button>
+        <div className="border-b border-slate-200 bg-white px-4 py-2 sm:px-8">
+          {isSpoonFedUnit ? (
+            <div className="mx-auto flex max-w-4xl items-center gap-3">
+              <label htmlFor="science-topic" className="shrink-0 text-xs font-black uppercase tracking-wider text-slate-500">Today’s idea</label>
+              <select id="science-topic" value={topicIndex} onChange={(event) => { speechGenerationRef.current++; setTopicIndex(Number(event.target.value)); }} className="min-w-0 flex-1 rounded-lg border-2 border-indigo-200 bg-white px-3 py-2 text-sm font-black text-indigo-900">
+                {unit.topics.map((tp, i) => <option key={tp.topicId} value={i}>{tp.topicId} · {tp.title}</option>)}
+              </select>
+              <span className="hidden shrink-0 text-xs font-bold text-slate-500 sm:inline">Topic {topicIndex + 1} of {unit.topics.length}</span>
+            </div>
+          ) : unit.topics.map((tp, i) => (
+            <button key={tp.topicId} type="button" onClick={() => { speechGenerationRef.current++; setTopicIndex(i); }} className={`mr-2 rounded-full border-2 px-3 py-1.5 text-xs font-black ${i === topicIndex ? "border-indigo-700 bg-indigo-700 text-white" : "border-slate-300 text-slate-600"}`}>{tp.topicId} · {tp.title}</button>
           ))}
         </div>
 
@@ -441,11 +443,11 @@ export default function InkBoard({ unit }: { unit: InkUnit }) {
               if (sceneIndex + 1 < topic.scenes.length) setSceneIndex((index) => index + 1);
               else setShowQuickCheck(true);
             }}
-            onSpeak={(text) => playNarration(text, false)}
+            onSpeak={(text, onDone) => playNarration(text, false, onDone)}
           />
         )}
         <div className="flex flex-wrap justify-center gap-1 border-t border-slate-200 bg-white px-4 py-3 sm:px-8">
-          {topic.scenes.map((s, i) => (
+          {isSpoonFedUnit ? <div className="flex w-full max-w-4xl items-center gap-3"><span className="shrink-0 text-xs font-black uppercase tracking-wider text-slate-500">Lesson step</span><div className="h-3 flex-1 overflow-hidden rounded-full bg-slate-200"><div className="h-full rounded-full bg-indigo-600 transition-all" style={{ width: `${((sceneIndex + 1) / topic.scenes.length) * 100}%` }} /></div><span className="shrink-0 text-xs font-black text-indigo-700">{sceneIndex + 1} / {topic.scenes.length}</span></div> : topic.scenes.map((s, i) => (
             <button
               key={s.label}
               type="button"

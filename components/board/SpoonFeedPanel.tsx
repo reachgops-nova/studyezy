@@ -14,7 +14,7 @@ const CHECKS: Check[] = [
   { prompt: "Playdough is squashed and shaped, but does not flow. Which state?", options: ["Solid", "Liquid", "Gas"], answer: 0, explain: "Playdough keeps its shape when it rests, so we classify it as a solid." },
 ];
 
-export default function SpoonFeedPanel({ sceneIndex, onComplete, onSpeak }: { sceneIndex: number; onComplete: () => void; onSpeak?: (text: string) => void }) {
+export default function SpoonFeedPanel({ sceneIndex, onComplete, onSpeak }: { sceneIndex: number; onComplete: () => void; onSpeak?: (text: string, onDone?: () => void) => void }) {
   const check = CHECKS[Math.min(sceneIndex, CHECKS.length - 1)];
   const [chosen, setChosen] = useState<number | null>(null);
   const [wrong, setWrong] = useState(false);
@@ -25,8 +25,7 @@ export default function SpoonFeedPanel({ sceneIndex, onComplete, onSpeak }: { sc
     if (chosen !== null) return;
     setChosen(index);
     if (index === check.answer) {
-      onSpeak?.(`Correct. ${check.explain}`);
-      window.setTimeout(onComplete, 1700);
+      onSpeak?.(`Correct. ${check.explain}`, onComplete);
     } else {
       setWrong(true);
       onSpeak?.(`Let us look again. ${check.explain}`);
