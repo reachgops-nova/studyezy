@@ -101,6 +101,28 @@ export default function InkBoard({ unit }: { unit: InkUnit }) {
   const isEnglish = unit.languageCode.toLowerCase().startsWith("en");
   const t = pickStrings(unit.languageCode);
 
+  // Chrome (and others) return an EMPTY array from speechSynthesis.getVoices()
+  // on its first call(s), populating only after the async 'voiceschanged'
+  // event fires once - calling getVoices() fresh inside speakEnglishWithBrowserVoice
+  // was silently finding no English voice on every single scene, falling
+  // through to the slow ~2s server /api/tts round trip every time instead of
+  // the intended free/instant browser voice. Real gap reported live
+  // 2026-11-10 ("reading is not sync with page shift it takes long time to
+  // read.. this was all good earlier"). Priming the list once here (and
+  // refreshing it whenever voiceschanged fires) is the standard fix.
+  const voicesRef = useRef<SpeechSynthesisVoice[]>([]);
+  useEffect(() => {
+    if (typeof window === "undefined" || !("speechSynthesis" in window)) return;
+    const refresh = () => {
+      voicesRef.current = window.speechSynthesis.getVoices();
+    };
+    refresh();
+    window.speechSynthesis.onvoiceschanged = refresh;
+    return () => {
+      if (window.speechSynthesis.onvoiceschanged === refresh) window.speechSynthesis.onvoiceschanged = null;
+    };
+  }, []);
+
   function draw() {
     const canvas = canvasRef.current;
     const activeScene = sceneRef.current;
@@ -199,7 +221,11 @@ export default function InkBoard({ unit }: { unit: InkUnit }) {
   // real devices).
   function speakEnglishWithBrowserVoice(text: string, myGeneration: number, advance: boolean): boolean {
     if (typeof window === "undefined" || !("speechSynthesis" in window)) return false;
-    const voices = window.speechSynthesis.getVoices();
+    // Fall back to a fresh call only if the primed/cached list is still
+    // empty (e.g. voiceschanged genuinely hasn't fired yet on this very
+    // first scene) - most calls use the cached list so they don't pay the
+    // same "might be empty right now" lottery on every scene.
+    const voices = voicesRef.current.length > 0 ? voicesRef.current : window.speechSynthesis.getVoices();
     const voice = voices.find((v) => v.lang.toLowerCase().startsWith("en"));
     if (!voice) return false;
     const isStale = () => speechGenerationRef.current !== myGeneration;
