@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { renderOps } from "@/lib/inkBoard/render";
 import type { InkUnit } from "@/lib/inkBoard/types";
+import ImageStage from "./ImageStage";
 import InkQuickCheck from "./InkQuickCheck";
 
 // Generic player for any InkUnit (see lib/inkBoard/types.ts for why this
@@ -196,7 +197,7 @@ export default function InkBoard({ unit }: { unit: InkUnit }) {
   // this device, exactly the same fallback direction /api/tts already
   // documents for the reverse case (Tamil has no browser voice on plenty of
   // real devices).
-  function speakEnglishWithBrowserVoice(text: string, myGeneration: number): boolean {
+  function speakEnglishWithBrowserVoice(text: string, myGeneration: number, advance: boolean): boolean {
     if (typeof window === "undefined" || !("speechSynthesis" in window)) return false;
     const voices = window.speechSynthesis.getVoices();
     const voice = voices.find((v) => v.lang.toLowerCase().startsWith("en"));
@@ -213,7 +214,7 @@ export default function InkBoard({ unit }: { unit: InkUnit }) {
     utter.onend = () => {
       if (isStale()) return;
       setSpeaking(false);
-      scheduleAdvance();
+      if (advance) scheduleAdvance();
     };
     utter.onerror = () => {
       if (isStale()) return;
@@ -228,8 +229,14 @@ export default function InkBoard({ unit }: { unit: InkUnit }) {
     return true;
   }
 
-  async function readBoard() {
-    if (!scene) return;
+  // The shared narration core: speaks `text` (the active scene's `say`, or
+  // an image hotspot's tapped "label. note" text) via the fast English
+  // browser-voice path when available, else the server /api/tts path.
+  // `advance` controls whether finishing this narration should trigger the
+  // auto-advance flow - true for the scene's own narration, false for an
+  // ad-hoc hotspot tap (tapping a hotspot is exploration, not "this scene is
+  // done, move on").
+  async function playNarration(text: string, advance: boolean) {
     const myGeneration = ++speechGenerationRef.current;
     const isStale = () => speechGenerationRef.current !== myGeneration;
 
@@ -242,14 +249,14 @@ export default function InkBoard({ unit }: { unit: InkUnit }) {
     audioRef.current?.pause();
     window.speechSynthesis?.cancel();
 
-    if (isEnglish && speakEnglishWithBrowserVoice(scene.say, myGeneration)) return;
+    if (isEnglish && speakEnglishWithBrowserVoice(text, myGeneration, advance)) return;
 
     setSpeaking(true);
     try {
       const res = await fetch("/api/tts", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ text: scene.say, languageCode: unit.languageCode }),
+        body: JSON.stringify({ text, languageCode: unit.languageCode }),
       });
       if (isStale()) return; // a newer scene/click started while this fetch was in flight
       if (!res.ok) throw new Error(`tts request failed (${res.status})`);
@@ -261,13 +268,13 @@ export default function InkBoard({ unit }: { unit: InkUnit }) {
       audio.onended = () => {
         if (isStale()) return;
         setSpeaking(false);
-        scheduleAdvance();
+        if (advance) scheduleAdvance();
       };
       audio.onerror = () => {
         if (!isStale()) {
           setSpeaking(false);
           setSpeechError(t.audioPlayError);
-          scheduleAdvance();
+          if (advance) scheduleAdvance();
         }
       };
       try {
@@ -290,13 +297,24 @@ export default function InkBoard({ unit }: { unit: InkUnit }) {
         console.warn("InkBoard autoplay blocked, waiting for a tap", playErr);
       }
     } catch (err) {
-      console.error("InkBoard readBoard failed", err);
+      console.error("InkBoard playNarration failed", err);
       if (!isStale()) {
         setSpeaking(false);
         setSpeechError(t.audioServiceError);
-        scheduleAdvance();
+        if (advance) scheduleAdvance();
       }
     }
+  }
+
+  function readBoard() {
+    if (!scene) return;
+    playNarration(scene.say, true);
+  }
+
+  // A tapped image hotspot narrates its own "label. note" text without
+  // affecting the scene's own auto-advance flow.
+  function speakHotspot(text: string) {
+    playNarration(text, false);
   }
 
   // Stop any in-flight narration the moment the player itself goes away
@@ -357,7 +375,13 @@ export default function InkBoard({ unit }: { unit: InkUnit }) {
         </div>
 
         <div className="bg-[#fbfdfb] p-2 sm:p-5">
-          <canvas ref={canvasRef} style={{ aspectRatio: `${DESIGN_WIDTH} / ${DESIGN_HEIGHT}` }} className="w-full rounded-lg" />
+          {scene.image ? (
+            <div style={{ aspectRatio: `${DESIGN_WIDTH} / ${DESIGN_HEIGHT}` }} className="w-full overflow-hidden rounded-lg bg-[#0b1329]">
+              <ImageStage image={scene.image} onTap={speakHotspot} />
+            </div>
+          ) : (
+            <canvas ref={canvasRef} style={{ aspectRatio: `${DESIGN_WIDTH} / ${DESIGN_HEIGHT}` }} className="w-full rounded-lg" />
+          )}
         </div>
         <div className="flex flex-wrap justify-center gap-1 border-t border-slate-200 bg-white px-4 py-3 sm:px-8">
           {topic.scenes.map((s, i) => (

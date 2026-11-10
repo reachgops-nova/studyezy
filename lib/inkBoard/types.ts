@@ -7,6 +7,9 @@
 // (components/board/InkBoard.tsx's renderOps) - adding a new topic never
 // means writing new canvas code again.
 //
+import type { ImageFrame } from "@/lib/boardUnits/types";
+export type { ImageFrame };
+
 // Coordinates are plain canvas pixels on a fixed design surface (see
 // InkBoard.tsx's DESIGN_WIDTH/DESIGN_HEIGHT) - the component scales the
 // canvas to fit, so every scene script can assume the same coordinate
@@ -159,7 +162,22 @@ export interface InkScene {
   label: string;
   /** Spoken narration for this scene, in the same language as the visible text (Tamil). */
   say: string;
+  /**
+   * Hand-drawn canvas ops - the default rendering. Ignored when `image` is
+   * set (a scene is one or the other, not both at once).
+   */
   ops: InkOp[];
+  /**
+   * A real illustration instead of hand-drawn ops - zoomed/panned to a
+   * focus region, with tappable hotspots and an optional animated
+   * motion-path token (components/board/ImageStage.tsx). Reuses the exact
+   * same ImageFrame shape as the card-based Board (lib/boardUnits/types.ts)
+   * so existing, already-tuned illustrations/hotspot coordinates can be
+   * reused as-is. Real user direction 2026-11-10: "the images are not
+   * animated and interactive visually graphical.. we had better images in
+   * the past which we can animate and use."
+   */
+  image?: ImageFrame;
 }
 
 /**

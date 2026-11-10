@@ -1,5 +1,25 @@
-import type { InkOp, InkUnit } from "./types";
+import type { ImageFrame, InkOp, InkUnit } from "./types";
 import { TIP_COLOR, PRACTICE_COLOR } from "./types";
+
+// The real, already-generated illustration this unit's card-based Board
+// uses (lib/boardUnits/cambridge-4-science-5.ts) - same image, same
+// hand-tuned focus regions and hotspot coordinates, reused here via
+// components/board/ImageStage.tsx so the whiteboard gets the same
+// animated-float + zoom/pan + tappable-hotspot treatment instead of only
+// hand-drawn canvas ops. Real user direction 2026-11-10: "the images are
+// not animated and interactive visually graphical.. we had better images
+// in the past which we can animate and use."
+const MATTER_IMG = "/board-art/cambridge-4-science-unit5-states-of-matter.png";
+const MATTER_ALT = "Four panels: the particle model of solids/liquids/gases, the changing-state cycle, water's special freezing property, and common gases around us.";
+
+const PARTICLE_FOCUS = { x: 0, y: 8, w: 48, h: 52 };
+const CYCLE_FOCUS = { x: 48, y: 8, w: 52, h: 52 };
+const WATER_PROP_FOCUS = { x: 0, y: 55, w: 48, h: 45 };
+const GASES_FOCUS = { x: 48, y: 55, w: 52, h: 45 };
+
+function matterImage(hotspots: NonNullable<ImageFrame["hotspots"]>, focus: ImageFrame["focus"], title: string): ImageFrame {
+  return { src: MATTER_IMG, alt: MATTER_ALT, title, hotspots, focus };
+}
 
 // Real drawn-circle particles for the particle-model diagrams, instead of
 // "●" text characters - crisp at any screen size and genuinely shows the
@@ -91,7 +111,21 @@ export const CAMBRIDGE_4_SCIENCE_5_INK: InkUnit = {
           ],
         },
         {
-          label: "2. Particle picture: solid",
+          label: "2. 🖼️ Explore: tap each state",
+          say: "Here is a real picture of the three states of matter, zoomed in. Tap SOLID, LIQUID, or GAS to hear about how its particles are arranged.",
+          ops: [],
+          image: matterImage(
+            [
+              { label: "Solid State", at: [11, 30], note: "Particles packed tight in a fixed pattern. Keeps its shape and volume.", tone: "gold" },
+              { label: "Liquid State", at: [26, 30], note: "Particles close but jumbled, able to flow. Keeps its volume, takes the container's shape.", tone: "green" },
+              { label: "Gas State", at: [40, 30], note: "Particles spread far apart, moving fast. No fixed shape or volume, escapes if unsealed.", tone: "blue" },
+            ],
+            PARTICLE_FOCUS,
+            "Solids, Liquids and Gases",
+          ),
+        },
+        {
+          label: "3. Particle picture: solid",
           say: "In a solid, the particles are packed tightly together in a fixed pattern, like soldiers standing in rows. They can only wobble in place - they cannot move past each other. That is why a solid keeps its own shape.",
           ops: [
             { type: "text", value: "A SOLID - particles packed tight, fixed pattern", x: 60, y: 60, color: "#b45309", size: 24 },
@@ -101,7 +135,7 @@ export const CAMBRIDGE_4_SCIENCE_5_INK: InkUnit = {
           ],
         },
         {
-          label: "3. Particle picture: liquid",
+          label: "4. Particle picture: liquid",
           say: "In a liquid, the particles are still close together, but they are jumbled up, not in rows. They can slide and roll past each other. That is why a liquid can flow and be poured, and takes the shape of whatever container it's in.",
           ops: [
             { type: "text", value: "A LIQUID - particles close but jumbled, able to flow", x: 60, y: 60, color: "#0369a1", size: 24 },
@@ -111,7 +145,7 @@ export const CAMBRIDGE_4_SCIENCE_5_INK: InkUnit = {
           ],
         },
         {
-          label: "4. Particle picture: gas",
+          label: "5. Particle picture: gas",
           say: "In a gas, the particles are spread far apart and zoom around freely at high speed, bouncing in every direction. That is why a gas has no fixed shape or volume at all - it spreads out to fill whatever space it is in, and escapes if the container isn't sealed.",
           ops: [
             { type: "text", value: "A GAS - particles spread far apart, moving fast", x: 60, y: 60, color: "#6b21a8", size: 24 },
@@ -121,7 +155,7 @@ export const CAMBRIDGE_4_SCIENCE_5_INK: InkUnit = {
           ],
         },
         {
-          label: "5. 💡 Tip: the container test",
+          label: "6. 💡 Tip: the container test",
           say: "Here's a real trick scientists use. If you're not sure which state something is, ask: does it keep its own shape without any container? If yes, it's a solid. If it needs a container to hold a shape but still has a flat top surface, it's a liquid. If it spreads to fill the WHOLE container with no surface at all, it's a gas.",
           ops: [
             { type: "text", value: "💡 Tip: The Container Test", x: 60, y: 60, color: TIP_COLOR, size: 26 },
@@ -129,7 +163,7 @@ export const CAMBRIDGE_4_SCIENCE_5_INK: InkUnit = {
           ],
         },
         {
-          label: "6. ✍️ Try it yourself",
+          label: "7. ✍️ Try it yourself",
           say: "Your turn! Think about playdough, the juice in your lunchbox, and the gas inside a balloon. Which state is each one in, and why? Work it out before checking the answer.",
           ops: [
             { type: "text", value: "✍️ Try it yourself - classify these", x: 60, y: 50, color: PRACTICE_COLOR, size: 24 },
@@ -162,7 +196,22 @@ export const CAMBRIDGE_4_SCIENCE_5_INK: InkUnit = {
           ],
         },
         {
-          label: "2. Gases can be squashed",
+          label: "2. 🖼️ Explore: tap each gas",
+          say: "Here is the real picture again, zoomed in on the gases. Tap carbon dioxide, oxygen, nitrogen, or hydrogen to hear its use.",
+          ops: [],
+          image: matterImage(
+            [
+              { label: "Carbon Dioxide (CO₂)", at: [59.75, 75.7], note: "The fizz in fizzy drinks. Also used in fire extinguishers.", tone: "gold" },
+              { label: "Oxygen (O₂)", at: [70, 75.7], note: "Needed for breathing. Divers carry it compressed in tanks.", tone: "green" },
+              { label: "Nitrogen (N₂)", at: [80.5, 75.7], note: "Keeps packaged food fresh. Also used as a fertiliser.", tone: "blue" },
+              { label: "Hydrogen (H₂)", at: [91, 75.7], note: "Catches fire easily, so it's used as rocket fuel.", tone: "red" },
+            ],
+            GASES_FOCUS,
+            "Common Gases Around Us",
+          ),
+        },
+        {
+          label: "3. Gases can be squashed",
           say: "Divers carry oxygen tanks, not giant balloons. That's because gases, like all gases, can be compressed - squashed into a much smaller space. A tank can hold a huge amount of oxygen squeezed tightly inside it.",
           ops: [
             { type: "text", value: "Why a small tank holds so much oxygen", x: 60, y: 60, color: "#0284c7", size: 24 },
@@ -170,7 +219,7 @@ export const CAMBRIDGE_4_SCIENCE_5_INK: InkUnit = {
           ],
         },
         {
-          label: "3. 💡 Tip: remembering the four gases",
+          label: "4. 💡 Tip: remembering the four gases",
           say: "Here's a memory trick. C for Carbon dioxide - think 'Cola fizz'. O for Oxygen - think 'Ocean diver'. N for Nitrogen - think 'Nice and fresh food'. H for Hydrogen - think 'High-flying rocket'. The first letter of the job matches the first letter of the gas's use!",
           ops: [
             { type: "text", value: "💡 Tip: C-O-N-H matches the job", x: 60, y: 60, color: TIP_COLOR, size: 26 },
@@ -178,7 +227,7 @@ export const CAMBRIDGE_4_SCIENCE_5_INK: InkUnit = {
           ],
         },
         {
-          label: "4. ✍️ Try it yourself",
+          label: "5. ✍️ Try it yourself",
           say: "Your turn! A bag of crisps puffs up a little to stop the crisps breaking, and keeps them fresher for longer. A fizzy drink loses its fizz once the bottle has been open a long time. Which gas is doing each job?",
           ops: [
             { type: "text", value: "✍️ Try it yourself", x: 60, y: 50, color: PRACTICE_COLOR, size: 24 },
@@ -209,7 +258,20 @@ export const CAMBRIDGE_4_SCIENCE_5_INK: InkUnit = {
           ],
         },
         {
-          label: "2. Water's strange secret",
+          label: "2. 🖼️ Explore: melting vs freezing",
+          say: "Here is the real picture, showing the changing-state cycle. Tap Melting or Freezing to hear what each one means.",
+          ops: [],
+          image: matterImage(
+            [
+              { label: "Melting (Solid to Liquid)", at: [74.5, 41.7], note: "Heating a solid turns it into a liquid.", tone: "gold" },
+              { label: "Freezing (Liquid to Solid)", at: [91.5, 29.6], note: "Cooling a liquid turns it into a solid.", tone: "green" },
+            ],
+            CYCLE_FOCUS,
+            "Melting and Freezing",
+          ),
+        },
+        {
+          label: "3. Water's strange secret",
           say: "Most liquids get smaller - they contract - when they freeze, because their particles slow down and pack closer together. But water does something very unusual: its particles link together leaving gaps between them, so water actually EXPANDS - gets bigger - when it turns to ice.",
           ops: [
             { type: "text", value: "Water's special property: it EXPANDS when frozen!", x: 60, y: 60, color: "#1e293b", size: 24 },
@@ -218,7 +280,20 @@ export const CAMBRIDGE_4_SCIENCE_5_INK: InkUnit = {
           ],
         },
         {
-          label: "3. 💡 Tip: why ice floats, and why pipes burst",
+          label: "4. 🖼️ Explore: water's expanding property",
+          say: "Tap each label on the real picture to compare: how most liquids behave when frozen, versus water's own unusual behaviour.",
+          ops: [],
+          image: matterImage(
+            [
+              { label: "Most Liquids Contract When Frozen", at: [9.5, 73.9], note: "The normal case - particles slow down and pack closer together.", tone: "green" },
+              { label: "Water Expands When Frozen", at: [31.75, 73.9], note: "Water is the unusual exception - its particles link up leaving gaps, so it expands.", tone: "gold" },
+            ],
+            WATER_PROP_FOCUS,
+            "Water's Special Property",
+          ),
+        },
+        {
+          label: "5. 💡 Tip: why ice floats, and why pipes burst",
           say: "This one special fact about water explains two real things you may have seen. Because ice expands, it becomes LESS dense than liquid water - that's exactly why ice cubes float instead of sinking. And it's also why water pipes can crack in freezing winter weather: the freezing water inside pushes outward with surprising force.",
           ops: [
             { type: "text", value: "💡 Tip: one fact, two real-world effects", x: 60, y: 60, color: TIP_COLOR, size: 26 },
@@ -226,7 +301,7 @@ export const CAMBRIDGE_4_SCIENCE_5_INK: InkUnit = {
           ],
         },
         {
-          label: "4. ✍️ Try it yourself",
+          label: "6. ✍️ Try it yourself",
           say: "Here's the real experiment from the book. Fill a plastic cup two-thirds with water, mark the water level with a pen, then freeze it overnight. Predict first: will the ice level be higher, lower, or the same as your mark? Then check!",
           ops: [
             { type: "text", value: "✍️ Try it yourself - the freezer test", x: 60, y: 50, color: PRACTICE_COLOR, size: 24 },
@@ -264,7 +339,17 @@ export const CAMBRIDGE_4_SCIENCE_5_INK: InkUnit = {
           ],
         },
         {
-          label: "3. 💡 Tip: 100°C never changes",
+          label: "3. 🖼️ Explore: boiling on the real picture",
+          say: "Tap the label on the real picture to hear about boiling and evaporation turning liquid into gas.",
+          ops: [],
+          image: matterImage(
+            [{ label: "Boiling & Evaporation (Liquid to Gas)", at: [57.25, 43.5], note: "Boils throughout the liquid at 100°C, or evaporates from just the surface at any temperature.", tone: "gold" }],
+            CYCLE_FOCUS,
+            "Boiling",
+          ),
+        },
+        {
+          label: "4. 💡 Tip: 100°C never changes",
           say: "Here's a real trick worth remembering: no matter how high you turn up the flame, boiling water never gets hotter than 100°C. A bigger flame just makes it boil faster (more bubbles), not hotter. That's a true fact that surprises a lot of people!",
           ops: [
             { type: "text", value: "💡 Tip: a bigger flame = faster, not hotter", x: 60, y: 60, color: TIP_COLOR, size: 26 },
@@ -272,7 +357,7 @@ export const CAMBRIDGE_4_SCIENCE_5_INK: InkUnit = {
           ],
         },
         {
-          label: "4. ✍️ Try it yourself",
+          label: "5. ✍️ Try it yourself",
           say: "Your turn! If pasta cooks at the boiling temperature of water, would turning the stove to its highest setting cook your pasta any faster once the water is already boiling hard? Think about the tip above before answering.",
           ops: [
             { type: "text", value: "✍️ Try it yourself", x: 60, y: 50, color: PRACTICE_COLOR, size: 24 },
@@ -310,7 +395,17 @@ export const CAMBRIDGE_4_SCIENCE_5_INK: InkUnit = {
           ],
         },
         {
-          label: "3. 💡 Tip: the 3 things that speed up evaporation",
+          label: "3. 🖼️ Explore: evaporation on the real picture",
+          say: "Here's the same real picture - tap the label to hear how evaporation turns a liquid into a gas.",
+          ops: [],
+          image: matterImage(
+            [{ label: "Boiling & Evaporation (Liquid to Gas)", at: [57.25, 43.5], note: "Evaporation happens at the surface, at any temperature - no need to reach boiling point.", tone: "gold" }],
+            CYCLE_FOCUS,
+            "Evaporation",
+          ),
+        },
+        {
+          label: "4. 💡 Tip: the 3 things that speed up evaporation",
           say: "Remember this with HAW: Heat makes particles move faster. Air-flow (wind or a draught) sweeps escaped vapour away so more can follow. Wide surface area means more particles are at the surface, ready to escape. More of any of these three means faster evaporation.",
           ops: [
             { type: "text", value: "💡 Tip: remember HAW", x: 60, y: 60, color: TIP_COLOR, size: 26 },
@@ -318,7 +413,7 @@ export const CAMBRIDGE_4_SCIENCE_5_INK: InkUnit = {
           ],
         },
         {
-          label: "4. ✍️ Try it yourself",
+          label: "5. ✍️ Try it yourself",
           say: "Your turn! Two identical wet T-shirts are hung up to dry. One is on a warm, breezy day, spread out flat. The other is on a cool, still day, bunched up in a ball. Which one dries faster, and why - using the HAW trick?",
           ops: [
             { type: "text", value: "✍️ Try it yourself", x: 60, y: 50, color: PRACTICE_COLOR, size: 24 },
@@ -350,7 +445,17 @@ export const CAMBRIDGE_4_SCIENCE_5_INK: InkUnit = {
           ],
         },
         {
-          label: "2. 💡 Tip: con-DENSE-ation",
+          label: "2. 🖼️ Explore: condensation on the real picture",
+          say: "Tap the label on the real picture to hear about condensation turning a gas into a liquid.",
+          ops: [],
+          image: matterImage(
+            [{ label: "Condensation (Gas to Liquid)", at: [73.5, 24.6], note: "A gas cools and changes back into a liquid - the opposite of evaporation.", tone: "gold" }],
+            CYCLE_FOCUS,
+            "Condensation",
+          ),
+        },
+        {
+          label: "3. 💡 Tip: con-DENSE-ation",
           say: "Here's a genuine memory trick hidden right in the word. CON-DENSE-ation: when a gas condenses, its spread-out particles pack together into a much DENSER liquid. The word literally contains the clue to what's happening to the particles!",
           ops: [
             { type: "text", value: "💡 Tip: the word hides the answer", x: 60, y: 60, color: TIP_COLOR, size: 26 },
@@ -358,7 +463,7 @@ export const CAMBRIDGE_4_SCIENCE_5_INK: InkUnit = {
           ],
         },
         {
-          label: "3. ✍️ Try it yourself",
+          label: "4. ✍️ Try it yourself",
           say: "Your turn! On a hot day, a cold can of lemonade taken out of the fridge quickly gets 'sweaty' with water droplets on the outside, even though the can is sealed and no liquid leaked out. Where did those droplets come from?",
           ops: [
             { type: "text", value: "✍️ Try it yourself - the sweaty can", x: 60, y: 50, color: PRACTICE_COLOR, size: 24 },
